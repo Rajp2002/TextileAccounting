@@ -197,7 +197,8 @@ describe('payroll worker card breakdown control', () => {
         expect(dialog).toContain("tx('Gross pay')")
         expect(dialog).toContain("tx('Advance recovery')")
         expect(dialog).toContain("tx('Metres by machine')")
-        expect(dialog).toContain("tx('Salary by month')")
+        // Piece-rate workers see metres by machine; fixed-salary staff see the attendance calendar.
+        expect(dialog).toMatch(/pay_type === 'fixed_monthly' \? \([\s\S]*<BaseStaffAttendanceCalendar[\s\S]*\) : <MachineTable breakdown=\{breakdown\} \/>/)
         // Net pay comes first in reading order, so phones show it before the machine list.
         expect(dialog.indexOf('<PaySummary payable={payable} />')).toBeLessThan(dialog.indexOf('<MachineTable breakdown={breakdown} />'))
     })

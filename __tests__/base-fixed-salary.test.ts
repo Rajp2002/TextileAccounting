@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { calculateBaseSalaryLines, currentBaseMonthlySalary, mergeBaseSalaryOverhead } from '../lib/base-salary'
+import { calculateBaseSalaryLines, currentBaseMonthlySalary, mergeBaseSalaryOverhead, withStaffDaysOff } from '../lib/base-salary'
 import { calculateBaseWorkerPayables, type BaseProductionWorker } from '../lib/base-production-core'
 import { buildBasePayrollHistory, buildBasePayrollHistoryCsv } from '../lib/base-payroll-history'
 import { buildBasePayrollReadiness } from '../lib/base-payroll-readiness'
@@ -67,5 +67,41 @@ describe('Base fixed salaries', () => {
         expect(history.machines).toEqual([])
         expect(history.totalGrossPay).toBe(30000)
         expect(buildBasePayrollHistoryCsv(history)).toContain('per month')
+    })
+})
+
+describe('Base fixed-salary days off', () => {
+    const october = { ...staff, start_date: '2026-10-01', salary_history: [{ effective_from: '2026-10-01', monthly_salary: 31000 }] }
+    it('subtracts a day off at that month\'s day rate', () => {
+        const [line] = calculateBaseSalaryLines({ ...october, days_off: ['2026-10-05'] }, '2026-10-01', '2026-10-14')
+        expect(line).toMatchObject({ start: '2026-10-01', end: '2026-10-14', days: 13, offDays: 1, offDates: ['2026-10-05'], monthDays: 31, dayRate: 1000, grossPay: 13000 })
+    })
+    it('splits days off across months and salary changes', () => {
+        const worker = { ...staff, start_date: '2026-09-01', salary_history: [{ effective_from: '2026-09-01', monthly_salary: 30000 }], days_off: ['2026-09-25', '2026-10-03'] }
+        const lines = calculateBaseSalaryLines(worker, '2026-09-23', '2026-10-14')
+        expect(lines.map(line => [line.days, line.offDays, line.grossPay])).toEqual([[7, 1, 7000], [13, 1, 12580.65]])
+        expect(lines[1].dayRate).toBe(967.74)
+        const raised = { ...worker, salary_history: [...worker.salary_history, { effective_from: '2026-10-10', monthly_salary: 62000 }], days_off: ['2026-10-03', '2026-10-12'] }
+        expect(calculateBaseSalaryLines(raised, '2026-10-01', '2026-10-14').map(line => [line.start, line.days, line.offDays, line.grossPay]))
+            .toEqual([['2026-10-01', 8, 1, 7741.94], ['2026-10-10', 4, 1, 8000]])
+    })
+    it('ignores days off outside the period or employment', () => {
+        const worker = { ...october, end_date: '2026-10-10', days_off: ['2026-09-30', '2026-10-12', '2026-10-20'] }
+        expect(calculateBaseSalaryLines(worker, '2026-10-01', '2026-10-14')).toMatchObject([{ days: 10, offDays: 0, offDates: [], grossPay: 10000 }])
+    })
+    it('pays exactly the salary for a full month with no days off', () => {
+        const worker = { ...staff, salary_history: [{ effective_from: '2026-08-01', monthly_salary: 29999 }], days_off: [] }
+        expect(calculateBaseSalaryLines(worker, '2026-08-01', '2026-08-31')).toMatchObject([{ days: 31, offDays: 0, grossPay: 29999, dayRate: 967.71 }])
+    })
+    it('attaches each worker\'s own days off and leaves other workers alone', () => {
+        const piece = { ...staff, id: 'piece', pay_type: 'piece_rate' as const }
+        const merged = withStaffDaysOff([october, piece], [{ worker_id: october.id, off_date: '2026-10-09' }, { worker_id: october.id, off_date: '2026-10-02' }])
+        expect(merged[0].days_off).toEqual(['2026-10-02', '2026-10-09'])
+        expect(merged[1]).toBe(piece)
+        expect(withStaffDaysOff([october], undefined)[0]).toBe(october)
+    })
+    it('lowers the payable gross by each day off', () => {
+        const result = calculateBaseWorkerPayables({ workers: [{ ...october, days_off: ['2026-10-02', '2026-10-09'] }], entries: [], advances: [], settlements: [], periodEnd: '2026-10-14' })
+        expect(result[0]).toMatchObject({ base_pay: 12000, gross_pay: 12000 })
     })
 })

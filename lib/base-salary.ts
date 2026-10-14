@@ -3,7 +3,19 @@ import type { BaseProductionWorker } from './base-production-core'
 import { DEFAULT_OVERHEAD_ITEMS, type OverheadItem } from './estimator'
 
 export type BaseSalaryRate = { effective_from: string; monthly_salary: number }
-export type BaseSalaryLine = { start: string; end: string; days: number; monthDays: number; monthlySalary: number; grossPay: number }
+/** `days` are the paid days: the segment's calendar days minus `offDays`. `dayRate` is for display only. */
+export type BaseSalaryLine = { start: string; end: string; days: number; offDays: number; offDates: string[]; monthDays: number
+    monthlySalary: number; dayRate: number; grossPay: number }
+
+export type BaseStaffDayOff = { worker_id: string; off_date: string }
+
+/** Attach each fixed-salary worker's days off; workers without any are returned unchanged. */
+export function withStaffDaysOff(workers: BaseProductionWorker[], daysOff: BaseStaffDayOff[] | undefined): BaseProductionWorker[] {
+    if (!daysOff?.length) return workers
+    const byWorker = new Map<string, string[]>()
+    for (const day of daysOff) byWorker.set(day.worker_id, [...(byWorker.get(day.worker_id) ?? []), day.off_date])
+    return workers.map(worker => byWorker.has(worker.id) ? { ...worker, days_off: byWorker.get(worker.id)!.sort() } : worker)
+}
 
 export function readBaseSalaryHistory(value: unknown): BaseSalaryRate[] {
     if (!Array.isArray(value)) return []
@@ -20,13 +32,14 @@ export function readBaseSalaryHistory(value: unknown): BaseSalaryRate[] {
 function date(value: string) { return new Date(`${value}T00:00:00Z`) }
 function iso(value: Date) { return value.toISOString().slice(0, 10) }
 
-/** Round once per salary-rate/calendar-month segment, identically to Postgres. */
+/** Round once per salary-rate/calendar-month segment, identically to Postgres. Days off are unpaid. */
 export function calculateBaseSalaryLines(worker: BaseProductionWorker, start: string, end: string): BaseSalaryLine[] {
     if (worker.pay_type !== 'fixed_monthly' || !worker.start_date) return []
     const from = [start, worker.start_date].sort().at(-1)!
     const through = worker.end_date && worker.end_date < end ? worker.end_date : end
     if (from > through) return []
     const history = worker.salary_history ?? []
+    const daysOff = [...new Set(worker.days_off ?? [])].sort()
     const lines: BaseSalaryLine[] = []
     for (let index = 0; index < history.length; index++) {
         const rate = history[index]
@@ -37,9 +50,13 @@ export function calculateBaseSalaryLines(worker: BaseProductionWorker, start: st
         while (iso(cursor) <= stop) {
             const monthEnd = new Date(Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth() + 1, 0))
             const segmentEnd = iso(monthEnd) < stop ? iso(monthEnd) : stop
-            const days = Math.round((date(segmentEnd).getTime() - cursor.getTime()) / 86400000) + 1
-            lines.push({ start: iso(cursor), end: segmentEnd, days, monthDays: monthEnd.getUTCDate(), monthlySalary: rate.monthly_salary,
-                grossPay: new Decimal(rate.monthly_salary).times(days).div(monthEnd.getUTCDate()).toDecimalPlaces(2).toNumber() })
+            const segmentStart = iso(cursor)
+            const offDates = daysOff.filter(day => day >= segmentStart && day <= segmentEnd)
+            const days = Math.round((date(segmentEnd).getTime() - cursor.getTime()) / 86400000) + 1 - offDates.length
+            const salary = new Decimal(rate.monthly_salary)
+            lines.push({ start: segmentStart, end: segmentEnd, days, offDays: offDates.length, offDates, monthDays: monthEnd.getUTCDate(),
+                monthlySalary: rate.monthly_salary, dayRate: salary.div(monthEnd.getUTCDate()).toDecimalPlaces(2).toNumber(),
+                grossPay: salary.times(days).div(monthEnd.getUTCDate()).toDecimalPlaces(2).toNumber() })
             cursor = new Date(date(segmentEnd).getTime() + 86400000)
         }
     }

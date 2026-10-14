@@ -68,6 +68,7 @@ import {
     calculateBaseWorkerPayables,
     type BasePayrollPaymentMode,
 } from '@/lib/base-production-core'
+import { withStaffDaysOff } from '@/lib/base-salary'
 import {
     type PayrollCycleRule,
     DEFAULT_MONTHLY_CYCLE_RULE,
@@ -79,6 +80,7 @@ import {
 import {
     createBaseWorkerAdvance,
     createBaseWorkerDeduction,
+    setBaseStaffDayOff,
     settleBaseWorkerPayroll,
 } from './actions'
 import BaseActiveQualities from './BaseActiveQualities'
@@ -170,12 +172,12 @@ type BaseProductionView = 'production' | 'operations' | 'payroll'
 // The shared production client also serves daily entry and assignments. Keep
 // payroll's full-history calculations dormant until the payroll view needs them.
 export function useBasePayrollForView(view: BaseProductionView, initialData: BaseProductionInitialData, period: { start: string; end: string }) {
-    const { workers, entries, allocations, incentives, advances, settlements, payrollPeriods, today } = initialData
+    const { workers, staffDaysOff, entries, allocations, incentives, advances, settlements, payrollPeriods, today } = initialData
     return useMemo(() => {
         if (view !== 'payroll') return null
         const cutoff = period.end < today ? period.end : today
         const payables = calculateBaseWorkerPayables({
-            workers, entries, allocations, incentives: incentives ?? [], advances, settlements, periodEnd: cutoff,
+            workers: withStaffDaysOff(workers, staffDaysOff), entries, allocations, incentives: incentives ?? [], advances, settlements, periodEnd: cutoff,
         })
         const periodRecord = (payrollPeriods ?? []).find(record => record.period_start === period.start && record.period_end === period.end) ?? null
         return {
@@ -184,7 +186,7 @@ export function useBasePayrollForView(view: BaseProductionView, initialData: Bas
             summary: calculateBasePayrollPeriodSummary({ payables, periodRecord: periodRecord ?? undefined }),
             readiness: buildBasePayrollReadiness({ payables, entries, allocations }),
         }
-    }, [view, workers, entries, allocations, incentives, advances, settlements, payrollPeriods, today, period.start, period.end])
+    }, [view, workers, staffDaysOff, entries, allocations, incentives, advances, settlements, payrollPeriods, today, period.start, period.end])
 }
 
 const NO_PAYABLES: ReturnType<typeof calculateBaseWorkerPayables> = []
@@ -269,6 +271,9 @@ export default function BaseProductionClient({
     const [payrollFilter, setPayrollFilter] = useState('all')
     // The worker whose breakdown modal is open, if any.
     const [breakdownWorkerId, setBreakdownWorkerId] = useState<string | null>(null)
+    // Day-off saves in flight. Each stays busy until refreshed payroll data replaces the data it was tapped on.
+    const [dayOffRequests, setDayOffRequests] = useState<Array<{ date: string; data: unknown }>>([])
+    const [dayOffError, setDayOffError] = useState<string | null>(null)
 
     const [openDialog, setDialog] = useState<DialogName>(null)
     const dialog: DialogName = payrollTourStep === 'pra-advance' ? 'advance' : payrollTourStep === 'pra-deduction' ? 'deduction' : openDialog
@@ -435,6 +440,25 @@ export default function BaseProductionClient({
             allocations: initialData.allocations,
         })
         : null
+    const pendingDayOffDates = new Set(dayOffRequests.filter(request => request.data === initialData.staffDaysOff).map(request => request.date))
+
+    async function toggleStaffDayOff(workerId: string, date: string, off: boolean) {
+        if (pendingDayOffDates.has(date)) return
+        const request = { date, data: initialData.staffDaysOff as unknown }
+        setDayOffError(null)
+        setDayOffRequests(current => [...current.filter(item => item.data === request.data), request])
+        const fail = (message: string) => {
+            setDayOffError(message)
+            setDayOffRequests(current => current.filter(item => item !== request))
+        }
+        try {
+            const error = getActionError(await setBaseStaffDayOff({ workerId, offDate: date, off }))
+            if (error) return fail(error)
+            router.refresh()
+        } catch (error) {
+            fail(error instanceof Error ? error.message : 'The day could not be saved.')
+        }
+    }
 
     useEffect(() => {
         if (tourSample) return // a tour sample is not a page view
@@ -857,7 +881,7 @@ export default function BaseProductionClient({
                                                 <Metric label="Net pay" value={formatINR(payable.net_payout, { hideDecimals: true })} emphasis />
                                             </div>
                                             <div data-payroll-tour={index === 0 ? 'recovery' : undefined} className="rounded-xl border border-hairline/70 bg-surface-soft/55 p-3 text-xs leading-relaxed text-body">
-                                                {payable.pay_type === 'fixed_monthly' && payable.status !== 'paid' && <div className="mb-2 space-y-1">{payable.salary_lines?.map(line => <p key={line.start}>{formatDateOnly(line.start)} – {formatDateOnly(line.end)}: {formatINR(line.monthlySalary)} × {line.days}/{line.monthDays} days = {formatINR(line.grossPay)}</p>)}</div>}
+                                                {payable.pay_type === 'fixed_monthly' && payable.status !== 'paid' && <div className="mb-2 space-y-1">{payable.salary_lines?.map(line => <p key={line.start}>{formatDateOnly(line.start)} – {formatDateOnly(line.end)}: {formatINR(line.monthlySalary)} × {line.days}/{line.monthDays} days{line.offDays > 0 ? ` (${tx('{count} off', { count: line.offDays })})` : ''} = {formatINR(line.grossPay)}</p>)}</div>}
                                                 {(payable.incentive_pay ?? 0) > 0 && <p className="mb-2">{tx('Approved incentive earnings')}: {formatINR(payable.incentive_pay ?? 0)}</p>}
                                                 {payable.incentive_review_ids?.length ? <p className="mb-2">{tx('Review incentives and include their complete service periods before payment.')}</p> : null}
                                                 {payable.status === 'paid'
@@ -913,8 +937,11 @@ export default function BaseProductionClient({
                 payable={breakdownPayable}
                 worker={breakdownWorker}
                 breakdown={breakdown}
-                onClose={() => setBreakdownWorkerId(null)}
+                onClose={() => { setBreakdownWorkerId(null); setDayOffError(null) }}
                 surface={surface}
+                pendingDayOffDates={pendingDayOffDates}
+                dayOffError={dayOffError}
+                onToggleDayOff={tourSample || !breakdownPayable ? undefined : (date, off) => void toggleStaffDayOff(breakdownPayable.worker_id, date, off)}
             />
 
             <Dialog open={dialog === 'advance'} onOpenChange={(open) => !open && closeDialog()} {...surface.root}>

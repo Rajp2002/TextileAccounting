@@ -93,6 +93,8 @@ export type BaseProductionWorker = {
     monthly_salary?: number
     salary_effective_from?: string | null
     salary_history?: BaseSalaryRate[]
+    /** Fixed-salary days the owner marked off. Every other employed day up to the period end is paid. */
+    days_off?: string[]
     start_date?: string | null
     end_date?: string | null
     id: string

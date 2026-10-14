@@ -21,6 +21,7 @@ import type {
     BaseWorkerMachineBreakdown,
     BaseWorkerPayable,
 } from '@/lib/base-production-core'
+import BaseStaffAttendanceCalendar from './BaseStaffAttendanceCalendar'
 
 function formatDateOnly(value: string | null | undefined) {
     if (!value) return '—'
@@ -59,7 +60,8 @@ const numberCell = 'whitespace-nowrap pl-3 text-right'
 
 /**
  * One worker's pay for the period on a single screen: net pay and how it is reached on the
- * right (on phones, first), and the metres or salary days behind it on the left.
+ * right (on phones, first), and what earned it on the left: metres by machine for piece-rate
+ * workers, the attendance calendar for fixed-salary staff.
  */
 export default function BaseWorkerPayBreakdownDialog({
     payable,
@@ -67,12 +69,19 @@ export default function BaseWorkerPayBreakdownDialog({
     breakdown,
     onClose,
     surface,
+    pendingDayOffDates,
+    dayOffError,
+    onToggleDayOff,
 }: {
     payable: BaseWorkerPayable | null
     worker?: BaseProductionWorker
     breakdown: BaseWorkerMachineBreakdown | null
     onClose: () => void
     surface: ReturnType<typeof tourSurfaceProps>
+    pendingDayOffDates?: ReadonlySet<string>
+    dayOffError?: string | null
+    /** Omit to show the attendance calendar read-only, for example in a tour sample. */
+    onToggleDayOff?: (date: string, off: boolean) => void
 }) {
     const { tx } = useTranslation()
 
@@ -94,9 +103,18 @@ export default function BaseWorkerPayBreakdownDialog({
                         <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_18rem] md:gap-6">
                             <PaySummary payable={payable} />
                             <div className="min-w-0 space-y-5 md:col-start-1 md:row-start-1">
-                                {payable.pay_type === 'fixed_monthly'
-                                    ? <SalaryTable payable={payable} />
-                                    : <MachineTable breakdown={breakdown} />}
+                                {payable.pay_type === 'fixed_monthly' ? (
+                                    <section className="space-y-3">
+                                        <SectionTitle>{tx('Days worked')}</SectionTitle>
+                                        <BaseStaffAttendanceCalendar
+                                            lines={payable.salary_lines ?? []}
+                                            locked={payable.status === 'paid'}
+                                            pendingDates={pendingDayOffDates}
+                                            error={dayOffError}
+                                            onToggle={onToggleDayOff}
+                                        />
+                                    </section>
+                                ) : <MachineTable breakdown={breakdown} />}
                                 {payable.incentive_lines?.length ? <IncentiveList payable={payable} /> : null}
                             </div>
                         </div>
@@ -233,44 +251,6 @@ function MachineTable({ breakdown }: { breakdown: BaseWorkerMachineBreakdown | n
                 </table>
             ) : (
                 <p className="mt-3 rounded-xl border border-dashed border-hairline bg-surface-soft/40 p-4 text-sm text-body">{tx('No metres recorded in this period.')}</p>
-            )}
-        </section>
-    )
-}
-
-function SalaryTable({ payable }: { payable: BaseWorkerPayable }) {
-    const { tx } = useTranslation()
-    const lines = payable.salary_lines ?? []
-
-    return (
-        <section>
-            <SectionTitle>{tx('Salary by month')}</SectionTitle>
-            {lines.length ? (
-                <table className="mt-3 w-full text-sm tabular-nums">
-                    <thead>
-                        <tr className="border-b border-hairline">
-                            <th scope="col" className={`${headCell} text-left`}>{tx('Period')}</th>
-                            <th scope="col" className={`${headCell} hidden pl-3 text-right sm:table-cell`}>{tx('Monthly salary')}</th>
-                            <th scope="col" className={`${headCell} pl-3 text-right`}>{tx('Days')}</th>
-                            <th scope="col" className={`${headCell} pl-3 text-right`}>{tx('Pay')}</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-hairline">
-                        {lines.map(line => (
-                            <tr key={line.start} className="align-top">
-                                <td className="py-3">
-                                    <span className="block font-semibold text-ink">{formatPeriod(line.start, line.end)}</span>
-                                    <span className="mt-1 block text-xs text-muted-foreground sm:hidden">{formatINR(line.monthlySalary)}/{tx('month')}</span>
-                                </td>
-                                <td className={`${numberCell} hidden py-3 text-body sm:table-cell`}>{formatINR(line.monthlySalary)}</td>
-                                <td className={`${numberCell} py-3 text-ink`}>{line.days}/{line.monthDays}</td>
-                                <td className={`${numberCell} py-3 font-semibold text-ink`}>{formatINR(line.grossPay)}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            ) : (
-                <p className="mt-3 rounded-xl border border-dashed border-hairline bg-surface-soft/40 p-4 text-sm text-body">{tx('No salary days in this period.')}</p>
             )}
         </section>
     )
