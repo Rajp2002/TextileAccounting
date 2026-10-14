@@ -10,8 +10,8 @@ Shared rules: [`GUIDED_TOURS_REFINEMENT_PLAN.md`](../../GUIDED_TOURS_REFINEMENT_
 | Route | `/owner/production` (sidebar "Overview") → `BaseProductionClient` (jobs view) inside `ProductionGuidedTour` |
 | Entitlement | `production_management` (Base). Owner role. |
 | Tour today | `components/production/ProductionGuidedTour.tsx` (left rail: guide + "Setup, history & corrections"; hides the live page), `ProductionTourPreview.tsx`, `components/tours/ProductionTutorial.tsx`, `lib/production-tour.ts` (12-step core covering Overview **and** Daily Sheet + 11-step details track), `lib/i18n/production-tutorial.ts`, `productionTourExample`. |
-| Live controls | Right rail "Activate Quality" (`BaseProductionClient.tsx:433-442`); `BaseActiveQualities`: Activate Quality dialog, "Yarn required before production" gate with Add Stock, Assign Looms dialog, ⋮ Quality actions (View in Costings, Production History, Deactivate) (the `BaseMachineBoard` that used to follow it was removed on 2026-10-08). |
-| Prerequisites | A saved costing (not archived); **stock above 0 kg for every yarn in its recipe** (`validate_quality_activation_yarn`); active machines; active piece-rate workers. |
+| Live controls | Right rail "Activate Quality" (`BaseProductionClient.tsx:433-442`); `BaseActiveQualities`: Activate Quality dialog, Assign Looms dialog, ⋮ Quality actions (View in Costings, Production History, Deactivate) (the `BaseMachineBoard` that used to follow it was removed on 2026-10-08). |
+| Prerequisites | A saved costing (not archived); active machines; active piece-rate workers. Yarn stock and its activation gate were deleted on 2026-10-14. |
 
 ## B. Diagnosis
 
@@ -26,13 +26,13 @@ Shared rules: [`GUIDED_TOURS_REFINEMENT_PLAN.md`](../../GUIDED_TOURS_REFINEMENT_
 
 ## C. Learning outcomes and coverage
 
-After the tour the owner can: (1) explain how a saved costing becomes a running quality whose metres feed stock and wages; (2) list the four prerequisites including yarn stock; (3) activate a quality with its wage; (4) assign looms; (5) start with the real "Activate Quality".
+After the tour the owner can: (1) explain how a saved costing becomes a running quality whose metres feed stock and wages; (2) list the three prerequisites; (3) activate a quality with its wage; (4) assign looms; (5) start with the real "Activate Quality".
 
 | Requirement | Destination |
 | --- | --- |
 | Purpose: costing → looms → daily metres → stock and wages | `pd-overview` |
-| Prerequisites: saved costing, yarn stock, machines, workers | `pd-prereq` (+ detail: where to add each) |
-| Activate Quality: version + weaver wage | `pd-activate` (+ detail: yarn gate, Add Stock) |
+| Prerequisites: saved costing, machines, workers | `pd-prereq` (+ detail: where to add each) |
+| Activate Quality: version + weaver wage | `pd-activate` |
 | Assign Looms | `pd-looms` |
 | Recording metres | Daily Sheet tour (`pd-handoff` names it) |
 | History, corrections, print | Daily Sheet tour |
@@ -48,7 +48,7 @@ Sample (`productionTourExample`): wage ₹2/m, quality "Sample fabric · v2", lo
 | # | Step id | Preset | Anchor | Surface |
 | --- | --- | --- | --- | --- |
 | 1 | `pd-overview` (was `overview`) | PS-SAMPLE | `[data-production-tour="overview"]` | overview |
-| 2 | `pd-prereq` (was `prerequisites`) | PS-SAMPLE | `[data-production-tour="prerequisites"]` | overview, a checklist card: Saved costing, Yarn stock, Machines, Workers |
+| 2 | `pd-prereq` (was `prerequisites`) | PS-SAMPLE | `[data-production-tour="prerequisites"]` | overview, a checklist card: Saved costing, Machines, Workers |
 | 3 | `pd-activate` (was `activate`) | PS-SAMPLE-DIALOG | `[data-production-tour="activate"]` / `[data-production-tour-preview="true"]` | Activate Quality dialog |
 | 4 | `pd-looms` (was `allocate`) | PS-SAMPLE-DIALOG | `[data-production-tour="allocate"]` / same | Assign Looms dialog |
 | 5 | `pd-handoff` | PS-HANDOFF | `[data-tour-anchor="production.activate"]` *(proposed on the right-rail Activate Quality and on its inline counterpart below 1280px)* | live |
@@ -105,4 +105,4 @@ Terminology evidence: [GujaratiLexicon, manage](https://www.gujaratilexicon.com/
 
 ## H. Comprehension check
 
-"You saved a costing for a new crepe yesterday and want two looms to start it tonight. What must be true before you can, and what do you press, in which order?" Expected: yarn stock exists for its yarns; Activate Quality (version + wage) → Assign Looms (two looms) → record metres on the Daily Sheet.
+"You saved a costing for a new crepe yesterday and want two looms to start it tonight. What must be true before you can, and what do you press, in which order?" Expected: Activate Quality (version + wage) → Assign Looms (two looms) → record metres on the Daily Sheet.

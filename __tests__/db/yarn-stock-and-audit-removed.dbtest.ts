@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { randomUUID } from 'node:crypto'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { asSuperuser, asUser, freshDatabase, seedOwnerOrg, type Db } from './helpers'
@@ -150,5 +151,16 @@ describe('yarn stock and stock audit removed', () => {
         expect(functions).toEqual([])
         const { rows: columns } = await db.query("SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'production_logs' AND column_name = 'yarn_batch_id'")
         expect(columns).toEqual([])
+    })
+    it('the closing guard names a function that still reads a deleted table, and finds none after the migrations', async () => {
+        const sql = readFileSync('supabase/migrations/20261014120100_remove_yarn_beam_module.sql', 'utf8')
+        const pattern = sql.match(/p\.prosrc ~ '([^']+)'/)![1]
+        const leftovers = "SELECT p.oid::regprocedure::text AS fn FROM pg_proc p WHERE p.pronamespace IN ('public'::regnamespace, 'private'::regnamespace) AND p.prosrc ~ $1"
+        await asSuperuser(db)
+        expect((await db.query(leftovers, [pattern])).rows).toEqual([])
+        await db.query('CREATE FUNCTION public.guard_probe() RETURNS bigint LANGUAGE sql AS $$ SELECT 0::bigint $$')
+        await db.query("CREATE OR REPLACE FUNCTION public.guard_probe() RETURNS bigint LANGUAGE plpgsql AS $$ BEGIN RETURN (SELECT count(*) FROM public.inventory_audits); END $$")
+        expect((await db.query(leftovers, [pattern])).rows).toEqual([{ fn: 'guard_probe()' }])
+        await db.query('DROP FUNCTION public.guard_probe()')
     })
 })

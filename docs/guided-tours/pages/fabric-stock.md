@@ -12,7 +12,7 @@ Shared rules: [`GUIDED_TOURS_REFINEMENT_PLAN.md`](../../GUIDED_TOURS_REFINEMENT_
 | Tour today | `components/stock/StockGuidedTour.tsx` (hides the live page), `FabricStockTourPreview.tsx`, `components/tours/StockTutorial.tsx`, steps `fabricStockTourSteps` in `lib/stock-tour.ts`, copy `lib/i18n/stock-tutorial.ts`, numbers `fabricStockExample`. |
 | Also wrapped (wrongly) | `/owner/stock/audit` renders the same Fabric tour (`app/(dashboard)/owner/stock/audit/page.tsx:16-19`). Removed by GT-08 (D-11). |
 | Live controls | Header: "Audit Inventory" link (hard-coded, ~129), Refresh, Opening stock (~138); quality cards: Opening stock / Correct balance / Movement history (~224-255). Labels through `t('qualityStock.*')` (root is `data-i18n-skip`). |
-| Rule | Saved production adds metres; confirming a dispatch removes them; opening stock is added once; a correction sets the counted total. Routine counts use Correct balance; the Stock audit is the full dated record (owner rule D-20, 2026-09-27). |
+| Rule | Saved production adds metres; confirming a dispatch removes them; opening stock is added once; a correction sets the counted total. Every count uses Correct balance; the Stock audit was deleted on 2026-10-14. |
 
 ## B. Diagnosis
 
