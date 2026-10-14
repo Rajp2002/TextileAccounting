@@ -1,12 +1,17 @@
 'use client'
 
+import { captureMessage } from '@sentry/nextjs'
 import { prepareForPwaRefresh } from '@/lib/pwa-refresh-safety'
 
 export type PwaUpdateStatus = 'idle' | 'available' | 'activating' | 'ready' | 'failed' | 'blocked'
 export type PwaUpdateSnapshot = { status: PwaUpdateStatus; buildId: string | null }
+type PwaUpdateFailure = 'timeout' | 'redundant' | 'post_message'
 
 const BUILD_ID_TIMEOUT_MS = 1500
-const ACTIVATION_TIMEOUT_MS = 10_000
+// Activation waits for the old worker's in-flight requests. Right after sign-in
+// on a slow connection that took longer than 10 seconds while the new version's
+// 12 MB precache was still competing for bandwidth.
+const ACTIVATION_TIMEOUT_MS = 30_000
 const UPDATE_NOTICE_KEY_PREFIX = 'weavly_pwa_update_toast_seen:'
 const serverSnapshot: PwaUpdateSnapshot = { status: 'idle', buildId: null }
 let snapshot = serverSnapshot
@@ -95,6 +100,25 @@ function reloadWhenSafe() {
     window.location.reload()
 }
 
+function reportFailure(reason: PwaUpdateFailure, worker: ServiceWorker, registration: ServiceWorkerRegistration, startedAt: number) {
+    try {
+        captureMessage('pwa_update_failed', {
+            level: 'warning',
+            tags: { pwa_update_failure: reason },
+            extra: {
+                elapsedMs: Date.now() - startedAt,
+                workerState: worker.state,
+                waitingState: registration.waiting?.state ?? null,
+                installingState: registration.installing?.state ?? null,
+                activeState: registration.active?.state ?? null,
+                buildId: snapshot.buildId,
+            },
+        })
+    } catch {
+        // Reporting is diagnostic only.
+    }
+}
+
 /** Only an explicit user action can activate an update and reload this page. */
 export function refreshPwaUpdate() {
     if (typeof window === 'undefined' || isLogin() || !target || reloadIssued || snapshot.status === 'activating') return
@@ -102,13 +126,26 @@ export function refreshPwaUpdate() {
         setSnapshot('blocked')
         return
     }
+    const { registration } = target
+    // A newer deployment can replace the offered worker before this page sees
+    // its statechange, so apply whichever version is waiting now.
+    const waiting = registration.waiting
+    if (waiting && waiting !== target.worker && target.worker.state !== 'activated') target = { registration, worker: waiting }
     const worker = target.worker
     const serviceWorker = navigator.serviceWorker
     if (worker.state === 'activated' || serviceWorker.controller === worker) {
         reloadWhenSafe()
         return
     }
+    const startedAt = Date.now()
     if (worker.state === 'redundant') {
+        // Another window may already have applied the update.
+        const active = registration.active
+        if (active && active.state === 'activated' && active !== serviceWorker.controller) {
+            reloadWhenSafe()
+            return
+        }
+        reportFailure('redundant', worker, registration, startedAt)
         setSnapshot('failed')
         return
     }
@@ -120,15 +157,16 @@ export function refreshPwaUpdate() {
         serviceWorker.removeEventListener('controllerchange', checkActivation)
         cancelActivation = null
     }
-    const fail = () => {
+    const fail = (reason: PwaUpdateFailure) => {
         if (finished) return
         finished = true
         cleanup()
+        reportFailure(reason, worker, registration, startedAt)
         setSnapshot('failed')
     }
     const checkActivation = () => {
         if (finished) return
-        if (worker.state === 'redundant') { fail(); return }
+        if (worker.state === 'redundant') { fail('redundant'); return }
         // clientsClaim is disabled, so activation can finish without this tab's
         // controller changing. An unrelated controller change is not success.
         if (worker.state !== 'activated' && serviceWorker.controller !== worker) return
@@ -136,7 +174,7 @@ export function refreshPwaUpdate() {
         cleanup()
         reloadWhenSafe()
     }
-    const timeout = setTimeout(fail, ACTIVATION_TIMEOUT_MS)
+    const timeout = setTimeout(() => fail('timeout'), ACTIVATION_TIMEOUT_MS)
     cancelActivation = () => {
         finished = true
         cleanup()
@@ -148,7 +186,7 @@ export function refreshPwaUpdate() {
     try {
         worker.postMessage({ type: 'SKIP_WAITING' })
         checkActivation()
-    } catch { fail() }
+    } catch { fail('post_message') }
 }
 
 /** One shell-level watcher owns listeners; menu controls consume the shared store. */
