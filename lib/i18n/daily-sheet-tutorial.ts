@@ -40,7 +40,7 @@ export const dailySheetTutorialCopy: Record<Language, DailySheetCopy> = {
         },
         "save": {
             "title": "Save the shift",
-            "body": "{c:saveShift} adds 120 m to fabric stock and ₹240 to the worker's earnings, and deducts the yarn used.",
+            "body": "{c:saveShift} adds 120 m to fabric stock and ₹240 to the worker's earnings.",
             "detail": "If some looms are still pending, Weavly asks whether to save the shift as incomplete."
         },
         "correct": {
@@ -93,7 +93,7 @@ export const dailySheetTutorialCopy: Record<Language, DailySheetCopy> = {
         },
         "save": {
             "title": "શિફ્ટ સાચવો",
-            "body": "{c:saveShift} કાપડના સ્ટોકમાં 120 મીટર અને કારીગરની કમાણીમાં ₹240 ઉમેરે છે, અને વપરાયેલું યાર્ન ઘટાડે છે.",
+            "body": "{c:saveShift} કાપડના સ્ટોકમાં 120 મીટર અને કારીગરની કમાણીમાં ₹240 ઉમેરે છે.",
             "detail": "કેટલાક લૂમ હજી બાકી હોય તો Weavly પૂછે છે કે શિફ્ટ અધૂરી તરીકે સાચવવી કે નહીં."
         },
         "correct": {
@@ -146,7 +146,7 @@ export const dailySheetTutorialCopy: Record<Language, DailySheetCopy> = {
         },
         "save": {
             "title": "शिफ्ट सेव करें",
-            "body": "{c:saveShift} कपड़े के स्टॉक में 120 मीटर और कारीगर की कमाई में ₹240 जोड़ता है, और लगा धागा घटाता है।",
+            "body": "{c:saveShift} कपड़े के स्टॉक में 120 मीटर और कारीगर की कमाई में ₹240 जोड़ता है।",
             "detail": "कुछ लूम अभी बाकी हों तो Weavly पूछता है कि शिफ्ट अधूरी के रूप में सेव करें या नहीं।"
         },
         "correct": {

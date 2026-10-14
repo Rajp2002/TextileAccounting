@@ -31,7 +31,7 @@ export const dispatchTutorialCopy: Record<Language, DispatchCopy> = {
         },
         "confirm": {
             "title": "Confirm when the goods leave",
-            "body": "{c:confirmLeft} locks the challan and takes 100 m out of fabric stock. Yarn was already counted when the fabric was produced.",
+            "body": "{c:confirmLeft} locks the challan and takes 100 m out of fabric stock.",
             "detail": "{c:print} opens the challan to print or save as PDF. A dispatch confirmed by mistake can be reversed while no money is recorded against it."
         },
         "receipt": {
@@ -78,7 +78,7 @@ export const dispatchTutorialCopy: Record<Language, DispatchCopy> = {
         },
         "confirm": {
             "title": "માલ નીકળે ત્યારે ખાતરી કરો",
-            "body": "{c:confirmLeft} ચલણ લૉક કરે છે અને કાપડના સ્ટોકમાંથી 100 મીટર ઘટાડે છે. યાર્ન તો કાપડ બન્યું ત્યારે જ ગણાઈ ગયું હતું.",
+            "body": "{c:confirmLeft} ચલણ લૉક કરે છે અને કાપડના સ્ટોકમાંથી 100 મીટર ઘટાડે છે.",
             "detail": "{c:print} ચલણને છાપવા કે PDF તરીકે સાચવવા ખોલે છે. ભૂલથી ખાતરી કરેલો ડિસ્પેચ, તેની સામે પૈસા ન નોંધાયા હોય ત્યાં સુધી ઉલટાવી શકાય."
         },
         "receipt": {
@@ -125,7 +125,7 @@ export const dispatchTutorialCopy: Record<Language, DispatchCopy> = {
         },
         "confirm": {
             "title": "माल निकले तब पुष्टि करें",
-            "body": "{c:confirmLeft} चालान लॉक करता है और कपड़े के स्टॉक से 100 मीटर घटाता है। धागा तो कपड़ा बनते समय ही गिना जा चुका है।",
+            "body": "{c:confirmLeft} चालान लॉक करता है और कपड़े के स्टॉक से 100 मीटर घटाता है।",
             "detail": "{c:print} चालान को छापने या PDF सेव करने के लिए खोलता है। गलती से पुष्टि किया डिस्पैच, जब तक उस पर पैसा दर्ज न हो, वापस किया जा सकता है।"
         },
         "receipt": {
