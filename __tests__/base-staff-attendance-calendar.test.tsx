@@ -54,9 +54,10 @@ describe('fixed-salary attendance calendar', () => {
 
     it('replaces the one-line salary text in the payroll breakdown modal', () => {
         const client = readFileSync('app/(dashboard)/owner/production/BaseProductionClient.tsx', 'utf8')
-        const modal = client.slice(client.indexOf('open={Boolean(breakdownPayable)}'))
+        const modal = readFileSync('app/(dashboard)/owner/production/BaseWorkerPayBreakdownDialog.tsx', 'utf8')
         expect(modal).toContain('<BaseStaffAttendanceCalendar')
-        expect(modal.slice(0, modal.indexOf('</Dialog>'))).not.toContain('× {line.days}/{line.monthDays} days')
+        expect(modal).not.toContain('× {line.days}/{line.monthDays} days')
+        expect(client).toContain('onToggleDayOff={')
         expect(client).toContain('setBaseStaffDayOff(')
     })
 })
