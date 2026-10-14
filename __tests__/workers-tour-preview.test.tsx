@@ -175,7 +175,7 @@ describe('Workers GuidedTour integration without browser execution', () => {
         expect(pieceHtml).toContain(t.shiftAvailability)
         for (const label of [t.joiningDate, t.salaryEffectiveFrom, t.lastWorkingDay]) expect(salaryHtml).toContain(label)
         expect(salaryHtml).toContain('id="base-staff-start"')
-        expect(salaryHtml).toMatch(/<input[^>]*id="base-staff-start"[^>]*disabled=""/)
+        expect(salaryHtml).not.toMatch(/<input[^>]*id="base-staff-start"[^>]*disabled=""/)
         expect(salaryHtml).toMatch(/<input[^>]*id="base-staff-effective"[^>]*min="2026-09-28"/)
     })
 })
