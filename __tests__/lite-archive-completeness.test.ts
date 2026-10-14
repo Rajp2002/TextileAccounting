@@ -192,7 +192,7 @@ describe('current Base, dispatch and settings records', () => {
         'base_production_machines', 'base_worker_machine_assignments', 'base_machine_job_contexts', 'base_production_batches',
         'base_production_batch_revisions', 'base_daily_production_entries', 'base_daily_production_allocations', 'factory_supervisors',
         'base_payroll_settlement_lines', 'base_payroll_reversals', 'base_payroll_advance_recoveries', 'base_payroll_periods',
-        'base_payroll_cycle_configs', 'base_worker_incentives', 'document_branding_settings', 'document_branding_logo_assets',
+        'base_payroll_cycle_configs', 'base_worker_incentives', 'base_staff_days_off', 'document_branding_settings', 'document_branding_logo_assets',
         'production_stock_lots', 'delivery_challans', 'delivery_challan_events', 'delivery_challan_lot_allocations',
         'inventory_audits', 'inventory_audit_lines', 'free_account_grants', 'plan_usage_events', 'web_vital_samples',
     ]

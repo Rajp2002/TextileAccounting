@@ -4,6 +4,7 @@ import 'server-only'
 import { readCompleteBaseRows } from '@/lib/base-complete-query'
 import { readBaseRevisionEntries } from '@/lib/base-production-audit'
 import { readMachineRecords } from '@/lib/base-machine-register'
+import type { BaseStaffDayOff } from '@/lib/base-salary'
 
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import {
@@ -52,6 +53,8 @@ export type BaseProductionInitialData = {
     dailyBatches: BaseProductionBatch[]
     batchRevisions: BaseProductionBatchRevision[]
     incentives?: BaseWorkerIncentive[]
+    /** Fixed-salary days marked off; payroll merges them into workers with withStaffDaysOff. */
+    staffDaysOff?: BaseStaffDayOff[]
     advances: BaseWorkerAdvance[]
     settlements: BasePayrollSettlement[]
     settlementLines: BasePayrollSettlementLine[]
@@ -166,6 +169,7 @@ export async function loadBaseProductionInitialData(
         settlementsResult,
         settlementLinesResult,
         incentivesResult,
+        staffDaysOffResult,
         machinesResult,
         assignmentsResult,
         contextsResult,
@@ -239,6 +243,10 @@ export async function loadBaseProductionInitialData(
             .from('base_worker_incentives')
             .select('id, worker_id, service_start, service_end, amount, evidence_reference, status, updated_at, approved_by, approved_at, void_reason', from === 0 ? { count: 'exact' } : {})
             .eq('org_id', orgId).order('created_at', { ascending: false }).order('id').range(from, to)) : skippedRows,
+        includePayroll ? readCompleteBaseRows((from, to) => supabase
+            .from('base_staff_days_off')
+            .select('id, worker_id, off_date', from === 0 ? { count: 'exact' } : {})
+            .eq('org_id', orgId).order('off_date').order('id').range(from, to)) : skippedRows,
         includeProduction ? readCompleteBaseRows((from, to) => supabase
             .from('base_production_machines')
             .select('id, name, machine_type, custom_label, is_active', from === 0 ? { count: 'exact' } : {})
@@ -317,6 +325,11 @@ export async function loadBaseProductionInitialData(
     const rawSettlements = requireRows(settlementsResult, 'settlements')
     const rawSettlementLines = requireRows(settlementLinesResult, 'settlement history lines')
     const rawIncentives = requireRows(incentivesResult, 'incentives')
+    // Deploying before 20261014160000 is applied must not take payroll down; there are no days off yet.
+    const staffDaysOffErr = staffDaysOffResult.error as { code?: string; message?: string } | null
+    const rawStaffDaysOff = (staffDaysOffErr && (staffDaysOffErr.code === 'PGRST205' || staffDaysOffErr.code === '42P01' || staffDaysOffErr.message?.includes('does not exist')))
+        ? []
+        : requireRows(staffDaysOffResult, 'fixed-salary days off')
     const rawMachines = requireRows(machinesResult, 'machines')
     const rawAssignments = requireRows(assignmentsResult, 'assignments')
     const rawContexts = requireRows(contextsResult, 'machine job contexts')
@@ -457,6 +470,7 @@ export async function loadBaseProductionInitialData(
         updated_at: String(row.updated_at), approved_by: toStringOrNull(row.approved_by), approved_at: toStringOrNull(row.approved_at),
         void_reason: toStringOrNull(row.void_reason), settlement_id: paidIncentives.get(String(row.id)) ?? null,
     }))
+    const staffDaysOff: BaseStaffDayOff[] = rawStaffDaysOff.map(row => ({ worker_id: String(row.worker_id), off_date: toDate(row.off_date, today) }))
     const machines = rawMachines.map(normalizeMachine)
 
     const assignments: BaseWorkerMachineAssignment[] = rawAssignments.map((row) => ({
@@ -595,6 +609,7 @@ export async function loadBaseProductionInitialData(
         settlements,
         settlementLines,
         incentives,
+        staffDaysOff,
         payrollPeriods,
         allocations,
     }

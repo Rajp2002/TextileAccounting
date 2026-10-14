@@ -1356,6 +1356,18 @@ export async function reviewBaseWorkerIncentive(input: { incentiveId: string; ex
     revalidatePath('/owner/production')
     return { success: true }
 }
+export async function setBaseStaffDayOff(input: { workerId: string; offDate: string; off: boolean }) {
+    await requireBaseProductionOwner()
+    const parsed = safeParse(z.object({ workerId: UuidSchema, offDate: DateSchema, off: z.boolean() }), input)
+    if ('error' in parsed) return parsed
+    const supabase = await createServerClient()
+    const { error } = await supabase.rpc('set_base_staff_day_off', {
+        p_worker_id: parsed.data.workerId, p_off_date: parsed.data.offDate, p_off: parsed.data.off,
+    })
+    if (error) return databaseError(error, error.message || 'The day could not be saved.')
+    revalidatePath('/owner/payroll')
+    return { success: true }
+}
 export async function settleBaseWorkerPayroll(input: {
     workerId: string
     paymentMode: 'cash' | 'bank_transfer' | 'upi' | 'cheque'
