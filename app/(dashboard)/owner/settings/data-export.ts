@@ -45,6 +45,7 @@ const EXPORT_SCHEMA_MIGRATION_BY_DATASET: Record<string, string> = {
     base_payroll_reversals: OWNER_ARCHIVE_READ_GRANT_MIGRATION,
     base_payroll_advance_recoveries: OWNER_ARCHIVE_READ_GRANT_MIGRATION,
     base_worker_incentives: OWNER_ARCHIVE_READ_GRANT_MIGRATION,
+    base_staff_days_off: '20261014160000_base_staff_days_off.sql',
     factory_supervisors: OWNER_ARCHIVE_READ_GRANT_MIGRATION,
 }
 
@@ -271,6 +272,7 @@ export async function exportOrganizationData() {
         { key: 'base_payroll_periods', query: scoped('base_payroll_periods') },
         { key: 'base_payroll_cycle_configs', query: scoped('base_payroll_cycle_configs') },
         { key: 'base_worker_incentives', query: scoped('base_worker_incentives') },
+        { key: 'base_staff_days_off', query: scoped('base_staff_days_off') },
         { key: 'supervisor_float_transactions', query: scoped('supervisor_float_transactions') },
         { key: 'machine_type_pay_defaults', query: scoped('machine_type_pay_defaults') },
         { key: 'machine_operator_assignments', query: scoped('machine_operator_assignments') },

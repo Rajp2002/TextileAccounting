@@ -806,7 +806,7 @@ export default function BasePayrollSettlementWorkspace({
                                                         {payable.salary_lines?.map((line, idx) => (
                                                             <div key={idx} className="flex justify-between py-0.5">
                                                                 <span>
-                                                                    {formatDateOnly(line.start)} – {formatDateOnly(line.end)} ({line.days}/{line.monthDays} days @ {formatINR(line.monthlySalary)}/mo)
+                                                                    {formatDateOnly(line.start)} – {formatDateOnly(line.end)} ({line.days}/{line.monthDays} days{line.offDays > 0 ? `, ${tx('{count} off', { count: line.offDays })}` : ''} @ {formatINR(line.monthlySalary)}/mo)
                                                                 </span>
                                                                 <span className="font-medium text-ink">{formatINR(line.grossPay)}</span>
                                                             </div>
