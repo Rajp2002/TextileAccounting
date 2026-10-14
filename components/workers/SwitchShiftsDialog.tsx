@@ -7,7 +7,7 @@ import { toast } from 'sonner'
 import { rotateBaseWorkerShifts } from '@/app/(dashboard)/owner/production/actions'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { listRotatableWorkers, planShiftRotation, type RotationAssignment, type ShiftClash } from '@/lib/base-shift-rotation'
+import { listRotatableWorkers, planShiftRotation, rotationSide, type RotationAssignment, type ShiftClash } from '@/lib/base-shift-rotation'
 import { useTranslation } from '@/lib/i18n/context'
 import { trackPlanEvent } from '@/lib/plan-analytics'
 import type { BaseProductionWorkerWithOperational } from '@/lib/worker-operational'
@@ -33,7 +33,7 @@ export function SwitchShiftsDialog({ open, onOpenChange, ...panel }: Omit<PanelP
         <DialogHeader>
           <DialogTitle>{tx('Switch shifts')}</DialogTitle>
           <DialogDescription>
-            {tx('Day workers move to night and night workers move to day. Their looms move with them, starting today.')}
+            {tx('Day workers move to night and night workers move to day. Their looms move with them, starting today. For Day & night workers, each loom swaps shift.')}
           </DialogDescription>
         </DialogHeader>
         {/* Mounted only while open, so every opening starts with everyone selected. */}
@@ -46,7 +46,7 @@ export function SwitchShiftsDialog({ open, onOpenChange, ...panel }: Omit<PanelP
 export function SwitchShiftsPanel({ workers, assignments, machineNames, onClose }: PanelProps) {
   const { tx } = useTranslation()
   const router = useRouter()
-  const rotatable = useMemo(() => listRotatableWorkers(workers), [workers])
+  const rotatable = useMemo(() => listRotatableWorkers(workers, assignments), [workers, assignments])
   const [selected, setSelected] = useState<Set<string>>(() => new Set(rotatable.map(worker => worker.id)))
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -107,9 +107,9 @@ export function SwitchShiftsPanel({ workers, assignments, machineNames, onClose 
     return (
       <div className="space-y-4">
         <p role="status" className="rounded-lg border border-hairline bg-surface-soft px-3 py-3 text-sm text-ink">
-          {tx('No piece-rate workers on a single shift to switch.')}
+          {tx('No piece-rate workers to switch.')}
         </p>
-        <p className="text-sm text-subtle">{tx('Workers set to Day & night and fixed-salary staff are not included.')}</p>
+        <p className="text-sm text-subtle">{tx('Fixed-salary staff and Day & night workers with no loom are not included.')}</p>
         <DialogFooter>
           <Button type="button" variant="outline" className="min-h-[44px]" onClick={onClose}>{tx('Cancel')}</Button>
         </DialogFooter>
@@ -117,9 +117,12 @@ export function SwitchShiftsPanel({ workers, assignments, machineNames, onClose 
     )
   }
 
+  // Day & night workers sit with the shift their looms are on, or in their own group when they run both.
+  const sideOf = (worker: BaseProductionWorkerWithOperational) => rotationSide(worker, assignments)
   const groups = [
-    { id: 'day', title: tx('Day → Night'), members: rotatable.filter(worker => worker.shift_availability === 'day') },
-    { id: 'night', title: tx('Night → Day'), members: rotatable.filter(worker => worker.shift_availability === 'night') },
+    { id: 'day', title: tx('Day → Night'), members: rotatable.filter(worker => sideOf(worker) === 'day') },
+    { id: 'night', title: tx('Night → Day'), members: rotatable.filter(worker => sideOf(worker) === 'night') },
+    { id: 'both', title: tx('Day ⇄ Night'), members: rotatable.filter(worker => sideOf(worker) === 'both') },
   ].filter(group => group.members.length > 0)
 
   return (
@@ -183,7 +186,7 @@ export function SwitchShiftsPanel({ workers, assignments, machineNames, onClose 
 
       {plan.clashes.length > 0 && <p role="alert" className="text-sm font-medium text-ink">{tx('Fix these before switching:')}</p>}
       {error && <p role="alert" className="text-sm font-medium text-destructive">{error}</p>}
-      <p className="text-xs text-subtle">{tx('Workers set to Day & night and fixed-salary staff are not included.')}</p>
+      <p className="text-xs text-subtle">{tx('Fixed-salary staff and Day & night workers with no loom are not included.')}</p>
 
       <DialogFooter>
         <Button type="button" variant="outline" className="min-h-[44px]" onClick={onClose} disabled={pending}>{tx('Cancel')}</Button>

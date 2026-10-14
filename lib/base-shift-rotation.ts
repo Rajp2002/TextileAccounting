@@ -15,11 +15,17 @@ export type RotationAssignment = {
     shift: RotationShift
 }
 
+/**
+ * Where a worker's looms sit before the switch: their shift, or 'both' for a Day & night
+ * worker who runs looms on each shift (every loom swaps, so they stay on both).
+ */
+export type RotationSide = RotationShift | 'both'
+
 export type ShiftMove = {
     workerId: string
     workerName: string
-    from: RotationShift
-    to: RotationShift
+    from: RotationSide
+    to: RotationSide
     loomCount: number
 }
 
@@ -44,21 +50,34 @@ export function oppositeShift(shift: RotationShift): RotationShift {
 }
 
 /**
- * Workers the rotation can move: active piece-rate workers fixed to one shift.
- * Fixed-salary staff and "day & night" workers have no single shift to swap.
+ * Workers the rotation can move: active piece-rate workers on one shift, and "day &
+ * night" workers who run at least one loom (each of their looms swaps shift). Fixed-salary
+ * staff are left out, and a day & night worker with no loom has nothing to swap.
  */
-export function listRotatableWorkers<T extends RotationWorker>(workers: readonly T[]): T[] {
+export function listRotatableWorkers<T extends RotationWorker>(workers: readonly T[], assignments: readonly RotationAssignment[]): T[] {
+    const withLooms = new Set(assignments.map(assignment => assignment.worker_id))
     return workers.filter(worker =>
         worker.is_active
         && worker.pay_type !== 'fixed_monthly'
-        && (worker.shift_availability === 'day' || worker.shift_availability === 'night'))
+        && (worker.shift_availability !== 'both' || withLooms.has(worker.id)))
+}
+
+/** The shift a worker moves away from: their setting, or where a day & night worker's looms are. */
+export function rotationSide(worker: RotationWorker, assignments: readonly RotationAssignment[]): RotationSide {
+    if (worker.shift_availability !== 'both') return worker.shift_availability
+    const shifts = new Set(assignments.filter(assignment => assignment.worker_id === worker.id).map(assignment => assignment.shift))
+    return shifts.size === 1 ? [...shifts][0] : 'both'
+}
+
+function oppositeSide(side: RotationSide): RotationSide {
+    return side === 'both' ? 'both' : oppositeShift(side)
 }
 
 /**
- * Plans a shift switch for the selected workers. Each selected worker moves to the
- * opposite shift together with every loom they run. A loom can have only one worker
- * per shift, so a move clashes when the target slot is held by someone who is not
- * themselves moving out of it.
+ * Plans a shift switch for the selected workers. Every loom a selected worker runs moves
+ * to the opposite shift, and single-shift workers change shift with them. A loom can have
+ * only one worker per shift, so a move clashes when the target slot is held by someone
+ * who is not themselves moving out of it.
  */
 export function planShiftRotation(input: {
     workers: readonly RotationWorker[]
@@ -67,7 +86,7 @@ export function planShiftRotation(input: {
     selectedIds: Iterable<string>
 }): ShiftRotationPlan {
     const selected = new Set(input.selectedIds)
-    const rotatable = listRotatableWorkers(input.workers)
+    const rotatable = listRotatableWorkers(input.workers, input.assignments)
     const moving = new Map(rotatable.filter(worker => selected.has(worker.id)).map(worker => [worker.id, worker]))
     const names = new Map(input.workers.map(worker => [worker.id, worker.name]))
 
@@ -80,14 +99,14 @@ export function planShiftRotation(input: {
     const clashes: ShiftClash[] = []
     for (const worker of rotatable) {
         if (!moving.has(worker.id)) continue
-        const from = worker.shift_availability as RotationShift
+        const from = rotationSide(worker, input.assignments)
         const looms = input.assignments.filter(assignment => assignment.worker_id === worker.id)
-        moves.push({ workerId: worker.id, workerName: worker.name, from, to: oppositeShift(from), loomCount: looms.length })
+        moves.push({ workerId: worker.id, workerName: worker.name, from, to: oppositeSide(from), loomCount: looms.length })
 
         for (const loomAssignment of looms) {
             const target = oppositeShift(loomAssignment.shift)
             const holderId = holderBySlot.get(`${loomAssignment.machine_id}:${target}`)
-            // A selected holder is a day/night worker, so they leave this slot as we enter it.
+            // Every loom of a selected worker swaps, so a selected holder leaves this slot as we enter it.
             if (!holderId || holderId === worker.id || moving.has(holderId)) continue
             clashes.push({
                 workerId: worker.id,
