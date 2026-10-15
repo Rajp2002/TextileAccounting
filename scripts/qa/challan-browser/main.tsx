@@ -7,11 +7,13 @@ import { LanguageSwitcher } from '../../../components/i18n/language-switcher'
 import { getChallan, listChallans, request } from './actions'
 import type { Challan } from '../../../lib/delivery-challans'
 import type { StockQuality } from '../../../lib/quality-stock'
+import type { LegacyStock } from '../../../lib/legacy-stock'
 import '../../../app/globals.css'
 function Harness() {
     const [data, setData] = useState<{
             rows: Challan[]
             qualities: StockQuality[]
+            legacy: LegacyStock[]
         } | null>(null),
         [print, setPrint] = useState<Challan | null>(null)
     useEffect(() => {
@@ -22,7 +24,11 @@ function Harness() {
         }
         void Promise.all([listChallans(), request('stock')]).then(
             ([rows, stock]) =>
-                setData({ rows: rows.data!, qualities: stock.qualities }),
+                setData({
+                    rows: rows.data!,
+                    qualities: stock.qualities,
+                    legacy: stock.legacy ?? [],
+                }),
         )
     }, [])
     return (
@@ -36,6 +42,7 @@ function Harness() {
                         <ChallansClient
                             initialData={data.rows}
                             qualities={data.qualities}
+                            legacy={data.legacy}
                         />
                     ) : (
                         <p>Loading local fixture…</p>

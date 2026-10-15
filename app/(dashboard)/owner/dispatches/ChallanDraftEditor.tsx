@@ -363,7 +363,7 @@ export default function ChallanDraftEditor({
                             {tx('keyboardHelp')}
                         </div>
                         <div
-                            className="grid grid-cols-[1.5rem_minmax(0,1fr)_minmax(0,0.8fr)_4.75rem_2.5rem] sm:grid-cols-[2rem_minmax(0,1fr)_minmax(0,0.8fr)_6rem_2.5rem] gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground"
+                            className="grid grid-cols-[1.25rem_minmax(0,1fr)_minmax(0,0.8fr)_5.25rem_2.5rem] sm:grid-cols-[2rem_minmax(0,1fr)_minmax(0,0.8fr)_6rem_2.5rem] gap-1.5 sm:gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground"
                             aria-hidden="true"
                         >
                             <span className="text-center">{tx('rowNo')}</span>
@@ -378,7 +378,7 @@ export default function ChallanDraftEditor({
                                 return (
                                     <div
                                         key={index}
-                                        className="grid grid-cols-[1.5rem_minmax(0,1fr)_minmax(0,0.8fr)_4.75rem_2.5rem] sm:grid-cols-[2rem_minmax(0,1fr)_minmax(0,0.8fr)_6rem_2.5rem] items-center gap-2"
+                                        className="grid grid-cols-[1.25rem_minmax(0,1fr)_minmax(0,0.8fr)_5.25rem_2.5rem] sm:grid-cols-[2rem_minmax(0,1fr)_minmax(0,0.8fr)_6rem_2.5rem] items-center gap-1.5 sm:gap-2"
                                     >
                                         <span className="text-center text-xs font-bold tabular-nums text-muted-foreground">
                                             {index + 1}
@@ -723,7 +723,7 @@ export default function ChallanDraftEditor({
                         </p>
                     )}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                     <SwitchField variant="pill" className="lg:hidden" checked={showPreview} onCheckedChange={setShowPreview}>
                         {tx('livePreview')}
                     </SwitchField>

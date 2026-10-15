@@ -19,6 +19,10 @@ const server = await createServer({
     esbuild: { jsx: 'automatic' },
     resolve: {
         alias: [
+            {
+                find: '@/app/actions/tour-preferences',
+                replacement: path.join(root, 'tour-preferences.ts'),
+            },
             { find: '@', replacement: process.cwd() },
             {
                 find: 'next/navigation',
@@ -85,12 +89,30 @@ const server = await createServer({
                                     )
                                 ).rows,
                             }
-                        else if (req.url === '/stock')
+                        else if (req.url === '/stock') {
                             out = (
                                 await db.query(
                                     'select get_quality_stock_board() data',
                                 )
                             ).rows[0].data
+                            out.legacy = (
+                                await db.query(
+                                    'select id,quality_id,basis,balance_meters,basis_meters,basis_at,dispatched_meters,onboarded_meters,status,started_at,closed_at,version from legacy_stock',
+                                )
+                            ).rows.map((row) => ({
+                                ...row,
+                                balance_meters:
+                                    row.balance_meters === null
+                                        ? null
+                                        : Number(row.balance_meters),
+                                basis_meters:
+                                    row.basis_meters === null
+                                        ? null
+                                        : Number(row.basis_meters),
+                                dispatched_meters: Number(row.dispatched_meters),
+                                onboarded_meters: Number(row.onboarded_meters),
+                            }))
+                        }
                         else if (req.url === '/mutate') {
                             const result = (
                                 await db.query(
