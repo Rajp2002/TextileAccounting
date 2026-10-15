@@ -171,4 +171,22 @@ CREATE TRIGGER guard_base_go_live BEFORE INSERT ON public.base_worker_incentives
 CREATE TRIGGER guard_base_go_live BEFORE INSERT ON public.base_payroll_settlements
   FOR EACH ROW EXECUTE FUNCTION private.guard_base_go_live('period_end');
 
+-- ── 3. Fixed salary accrues from go-live ────────────────────────────────────
+-- A first settlement starts at the later of the joining date and go-live; days before go-live were paid on
+-- paper. lib/base-production-core.ts calculateBaseWorkerPayables applies the same rule to the review.
+-- Assert the anchor appears exactly once so schema drift fails loudly, not partially.
+DO $migration$
+DECLARE definition text; anchor text;
+BEGIN
+  definition := pg_get_functiondef('public.settle_base_worker_payroll(uuid,date,text)'::regprocedure);
+  anchor := 'coalesce(max(period_end) + 1, v_salary_worker.start_date)';
+  IF (length(definition) - length(replace(definition, anchor, ''))) / length(anchor) <> 1 THEN
+    RAISE EXCEPTION 'Unexpected fixed-salary period start';
+  END IF;
+  definition := replace(definition, anchor,
+    'coalesce(max(period_end) + 1, greatest(v_salary_worker.start_date, coalesce(private.base_go_live_date(v_org_id), v_salary_worker.start_date)))');
+  EXECUTE definition;
+END;
+$migration$;
+
 COMMIT;

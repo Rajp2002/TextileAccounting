@@ -1,5 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { calculateBaseWorkerPayables, type BasePayrollSettlement, type BaseProductionWorker } from '../../lib/base-production-core'
+import { basePayrollReview } from '../../lib/base-payroll-review'
 import { asServiceRole, asSuperuser, asSupervisor, asUser, freshDatabase, pgError, seedOwnerOrg, seedSupervisor, type Db } from './helpers'
 
 let db: Db
@@ -170,5 +172,24 @@ describe('guards before go-live', () => {
         const entries = [{ worker_id: f.worker, entry_status: 'entered', meters: 40, allocations: [{ machine_id: f.machine, job_id: f.job, meters: 40 }], machine_records: [{ machine_id: f.machine, state: 'entered' }] }]
         const error = await pgError(db.query("SELECT public.save_supervisor_daily_sheet($1, 'day', $2, $3, NULL, NULL)", [today, randomUUID(), JSON.stringify(entries)]))
         expect(error.code).toBe('22023')
+    })
+})
+
+describe('fixed salary from go-live', () => {
+    it('settles fixed salary from go-live', async () => {
+        const goLive = (await db.query("SELECT (date_trunc('month', now() AT TIME ZONE 'Asia/Kolkata') - interval '1 month')::date::text AS d")).rows[0].d as string
+        const owner = await seedOwnerOrg(db, { goLive })
+        const worker = randomUUID()
+        await asSuperuser(db)
+        await db.query("INSERT INTO public.base_production_workers(id, org_id, name, pay_type, monthly_salary, start_date, rate_per_meter) VALUES ($1, $2, 'Mahesh', 'fixed_monthly', 30000, '2019-04-01', 0)", [worker, owner.orgId])
+        const row = (await db.query('SELECT to_jsonb(w) AS data FROM public.base_production_workers w WHERE id = $1', [worker])).rows[0].data as BaseProductionWorker
+        const payable = calculateBaseWorkerPayables({ workers: [{ ...row, days_off: [] }], entries: [], advances: [], settlements: [] as BasePayrollSettlement[], periodEnd: today, goLiveDate: goLive })[0]
+        expect(payable.period_start).toBe(goLive)
+        await asUser(db, owner.userId, owner.orgId)
+        const result = (await db.query("SELECT public.settle_base_worker_payroll_reviewed($1, $2, 'cash', $3, NULL) AS result", [worker, today, JSON.stringify(basePayrollReview(payable, randomUUID()))])).rows[0].result
+        await asSuperuser(db)
+        const settlement = (await db.query('SELECT period_start::text AS start, gross_pay::numeric AS gross FROM public.base_payroll_settlements WHERE id = $1', [result.settlement_id])).rows[0]
+        expect(settlement.start).toBe(goLive)
+        expect(Number(settlement.gross)).toBe(payable.gross_pay)
     })
 })

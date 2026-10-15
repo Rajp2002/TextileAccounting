@@ -41,6 +41,8 @@ export type BaseProductionInitialData = {
     actorId?: string
     factoryName?: string
     today: string
+    /** First day recorded in Weavly (organizations.base_go_live_date); null while not scheduled. */
+    goLiveDate?: string | null
     payrollPeriod: { start: string; end: string }
     payrollCycleConfig?: PayrollCycleConfig
     costings: BaseProductionCosting[]
@@ -182,7 +184,7 @@ export async function loadBaseProductionInitialData(
     ] = await Promise.all([
         supabase
             .from('organizations')
-            .select('name')
+            .select('name, base_go_live_date')
             .eq('id', orgId)
             .maybeSingle(),
         includeProduction ? readCompleteBaseRows((from, to) => supabase
@@ -594,6 +596,7 @@ export async function loadBaseProductionInitialData(
     return {
         orgId,
         factoryName: String(organizationResult.data?.name || 'Weavly'),
+        goLiveDate: (organizationResult.data?.base_go_live_date as string | null | undefined) ?? null,
         today,
         payrollPeriod,
         payrollCycleConfig,

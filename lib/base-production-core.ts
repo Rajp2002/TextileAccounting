@@ -507,6 +507,7 @@ export function calculateBaseWorkerPayables({
     advances,
     settlements,
     periodEnd,
+    goLiveDate = null,
 }: {
     workers: BaseProductionWorker[]
     entries: BaseProductionEntry[]
@@ -515,6 +516,8 @@ export function calculateBaseWorkerPayables({
     advances: BaseWorkerAdvance[]
     settlements: BasePayrollSettlement[]
     periodEnd: string
+    /** Fixed salary accrues from go-live at the earliest; pay before it was settled on paper. */
+    goLiveDate?: string | null
 }): BaseWorkerPayable[] {
     const activeSettlements = settlements.filter(settlement => settlement.status !== 'reversed')
     const allocationsByEntry = new Map<string, BaseProductionAllocation[]>()
@@ -527,7 +530,7 @@ export function calculateBaseWorkerPayables({
     return workers.map((worker) => {
         const lastPaid = activeSettlements.filter(item => item.worker_id === worker.id && item.period_end < periodEnd).sort((a, b) => b.period_end.localeCompare(a.period_end))[0]
         const periodStart = worker.pay_type === 'fixed_monthly'
-            ? lastPaid ? new Date(new Date(`${lastPaid.period_end}T00:00:00Z`).getTime() + 86400000).toISOString().slice(0, 10) : worker.start_date ?? periodEnd
+            ? lastPaid ? new Date(new Date(`${lastPaid.period_end}T00:00:00Z`).getTime() + 86400000).toISOString().slice(0, 10) : [worker.start_date ?? periodEnd, goLiveDate ?? ''].sort().at(-1)!
             : getWorkerPeriodStart(worker.id, activeSettlements, periodEnd, entries, incentives)
         const salaryLines = calculateBaseSalaryLines(worker, periodStart, periodEnd)
         const periodEntries = entries.filter((entry) => (
