@@ -45,3 +45,18 @@ describe('Base setup phase surfaces', () => {
         expect(challans.match(/disabled=\{busy \|\| !!pending \|\| closedUntilGoLive\}/g)).toHaveLength(2)
     })
 })
+
+describe('Base setup phase for supervisors and the setup wizard', () => {
+    it('tells the supervisor sheet when recording starts and holds saves until then', () => {
+        const page = read('app/supervisor/daily-sheet/page.tsx')
+        const sheet = read('components/supervisor/SupervisorDailySheet.tsx')
+        expect(page).toContain("rpc('get_supervisor_go_live')")
+        expect(sheet).toContain("t('goLive.supervisorStarts'")
+        expect(sheet).toContain('goLiveDate')
+    })
+    it('shows the go-live date on the wizard review step', () => {
+        const review = read('components/onboarding/base/Step6Review.tsx')
+        expect(review).toContain('nextGoLiveDate(')
+        expect(review).toContain("t('goLive.wizardStarts'")
+    })
+})

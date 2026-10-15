@@ -13,12 +13,18 @@ export default async function SupervisorDailySheetPage({ searchParams }: { searc
     const shift = params.shift === 'night' ? 'night' : 'day'
 
     const supabase = await createClient()
-    const { data, error } = await supabase.rpc('get_supervisor_daily_sheet', { p_production_date: date, p_shift: shift })
+    const [{ data, error }, goLive] = await Promise.all([
+        supabase.rpc('get_supervisor_daily_sheet', { p_production_date: date, p_shift: shift }),
+        supabase.rpc('get_supervisor_go_live'),
+    ])
     let sheet: SupervisorSheetData | null = null
     if (!error && data) {
         try { sheet = parseSupervisorSheet(data) } catch { sheet = null }
     }
     if (!sheet) return <SupervisorSheetLoadError />
 
-    return <SupervisorDailySheet key={`${date}:${shift}`} data={sheet} date={date} shift={shift} actorId={session.userId} />
+    // Recording opens on go-live; null while the owner has not scheduled it. A failed read leaves the sheet open,
+    // since the database refuses a save before go-live anyway.
+    const goLiveDate = goLive.error ? undefined : (goLive.data as string | null)
+    return <SupervisorDailySheet key={`${date}:${shift}`} data={sheet} date={date} shift={shift} actorId={session.userId} goLiveDate={goLiveDate} />
 }

@@ -17,7 +17,10 @@ import type {
     BaseOnboardingStep,
     FactoryReadiness,
 } from '@/lib/base-onboarding'
-import { getMachineTypeLabel } from '@/lib/base-onboarding'
+import { getMachineTypeLabel, onboardingCycleRule } from '@/lib/base-onboarding'
+import { formatGoLiveDate, nextGoLiveDate } from '@/lib/base-go-live'
+import { validateCycleRule } from '@/lib/payroll-cycle-engine'
+import { getSuratTodayString } from '@/lib/time'
 
 interface Step6ReviewProps {
     draft: BaseOnboardingDraft
@@ -31,7 +34,11 @@ export function Step6Review({
     onEditStep,
     error,
 }: Step6ReviewProps) {
-    const { tx } = useTranslation()
+    const { tx, t, language } = useTranslation()
+    // Daily recording starts at the next start of the chosen cycle, the date completing setup schedules.
+    const today = getSuratTodayString()
+    const goLiveRule = validateCycleRule(onboardingCycleRule(draft.payroll, today)).normalizedRule
+    const goLiveDate = goLiveRule ? nextGoLiveDate(today, goLiveRule) : null
 
     // Calculate live counts from draft
     let totalDraftMachines = 0
@@ -269,6 +276,9 @@ export function Step6Review({
                         <span className="font-semibold text-[var(--wv-neel-900)]">
                             {tx(payrollDescription)}
                         </span>
+                        {goLiveDate && (
+                            <p className="mt-1.5" data-i18n-skip="true">{t('goLive.wizardStarts', { date: formatGoLiveDate(goLiveDate, language) })}</p>
+                        )}
                     </div>
                 </div>
 

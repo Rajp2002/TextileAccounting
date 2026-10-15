@@ -1,3 +1,4 @@
+import type { PayrollCycleRule, WeekdayName } from './payroll-cycle-engine'
 export const BASE_ONBOARDING_VERSION = 1
 
 export type BaseOnboardingStep =
@@ -51,6 +52,14 @@ export interface PayrollCycleInput {
     anchorWeekday?: string
     intervalDays?: number
     anchorDate?: string
+}
+
+/** The cycle rule a wizard payroll answer stands for; the payroll step saves it and the review shows its go-live. */
+export function onboardingCycleRule(input: PayrollCycleInput, today: string): PayrollCycleRule {
+    if (input.cycleType === 'weekly') return { type: 'weekly', anchorWeekday: (input.anchorWeekday as WeekdayName) || 'monday' }
+    if (input.cycleType === 'interval_days') return { type: 'interval_days', interval: Math.max(1, input.intervalDays || 14), anchorDate: input.anchorDate || today }
+    if (input.cycleType === 'monthly') return { type: 'monthly', anchorDay: Math.min(31, Math.max(1, input.anchorDay || 1)) }
+    return { type: 'monthly', anchorDay: 1 }
 }
 
 export interface BaseOnboardingDraft {

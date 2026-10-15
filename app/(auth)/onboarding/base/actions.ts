@@ -10,20 +10,14 @@ import { getSuratTodayString } from '@/lib/time'
 import {
     BASE_ONBOARDING_VERSION,
     getDefaultBaseOnboardingDraft,
+    onboardingCycleRule,
     type BaseOnboardingDraft,
     type FactoryDefaultsInput,
     type PayrollCycleInput,
 } from '@/lib/base-onboarding'
 import { getFactoryReadiness } from '@/lib/base-onboarding.server'
 import { getBaseGoLiveState, scheduleBaseGoLiveForOrg } from '@/lib/base-go-live.server'
-import {
-    validateCycleRule,
-    type PayrollCycleRule,
-    type MonthlyCycleRule,
-    type WeeklyCycleRule,
-    type IntervalDaysCycleRule,
-    type WeekdayName,
-} from '@/lib/payroll-cycle-engine'
+import { validateCycleRule } from '@/lib/payroll-cycle-engine'
 
 // ─── 1. Load Initial State ────────────────────────────────────────────────────
 
@@ -574,32 +568,8 @@ export async function saveBaseOnboardingPayrollAction(input: PayrollCycleInput) 
         const supabase = await createClient()
         const today = getSuratTodayString()
 
-        let cycleRule: PayrollCycleRule
         const cycleType = input.cycleType || 'monthly'
-
-        if (cycleType === 'monthly') {
-            const rule: MonthlyCycleRule = {
-                type: 'monthly',
-                anchorDay: Math.min(31, Math.max(1, input.anchorDay || 1)),
-            }
-            cycleRule = rule
-        } else if (cycleType === 'weekly') {
-            const rule: WeeklyCycleRule = {
-                type: 'weekly',
-                anchorWeekday: (input.anchorWeekday as WeekdayName) || 'monday',
-            }
-            cycleRule = rule
-        } else if (cycleType === 'interval_days') {
-            const rule: IntervalDaysCycleRule = {
-                type: 'interval_days',
-                interval: Math.max(1, input.intervalDays || 14),
-                anchorDate: input.anchorDate || today,
-            }
-            cycleRule = rule
-        } else {
-            const rule: MonthlyCycleRule = { type: 'monthly', anchorDay: 1 }
-            cycleRule = rule
-        }
+        const cycleRule = onboardingCycleRule({ ...input, cycleType }, today)
 
         const validation = validateCycleRule(cycleRule)
         if (!validation.valid || !validation.normalizedRule) {
