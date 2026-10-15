@@ -12,13 +12,13 @@ export function PwaUpdateAction({ className }: { className?: string }) {
     const pathname = usePathname()
     const { status } = useSyncExternalStore(subscribePwaUpdate, getPwaUpdateSnapshot, getPwaUpdateServerSnapshot)
     if (pathname === '/login' || status === 'idle') return null
-    const retry = status === 'failed' || status === 'blocked'
+    const retry = status === 'blocked'
 
     return (
         <div className={className}>
             {retry && (
                 <p className="mb-2 text-xs text-inherit opacity-90" role="status">
-                    {t(status === 'blocked' ? 'common.pwa_update_blocked' : 'common.pwa_update_failed')}
+                    {t('common.pwa_update_blocked')}
                 </p>
             )}
             <Button type="button" variant="outline" className="h-auto min-h-[44px] w-full whitespace-normal py-2" disabled={status === 'activating'} onClick={refreshPwaUpdate}>

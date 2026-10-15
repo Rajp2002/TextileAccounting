@@ -3,15 +3,15 @@
 import { captureMessage } from '@sentry/nextjs'
 import { prepareForPwaRefresh } from '@/lib/pwa-refresh-safety'
 
-export type PwaUpdateStatus = 'idle' | 'available' | 'activating' | 'ready' | 'failed' | 'blocked'
+export type PwaUpdateStatus = 'idle' | 'available' | 'activating' | 'ready' | 'blocked'
 export type PwaUpdateSnapshot = { status: PwaUpdateStatus; buildId: string | null }
 type PwaUpdateFailure = 'timeout' | 'redundant' | 'post_message'
 
 const BUILD_ID_TIMEOUT_MS = 1500
-// Activation waits for the old worker's in-flight requests. Right after sign-in
-// on a slow connection that took longer than 10 seconds while the new version's
-// 12 MB precache was still competing for bandwidth.
-const ACTIVATION_TIMEOUT_MS = 30_000
+// Activation waits for the old worker to go idle, which on one Windows PC never
+// happened within 30 seconds. Documents are network-only, so after this wait a
+// plain reload still loads the new build; the worker swaps in once it can.
+const ACTIVATION_TIMEOUT_MS = 5_000
 const UPDATE_NOTICE_KEY_PREFIX = 'weavly_pwa_update_toast_seen:'
 const serverSnapshot: PwaUpdateSnapshot = { status: 'idle', buildId: null }
 let snapshot = serverSnapshot
@@ -36,6 +36,10 @@ function setSnapshot(status: PwaUpdateStatus, buildId = snapshot.buildId) {
 }
 
 function isLogin() { return window.location.pathname === '/login' }
+
+// Defined by Next's webpack configuration, like the worker's copy.
+declare const __WEAVLY_BUILD_ID__: string | undefined
+function pageBuildId() { return typeof __WEAVLY_BUILD_ID__ === 'string' ? __WEAVLY_BUILD_ID__ : null }
 
 /** Ask this worker, not the current controller: every deployment uses /sw.js. */
 export function queryWorkerBuildId(worker: ServiceWorker, signal?: AbortSignal): Promise<string | null> {
@@ -146,7 +150,7 @@ export function refreshPwaUpdate() {
             return
         }
         reportFailure('redundant', worker, registration, startedAt)
-        setSnapshot('failed')
+        reloadWhenSafe()
         return
     }
 
@@ -162,7 +166,7 @@ export function refreshPwaUpdate() {
         finished = true
         cleanup()
         reportFailure(reason, worker, registration, startedAt)
-        setSnapshot('failed')
+        reloadWhenSafe()
     }
     const checkActivation = () => {
         if (finished) return
@@ -209,6 +213,13 @@ export function watchPwaUpdates(onAvailable: () => void) {
         const buildId = await queryWorkerBuildId(worker, query.signal)
         queries.delete(query)
         if (disposed || isLogin() || target?.worker !== worker) return
+        if (buildId && buildId === pageBuildId()) {
+            // Documents are network-only, so a page loaded after the deploy already
+            // runs this build. The worker takes over when every window has closed.
+            target = null
+            setSnapshot('idle', null)
+            return
+        }
         setSnapshot(snapshot.status, buildId)
         if (shouldAnnounce(worker, buildId)) onAvailable()
     }

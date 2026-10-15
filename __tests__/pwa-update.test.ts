@@ -215,6 +215,26 @@ describe('PWA update discovery', () => {
         expect(vi.getTimerCount()).toBe(0)
     })
 
+    it('does not offer a worker that carries the build this page already runs', async () => {
+        // Documents are network-only, so a page loaded after a deploy already runs
+        // the build its newly installed worker carries.
+        vi.stubGlobal('__WEAVLY_BUILD_ID__', 'build-a')
+        const { manager, notify, worker } = await start()
+        expect(notify).not.toHaveBeenCalled()
+        expect(manager.getPwaUpdateSnapshot().status).toBe('idle')
+        // It still waits for every window to close, so an older open tab keeps its precache.
+        expect(worker.postMessage).not.toHaveBeenCalledWith({ type: 'SKIP_WAITING' })
+        expect(storage.size).toBe(0)
+        manager.refreshPwaUpdate()
+        expect(reload).not.toHaveBeenCalled()
+        const laterWorker = new FakeWorker('build-b')
+        installLater(laterWorker)
+        await settle()
+        expect(notify).toHaveBeenCalledTimes(1)
+        expect(manager.getPwaUpdateSnapshot()).toEqual({ status: 'available', buildId: 'build-b' })
+        expect(laterWorker.postMessage).not.toHaveBeenCalledWith({ type: 'SKIP_WAITING' })
+    })
+
     it('does not discover or activate an update on login', async () => {
         location.pathname = '/login'
         const { manager, notify, worker } = await start()
@@ -275,14 +295,35 @@ describe('explicit PWA refresh', () => {
         expect(reload).toHaveBeenCalledTimes(1)
     })
 
-    it('keeps waiting for an activation slowed by a busy connection', async () => {
-        const { manager, worker } = await start()
+    it('reloads after a short wait when the worker swap stalls, and reports why', async () => {
+        // A busy or stuck old worker can hold activation for minutes. Documents are
+        // network-only, so a plain reload still loads the new build.
+        const { manager } = await start()
         manager.refreshPwaUpdate()
-        await vi.advanceTimersByTimeAsync(20_000)
+        await vi.advanceTimersByTimeAsync(4999)
         expect(manager.getPwaUpdateSnapshot().status).toBe('activating')
-        worker.transition('activated')
+        expect(reload).not.toHaveBeenCalled()
+        await vi.advanceTimersByTimeAsync(1)
         expect(reload).toHaveBeenCalledTimes(1)
-        expect(captureMessage).not.toHaveBeenCalled()
+        expect(vi.getTimerCount()).toBe(0)
+        expect(captureMessage).toHaveBeenCalledWith('pwa_update_failed', expect.objectContaining({
+            level: 'warning',
+            tags: { pwa_update_failure: 'timeout' },
+            extra: expect.objectContaining({ workerState: 'installed', elapsedMs: 5000 }),
+        }))
+    })
+
+    it('does not reload after a stalled swap while work is unsafe', async () => {
+        const { manager } = await start()
+        manager.refreshPwaUpdate()
+        prepare.mockReturnValue(false)
+        await vi.advanceTimersByTimeAsync(5000)
+        expect(manager.getPwaUpdateSnapshot().status).toBe('blocked')
+        expect(reload).not.toHaveBeenCalled()
+        prepare.mockReturnValue(true)
+        manager.refreshPwaUpdate()
+        await vi.advanceTimersByTimeAsync(5000)
+        expect(reload).toHaveBeenCalledTimes(1)
     })
 
     it('applies the newest waiting worker when the offered one was replaced', async () => {
@@ -298,18 +339,6 @@ describe('explicit PWA refresh', () => {
         expect(reload).toHaveBeenCalledTimes(1)
     })
 
-    it('retries with the replacement after an offered worker went redundant', async () => {
-        const { manager, worker } = await start()
-        manager.refreshPwaUpdate()
-        worker.transition('redundant')
-        expect(manager.getPwaUpdateSnapshot().status).toBe('failed')
-        const newer = new FakeWorker('build-b')
-        registration.waiting = newer
-        manager.refreshPwaUpdate()
-        newer.transition('activated')
-        expect(reload).toHaveBeenCalledTimes(1)
-    })
-
     it('reloads when another window already activated the update', async () => {
         const { manager, worker } = await start()
         worker.state = 'redundant'
@@ -321,44 +350,15 @@ describe('explicit PWA refresh', () => {
         expect(reload).toHaveBeenCalledTimes(1)
     })
 
-    it('reports why an update could not be applied', async () => {
-        const { manager } = await start()
-        manager.refreshPwaUpdate()
-        await vi.advanceTimersByTimeAsync(30_000)
-        expect(manager.getPwaUpdateSnapshot().status).toBe('failed')
-        expect(captureMessage).toHaveBeenCalledTimes(1)
-        expect(captureMessage).toHaveBeenCalledWith('pwa_update_failed', expect.objectContaining({
-            level: 'warning',
-            tags: { pwa_update_failure: 'timeout' },
-            extra: expect.objectContaining({ workerState: 'installed', elapsedMs: 30_000 }),
-        }))
-    })
-
-    it('times out without forced reload and keeps explicit retry available', async () => {
-        const { manager, worker } = await start()
-        manager.refreshPwaUpdate()
-        await vi.advanceTimersByTimeAsync(29_000)
-        expect(reload).not.toHaveBeenCalled()
-        await vi.advanceTimersByTimeAsync(1000)
-        expect(manager.getPwaUpdateSnapshot().status).toBe('failed')
-        expect(reload).not.toHaveBeenCalled()
-        expect(vi.getTimerCount()).toBe(0)
-        worker.transition('activated')
-        expect(reload).not.toHaveBeenCalled()
-        manager.refreshPwaUpdate()
-        expect(reload).toHaveBeenCalledTimes(1)
-    })
-
-    it.each(['redundant', 'postMessage failure'] as const)('does not reload after %s', async (failure) => {
+    it.each(['redundant', 'postMessage failure'] as const)('still reloads after %s', async (failure) => {
         const { manager, worker } = await start()
         worker.throwOnActivation = failure === 'postMessage failure'
         manager.refreshPwaUpdate()
         if (failure === 'redundant') worker.transition('redundant')
-        expect(manager.getPwaUpdateSnapshot().status).toBe('failed')
-        manager.refreshPwaUpdate()
-        expect(manager.getPwaUpdateSnapshot().status).toBe('failed')
-        await vi.advanceTimersByTimeAsync(10_000)
-        expect(reload).not.toHaveBeenCalled()
+        expect(reload).toHaveBeenCalledTimes(1)
+        expect(captureMessage).toHaveBeenCalledWith('pwa_update_failed', expect.objectContaining({
+            tags: { pwa_update_failure: failure === 'redundant' ? 'redundant' : 'post_message' },
+        }))
         expect(vi.getTimerCount()).toBe(0)
     })
 
