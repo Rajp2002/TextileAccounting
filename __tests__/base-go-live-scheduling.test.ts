@@ -31,8 +31,8 @@ describe('Base go-live scheduling', () => {
         expect(body).toContain("phase === 'setup'")
         expect(body).toContain('scheduleBaseGoLiveForOrg(')
         expect(body).toContain('nextGoLiveDate(')
-        // A cycle saved during setup starts at go-live, never before the config the schedule moved there.
-        expect(body).toContain('effectiveDateFor(')
+        // A cycle saved during setup replaces the current one at go-live, never closing it for a later start.
+        expect(body).toContain('const effectiveDate = inSetup ? goLive.goLive! :')
     })
     it('lets only a writable Base owner schedule', () => {
         const body = functionBody(production, 'scheduleBaseGoLiveAction')

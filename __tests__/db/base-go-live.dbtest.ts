@@ -193,3 +193,42 @@ describe('fixed salary from go-live', () => {
         expect(Number(settlement.gross)).toBe(payable.gross_pay)
     })
 })
+
+describe('review fixes', () => {
+    it('re-dates setup assignments and qualities when go-live moves earlier', async () => {
+        const later = plusDays(today, 10)
+        const f = await factory(later)
+        await asSuperuser(db)
+        // Setup rows are dated at the current go-live, as the board and quality dialog write them.
+        await db.query("UPDATE public.base_worker_machine_assignments SET effective_from = $2 WHERE org_id = $1", [f.owner.orgId, later])
+        await db.query("UPDATE public.base_machine_job_contexts SET effective_from = $2 WHERE org_id = $1", [f.owner.orgId, later])
+        const earlier = plusDays(today, 3)
+        expect(await schedule(f.owner.orgId, earlier, f.owner.userId)).toBe(earlier)
+        await asSuperuser(db)
+        const dates = async (table: string) => (await db.query(`SELECT effective_from::text AS d FROM public.${table} WHERE org_id = $1`, [f.owner.orgId])).rows.map((r: { d: string }) => r.d)
+        expect(await dates('base_worker_machine_assignments')).toEqual([earlier])
+        expect(await dates('base_machine_job_contexts')).toEqual([earlier])
+    })
+    it('lets only the service role change the go-live columns', async () => {
+        const owner = await seedOwnerOrg(db, { goLive: plusDays(today, 10) })
+        await asUser(db, owner.userId, owner.orgId)
+        expect((await pgError(db.query("UPDATE public.organizations SET base_go_live_date = '2001-01-01' WHERE id = $1", [owner.orgId]))).code).toBe('42501')
+        await db.query("UPDATE public.organizations SET name = 'Renamed Works' WHERE id = $1", [owner.orgId])
+        expect((await goLiveOf(owner.orgId)).go_live).toBe(plusDays(today, 10))
+    })
+    it('backfills factories that only have challans, stock movements or fixed staff', async () => {
+        const challans = await seedOwnerOrg(db, { goLive: null })
+        await raw("INSERT INTO public.delivery_challans(id, org_id, quality_id, quality_label, document, lines, sent_meters, selling_rate, chargeable_meters, created_at) VALUES ($1, $2, $3, 'Cotton', '{}', '[]', 100, 40, 100, '2026-07-10T10:00:00+05:30')", [randomUUID(), challans.orgId, randomUUID()])
+        const stock = await seedOwnerOrg(db, { goLive: null })
+        await raw("INSERT INTO public.quality_stock_movements(org_id, quality_id, kind, meters_delta, balance_after, reason, created_at) VALUES ($1, $2, 'opening', 100, 100, 'Opening stock', '2026-06-05T23:30:00+05:30')", [stock.orgId, randomUUID()])
+        const staff = await seedOwnerOrg(db, { goLive: null })
+        // Through the worker triggers (they fill the salary history), not as a raw row.
+        await asSuperuser(db)
+        await db.query("INSERT INTO public.base_production_workers(id, org_id, name, pay_type, monthly_salary, start_date, rate_per_meter) VALUES ($1, $2, 'Mahesh', 'fixed_monthly', 30000, '2019-04-01', 0)", [randomUUID(), staff.orgId])
+        await asSuperuser(db)
+        await db.query('SELECT private.backfill_base_go_live()')
+        expect((await goLiveOf(challans.orgId)).go_live).toBe('2026-07-10')
+        expect((await goLiveOf(stock.orgId)).go_live).toBe('2026-06-05')
+        expect((await goLiveOf(staff.orgId)).go_live).toBe('2019-04-01')
+    })
+})

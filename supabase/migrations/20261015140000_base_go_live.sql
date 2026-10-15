@@ -35,8 +35,10 @@ $$;
 REVOKE ALL ON FUNCTION private.base_go_live_date(uuid) FROM PUBLIC, anon, authenticated, service_role;
 
 -- Existing factories go live on their earliest Base record of any kind. Production alone is not enough:
--- a factory with only fixed-salary staff has settlements and days off but no production, and the
--- assignment Undo re-inserts rows dated before the first production.
+-- a factory with only fixed-salary staff has settlements and days off but no production, the assignment
+-- Undo re-inserts rows dated before the first production, a factory may dispatch challans from opening
+-- stock without recording production, and an unsettled fixed-salary worker must keep accruing from the
+-- joining date (salary starts at the later of joining date and go-live).
 CREATE FUNCTION private.backfill_base_go_live()
 RETURNS integer
 LANGUAGE plpgsql
@@ -54,6 +56,9 @@ BEGIN
     UNION ALL SELECT org_id, min(period_start) FROM public.base_payroll_settlements GROUP BY org_id
     UNION ALL SELECT org_id, min(off_date) FROM public.base_staff_days_off GROUP BY org_id
     UNION ALL SELECT org_id, min(service_start) FROM public.base_worker_incentives GROUP BY org_id
+    UNION ALL SELECT org_id, min((created_at AT TIME ZONE 'Asia/Kolkata')::date) FROM public.delivery_challans GROUP BY org_id
+    UNION ALL SELECT org_id, min((created_at AT TIME ZONE 'Asia/Kolkata')::date) FROM public.quality_stock_movements GROUP BY org_id
+    UNION ALL SELECT org_id, min(start_date) FROM public.base_production_workers WHERE pay_type = 'fixed_monthly' GROUP BY org_id
   ), earliest AS (
     SELECT org_id, min(first_date) AS go_live FROM firsts GROUP BY org_id
   )
@@ -102,6 +107,22 @@ BEGIN
   SET base_go_live_date = p_go_live, base_go_live_set_at = now(), base_go_live_set_by = p_actor
   WHERE id = p_org_id;
 
+  -- Setup changes are dated at go-live. When go-live moves earlier (a new pay cycle during setup), move them
+  -- with it, or go-live day would open with no qualities or workers on the looms. Nothing is recorded yet,
+  -- so no history depends on these dates. An assignment stays put if its worker joins after the new date.
+  IF v_current IS NOT NULL AND p_go_live < v_current THEN
+    UPDATE public.base_machine_job_contexts
+    SET effective_from = p_go_live
+    WHERE org_id = p_org_id AND effective_from > p_go_live AND effective_from <= v_current;
+    UPDATE public.base_worker_machine_assignments AS assignment
+    SET effective_from = p_go_live
+    FROM public.base_production_workers AS worker
+    WHERE assignment.org_id = p_org_id AND worker.org_id = p_org_id AND worker.id = assignment.worker_id
+      AND assignment.effective_from > p_go_live AND assignment.effective_from <= v_current
+      AND (worker.start_date IS NULL OR worker.start_date <= p_go_live)
+      AND (worker.operator_effective_from IS NULL OR worker.operator_effective_from <= p_go_live);
+  END IF;
+
   -- Payroll periods begin at go-live, with no stub period for the setup days.
   UPDATE public.base_payroll_cycle_configs
   SET effective_from = p_go_live, updated_at = now()
@@ -112,6 +133,31 @@ END;
 $$;
 REVOKE ALL ON FUNCTION public.schedule_base_go_live(uuid, date, uuid) FROM PUBLIC, anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.schedule_base_go_live(uuid, date, uuid) TO service_role;
+
+-- Only schedule_base_go_live (service role) and migrations may change the go-live columns. The owner's
+-- organizations update policy would otherwise let a client back-date or clear go-live directly.
+CREATE FUNCTION private.guard_base_go_live_columns()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = ''
+AS $$
+BEGIN
+  IF NEW.base_go_live_date IS NOT DISTINCT FROM OLD.base_go_live_date
+     AND NEW.base_go_live_set_at IS NOT DISTINCT FROM OLD.base_go_live_set_at
+     AND NEW.base_go_live_set_by IS NOT DISTINCT FROM OLD.base_go_live_set_by THEN
+    RETURN NEW;
+  END IF;
+  IF coalesce((SELECT auth.jwt()) ->> 'role', '') IN ('', 'service_role')
+     OR EXISTS (SELECT 1 FROM pg_catalog.pg_roles AS r WHERE r.rolname = current_user AND r.rolsuper) THEN
+    RETURN NEW;
+  END IF;
+  RAISE EXCEPTION 'The daily recording start date can only be changed from the production page.' USING ERRCODE = '42501';
+END;
+$$;
+REVOKE ALL ON FUNCTION private.guard_base_go_live_columns() FROM PUBLIC, anon, authenticated, service_role;
+CREATE TRIGGER guard_base_go_live_columns
+BEFORE UPDATE OF base_go_live_date, base_go_live_set_at, base_go_live_set_by ON public.organizations
+FOR EACH ROW EXECUTE FUNCTION private.guard_base_go_live_columns();
 
 -- Supervisors are not tenant members and cannot read organizations, so the sheet asks for the date.
 CREATE FUNCTION public.get_supervisor_go_live()

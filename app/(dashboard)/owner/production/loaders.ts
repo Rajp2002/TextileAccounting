@@ -611,7 +611,7 @@ export async function loadBaseProductionInitialData(
         factoryName: String(organizationResult.data?.name || 'Weavly'),
         goLiveDate,
         goLivePhase: goLivePhase(today, goLiveDate),
-        goLiveOptions: goLivePhase(today, goLiveDate) === 'live' || !rawCycleConfig ? [] : goLiveOptions(today, payrollCycleConfig.rule),
+        goLiveOptions: goLivePhase(today, goLiveDate) === 'live' ? [] : goLiveOptions(today, payrollCycleConfig.rule),
         effectiveDate: effectiveDateFor(today, goLiveDate),
         ...(legacyCounts ? { legacyCounts } : {}),
         today,

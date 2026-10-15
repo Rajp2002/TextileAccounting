@@ -77,9 +77,10 @@ export async function getChallan(id: string) {
 }
 export async function mutateChallan(input: ChallanMutation) {
     const { profile } = await owner(true)
-    // Dispatch is recorded from go-live; before it fabric leaves on paper from legacy stock.
+    // New dispatch is recorded from go-live; before it fabric leaves on paper from legacy stock. Payments,
+    // receipts and reversals on challans that already exist stay open.
     const goLive = await getBaseGoLiveState(profile.org_id)
-    if (goLive.phase !== 'live')
+    if ((input.action === 'save' || input.action === 'confirm') && goLive.phase !== 'live')
         return { error: goLive.goLive ? `Challans open on ${formatDateLabel(goLive.goLive)}.` : 'Schedule daily recording first.', uncertain: false }
     const parsed = MutationSchema.safeParse(input)
     if (!parsed.success) return { error: 'Review the dispatch details.' }

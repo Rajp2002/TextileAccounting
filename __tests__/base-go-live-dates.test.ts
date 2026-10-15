@@ -30,5 +30,7 @@ describe('setup changes take effect from go-live', () => {
         const mutate = actions.slice(actions.indexOf('export async function mutateChallan('))
         expect(mutate).toContain('getBaseGoLiveState(')
         expect(mutate).toContain('Challans open on')
+        // Payments, receipts and reversals on challans that already exist stay open; only new dispatch waits.
+        expect(mutate).toContain("(input.action === 'save' || input.action === 'confirm') && goLive.phase !== 'live'")
     })
 })

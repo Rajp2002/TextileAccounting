@@ -1470,10 +1470,12 @@ export async function saveBasePayrollCycleConfig(input: {
         today: getSuratTodayString(),
     })
 
-    // During setup the current cycle already starts at go-live, so a new one starts there too.
+    // During setup nothing is paid yet and the current cycle starts at go-live, so a new cycle replaces it
+    // there in place; go-live then moves to the new cycle's next start (below).
     const goLive = await getBaseGoLiveState(profile.org_id)
-    const effectiveDate = effectiveDateFor(parsed.data.effectiveFrom || safeResult.safeEffectiveDate, goLive.phase === 'setup' ? goLive.goLive : null)
-    if (effectiveDate < safeResult.safeEffectiveDate) {
+    const inSetup = goLive.phase === 'setup' && goLive.goLive !== null
+    const effectiveDate = inSetup ? goLive.goLive! : parsed.data.effectiveFrom || safeResult.safeEffectiveDate
+    if (!inSetup && effectiveDate < safeResult.safeEffectiveDate) {
         return {
             error: `The requested effective date (${effectiveDate}) falls inside a protected payroll period. The earliest safe date is ${safeResult.safeEffectiveDate}.`,
         }
@@ -1495,7 +1497,7 @@ export async function saveBasePayrollCycleConfig(input: {
 
     // Go-live is always a cycle start, so a new cycle during setup moves it to the next start of that cycle.
     let goLiveDate = goLive.goLive
-    if (goLive.phase === 'setup') {
+    if (inSetup) {
         const scheduled = await scheduleBaseGoLiveForOrg(profile.org_id, user.id, nextGoLiveDate(getSuratTodayString(), validation.normalizedRule))
         if ('error' in scheduled) return { error: `Pay cycle saved, but the recording start date could not move: ${scheduled.error}` }
         goLiveDate = scheduled.goLive
@@ -1509,7 +1511,7 @@ export async function saveBasePayrollCycleConfig(input: {
     return {
         success: true,
         goLiveDate,
-        effectiveFrom: goLiveDate && goLive.phase === 'setup' ? goLiveDate : effectiveDate,
+        effectiveFrom: inSetup && goLiveDate ? goLiveDate : effectiveDate,
         rule: validation.normalizedRule,
     }
 }

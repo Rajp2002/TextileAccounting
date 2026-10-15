@@ -17,6 +17,7 @@ import {
 } from '@/lib/base-onboarding'
 import { getFactoryReadiness } from '@/lib/base-onboarding.server'
 import { getBaseGoLiveState, scheduleBaseGoLiveForOrg } from '@/lib/base-go-live.server'
+import { nextGoLiveDate } from '@/lib/base-go-live'
 import { validateCycleRule } from '@/lib/payroll-cycle-engine'
 
 // ─── 1. Load Initial State ────────────────────────────────────────────────────
@@ -564,7 +565,7 @@ export async function saveBaseOnboardingWorkersBulkAction(
 
 export async function saveBaseOnboardingPayrollAction(input: PayrollCycleInput) {
     try {
-        await requireWritableOrg(['owner'])
+        const { user, profile } = await requireWritableOrg(['owner'])
         const supabase = await createClient()
         const today = getSuratTodayString()
 
@@ -579,15 +580,25 @@ export async function saveBaseOnboardingPayrollAction(input: PayrollCycleInput) 
         // The RPC checks owner and Base access and handles same-day edits in
         // place (20260915120000). There is deliberately no service-role
         // fallback: a refused write must not bypass those checks.
+        // During setup the current cycle starts at go-live; replace it there, then move go-live to the new
+        // cycle's next start, as the payroll settings do. Read with the owner's own client: this step never
+        // touches the service role before the owner's write has passed the RPC's checks (AS-01).
+        const { data: org } = await supabase.from('organizations').select('base_go_live_date').eq('id', profile.org_id).maybeSingle()
+        const goLive = (org?.base_go_live_date as string | null | undefined) ?? null
+        const inSetup = goLive !== null && goLive > today
         const { error: rpcError } = await supabase.rpc('update_base_payroll_cycle', {
             p_cycle_type: cycleType,
             p_rule: validation.normalizedRule,
-            p_effective_from: today,
+            p_effective_from: inSetup ? goLive : today,
         })
 
         if (rpcError) {
             console.error('update_base_payroll_cycle failed during onboarding:', rpcError.message)
             return { error: 'Failed to configure payroll cycle. Please try again.' }
+        }
+        if (inSetup) {
+            const scheduled = await scheduleBaseGoLiveForOrg(profile.org_id, user.id, nextGoLiveDate(today, validation.normalizedRule))
+            if ('error' in scheduled) return { error: scheduled.error }
         }
 
         revalidatePath('/owner/production')

@@ -30,7 +30,7 @@ vi.mock('@/lib/supabase/admin', () => ({
     createAdminClient: () => createTestSupabase(ctx.db as Db, { kind: 'service' }, ctx.calls as RpcCall[]),
 }))
 
-const { saveBasePayrollCycleConfig } = await import('@/app/(dashboard)/owner/production/actions')
+const { saveBasePayrollCycleConfig, scheduleBaseGoLiveAction } = await import('@/app/(dashboard)/owner/production/actions')
 
 let db: Db
 let safeDay: (offset: number) => string
@@ -70,6 +70,27 @@ afterAll(async () => { await db?.end() })
 beforeEach(() => { (ctx.calls as RpcCall[]).length = 0 })
 
 describe('payroll cycle settings (OS-13 fixed)', () => {
+    it('schedules a factory that never saved a pay cycle on the default monthly cycle', async () => {
+        ctx.actor = await seedOwnerOrg(db, { tier: 'base', goLive: null })
+        const next = nextGoLiveDate(getSuratTodayString(), { type: 'monthly', anchorDay: 1 })
+        expect(await scheduleBaseGoLiveAction(next)).toEqual({ goLive: next })
+    })
+
+    it('replaces the setup cycle in place when the new cycle starts earlier than go-live', async () => {
+        const today = getSuratTodayString()
+        const tomorrow = new Date(Date.parse(`${today}T00:00:00Z`) + 86400000).toISOString().slice(0, 10)
+        const goLive = nextGoLiveDate(tomorrow, { type: 'weekly', anchorWeekday: 'monday' })
+        ctx.actor = await seedOwnerOrg(db, { tier: 'base', goLive })
+        const owner = ctx.actor as Actor
+        await asSuperuser(db)
+        await db.query("INSERT INTO public.base_payroll_cycle_configs(org_id, cycle_type, rule, effective_from) VALUES ($1, 'weekly', '{\"type\":\"weekly\",\"anchorWeekday\":\"monday\"}', $2)", [owner.orgId, goLive])
+        const rule = { type: 'monthly' as const, anchorDay: 16 }
+        const next = nextGoLiveDate(today, rule)
+        // The settings card sends the earliest safe date, which can be later than go-live.
+        expect(await saveBasePayrollCycleConfig({ cycleType: 'monthly', rule, effectiveFrom: safeDay(0) })).toMatchObject({ success: true, goLiveDate: next, effectiveFrom: next })
+        expect(await configs(owner.orgId)).toEqual([{ cycle_type: 'monthly', from: next, until: null }])
+    })
+
     it('moves go-live to the next start of a cycle changed during setup', async () => {
         const today = getSuratTodayString()
         const goLive = nextGoLiveDate(today === nextGoLiveDate(today, { type: 'monthly', anchorDay: 1 }) ? `${today.slice(0, 8)}02` : today, { type: 'monthly', anchorDay: 1 })

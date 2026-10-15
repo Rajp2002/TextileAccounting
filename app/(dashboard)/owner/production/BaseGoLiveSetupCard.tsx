@@ -68,7 +68,8 @@ export default function BaseGoLiveSetupCard({ phase, goLive, options, readiness 
         )
     }
 
-    const later = options.filter(option => option !== goLive)
+    // Go-live only moves later from here; an earlier start comes from changing the pay cycle.
+    const later = options.filter(option => option > goLive)
     return (
         <section data-go-live-card className="rounded-2xl border border-hairline bg-surface p-5 shadow-xs">
             <h2 className="flex items-center gap-2 text-base font-semibold text-ink">
