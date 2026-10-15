@@ -1,5 +1,6 @@
 import { normalizeWorker, normalizeMachine } from './registers/normalize'
 import 'server-only'
+import { effectiveDateFor, goLiveOptions, goLivePhase, type BaseGoLivePhase } from '@/lib/base-go-live'
 
 import { readCompleteBaseRows } from '@/lib/base-complete-query'
 import { readBaseRevisionEntries } from '@/lib/base-production-audit'
@@ -43,6 +44,11 @@ export type BaseProductionInitialData = {
     today: string
     /** First day recorded in Weavly (organizations.base_go_live_date); null while not scheduled. */
     goLiveDate?: string | null
+    goLivePhase?: BaseGoLivePhase
+    /** Cycle starts the owner may move go-live to; empty once live. */
+    goLiveOptions?: string[]
+    /** The later of today and go-live: the date setup changes take effect from. */
+    effectiveDate?: string
     payrollPeriod: { start: string; end: string }
     payrollCycleConfig?: PayrollCycleConfig
     costings: BaseProductionCosting[]
@@ -593,10 +599,14 @@ export async function loadBaseProductionInitialData(
         updated_at: String(row.updated_at || new Date(0).toISOString()),
     }))
 
+    const goLiveDate = (organizationResult.data?.base_go_live_date as string | null | undefined) ?? null
     return {
         orgId,
         factoryName: String(organizationResult.data?.name || 'Weavly'),
-        goLiveDate: (organizationResult.data?.base_go_live_date as string | null | undefined) ?? null,
+        goLiveDate,
+        goLivePhase: goLivePhase(today, goLiveDate),
+        goLiveOptions: goLivePhase(today, goLiveDate) === 'live' || !rawCycleConfig ? [] : goLiveOptions(today, payrollCycleConfig.rule),
+        effectiveDate: effectiveDateFor(today, goLiveDate),
         today,
         payrollPeriod,
         payrollCycleConfig,

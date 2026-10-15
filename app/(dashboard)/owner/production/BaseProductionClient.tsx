@@ -255,6 +255,9 @@ export default function BaseProductionClient({
     const payrollTourStep = useTourSample('payroll')?.step
     const surface = tourSurfaceProps(Boolean(tourSample))
     useLocalizedPageTitle(view === 'operations' ? `${tx('Worker–Machine Assignments')} | Weavly` : null)
+    // During setup the board shows and edits the arrangement on go-live, the day it takes effect.
+    const assignmentData = useMemo(() => (initialData.effectiveDate && initialData.effectiveDate !== initialData.today
+        ? { ...initialData, today: initialData.effectiveDate } : initialData), [initialData])
     const searchParams = useSearchParams()
     const navigation = readBaseProductionNavigation(searchParams)
     const [payrollTab, setPayrollTab] = useState('pay')
@@ -745,7 +748,7 @@ export default function BaseProductionClient({
                 </Card>
             )}
 
-            {view === 'operations' && <BaseAssignmentWorkspace key={`${initialData.orgId}:${navigation.worker ?? "all"}:${navigation.machine ?? "all"}:${navigation.shift ?? "day"}`} initialData={initialData} focusWorkerId={searchParams.get("worker") ?? undefined} focusMachineId={searchParams.get("machine") ?? undefined} initialShift={navigation.shift} tourMetadata={tourMetadata} />}
+            {view === 'operations' && <BaseAssignmentWorkspace key={`${initialData.orgId}:${navigation.worker ?? "all"}:${navigation.machine ?? "all"}:${navigation.shift ?? "day"}`} initialData={assignmentData} focusWorkerId={searchParams.get("worker") ?? undefined} focusMachineId={searchParams.get("machine") ?? undefined} initialShift={navigation.shift} tourMetadata={tourMetadata} />}
 
             {(view === 'production' || (view === 'payroll' && activeTab !== 'history')) && <div className={view === 'production' && !isDailySheetView ? 'space-y-8 pt-2' : view === 'payroll' ? 'payroll-pay-region space-y-4' : 'space-y-4'}>
                 {view === 'production' && activeTab === 'jobs' && (
@@ -754,7 +757,7 @@ export default function BaseProductionClient({
                         costings={initialData.costings}
                         machines={initialData.machines}
                         machineJobContexts={initialData.machineJobContexts}
-                        today={initialData.today}
+                        today={initialData.effectiveDate ?? initialData.today}
                         todayMetersByJobId={todayProduction.metersByJobId}
                         todayEntered={todayProduction.hasSavedSheet}
                         onViewHistory={() => router.push('/owner/production/daily-sheet')}

@@ -565,14 +565,15 @@ const ShiftRotationSchema = z.object({ workerIds: z.array(UuidSchema).min(1).max
  * looms, starting today. All or nothing; clashes come back for the modal to show.
  */
 export async function rotateBaseWorkerShifts(input: { workerIds: string[] }) {
-    await requireBaseProductionOwner()
+    const { profile } = await requireBaseProductionOwner()
     const parsed = safeParse(ShiftRotationSchema, input)
     if ('error' in parsed) return parsed
 
     const supabase = await createServerClient()
     const { data, error } = await supabase.rpc('rotate_base_worker_shifts', {
         p_worker_ids: [...new Set(parsed.data.workerIds)],
-        p_effective_from: getSuratTodayString(),
+        // During setup the switch takes effect from go-live, like every other setup change.
+        p_effective_from: effectiveDateFor(getSuratTodayString(), (await getBaseGoLiveState(profile.org_id)).goLive),
     })
 
     if (error) return databaseError(error, 'Shifts could not be switched. Please try again.')

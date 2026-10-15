@@ -13,6 +13,8 @@ import {
     type ChallanMutation,
 } from '@/lib/delivery-challans'
 import { z } from 'zod'
+import { getBaseGoLiveState } from '@/lib/base-go-live.server'
+import { formatDateLabel } from '@/lib/payroll-cycle-engine'
 async function owner(write = false) {
     const session = write
         ? await requireWritableOrg(['owner'])
@@ -74,7 +76,11 @@ export async function getChallan(id: string) {
     return { data: document.data as Challan, events }
 }
 export async function mutateChallan(input: ChallanMutation) {
-    await owner(true)
+    const { profile } = await owner(true)
+    // Dispatch is recorded from go-live; before it fabric leaves on paper from legacy stock.
+    const goLive = await getBaseGoLiveState(profile.org_id)
+    if (goLive.phase !== 'live')
+        return { error: goLive.goLive ? `Challans open on ${formatDateLabel(goLive.goLive)}.` : 'Schedule daily recording first.', uncertain: false }
     const parsed = MutationSchema.safeParse(input)
     if (!parsed.success) return { error: 'Review the dispatch details.' }
     if (input.action === 'save') {
