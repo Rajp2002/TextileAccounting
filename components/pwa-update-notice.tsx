@@ -35,9 +35,9 @@ export function PwaUpdateNotice() {
     }, [isLoginRoute])
 
     useEffect(() => {
-        if (isLoginRoute || (status !== 'blocked' && status !== 'failed')) return
+        if (isLoginRoute || status !== 'blocked') return
         const noticeId = toast.info(t('common.pwa_update_title'), {
-            description: t(status === 'blocked' ? 'common.pwa_update_blocked' : 'common.pwa_update_failed'),
+            description: t('common.pwa_update_blocked'),
             action: { label: t('common.pwa_update_retry'), onClick: refreshPwaUpdate },
         })
         return () => { sonnerToast.dismiss(noticeId) }

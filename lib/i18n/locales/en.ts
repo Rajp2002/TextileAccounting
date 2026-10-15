@@ -415,7 +415,6 @@ export const en = {
     pwa_update_applying: "Applying update…",
     pwa_update_retry: "Retry update",
     pwa_update_blocked: "Finish or save your current work, then try refreshing again.",
-    pwa_update_failed: "The update could not be applied. Your work is still here. Try again.",
     offline_title: "You’re offline",
     offline_description: "For your privacy, protected account pages are not available offline. Reconnect, then retry to return to your task.",
     offline_retry: "Retry this page",
