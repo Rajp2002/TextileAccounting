@@ -86,6 +86,17 @@ export async function mutateChallan(input: ChallanMutation) {
         if (!terms.success) return { error: terms.error.issues[0].message }
     }
     const db = await createClient()
+    // Fail closed if the app reaches a database without legacy stock (20261015120000): the older RPC
+    // ignores a line's source and would take Legacy metres from orange stock.
+    if (input.action === 'save' || input.action === 'confirm') {
+        const lines = input.action === 'save'
+            ? (input.payload.lines as { source?: string }[] | undefined) ?? []
+            : ((await db.from('delivery_challans').select('lines').eq('id', input.id).maybeSingle()).data?.lines as { source?: string }[] | undefined) ?? []
+        if (lines.some((line) => line?.source === 'legacy')) {
+            const probe = await db.from('delivery_challans').select('legacy_meters').limit(0)
+            if (probe.error) return { error: 'Legacy stock is not available yet. Mark these takas Orange or try again later.', uncertain: false }
+        }
+    }
     const { data, error } = await db.rpc('mutate_delivery_challan', {
         p_id: input.id,
         p_request_id: input.requestId,

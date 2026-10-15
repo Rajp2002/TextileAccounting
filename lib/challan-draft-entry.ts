@@ -5,6 +5,7 @@ import {
     safeEvidenceUrl,
     type ChallanDraft,
 } from './delivery-challans'
+import { lineSource } from './legacy-stock'
 
 /** The document fields a challan cannot be saved, and so cannot be printed, without. */
 export const REQUIRED_CHALLAN_DOCUMENT_FIELDS = [
@@ -121,7 +122,10 @@ export function isSameChallanDraft(a: ChallanDraft, b: ChallanDraft) {
         [...keys].every((key) => (a.document[key] ?? '') === (b.document[key] ?? '')) &&
         linesA.length === linesB.length &&
         linesA.every(
-            (line, i) => line.lot === linesB[i].lot && line.meters === linesB[i].meters,
+            (line, i) =>
+                line.lot === linesB[i].lot &&
+                line.meters === linesB[i].meters &&
+                lineSource(line) === lineSource(linesB[i]),
         )
     )
 }

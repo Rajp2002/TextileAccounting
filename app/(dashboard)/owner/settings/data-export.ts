@@ -306,6 +306,8 @@ export async function exportOrganizationData() {
         { key: 'quality_stock', query: scoped('quality_stock') },
         { key: 'quality_stock_movements', query: scoped('quality_stock_movements') },
         { key: 'quality_stock_cutover', query: scoped('quality_stock_cutover', 'org_id', 'org_id') },
+        { key: 'legacy_stock', query: scoped('legacy_stock') },
+        { key: 'legacy_stock_movements', query: scoped('legacy_stock_movements') },
         { key: 'fabric_stock_lots', query: scoped('fabric_stock_lots') },
         { key: 'fabric_stock_sales', query: scoped('fabric_stock_sales') },
         { key: 'fabric_stock_movements', query: scoped('fabric_stock_movements') },

@@ -36,6 +36,7 @@ import {
     type ChallanMutation,
 } from '@/lib/delivery-challans'
 import type { StockQuality } from '@/lib/quality-stock'
+import type { LegacyStock } from '@/lib/legacy-stock'
 import { getChallan, listChallans, mutateChallan } from './challan-actions'
 import { businessDate, challanDueStatus } from '@/lib/challan-payment-terms'
 import { isSameChallanDraft } from '@/lib/challan-draft-entry'
@@ -76,10 +77,13 @@ const blank = (): ChallanDraft => ({
 export default function ChallansClient({
     initialData,
     qualities,
+    legacy = [],
     businessName,
 }: {
     initialData: Challan[]
     qualities: StockQuality[]
+    /** Legacy (untagged) stock per quality, for the editor's Orange/Legacy hints. */
+    legacy?: LegacyStock[]
     /** The factory's name from its account; the editor's preview falls back to the sender name without it. */
     businessName?: string
 }) {
@@ -550,6 +554,7 @@ export default function ChallansClient({
                             onSave={(value) => save('save', value)}
                             onSavePrint={savePrint}
                             qualities={qualities}
+                            legacy={legacy}
                             number={selected?.number}
                             businessName={businessName}
                             disabled={busy || !!pending}
