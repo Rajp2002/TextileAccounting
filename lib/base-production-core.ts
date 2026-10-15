@@ -30,6 +30,8 @@ export type BaseWorkerMachineAssignment = {
     active: boolean
     effective_from: string
     effective_to: string | null
+    /** When the row was saved; absent on rows built in the browser before they are saved. */
+    created_at?: string
 }
 
 export type BaseMachineJobContext = {

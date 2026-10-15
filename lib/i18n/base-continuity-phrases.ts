@@ -155,6 +155,8 @@ const workflowPhrases = [
   ['Day shift', 'दिन की शिफ्ट', 'દિવસની શિફ્ટ'],
   ['Night shift', 'रात की शिफ्ट', 'રાતની શિફ્ટ'],
   ['Assignment shift', 'काम सौंपने की शिफ्ट', 'કામ સોંપવાની શિફ્ટ'],
+  ['Show {count} workers on the other shift', 'दूसरी शिफ्ट के {count} कर्मचारी दिखाएँ', 'બીજી શિફ્ટના {count} કર્મચારી બતાવો'],
+  ['Hide workers on the other shift', 'दूसरी शिफ्ट के कर्मचारी छिपाएँ', 'બીજી શિફ્ટના કર્મચારી છુપાવો'],
   ['Assignment workspace view', 'काम सौंपने का दृश्य', 'કામ સોંપવાનું દૃશ્ય'],
   ['Filter by machine type', 'मशीन के प्रकार से छाँटें', 'મશીનના પ્રકાર પ્રમાણે ગાળો'],
   ['Saved for', 'इसके लिए सेव किया', 'આ માટે સેવ કર્યું'],

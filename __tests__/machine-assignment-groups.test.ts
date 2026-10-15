@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { groupMachinesByWorker } from '../lib/machine-assignment-groups'
+import { groupMachinesByWorker, orderWorkersByAssignment, workersHeldByOtherShift } from '../lib/machine-assignment-groups'
 import { compareMachineLabels } from '../lib/base-machine-register'
 
 const worker = (id: string) => ({ id })
@@ -96,5 +96,53 @@ describe('groupMachinesByWorker', () => {
 
         expect(ids(result.rows[0].machines)).toEqual(['m5', 'm10'])
         expect(ids(result.ungrouped)).toEqual(['m1', 'm2', 'mAlpha', 'mSpare'])
+    })
+})
+
+describe('orderWorkersByAssignment', () => {
+    const at = (worker_id: string, created_at?: string) => ({ worker_id, created_at })
+
+    it('puts assigned workers first, earliest assignment at the top, then the rest in the order given', () => {
+        const result = orderWorkersByAssignment(
+            [worker('anil'), worker('bhavin'), worker('chirag'), worker('dinesh')],
+            [at('chirag', '2026-10-15T09:00:00Z'), at('bhavin', '2026-10-15T10:00:00Z')],
+        )
+        expect(ids(result)).toEqual(['chirag', 'bhavin', 'anil', 'dinesh'])
+    })
+
+    it('keeps a worker where their oldest assignment puts them when they get more machines', () => {
+        const result = orderWorkersByAssignment(
+            [worker('anil'), worker('bhavin')],
+            [at('anil', '2026-10-15T09:00:00Z'), at('bhavin', '2026-10-15T09:30:00Z'), at('anil', '2026-10-15T11:00:00Z')],
+        )
+        expect(ids(result)).toEqual(['anil', 'bhavin'])
+    })
+
+    it('places a worker just assigned in the browser (no saved time) after saved ones', () => {
+        const result = orderWorkersByAssignment(
+            [worker('anil'), worker('bhavin'), worker('chirag')],
+            [at('bhavin', '2026-10-15T09:00:00Z'), at('anil')],
+        )
+        expect(ids(result)).toEqual(['bhavin', 'anil', 'chirag'])
+    })
+
+    it('keeps the given order when nothing has a time', () => {
+        const result = orderWorkersByAssignment([worker('anil'), worker('bhavin')], [at('bhavin'), at('anil')])
+        expect(ids(result)).toEqual(['anil', 'bhavin'])
+    })
+
+    it('ignores assignments for workers that are not listed', () => {
+        expect(ids(orderWorkersByAssignment([worker('anil')], [at('ghost', '2026-10-15T09:00:00Z')]))).toEqual(['anil'])
+    })
+})
+
+describe('workersHeldByOtherShift', () => {
+    it('holds workers placed on the other shift only', () => {
+        const held = workersHeldByOtherShift([{ worker_id: 'both' }], [{ worker_id: 'both' }, { worker_id: 'day-only' }])
+        expect([...held]).toEqual(['day-only'])
+    })
+
+    it('holds nobody when the other shift has no assignments', () => {
+        expect(workersHeldByOtherShift([{ worker_id: 'a' }], []).size).toBe(0)
     })
 })

@@ -257,7 +257,7 @@ export async function loadBaseProductionInitialData(
             .range(from, to)) : skippedRows,
         includeProduction ? readCompleteBaseRows((from, to) => supabase
             .from('base_worker_machine_assignments')
-            .select('id, worker_id, machine_id, shift, active, effective_from, effective_to', from === 0 ? { count: 'exact' } : {})
+            .select('id, worker_id, machine_id, shift, active, effective_from, effective_to, created_at', from === 0 ? { count: 'exact' } : {})
             .eq('org_id', orgId)
             .order('active', { ascending: false })
             .order('effective_from', { ascending: false })
@@ -481,6 +481,7 @@ export async function loadBaseProductionInitialData(
         active: row.active !== false,
         effective_from: toDate(row.effective_from, today),
         effective_to: toStringOrNull(row.effective_to),
+        ...(row.created_at ? { created_at: String(row.created_at) } : {}),
     }))
 
     const machineJobContexts: BaseMachineJobContext[] = rawContexts.map((row) => ({

@@ -56,7 +56,7 @@ export async function loadBaseAssignmentsInitialData(today?: string): Promise<{
             .select('id, costing_id, costing_group_id, costing_version, quality_label, target_meters, start_date, due_date, customer_reference, notes, status, worker_rate_per_meter, planned_cost_per_meter, planned_price_per_meter, created_at', from === 0 ? { count: 'exact' } : {})
             .eq('org_id', orgId).order('updated_at', { ascending: false }).order('id').range(from, to)),
         readCompleteBaseRows((from, to) => db.from('base_worker_machine_assignments')
-            .select('id, worker_id, machine_id, shift, active, effective_from, effective_to', from === 0 ? { count: 'exact' } : {})
+            .select('id, worker_id, machine_id, shift, active, effective_from, effective_to, created_at', from === 0 ? { count: 'exact' } : {})
             .eq('org_id', orgId).order('active', { ascending: false }).order('effective_from', { ascending: false }).order('id').range(from, to)),
         readCompleteBaseRows((from, to) => db.from('base_machine_job_contexts')
             .select('id, machine_id, job_id, active, effective_from, effective_to', from === 0 ? { count: 'exact' } : {})
@@ -87,6 +87,7 @@ export async function loadBaseAssignmentsInitialData(today?: string): Promise<{
         id: String(row.id), worker_id: String(row.worker_id), machine_id: String(row.machine_id),
         shift: row.shift === 'night' ? 'night' : 'day', active: row.active !== false,
         effective_from: toDate(row.effective_from, effectiveDate), effective_to: toStringOrNull(row.effective_to),
+        ...(row.created_at ? { created_at: String(row.created_at) } : {}),
     }))
     const machineJobContexts: BaseMachineJobContext[] = requireRows(contextsResult).map(row => ({
         id: String(row.id), machine_id: String(row.machine_id), job_id: String(row.job_id),

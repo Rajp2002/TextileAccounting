@@ -28,7 +28,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
-import { groupMachinesByWorker } from '@/lib/machine-assignment-groups'
+import { groupMachinesByWorker, orderWorkersByAssignment, workersHeldByOtherShift } from '@/lib/machine-assignment-groups'
 import { compareMachineLabels } from '@/lib/base-machine-register'
 import {
     applyPendingAssignmentChanges,
@@ -445,6 +445,7 @@ export default function BaseAssignmentWorkspace({
     const [search, setWorkerSearch] = useState('')
     const [machineTypeFilter, setSelectedMachineTypes] = useState<string[]>([])
     const [includeInactive] = useState(false)
+    const [showOtherShiftWorkers, setShowOtherShiftWorkers] = useState(false)
     const [draggingWorkerId, setDraggingWorkerId] = useState<string | null>(null)
     const [hoveredWorkerId, setHoveredWorkerId] = useState<string | null>(null)
     const [hoveredMachineId, setHoveredMachineId] = useState<string | null>(null)
@@ -560,7 +561,12 @@ export default function BaseAssignmentWorkspace({
         [currentAssignments],
     )
 
-    const visibleWorkers = useMemo(() => initialData.workers.filter((worker) => {
+    // Someone working the other shift is moved with switch workers, so they stay off this board.
+    const heldByOtherShift = useMemo(() => workersHeldByOtherShift(
+        currentAssignments,
+        selectCurrentAssignments(applyPendingAssignmentChanges(initialData.assignments, shownChanges, initialData.today), shift === 'day' ? 'night' : 'day', initialData.today, currentJobByMachine),
+    ), [currentAssignments, currentJobByMachine, initialData.assignments, initialData.today, shift, shownChanges])
+    const candidateWorkers = useMemo(() => initialData.workers.filter((worker) => {
         if (!tourStep && focusWorkerId && worker.id !== focusWorkerId) return false
         if (!hasBaseOperatorEligibility(worker, initialData.today)) return false
         if (!showInactive && !worker.is_active) return false
@@ -568,6 +574,13 @@ export default function BaseAssignmentWorkspace({
         if (!isAvailable && !assignmentByWorker.has(worker.id)) return false
         return worker.name.toLowerCase().includes(workerSearch.trim().toLowerCase())
     }), [assignmentByWorker, initialData.workers, shift, showInactive, workerSearch, focusWorkerId, tourStep, initialData.today])
+    // A worker who covers both shifts back to back can be brought back with the toggle under the search.
+    const otherShiftHiddenCount = tourStep || focusWorkerId ? 0 : candidateWorkers.filter((worker) => heldByOtherShift.has(worker.id)).length
+    const hidesOtherShift = !showOtherShiftWorkers && otherShiftHiddenCount > 0
+    const visibleWorkers = useMemo(
+        () => orderWorkersByAssignment(hidesOtherShift ? candidateWorkers.filter((worker) => !heldByOtherShift.has(worker.id)) : candidateWorkers, placedAssignments),
+        [candidateWorkers, heldByOtherShift, hidesOtherShift, placedAssignments],
+    )
     const machineTypes = useMemo(() => Array.from(new Set(
         initialData.machines
             .filter((machine) => showInactive || machine.is_active)
@@ -623,7 +636,7 @@ export default function BaseAssignmentWorkspace({
 
     // Anything that changes the board's layout without a user change (shift, filters, search,
     // tour samples) snaps into place; only assignment changes glide.
-    const boardMotionContext = [shift, workerSearch, selectedMachineTypes.join(','), showInactive, tourStep ?? '', focusWorkerId ?? '', focusMachineId ?? ''].join('|')
+    const boardMotionContext = [shift, workerSearch, selectedMachineTypes.join(','), showInactive, showOtherShiftWorkers, tourStep ?? '', focusWorkerId ?? '', focusMachineId ?? ''].join('|')
     useLayoutEffect(() => {
         const board = boardRef.current
         if (!board) return
@@ -1335,6 +1348,16 @@ export default function BaseAssignmentWorkspace({
                         </div>
                         <MachineTypeFilters machineTypes={machineTypes} selected={selectedMachineTypes} onSelect={(machineType) => setSelectedMachineTypes(machineType ? [machineType] : [])} />
                     </div>
+                    {otherShiftHiddenCount > 0 && (
+                            <button
+                                type="button"
+                                onClick={() => setShowOtherShiftWorkers((current) => !current)}
+                                aria-pressed={showOtherShiftWorkers}
+                                className="-mt-3 mb-3 inline-flex min-h-[44px] items-center text-xs font-semibold text-body underline-offset-2 hover:text-ink hover:underline"
+                            >
+                                {showOtherShiftWorkers ? tx('Hide workers on the other shift') : tx('Show {count} workers on the other shift', { count: otherShiftHiddenCount })}
+                            </button>
+                        )}
                     <div
                         ref={boardRef}
                         data-configuration-tour-connections
@@ -1412,6 +1435,16 @@ export default function BaseAssignmentWorkspace({
                                 className="h-10 rounded-xl border border-hairline bg-surface pl-9 text-sm text-ink placeholder:text-muted-foreground/70 focus:border-loom-subtle focus:ring-2 focus:ring-loom/10"
                             />
                         </div>
+                        {otherShiftHiddenCount > 0 && (
+                            <button
+                                type="button"
+                                onClick={() => setShowOtherShiftWorkers((current) => !current)}
+                                aria-pressed={showOtherShiftWorkers}
+                                className="-mt-1 mb-2 inline-flex min-h-[44px] items-center text-xs font-semibold text-body underline-offset-2 hover:text-ink hover:underline"
+                            >
+                                {showOtherShiftWorkers ? tx('Hide workers on the other shift') : tx('Show {count} workers on the other shift', { count: otherShiftHiddenCount })}
+                            </button>
+                        )}
                         <div className="space-y-2">
                             {visibleWorkers.length === 0 ? <EmptyInline label="No workers match this view." /> : visibleWorkers.map((worker) => {
                                 const assignments = assignmentByWorker.get(worker.id) ?? []
