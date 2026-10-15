@@ -1,5 +1,7 @@
 # Standalone delivery challans
 
+**Orange/Legacy lines (2026-10-15):** each lot row says whether it comes from orange stock or untagged legacy stock; confirmation and reversal move each part from its own stock. See [legacy fabric stock](legacy_fabric_stock.md).
+
 **Yarn tracking:** Once an owner starts [yarn inventory](yarn_inventory.md), confirmation also deducts the linked costing's yarn kg atomically with fabric metres. A missing formula or insufficient yarn prevents confirmation. Allowed physical reversals restore the original yarn weight; receipt and payment changes remain neutral to stock.
 
 Implemented on the aggregate quality stock base (`b1ee8719`, stock PR #94). New dispatches live at `/owner/dispatches` for owners with production access (Base and eligible legacy plans). No party, customer account, sales order, reservation or individual taka stock record is created. Customer details and selling price are entered for each transaction.

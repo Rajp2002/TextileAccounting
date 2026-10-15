@@ -54,6 +54,8 @@ export const ChallanDraftSchema = z
                     meters: decimal.pipe(
                         z.number().positive().max(100_000_000),
                     ),
+                    // Orange (tracked, the default) or untagged Legacy stock; see lib/legacy-stock.ts.
+                    source: z.enum(['tracked', 'legacy']).optional(),
                 }),
             )
             .min(1)
@@ -79,6 +81,8 @@ export type Challan = ChallanDraft & {
     number: string
     quality_label: string
     sent_meters: number
+    /** The part of sent_meters taken from legacy stock; the rest came from orange stock. */
+    legacy_meters?: number
     chargeable_meters: number
     acknowledged_meters: number | null
     delivery_status: 'draft' | 'sent' | 'received' | 'reversed'

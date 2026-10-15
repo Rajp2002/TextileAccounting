@@ -34,7 +34,10 @@ import type { FabricStockTourStep } from '@/lib/stock-tour'
 import { businessDate } from '@/lib/challan-payment-terms'
 import { activitySince, balanceTrail, groupByIndiaDay, totalsSince, weekSince, type ActivityRow } from '@/lib/stock-activity'
 import { StockAdjustmentSchema, fabricActivityBucket, type QualityStockBoard, type StockAdjustmentInput, type StockQuality } from '@/lib/quality-stock'
+import { stockTotals } from '@/lib/legacy-stock'
 import { getQualityStockBoard, recordQualityStockAdjustment } from './actions'
+import LegacyStockDialog from './LegacyStockDialog'
+import { LegacyStatusLine } from './LegacyStatusLine'
 
 // Phones render rem at 14px, so the 44px touch target needs a pixel minimum.
 const secondaryAction = 'h-10 rounded-lg border-hairline bg-surface font-semibold text-ink shadow-xs hover:bg-surface-soft max-md:min-h-[44px]'
@@ -60,6 +63,7 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
     const [saving, setSaving] = useState(false)
     const [saveError, setSaveError] = useState('')
     const [request, setRequest] = useState<StockAdjustmentInput | null>(null)
+    const [legacyFor, setLegacyFor] = useState<StockQuality | null>(null)
     const loading = useRef(false)
     const writing = useRef(false)
     const tx = (key: string) => t(`qualityStock.${key}`)
@@ -131,6 +135,10 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
     const labelOf = new Map(data.qualities.map(quality => [quality.id, quality.quality_label]))
     const qualities = ranked.filter(row => row.quality_label.toLocaleLowerCase().includes(search.toLocaleLowerCase()))
     const total = Number(data.total_meters)
+    // Legacy (untagged) stock is kept apart: the headline stays orange stock, and the whole total is called exact only when it is.
+    const legacyRows = data.legacy ?? []
+    const legacyOf = new Map(legacyRows.map(row => [row.quality_id, row]))
+    const totals = legacyRows.length > 0 ? stockTotals(data.qualities.map(quality => Number(quality.meters)), legacyRows) : null
     const share = (value: number) => total > 0 ? Math.round((Math.max(value, 0) / total) * 100) : 0
     const others = ranked.slice(COMPOSITION_SLOTS)
     const othersMeters = others.reduce((sum, quality) => sum + Number(quality.meters), 0)
@@ -147,7 +155,7 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
     const shortDate = (iso: string) => new Date(iso).toLocaleDateString(`${language}-IN`, { day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' })
     const kindLabel = (kind: string) => tx(kind === 'production' ? 'productionEntry' : kind)
     const reasonLabel = (value: string) => value === 'Production updated' ? tx('productionUpdated') : value
-    const weekFacts = (totals: Partial<Record<'woven' | 'dispatched' | 'adjusted', number>>) => (['woven', 'dispatched', 'adjusted'] as const)
+    const weekFacts = (totals: Partial<Record<'woven' | 'dispatched' | 'onboarded' | 'adjusted', number>>) => (['woven', 'dispatched', 'onboarded', 'adjusted'] as const)
         .filter(key => totals[key])
         .map(key => ({ key, label: tx(key), value: totals[key]! }))
 
@@ -175,13 +183,22 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
                     <div>
                         <p id="fabric-on-hand" className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                             <span aria-hidden="true" className="size-1.5 rounded-full bg-saffron" />
-                            {tx('onHand')}
+                            {totals ? tx('orangeOnHand') : tx('onHand')}
                         </p>
                         <p className="mt-3 text-5xl font-semibold leading-none tracking-[-0.035em] text-ink tabular-nums">
                             {metres(total)}
                             <span className="ml-1.5 text-2xl font-medium tracking-normal text-muted-foreground">{tx('metres')}</span>
                         </p>
                         <p className="mt-3 text-sm text-body">{data.qualities.length === 1 ? tx('qualityCountOne') : t('qualityStock.qualityCount', { count: data.qualities.length })}</p>
+                        {totals && (
+                            <p data-legacy-total={totals.exact ? 'exact' : totals.unknownQualities ? 'incomplete' : 'estimated'} className="mt-1 text-sm font-medium text-ink">
+                                {totals.unknownQualities > 0
+                                    ? (totals.unknownQualities === 1 ? tx('totalIncompleteOne') : t('qualityStock.totalIncomplete', { count: totals.unknownQualities }))
+                                    : totals.exact
+                                        ? t('qualityStock.totalExact', { meters: metres(totals.total) })
+                                        : t('qualityStock.totalEstimated', { meters: metres(totals.total) })}
+                            </p>
+                        )}
                     </div>
                     {week ? (
                         <div className="min-w-0">
@@ -285,7 +302,7 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
                                             <Swatch color={color} className="mt-1.5" />
                                             <span className="break-words">{quality.quality_label}</span>
                                         </h3>
-                                        {!quality.opening_recorded ? (
+                                        {!quality.opening_recorded && !legacyOf.has(quality.id) ? (
                                             <span className="inline-flex shrink-0 items-center gap-1.5 text-[13px] font-semibold text-[var(--wv-ochre-800)]" title={tx('openingPending')}>
                                                 <AlertCircle className="h-3.5 w-3.5" aria-hidden="true" />
                                                 {tx('pending')}
@@ -301,6 +318,7 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
                                         </p>
                                         {trail && <StockTrend points={trail} color={color} label={tx('trendLabel')} className="w-1/2" />}
                                     </div>
+                                    {legacyOf.get(quality.id) && <LegacyStatusLine legacy={legacyOf.get(quality.id)!} />}
                                     {own && (
                                         <p className="text-[13px] text-body">
                                             <span className="text-muted-foreground">{tx('lastWeek')}: </span>
@@ -325,6 +343,12 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
                                         {!quality.opening_recorded && (
                                             <Button variant="outline" onClick={() => open('correction', quality)} className={secondaryAction}>
                                                 {tx('correct')}
+                                            </Button>
+                                        )}
+                                        {/* Hidden when legacy stock cannot be read, so no one acts on a balance they cannot see. */}
+                                        {!tourSample && data.legacy && (
+                                            <Button variant="outline" aria-haspopup="dialog" onClick={() => setLegacyFor(quality)} className={secondaryAction}>
+                                                {tx('legacyAction')}
                                             </Button>
                                         )}
                                         <Button
@@ -569,6 +593,13 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
                     </div>
                 </DialogContent>
             </Dialog>
+
+            <LegacyStockDialog
+                quality={legacyFor}
+                legacy={legacyFor ? legacyOf.get(legacyFor.id) : undefined}
+                onClose={() => setLegacyFor(null)}
+                onSaved={async message => { setNotice(message); if (!tourSample) reportPwaWorkflowSuccess('stock'); await load('') }}
+            />
 
             {/* Opening / Correction Modal */}
             <Dialog open={Boolean(form)} onOpenChange={value => { if (!value && !saving) setForm(null) }} {...surface.root}>

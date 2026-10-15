@@ -2,6 +2,8 @@
 
 **Yarn stock and the stock audit were deleted on 2026-10-14** (`20261014120000_remove_yarn_stock_and_stock_audit.sql`). Stock tracks fabric metres only; production adds metres and a confirmed dispatch removes them.
 
+**Legacy fabric stock was added on 2026-10-15**: untagged pre-Weavly fabric now has its own ledger beside this (orange) balance, with unknown, estimated or counted amounts. See [legacy fabric stock](legacy_fabric_stock.md).
+
 Updated September 8, 2026. This replaces the old Full Suite stock feature; historical migrations and business records are retained.
 
 ## Workflow

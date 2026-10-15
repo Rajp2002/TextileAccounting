@@ -29,6 +29,7 @@ export default async function DispatchesPage() {
         <ChallansClient
             initialData={challans.data!}
             qualities={stock.data.qualities}
+            legacy={stock.data.legacy ?? []}
             businessName={organization.data?.name ?? ''}
         />
         </DispatchGuidedTour>

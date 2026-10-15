@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import type { LegacyStock } from './legacy-stock'
 
 export const StockAdjustmentSchema = z.object({
     qualityLabel: z.string().trim().min(1, 'Choose a quality.').max(160).transform(value => value.replace(/\s+/g, ' ')),
@@ -17,7 +18,7 @@ export type StockMovement = {
     meters_delta: number; balance_after: number; reason: string; created_at: string; created_by: string | null
     source_table: string | null; source_id: string | null; production_before: number | null; production_after: number | null
 }
-export type StockMovementKind = 'production' | 'production_reversal' | 'opening' | 'correction' | 'dispatch' | 'dispatch_reversal' | 'audit_adjustment'
+export type StockMovementKind = 'production' | 'production_reversal' | 'opening' | 'correction' | 'dispatch' | 'dispatch_reversal' | 'audit_adjustment' | 'legacy_onboarding'
 /** A movement of the last three weeks, read for week totals and trend lines (see lib/stock-activity.ts). */
 export type StockActivity = Pick<StockMovement, 'id' | 'quality_id' | 'kind' | 'meters_delta' | 'balance_after' | 'reason' | 'source_table' | 'source_id' | 'created_at'>
 export type StockCursor = { at: string; id: string }
@@ -26,10 +27,13 @@ export type QualityStockBoard = {
     cutover: { started_at: string; historical_production_meters: number; legacy_lot_count: number; unallocated_production_meters: number } | null
     /** Movements since `activitySince()`, newest first. Absent for a filtered or paged load and for tour samples; null when it could not be read. */
     activity?: StockActivity[] | null
+    /** Legacy (untagged) stock per quality that has started it. Absent for tour samples; null when it could not be read. */
+    legacy?: LegacyStock[] | null
 }
 /** Which week total a fabric movement counts towards. */
-export function fabricActivityBucket(kind: string): 'woven' | 'dispatched' | 'adjusted' | null {
+export function fabricActivityBucket(kind: string): 'woven' | 'dispatched' | 'onboarded' | 'adjusted' | null {
     if (kind === 'production' || kind === 'production_reversal') return 'woven'
+    if (kind === 'legacy_onboarding') return 'onboarded'
     if (kind === 'dispatch' || kind === 'dispatch_reversal') return 'dispatched'
     if (kind === 'opening' || kind === 'correction' || kind === 'audit_adjustment') return 'adjusted'
     return null

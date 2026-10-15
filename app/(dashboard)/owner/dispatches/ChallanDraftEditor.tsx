@@ -24,6 +24,7 @@ import {
     WEAVLY_LOGO_WIDTH,
 } from '@/lib/estimator-export-logo'
 import type { StockQuality } from '@/lib/quality-stock'
+import { legacyStatus, lineSource, sourceTotals, type LegacyStock } from '@/lib/legacy-stock'
 
 const required: readonly string[] = REQUIRED_CHALLAN_DOCUMENT_FIELDS
 const LOGO_WIDTH = 88
@@ -51,6 +52,7 @@ export default function ChallanDraftEditor({
     onSave,
     onSavePrint,
     qualities,
+    legacy = [],
     number,
     businessName,
     disabled,
@@ -62,6 +64,8 @@ export default function ChallanDraftEditor({
     /** Saves the draft, which assigns its number, then prints it. */
     onSavePrint: (draft: ChallanDraft) => void
     qualities: StockQuality[]
+    /** Legacy (untagged) stock per quality, for the Orange/Legacy hints. */
+    legacy?: LegacyStock[]
     number?: string
     /** The factory's name from its account, shown on the document as on the printed copy. */
     businessName?: string
@@ -77,6 +81,11 @@ export default function ChallanDraftEditor({
     const progress = challanDraftProgress(draft)
     const readiness = challanPrintReadiness(draft)
     const quality = qualities.find((q) => q.id === draft.quality_id)
+    // Orange and Legacy metres of the completed rows. The server re-checks orange stock on confirm.
+    const split = sourceTotals(progress.completed)
+    const qualityLegacy = legacy.find((row) => row.quality_id === draft.quality_id)
+    const legacyClosed = split.legacy > 0 && qualityLegacy && legacyStatus(qualityLegacy) === 'closed'
+    const orangeShort = quality && split.tracked > Number(quality.meters)
     const format = (n: number) =>
         n.toLocaleString(`${language}-IN`, { maximumFractionDigits: 2 })
     useLayoutEffect(() => {
@@ -118,6 +127,13 @@ export default function ChallanDraftEditor({
             ),
         })
     }
+    /** A blank row that keeps the last row's stock, so a run of untagged takas stays Legacy. */
+    function blankLine(): ChallanDraft['lines'][number] {
+        const last = draft.lines.at(-1)
+        return last && lineSource(last) === 'legacy'
+            ? { lot: '', meters: 0, source: 'legacy' }
+            : { lot: '', meters: 0 }
+    }
     function addLine() {
         const blankIndex = draft.lines.findIndex(isEmptyChallanLine)
         if (blankIndex >= 0) {
@@ -129,7 +145,7 @@ export default function ChallanDraftEditor({
             focusRow.current = draft.lines.length
             onChange({
                 ...draft,
-                lines: [...draft.lines, { lot: '', meters: 0 }],
+                lines: [...draft.lines, blankLine()],
             })
         }
     }
@@ -174,7 +190,7 @@ export default function ChallanDraftEditor({
                 focusRow.current = index + 1
                 onChange({
                     ...draft,
-                    lines: [...draft.lines, { lot: '', meters: 0 }],
+                    lines: [...draft.lines, blankLine()],
                 })
             } else saveButton.current?.focus()
         }
@@ -347,12 +363,13 @@ export default function ChallanDraftEditor({
                             {tx('keyboardHelp')}
                         </div>
                         <div
-                            className="grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,0.8fr)_2.25rem] gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground"
+                            className="grid grid-cols-[1.5rem_minmax(0,1fr)_minmax(0,0.8fr)_4.75rem_2.5rem] sm:grid-cols-[2rem_minmax(0,1fr)_minmax(0,0.8fr)_6rem_2.5rem] gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground"
                             aria-hidden="true"
                         >
                             <span className="text-center">{tx('rowNo')}</span>
                             <span>{tx('lot')}</span>
                             <span>{tx('sentMeters')} (m)</span>
+                            <span>{tx('stockSource')}</span>
                             <span />
                         </div>
                         <div className="space-y-2">
@@ -361,7 +378,7 @@ export default function ChallanDraftEditor({
                                 return (
                                     <div
                                         key={index}
-                                        className="grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,0.8fr)_2.25rem] items-center gap-2"
+                                        className="grid grid-cols-[1.5rem_minmax(0,1fr)_minmax(0,0.8fr)_4.75rem_2.5rem] sm:grid-cols-[2rem_minmax(0,1fr)_minmax(0,0.8fr)_6rem_2.5rem] items-center gap-2"
                                     >
                                         <span className="text-center text-xs font-bold tabular-nums text-muted-foreground">
                                             {index + 1}
@@ -421,6 +438,31 @@ export default function ChallanDraftEditor({
                                                 })
                                             }
                                         />
+                                        <button
+                                            type="button"
+                                            data-source-row={index}
+                                            aria-pressed={lineSource(line) === 'legacy'}
+                                            aria-label={t('challan.sourceToggle', { row: index + 1, source: tx(lineSource(line) === 'legacy' ? 'sourceLegacy' : 'sourceOrange') })}
+                                            title={tx('sourceHelp')}
+                                            className="inline-flex h-10 min-w-0 items-center justify-center gap-1.5 rounded-xl border border-hairline bg-surface px-2 text-xs font-bold text-ink shadow-xs hover:bg-surface-soft focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-loom max-md:min-h-[44px]"
+                                            onClick={() =>
+                                                updateLine(index, {
+                                                    source: lineSource(line) === 'legacy' ? undefined : 'legacy',
+                                                })
+                                            }
+                                        >
+                                            <span
+                                                aria-hidden="true"
+                                                className={
+                                                    lineSource(line) === 'legacy'
+                                                        ? 'size-2.5 shrink-0 rounded-full border-2 border-muted-foreground'
+                                                        : 'size-2.5 shrink-0 rounded-full bg-saffron'
+                                                }
+                                            />
+                                            <span className="truncate">
+                                                {tx(lineSource(line) === 'legacy' ? 'sourceLegacy' : 'sourceOrange')}
+                                            </span>
+                                        </button>
                                         <Button
                                             type="button"
                                             size="icon"
@@ -453,9 +495,22 @@ export default function ChallanDraftEditor({
                             <Plus className="h-4 w-4" />
                             {tx('addLine')}
                         </Button>
+                        <p className="text-xs text-muted-foreground">
+                            {tx('sourceHelp')}
+                        </p>
                         {progress.incomplete > 0 && (
                             <p className="text-xs font-semibold text-[var(--wv-ochre-800)] bg-[var(--wv-ochre-50)] p-2.5 rounded-xl border border-[var(--wv-ochre-200)]">
                                 {tx('incompleteRows')}
+                            </p>
+                        )}
+                        {orangeShort && (
+                            <p className="text-xs font-semibold text-[var(--wv-ochre-800)] bg-[var(--wv-ochre-50)] p-2.5 rounded-xl border border-[var(--wv-ochre-200)]">
+                                {t('challan.orangeShort', { available: format(Number(quality.meters)) })}
+                            </p>
+                        )}
+                        {legacyClosed && (
+                            <p className="text-xs font-semibold text-[var(--wv-ochre-800)] bg-[var(--wv-ochre-50)] p-2.5 rounded-xl border border-[var(--wv-ochre-200)]">
+                                {tx('legacyClosed')}
                             </p>
                         )}
                     </section>
@@ -662,6 +717,11 @@ export default function ChallanDraftEditor({
                     <p className="text-xs font-semibold text-muted-foreground">
                         Rs {format(progress.value)} · {tx('beforeCharges')}
                     </p>
+                    {split.legacy > 0 && (
+                        <p className="text-xs font-semibold text-body tabular-nums">
+                            {t('challan.splitSummary', { orange: format(split.tracked), legacy: format(split.legacy) })}
+                        </p>
+                    )}
                 </div>
                 <div className="flex items-center gap-2">
                     <SwitchField variant="pill" className="lg:hidden" checked={showPreview} onCheckedChange={setShowPreview}>

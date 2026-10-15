@@ -192,7 +192,7 @@ describe('current Base, dispatch and settings records', () => {
         'base_production_batch_revisions', 'base_daily_production_entries', 'base_daily_production_allocations', 'factory_supervisors',
         'base_payroll_settlement_lines', 'base_payroll_reversals', 'base_payroll_advance_recoveries', 'base_payroll_periods',
         'base_payroll_cycle_configs', 'base_worker_incentives', 'base_staff_days_off', 'document_branding_settings', 'document_branding_logo_assets',
-        'delivery_challans', 'delivery_challan_events', 'free_account_grants', 'plan_usage_events', 'web_vital_samples',
+        'delivery_challans', 'delivery_challan_events', 'legacy_stock', 'legacy_stock_movements', 'free_account_grants', 'plan_usage_events', 'web_vital_samples',
     ]
 
     it('exports every table the current Base, challan and branding screens write', async () => {

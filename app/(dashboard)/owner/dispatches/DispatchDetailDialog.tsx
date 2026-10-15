@@ -384,6 +384,16 @@ function DispatchDetailBody({
                         </h3>
                         <dl className="text-sm">
                             <Figure label={tx('sentMeters')} value={`${formatMeters(d.sent_meters)} m`} />
+                            {Number(d.legacy_meters ?? 0) > 0 && (
+                                <Figure
+                                    label={tx('stockSource')}
+                                    value={t('challan.splitSummary', {
+                                        orange: formatMeters(Number(d.sent_meters) - Number(d.legacy_meters)),
+                                        legacy: formatMeters(Number(d.legacy_meters)),
+                                    })}
+                                    tone="muted"
+                                />
+                            )}
                             <Figure
                                 label={tx('acknowledged')}
                                 value={d.acknowledged_meters === null ? '—' : `${formatMeters(d.acknowledged_meters)} m`}
