@@ -1723,5 +1723,26 @@ export const en = {
     "liveCost": "Live cost",
     "calculateSave": "Calculate & save · uses 1 costing",
     "startProduction": "Start Production"
+},
+
+  // Base go-live: setup before the first recorded pay-cycle start (lib/base-go-live.ts).
+  goLive: {
+    "setupCardTitle": "Daily recording starts {date}",
+    "setupCardBody": "Until then, set up looms and workers. Pay for days before {date} stays on paper, and fabric already in the godown is legacy stock.",
+    "changeDate": "Change date",
+    "readinessQualities": "{count} of {total} looms have a quality",
+    "readinessStaffed": "Day: {day} of {total} looms staffed · Night: {night} of {total}",
+    "readinessLegacyNone": "Count untagged fabric as legacy stock the evening before or on {date}",
+    "readinessLegacyStale": "Counted {counted}. Recount near {date}",
+    "readinessLegacyFresh": "Legacy stock counted {counted}",
+    "scheduleTitle": "Schedule daily recording",
+    "scheduleBody": "Recording starts at the beginning of your next pay cycle: {date}.",
+    "scheduleAction": "Start on {date}",
+    "sheetPreview": "Preview of {date}. Readings open on that day.",
+    "payrollStarts": "The first pay cycle in Weavly starts {date}. Pay before that stays on paper.",
+    "challansStart": "Challans open on {date}. Until then, dispatch on paper from legacy stock.",
+    "openingDisabled": "Old fabric is legacy stock. Record it with a legacy count.",
+    "supervisorStarts": "Daily recording starts {date}.",
+    "wizardStarts": "Daily recording starts {date}."
 }
 }

@@ -68,3 +68,14 @@ export function goLiveReadiness(input: {
         legacy: { state: !countedOn ? 'none' : countedOn >= addDays(input.goLive, -1) ? 'fresh' : 'stale', countedOn },
     }
 }
+
+const DATE_LOCALES = { en: 'en-IN', hi: 'hi-IN', gu: 'gu-IN' } as const
+
+/** "Sun, 1 Nov" in the viewer's language, for go-live copy. */
+export function formatGoLiveDate(date: string, language: string = 'en') {
+    const [year, month, day] = date.split('-').map(Number)
+    if (![year, month, day].every(Number.isFinite)) return date
+    return new Intl.DateTimeFormat(DATE_LOCALES[language as keyof typeof DATE_LOCALES] ?? 'en-IN', {
+        weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC',
+    }).format(new Date(Date.UTC(year, month - 1, day)))
+}

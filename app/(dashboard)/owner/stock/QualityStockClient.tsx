@@ -27,6 +27,7 @@ import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { COMPOSITION_SLOTS, CompositionBar, DayGroupList, OTHER_SWATCH, RecentMovementsSection, SignedQuantity, StockTrend, Swatch, formatIndiaDay, swatchFor } from '@/components/stock/stock-presentation'
 import { useTranslation } from '@/lib/i18n/context'
+import { GoLiveNotice } from '@/components/production/GoLiveNotice'
 import { useTourSample } from '@/lib/tours/sample-context'
 import { tourSurfaceProps } from '@/lib/tours/sample-surface'
 import { fabricStockSampleForm } from '@/lib/tours/sample-data/stock'
@@ -42,12 +43,14 @@ import { LegacyStatusLine } from './LegacyStatusLine'
 // Phones render rem at 14px, so the 44px touch target needs a pixel minimum.
 const secondaryAction = 'h-10 rounded-lg border-hairline bg-surface font-semibold text-ink shadow-xs hover:bg-surface-soft max-md:min-h-[44px]'
 
-export default function QualityStockClient({ initialData }: { initialData: QualityStockBoard }) {
+/** inSetup: before go-live, old fabric is legacy stock, so the orange opening-stock tool stays closed. */
+export default function QualityStockClient({ initialData, inSetup = false }: { initialData: QualityStockBoard; inSetup?: boolean }) {
     const { t, language } = useTranslation()
     const router = useRouter()
     const tourSample = useTourSample('fabric-stock')
     const tourStep = tourSample?.step as FabricStockTourStep | undefined
     const surface = tourSurfaceProps(Boolean(tourSample))
+    const openingClosed = inSetup && !tourSample
     const [data, setData] = useState(initialData)
     const [search, setSearch] = useState('')
     const [qualityId, setQualityId] = useState('')
@@ -167,12 +170,13 @@ export default function QualityStockClient({ initialData }: { initialData: Quali
                 description={tx('intro')}
                 actions={<>
                     <PageGuide />
-                    <Button data-tour-anchor="fabric.opening" onClick={() => open('opening')} className={railPrimaryAction}>
+                    <Button data-tour-anchor="fabric.opening" onClick={() => open('opening')} disabled={openingClosed} className={railPrimaryAction}>
                         <Plus className="h-4 w-4" aria-hidden="true" />
                         {tx('opening')}
                     </Button>
                 </>}
             />
+            {openingClosed && <GoLiveNotice>{t('goLive.openingDisabled')}</GoLiveNotice>}
 
             {notice && <p role="status" className="rounded-xl border border-[var(--wv-moss-200)] bg-[var(--wv-moss-50)] p-3.5 text-sm font-medium text-[var(--wv-moss-700)]">{notice}</p>}
             {error && <p role="alert" className="rounded-xl border border-[var(--wv-madder-200)] bg-[var(--wv-madder-50)] p-3.5 text-sm font-medium text-[var(--wv-madder-600)]">{error} <button className="ml-1 font-bold underline" onClick={() => void load('')}>{tx('retry')}</button></p>}

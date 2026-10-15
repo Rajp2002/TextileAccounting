@@ -44,6 +44,8 @@ import ChallanDraftEditor from './ChallanDraftEditor'
 import DispatchDetailDialog, { ChallanNumber, DispatchDetailPanel } from './DispatchDetailDialog'
 import { useMediaQuery } from '@/hooks/use-media-query'
 import { cn } from '@/lib/utils'
+import { GoLiveNotice } from '@/components/production/GoLiveNotice'
+import { formatGoLiveDate, type BaseGoLivePhase } from '@/lib/base-go-live'
 import { deliveryBadgeVariant, formatDocumentDate, formatMeters, paymentBadgeVariant } from '@/lib/dispatch-detail'
 
 function NewDispatchButton({ onClick, disabled, label, tourAnchor }: { onClick: () => void; disabled: boolean; label: string; tourAnchor?: "dispatch.new" }) {
@@ -79,6 +81,7 @@ export default function ChallansClient({
     qualities,
     legacy = [],
     businessName,
+    goLive,
 }: {
     initialData: Challan[]
     qualities: StockQuality[]
@@ -86,6 +89,8 @@ export default function ChallansClient({
     legacy?: LegacyStock[]
     /** The factory's name from its account; the editor's preview falls back to the sender name without it. */
     businessName?: string
+    /** Challans open on go-live; before it fabric leaves on paper from legacy stock. */
+    goLive?: { phase: BaseGoLivePhase; date: string | null }
 }) {
     const { t, language } = useTranslation()
     const tx = (s: string) => t(`challan.${s}`)
@@ -93,6 +98,7 @@ export default function ChallansClient({
     const tourSample = useTourSample('dispatch')
     const tourStep = tourSample?.step as DispatchTourStep | undefined
     const surface = tourSurfaceProps(Boolean(tourSample))
+    const closedUntilGoLive = !tourSample && Boolean(goLive) && goLive!.phase !== 'live'
     const [today, setToday] = useState(businessDate)
     useEffect(() => {
         const refresh = () => setToday(businessDate())
@@ -363,9 +369,14 @@ export default function ChallansClient({
                 description={<span className="sr-only">{tx('intro')}</span>}
                 actions={<>
                     <PageGuide />
-                    <NewDispatchButton tourAnchor="dispatch.new" onClick={beginDraft} disabled={busy || !!pending} label={tx('new')} />
+                    <NewDispatchButton tourAnchor="dispatch.new" onClick={beginDraft} disabled={busy || !!pending || closedUntilGoLive} label={tx('new')} />
                 </>}
             />
+            {closedUntilGoLive && (
+                <GoLiveNotice>{goLive!.date
+                    ? t('goLive.challansStart', { date: formatGoLiveDate(goLive!.date, language) })
+                    : t('goLive.scheduleTitle')}</GoLiveNotice>
+            )}
             <div className="xl:grid xl:h-[calc(100dvh-10.5rem)] xl:min-h-[34rem] xl:grid-cols-[minmax(21rem,25rem)_minmax(0,1fr)] xl:overflow-clip xl:rounded-2xl xl:border xl:border-hairline xl:bg-surface xl:shadow-xs">
             <div className="flex min-h-0 flex-col gap-4 xl:border-r xl:border-hairline xl:bg-surface-soft/40 xl:p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center xl:flex-col xl:items-stretch">
@@ -500,7 +511,7 @@ export default function ChallansClient({
                         title={tx('empty')}
                         className="xl:min-h-64 xl:border-0 xl:bg-transparent"
                         action={!history && !search.trim() && (
-                            <NewDispatchButton onClick={beginDraft} disabled={busy || !!pending} label={tx('new')} />
+                            <NewDispatchButton onClick={beginDraft} disabled={busy || !!pending || closedUntilGoLive} label={tx('new')} />
                         )}
                     />
                 )}

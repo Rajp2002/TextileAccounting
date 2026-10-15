@@ -37,6 +37,8 @@ import { cn } from '@/lib/utils'
 import { railPrimaryAction, railSurface } from '@/components/ui/rail'
 import { PageHeader } from '@/components/ui/page-header'
 import { PageGuide } from '@/components/tours/TourInvitation'
+import { GoLiveNotice } from '@/components/production/GoLiveNotice'
+import { formatGoLiveDate } from '@/lib/base-go-live'
 import {
     calculateBaseDailyProductionSummary,
     type BaseDailyProductionStatus,
@@ -209,7 +211,11 @@ export default function BaseDailyProductionSheet({
     const sample = Boolean(tourSample)
     const tourStep = tourSample?.step
     const surface = tourSurfaceProps(sample)
-    const [productionDate, setProductionDate] = useState(navigation.date ?? initialData.today)
+    // Before go-live the sheet is a read-only preview of go-live day: the arrangement it will open with.
+    const goLivePhase = initialData.goLivePhase ?? 'live'
+    const inSetup = !sample && goLivePhase !== 'live'
+    const setupDate = initialData.goLiveDate ?? initialData.today
+    const [productionDate, setProductionDate] = useState(inSetup ? setupDate : navigation.date ?? initialData.today)
     const [shift, setShift] = useState<'day' | 'night'>(navigation.shift ?? 'day')
     const [rows, setRows] = useState<Record<string, DraftRow>>({})
     const [requestId, setRequestId] = useState(newClientRequestId)
@@ -249,9 +255,9 @@ export default function BaseDailyProductionSheet({
 
     useEffect(() => {
         const date = selectedEntry?.production_date ?? navigation.date
-        setProductionDate(date && date <= initialData.today ? date : initialData.today)
+        setProductionDate(inSetup ? setupDate : date && date <= initialData.today ? date : initialData.today)
         setShift(selectedEntry?.shift ?? navigation.shift ?? 'day')
-    }, [selectedEntry?.production_date, selectedEntry?.shift, navigation.date, navigation.shift, initialData.today])
+    }, [selectedEntry?.production_date, selectedEntry?.shift, navigation.date, navigation.shift, initialData.today, inSetup, setupDate])
 
     useEffect(() => {
         if (draftStatus !== 'error') return
@@ -266,6 +272,11 @@ export default function BaseDailyProductionSheet({
     }, [focusedWorker, navigation.job, productionDate, shift])
 
     function changeSelection(date: string, nextShift: 'day' | 'night') {
+        if (inSetup) {
+            // Only the shift changes in the preview; the date stays on go-live.
+            setShift(nextShift)
+            return
+        }
         if (!validBaseDate(date) || date > initialData.today || isSaving) return
         if (draftStatus === 'error' && !window.confirm(tx('This draft could not be saved on this device. Discard these unsaved changes?'))) return
         setProductionDate(date)
@@ -339,7 +350,7 @@ export default function BaseDailyProductionSheet({
         && !isCurrentBatchLocked
         && unlockedBatchId !== currentBatch.id,
     )
-    const areInputsDisabled = isSaving || isCurrentBatchLocked || draftStatus === 'conflict'
+    const areInputsDisabled = isSaving || isCurrentBatchLocked || draftStatus === 'conflict' || inSetup
 
     const allocationsByEntry = useMemo(() => {
         const map = new Map<string, typeof initialData.allocations>()
@@ -884,13 +895,19 @@ export default function BaseDailyProductionSheet({
                     </>}
                 />
 
+                {inSetup && (
+                    <GoLiveNotice>{initialData.goLiveDate
+                        ? t('goLive.sheetPreview', { date: formatGoLiveDate(initialData.goLiveDate, language) })
+                        : t('goLive.scheduleTitle')}</GoLiveNotice>
+                )}
+
                 <div className="grid gap-3 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_auto] lg:items-stretch">
                     <div data-daily-tour="shift" className={cn(railSurface, 'p-3')}>
                         <p className="sr-only">{t('dailySheet.shiftDetails')}</p>
                         <div className="grid grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] gap-3">
                             <div className="min-w-0 space-y-1.5">
                                 <Label htmlFor="base-daily-date" className="text-xs font-bold text-body">Date</Label>
-                                <Input id="base-daily-date" type="date" max={initialData.today} value={productionDate} disabled={isSaving} onChange={(event) => changeSelection(event.target.value, shift)} className="h-10 min-w-0 w-full rounded-xl border-hairline bg-surface px-2 text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom" />
+                                <Input id="base-daily-date" type="date" max={inSetup ? setupDate : initialData.today} value={productionDate} disabled={isSaving || inSetup} onChange={(event) => changeSelection(event.target.value, shift)} className="h-10 min-w-0 w-full rounded-xl border-hairline bg-surface px-2 text-ink shadow-xs focus:border-loom focus:ring-1 focus:ring-loom" />
                             </div>
                             <div className="min-w-0 space-y-1.5">
                                 <Label htmlFor="base-daily-shift" className="text-xs font-bold text-body">Shift</Label>

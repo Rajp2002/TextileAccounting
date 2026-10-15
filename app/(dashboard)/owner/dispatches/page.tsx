@@ -5,19 +5,21 @@ import { getCachedOwnerOrganization } from '@/lib/owner-organization'
 import ChallansClient from './ChallansClient'
 import { listChallans } from './challan-actions'
 import { getQualityStockBoard } from '../stock/actions'
+import { getBaseGoLiveState } from '@/lib/base-go-live.server'
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Delivery challans | Weavly' }
 export default async function DispatchesPage() {
     const { user, profile } = await requireRole(['owner'])
     const perf = createPerfTimer('/owner/dispatches')
     // The organization read is shared with the owner shell, which already made it for this request.
-    const [challans, stock, organization] = await perf.measure(
+    const [challans, stock, organization, goLive] = await perf.measure(
         'businessData',
         () =>
             Promise.all([
                 listChallans(),
                 getQualityStockBoard(),
                 getCachedOwnerOrganization(user.id, profile.org_id),
+                getBaseGoLiveState(profile.org_id),
             ]),
         2,
     )
@@ -31,6 +33,7 @@ export default async function DispatchesPage() {
             qualities={stock.data.qualities}
             legacy={stock.data.legacy ?? []}
             businessName={organization.data?.name ?? ''}
+            goLive={{ phase: goLive.phase, date: goLive.goLive }}
         />
         </DispatchGuidedTour>
     )

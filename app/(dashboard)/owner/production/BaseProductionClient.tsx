@@ -87,6 +87,9 @@ import BaseActiveQualities from './BaseActiveQualities'
 import BaseAssignmentWorkspace from './BaseAssignmentWorkspace'
 import BaseProductionLoomChart from './BaseProductionLoomChart'
 import BaseProductionTodayBand from './BaseProductionTodayBand'
+import BaseGoLiveSetupCard from './BaseGoLiveSetupCard'
+import { GoLiveNotice } from '@/components/production/GoLiveNotice'
+import { formatGoLiveDate, goLiveReadiness } from '@/lib/base-go-live'
 import BaseDailyProductionSheet from './BaseDailyProductionSheet'
 import BasePayrollReadinessPanel from './BasePayrollReadinessPanel'
 import BaseWorkerIncentives from './BaseWorkerIncentives'
@@ -250,11 +253,14 @@ export default function BaseProductionClient({
 }) {
     const router = useRouter()
     const pathname = usePathname()
-    const { tx, t } = useTranslation()
+    const { tx, t, language } = useTranslation()
     const tourSample = useTourSample()
     const payrollTourStep = useTourSample('payroll')?.step
     const surface = tourSurfaceProps(Boolean(tourSample))
     useLocalizedPageTitle(view === 'operations' ? `${tx('Worker–Machine Assignments')} | Weavly` : null)
+    // Before go-live the factory is setting up: nothing is recorded yet. Tours keep their sample pages.
+    const goLivePhase = initialData.goLivePhase ?? 'live'
+    const inSetup = !tourSample && goLivePhase !== 'live'
     // During setup the board shows and edits the arrangement on go-live, the day it takes effect.
     const assignmentData = useMemo(() => (initialData.effectiveDate && initialData.effectiveDate !== initialData.today
         ? { ...initialData, today: initialData.effectiveDate } : initialData), [initialData])
@@ -620,7 +626,7 @@ export default function BaseProductionClient({
                         </Button>
                     )}
                     {view === 'payroll' && activeTab !== 'history' && activePeriodSummary && (
-                        <Button data-tour-anchor="payroll.settle" onClick={() => setWorkspaceOpen(true)} className={railPrimaryAction}>
+                        <Button data-tour-anchor="payroll.settle" onClick={() => setWorkspaceOpen(true)} disabled={inSetup} className={railPrimaryAction}>
                             <WalletCards className="size-4" aria-hidden="true" />
                             <span data-i18n-skip="true">{activePeriodSummary.status === 'settled'
                                 ? t('payroll.viewSettledPayroll')
@@ -670,7 +676,28 @@ export default function BaseProductionClient({
                 <BasePayrollRecords initialData={initialData} initialPeriodStart={recordsPeriodStart} onBack={() => setPayrollTab('pay')} />
             )}
 
-            {view === 'production' && !isDailySheetView && (
+            {view === 'production' && !isDailySheetView && inSetup && (
+                <BaseGoLiveSetupCard
+                    phase={goLivePhase === 'unscheduled' ? 'unscheduled' : 'setup'}
+                    goLive={initialData.goLiveDate ?? null}
+                    options={initialData.goLiveOptions ?? []}
+                    readiness={initialData.goLiveDate ? goLiveReadiness({
+                        goLive: initialData.goLiveDate,
+                        machines: activeMachines,
+                        jobContexts: initialData.machineJobContexts,
+                        assignments: initialData.assignments,
+                        legacyCounts: initialData.legacyCounts ?? [],
+                    }) : null}
+                />
+            )}
+
+            {view === 'payroll' && activeTab !== 'history' && inSetup && (
+                <GoLiveNotice>{initialData.goLiveDate
+                    ? t('goLive.payrollStarts', { date: formatGoLiveDate(initialData.goLiveDate, language) })
+                    : t('goLive.scheduleTitle')}</GoLiveNotice>
+            )}
+
+            {view === 'production' && !isDailySheetView && !inSetup && (
                 <BaseProductionTodayBand
                     today={todayProduction}
                     comparison={yesterdayComparison}

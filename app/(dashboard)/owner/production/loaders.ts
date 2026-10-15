@@ -49,6 +49,8 @@ export type BaseProductionInitialData = {
     goLiveOptions?: string[]
     /** The later of today and go-live: the date setup changes take effect from. */
     effectiveDate?: string
+    /** Legacy stock count dates for the setup readiness list; loaded only while not live. */
+    legacyCounts?: { basis: 'unknown' | 'estimated' | 'counted'; basis_at: string | null }[]
     payrollPeriod: { start: string; end: string }
     payrollCycleConfig?: PayrollCycleConfig
     costings: BaseProductionCosting[]
@@ -600,6 +602,10 @@ export async function loadBaseProductionInitialData(
     }))
 
     const goLiveDate = (organizationResult.data?.base_go_live_date as string | null | undefined) ?? null
+    // Setup readiness asks for a legacy count near go-live. A failed read only hides that line.
+    const legacyCounts = includeProduction && goLivePhase(today, goLiveDate) !== 'live'
+        ? ((await supabase.from('legacy_stock').select('basis, basis_at').eq('org_id', orgId)).data ?? []) as BaseProductionInitialData['legacyCounts']
+        : undefined
     return {
         orgId,
         factoryName: String(organizationResult.data?.name || 'Weavly'),
@@ -607,6 +613,7 @@ export async function loadBaseProductionInitialData(
         goLivePhase: goLivePhase(today, goLiveDate),
         goLiveOptions: goLivePhase(today, goLiveDate) === 'live' || !rawCycleConfig ? [] : goLiveOptions(today, payrollCycleConfig.rule),
         effectiveDate: effectiveDateFor(today, goLiveDate),
+        ...(legacyCounts ? { legacyCounts } : {}),
         today,
         payrollPeriod,
         payrollCycleConfig,
