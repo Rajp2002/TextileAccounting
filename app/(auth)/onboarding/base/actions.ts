@@ -15,6 +15,7 @@ import {
     type PayrollCycleInput,
 } from '@/lib/base-onboarding'
 import { getFactoryReadiness } from '@/lib/base-onboarding.server'
+import { getBaseGoLiveState, scheduleBaseGoLiveForOrg } from '@/lib/base-go-live.server'
 import {
     validateCycleRule,
     type PayrollCycleRule,
@@ -692,8 +693,20 @@ export async function completeBaseOnboardingAction() {
             console.warn('[completeBaseOnboardingAction] Failed to update user app_metadata:', authErr)
         }
 
+        // Daily recording starts at the next pay-cycle start (the first option). A failure here leaves
+        // go-live unscheduled, which the production page's "Schedule daily recording" card recovers.
+        try {
+            const goLive = await getBaseGoLiveState(profile.org_id)
+            if (goLive.phase === 'unscheduled' && goLive.options[0]) {
+                const scheduled = await scheduleBaseGoLiveForOrg(profile.org_id, user.id, goLive.options[0])
+                if ('error' in scheduled) console.warn('[completeBaseOnboardingAction] Go-live not scheduled:', scheduled.error)
+            }
+        } catch (goLiveErr) {
+            console.warn('[completeBaseOnboardingAction] Go-live not scheduled:', goLiveErr)
+        }
+
         revalidatePath('/owner/production')
-        revalidatePath('/owner/production')
+        revalidatePath('/owner/production/daily-sheet')
         revalidatePath('/owner/machines')
         revalidatePath('/owner/workers')
         revalidatePath('/owner/payroll')

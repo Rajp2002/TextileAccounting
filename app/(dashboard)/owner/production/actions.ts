@@ -15,6 +15,8 @@ import {
     findBulkNameIssues, isValidMonthlySalary, normalizeBulkName,
 } from '@/lib/base-bulk-register'
 import { getSuratTodayString } from '@/lib/time'
+import { effectiveDateFor, nextGoLiveDate } from '@/lib/base-go-live'
+import { getBaseGoLiveState, scheduleBaseGoLiveForOrg } from '@/lib/base-go-live.server'
 import {
     validateCycleRule,
     getEarliestSafeCycleChangeDate,
@@ -1444,7 +1446,7 @@ export async function saveBasePayrollCycleConfig(input: {
     rule: unknown
     effectiveFrom?: string
 }) {
-    const { profile } = await requireBaseProductionOwner()
+    const { user, profile } = await requireBaseProductionOwner()
     const parsed = safeParse(SavePayrollCycleSchema, input)
     if ('error' in parsed) return parsed
 
@@ -1467,7 +1469,9 @@ export async function saveBasePayrollCycleConfig(input: {
         today: getSuratTodayString(),
     })
 
-    const effectiveDate = parsed.data.effectiveFrom || safeResult.safeEffectiveDate
+    // During setup the current cycle already starts at go-live, so a new one starts there too.
+    const goLive = await getBaseGoLiveState(profile.org_id)
+    const effectiveDate = effectiveDateFor(parsed.data.effectiveFrom || safeResult.safeEffectiveDate, goLive.phase === 'setup' ? goLive.goLive : null)
     if (effectiveDate < safeResult.safeEffectiveDate) {
         return {
             error: `The requested effective date (${effectiveDate}) falls inside a protected payroll period. The earliest safe date is ${safeResult.safeEffectiveDate}.`,
@@ -1488,13 +1492,23 @@ export async function saveBasePayrollCycleConfig(input: {
         return databaseError(rpcError, 'Failed to save payroll cycle configuration. Your existing settings have not changed.')
     }
 
+    // Go-live is always a cycle start, so a new cycle during setup moves it to the next start of that cycle.
+    let goLiveDate = goLive.goLive
+    if (goLive.phase === 'setup') {
+        const scheduled = await scheduleBaseGoLiveForOrg(profile.org_id, user.id, nextGoLiveDate(getSuratTodayString(), validation.normalizedRule))
+        if ('error' in scheduled) return { error: `Pay cycle saved, but the recording start date could not move: ${scheduled.error}` }
+        goLiveDate = scheduled.goLive
+    }
+
     revalidateNextPath('/owner/settings')
     revalidateNextPath('/owner/payroll')
     revalidateNextPath('/owner/production')
+    revalidateNextPath('/owner/production/daily-sheet')
 
     return {
         success: true,
-        effectiveFrom: effectiveDate,
+        goLiveDate,
+        effectiveFrom: goLiveDate && goLive.phase === 'setup' ? goLiveDate : effectiveDate,
         rule: validation.normalizedRule,
     }
 }
@@ -1558,3 +1572,15 @@ export async function getSafePayrollCycleEffectiveDateAction() {
     }
 }
 
+/** Sets or moves the day daily recording starts. Only one of the offered pay-cycle starts is accepted. */
+export async function scheduleBaseGoLiveAction(goLive: string): Promise<{ goLive: string } | { error: string }> {
+    const { user, profile } = await requireBaseProductionOwner()
+    const parsed = safeParse(DateSchema, goLive)
+    if ('error' in parsed) return { error: 'Choose one of the listed start dates.' }
+    const result = await scheduleBaseGoLiveForOrg(profile.org_id, user.id, parsed.data)
+    if ('error' in result) return result
+    for (const path of ['/owner/production', '/owner/production/daily-sheet', '/owner/payroll', '/owner/assignments', '/owner/stock', '/owner/dispatches']) {
+        revalidateNextPath(path)
+    }
+    return result
+}
