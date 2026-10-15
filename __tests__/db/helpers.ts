@@ -41,7 +41,9 @@ export async function asServiceRole(db: Db) {
     await db.query('SET ROLE service_role')
 }
 
-type SeedOptions = { tier?: 'lite' | 'base' | null; locked?: boolean; name?: string }
+// goLive: the org's Base go-live date. The default sits far in the past so tests that record
+// production, assignments or payroll behave as a live factory; pass null for one still in setup.
+type SeedOptions = { tier?: 'lite' | 'base' | null; locked?: boolean; name?: string; goLive?: string | null }
 
 /** Seed an organization with one owner (as superuser). */
 export async function seedOwnerOrg(db: Db, options: SeedOptions = {}) {
@@ -53,6 +55,8 @@ export async function seedOwnerOrg(db: Db, options: SeedOptions = {}) {
         orgId, options.name ?? 'Test Weaving Works', userId, options.locked ?? false,
     ])
     await db.query("INSERT INTO public.profiles(id, org_id, role, full_name) VALUES ($1, $2, 'owner', 'Test Owner')", [userId, orgId])
+    const goLive = options.goLive === undefined ? '2000-01-01' : options.goLive
+    if (goLive !== null) await db.query('UPDATE public.organizations SET base_go_live_date = $2 WHERE id = $1', [orgId, goLive])
     const tier = options.tier === undefined ? 'base' : options.tier
     if (tier) {
         await db.query(
