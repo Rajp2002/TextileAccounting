@@ -126,4 +126,49 @@ $$;
 REVOKE ALL ON FUNCTION public.get_supervisor_go_live() FROM PUBLIC, anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.get_supervisor_go_live() TO authenticated;
 
+-- ── 2. Nothing is recorded before go-live ───────────────────────────────────
+-- One trigger guards every writer of these tables, the owner and supervisor sheets, the assignment board,
+-- Switch shifts, loom qualities, days off, incentives and settlement included. Production also needs a
+-- scheduled go-live; the other records only check the date once one exists, since setup changes made
+-- before scheduling are dated today and still cover go-live.
+
+CREATE FUNCTION private.guard_base_go_live()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+  v_go_live date := private.base_go_live_date(NEW.org_id);
+  v_date date;
+BEGIN
+  -- The trigger argument names the row's business date column.
+  v_date := (to_jsonb(NEW) ->> TG_ARGV[0])::date;
+  IF v_go_live IS NULL THEN
+    IF TG_TABLE_NAME = 'base_production_batches' THEN
+      RAISE EXCEPTION 'Schedule daily recording before saving production.' USING ERRCODE = '22023';
+    END IF;
+    RETURN NEW;
+  END IF;
+  IF v_date < v_go_live THEN
+    RAISE EXCEPTION 'Daily recording starts on %.', to_char(v_go_live, 'YYYY-MM-DD') USING ERRCODE = '22023';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+REVOKE ALL ON FUNCTION private.guard_base_go_live() FROM PUBLIC, anon, authenticated, service_role;
+
+CREATE TRIGGER guard_base_go_live BEFORE INSERT OR UPDATE OF production_date ON public.base_production_batches
+  FOR EACH ROW EXECUTE FUNCTION private.guard_base_go_live('production_date');
+CREATE TRIGGER guard_base_go_live BEFORE INSERT ON public.base_worker_machine_assignments
+  FOR EACH ROW EXECUTE FUNCTION private.guard_base_go_live('effective_from');
+CREATE TRIGGER guard_base_go_live BEFORE INSERT ON public.base_machine_job_contexts
+  FOR EACH ROW EXECUTE FUNCTION private.guard_base_go_live('effective_from');
+CREATE TRIGGER guard_base_go_live BEFORE INSERT ON public.base_staff_days_off
+  FOR EACH ROW EXECUTE FUNCTION private.guard_base_go_live('off_date');
+CREATE TRIGGER guard_base_go_live BEFORE INSERT ON public.base_worker_incentives
+  FOR EACH ROW EXECUTE FUNCTION private.guard_base_go_live('service_start');
+CREATE TRIGGER guard_base_go_live BEFORE INSERT ON public.base_payroll_settlements
+  FOR EACH ROW EXECUTE FUNCTION private.guard_base_go_live('period_end');
+
 COMMIT;

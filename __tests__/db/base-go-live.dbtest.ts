@@ -99,3 +99,76 @@ describe('get_supervisor_go_live', () => {
         expect(result.go_live).toBe(plusDays(today, 12))
     })
 })
+
+type Factory = { owner: { userId: string; orgId: string }; job: string; worker: string; fixed: string; machine: string }
+
+/** A set-up factory: rows are written while unscheduled, then go-live is set, as the setup phase does. */
+async function factory(goLive: string | null): Promise<Factory> {
+    const owner = await seedOwnerOrg(db, { goLive: null })
+    const ids = { costing: randomUUID(), job: randomUUID(), worker: randomUUID(), fixed: randomUUID(), machine: randomUUID() }
+    await asSuperuser(db)
+    await db.query(
+        `INSERT INTO public.estimator_quotes(id, org_id, record_kind, quality_label, yarn_denier, meters, yarn_rate_per_kg,
+            landed_cost_per_meter, quote_price_per_meter, intended_margin_percent, worker_rate_per_m)
+         VALUES ($1, $2, 'costing', 'Cotton', 100, 1000, 100, 20, 40, 50, 2)`, [ids.costing, owner.orgId])
+    await db.query("INSERT INTO public.base_production_jobs(id, org_id, costing_id, quality_label, target_meters, start_date, status, worker_rate_per_meter) VALUES ($1, $2, $3, 'Cotton', 10000, '2026-08-01', 'active', 2)", [ids.job, owner.orgId, ids.costing])
+    await db.query("INSERT INTO public.base_production_workers(id, org_id, name, rate_per_meter, shift_availability) VALUES ($1, $2, 'Weaver One', 2, 'both')", [ids.worker, owner.orgId])
+    await db.query("INSERT INTO public.base_production_workers(id, org_id, name, pay_type, monthly_salary, start_date, rate_per_meter) VALUES ($1, $2, 'Mahesh', 'fixed_monthly', 30000, '2026-08-01', 0)", [ids.fixed, owner.orgId])
+    await db.query("INSERT INTO public.base_production_machines(id, org_id, name, machine_type) VALUES ($1, $2, 'Loom 1', 'power_loom')", [ids.machine, owner.orgId])
+    await db.query("INSERT INTO public.base_worker_machine_assignments(org_id, worker_id, machine_id, shift, effective_from) VALUES ($1, $2, $3, 'day', '2026-08-01')", [owner.orgId, ids.worker, ids.machine])
+    await db.query("INSERT INTO public.base_machine_job_contexts(org_id, machine_id, job_id, effective_from) VALUES ($1, $2, $3, '2026-08-01')", [owner.orgId, ids.machine, ids.job])
+    if (goLive) await db.query('UPDATE public.organizations SET base_go_live_date = $2 WHERE id = $1', [owner.orgId, goLive])
+    return { owner, ...ids }
+}
+async function ownerSave(f: Factory, date: string) {
+    await asUser(db, f.owner.userId, f.owner.orgId)
+    const entries = [{ worker_id: f.worker, entry_status: 'entered', meters: 40, allocations: [{ machine_id: f.machine, job_id: f.job, meters: 40 }], machine_records: [{ machine_id: f.machine, state: 'entered' }] }]
+    return (await db.query("SELECT public.save_base_daily_production_reviewed($1, 'day', $2, $3, NULL, NULL) AS result", [date, randomUUID(), JSON.stringify(entries)])).rows[0].result
+}
+async function asOwner(f: Factory, sql: string, params: unknown[]) {
+    await asUser(db, f.owner.userId, f.owner.orgId)
+    return db.query(sql, params)
+}
+
+describe('guards before go-live', () => {
+    it('refuses production before go-live and without one', async () => {
+        const setup = await factory(plusDays(today, 7))
+        const before = await pgError(ownerSave(setup, today))
+        expect(before.code).toBe('22023')
+        expect(before.message).toContain('Daily recording starts on')
+        const unscheduled = await factory(null)
+        const none = await pgError(ownerSave(unscheduled, today))
+        expect(none.code).toBe('22023')
+        expect(none.message).toContain('Schedule daily recording')
+    })
+    it('accepts production on go-live day', async () => {
+        const live = await factory(today)
+        expect(await ownerSave(live, today)).toMatchObject({ batch_id: expect.any(String) })
+    })
+    it('refuses assignments, qualities and rotations before go-live', async () => {
+        const goLive = plusDays(today, 7)
+        const f = await factory(goLive)
+        const machine = randomUUID()
+        await asSuperuser(db)
+        await db.query("INSERT INTO public.base_production_machines(id, org_id, name, machine_type) VALUES ($1, $2, 'Loom 2', 'power_loom')", [machine, f.owner.orgId])
+        expect((await pgError(asOwner(f, 'SELECT public.set_base_machine_job_context($1, $2, $3)', [machine, f.job, today]))).code).toBe('22023')
+        await asOwner(f, 'SELECT public.set_base_machine_job_context($1, $2, $3)', [machine, f.job, goLive])
+        expect((await pgError(asOwner(f, "SELECT public.upsert_base_worker_machine_assignment($1, $2, 'night', $3, false)", [f.worker, f.machine, today]))).code).toBe('22023')
+        await asOwner(f, "SELECT public.upsert_base_worker_machine_assignment($1, $2, 'night', $3, false)", [f.worker, machine, goLive])
+        expect((await pgError(asOwner(f, 'SELECT public.rotate_base_worker_shifts($1, $2)', [[f.worker], today]))).code).toBe('22023')
+    })
+    it('refuses days off and incentives before go-live', async () => {
+        const f = await factory(today)
+        const yesterday = plusDays(today, -1)
+        expect((await pgError(asOwner(f, 'SELECT public.set_base_staff_day_off($1, $2, true)', [f.fixed, yesterday]))).code).toBe('22023')
+        expect((await pgError(asOwner(f, 'SELECT public.create_base_worker_incentive($1, $2, $3, 500, $4, $5)', [f.worker, yesterday, yesterday, 'Slip 12', randomUUID()]))).code).toBe('22023')
+    })
+    it('refuses a supervisor save before go-live', async () => {
+        const f = await factory(plusDays(today, 7))
+        const supervisor = await seedSupervisor(db, f.owner.orgId)
+        await asSupervisor(db, supervisor.userId)
+        const entries = [{ worker_id: f.worker, entry_status: 'entered', meters: 40, allocations: [{ machine_id: f.machine, job_id: f.job, meters: 40 }], machine_records: [{ machine_id: f.machine, state: 'entered' }] }]
+        const error = await pgError(db.query("SELECT public.save_supervisor_daily_sheet($1, 'day', $2, $3, NULL, NULL)", [today, randomUUID(), JSON.stringify(entries)]))
+        expect(error.code).toBe('22023')
+    })
+})
