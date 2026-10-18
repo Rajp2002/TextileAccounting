@@ -32,7 +32,7 @@ const phrases = {
  calculateAfterReset:['Calculate & save opens again when your allowance resets.','ભથ્થું રીસેટ થાય ત્યારે ગણતરી કરો અને સાચવો ફરી ખુલશે.','सीमा रीसेट होने पर गणना करें और सहेजें फिर खुलेगा।'],
  draftKept:['Your inputs are kept on this device.','તમારી માહિતી આ ડિવાઇસ પર રાખેલ છે.','आपकी जानकारी इस डिवाइस पर रखी गई है।'],
  draftRestored:['Your unsaved inputs from this device are back.','આ ડિવાઇસ પર રાખેલી તમારી સાચવ્યા વગરની માહિતી પાછી આવી છે.','इस डिवाइस पर रखी आपकी बिना सहेजी जानकारी वापस आ गई है।'],
- tryLiteFree:['Try Lite free for 1 month','Lite 1 મહિનો મફત અજમાવો','Lite 1 महीने मुफ़्त आज़माएँ'],
+ tryLiteFree:['Try Lite free for 3 months','Lite 3 મહિના મફત અજમાવો','Lite 3 महीने मुफ़्त आज़माएँ'],
 
  planSummary:['Choose Lite for full costing, or Base to add production logging and automatic payroll calculation.','સંપૂર્ણ કોસ્ટિંગ માટે Lite પસંદ કરો, અથવા ઉત્પાદન નોંધ અને આપમેળે પગાર ગણતરી ઉમેરવા Base પસંદ કરો.','पूरी कॉस्टिंग के लिए Lite चुनें, या उत्पादन लॉगिंग और स्वचालित वेतन गणना जोड़ने के लिए Base चुनें।'],
  planExplore:['Explore Lite and Base','Lite અને Base વિશે જાણો','Lite और Base के बारे में जानें'],

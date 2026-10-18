@@ -36,7 +36,7 @@ interface PlanCardProps {
   busy: boolean
   onSelectFree: () => void
   onOpenPreview: (feature: UpgradeFeature, tier: UpgradePlan) => void
-  /** Lite only: the org may start the 30-day trial. Defaults to hidden. */
+  /** Lite only: the org may start the 90-day trial. Defaults to hidden. */
   liteTrialEligible?: boolean
 }
 

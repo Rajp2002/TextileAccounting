@@ -21,7 +21,7 @@ interface StartTrialButtonProps {
   onStarted?: () => void
 }
 
-/** Starts the 30-day Lite trial from the verified owner session, then moves to the estimator. */
+/** Starts the 90-day Lite trial from the verified owner session, then moves to the estimator. */
 export function StartTrialButton({ className, onStarted }: StartTrialButtonProps) {
   const { language, tx } = useTranslation()
   const [pending, setPending] = useState(false)

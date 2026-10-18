@@ -87,8 +87,8 @@ describe('normalizeSignupPlan', () => {
 describe('trialDaysLeft', () => {
   const now = Date.parse('2026-10-11T00:00:00.000Z')
 
-  it('the Lite trial is 30 days', () => {
-    expect(LITE_TRIAL_DAYS).toBe(30)
+  it('the Lite trial is 90 days (three months)', () => {
+    expect(LITE_TRIAL_DAYS).toBe(90)
   })
 
   it('rounds a partial day up', () => {
