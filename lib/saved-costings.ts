@@ -1,3 +1,4 @@
+import { nanoid } from 'nanoid'
 import { formatTimestampDate } from './format'
 import {
   ensureOverheadIntegrity,
@@ -13,6 +14,7 @@ import {
   type WarpRow,
   type WeftRow,
 } from './estimator'
+import { constructionSignature, templateConstructionRows } from './quality-construction'
 
 export type SavedCostingSort = 'recent' | 'oldest' | 'margin_desc' | 'cost_asc'
 export type SavedCostingMarginFilter = 'all' | 'negative' | 'under_10' | '10_to_20' | 'over_20'
@@ -248,6 +250,18 @@ export type SavedQualityFactoryProfile = Partial<{
  */
 export type SavedQualityCostingReuse = Partial<{
   updated_at: string | null
+  version_number: number | null
+  warp_rows: WarpRow[] | null
+  weft_rows: WeftRow[] | null
+  per_pick_cost_paise: unknown
+  yarn_shortage_pct: unknown
+  warp_crimp_pct: unknown
+  tape_length_m: unknown
+  loom_type: LoomType | null
+  estimator_rpm: unknown
+  estimator_power_kw: unknown
+  hours_per_shift: unknown
+  sizing_mode: 'in_house' | 'outsourced' | null
   warping_rate_per_kg: unknown
   sizing_rate_per_kg: unknown
   winding_rate_per_kg: unknown
@@ -309,23 +323,30 @@ export function resolveSavedCostingInputBasis(
 }
 
 /**
- * Overhead and warping basis when a saved quality is applied. The quality's
- * own direct overhead comes first; otherwise the latest costing's restored
- * basis (`restored`, from restoreSavedQualityCostingAssumptions) is kept
- * rather than replaced by whatever the editor held. Without a reused costing,
- * `restored` is the editor state and warping defaults to in-house, as before.
+ * Overhead and warping basis when a saved quality is applied. The latest
+ * costing's restored basis (`restored`, from
+ * restoreSavedQualityCostingAssumptions) wins, so a repeat costing stays
+ * comparable. Only a quality that has never been costed falls back to its own
+ * direct overhead; without either, `restored` is the editor state and warping
+ * defaults to in-house, as before.
  */
 export function resolveAppliedQualityBasis(
   template: { overhead_override_per_m?: unknown; warping_mode?: unknown; latest_costing_reuse?: SavedQualityCostingReuse | null },
   restored: { overheadMode: OverheadMode; overheadOverridePerM: number | null },
 ): { overheadMode: OverheadMode; overheadOverridePerM: number | null; warpingMode: WarpingMode } {
+  const warpingMode = storedWarpingMode(template.latest_costing_reuse?.warping_mode)
+    ?? storedWarpingMode(template.warping_mode)
+    ?? 'in_house'
+  if (template.latest_costing_reuse) {
+    return { overheadOverridePerM: restored.overheadOverridePerM, overheadMode: restored.overheadMode, warpingMode }
+  }
   const templateOverride = template.overhead_override_per_m === undefined || template.overhead_override_per_m === null
     ? null
     : Number(template.overhead_override_per_m)
   return {
     overheadOverridePerM: templateOverride ?? restored.overheadOverridePerM,
     overheadMode: templateOverride !== null ? 'direct' : restored.overheadMode,
-    warpingMode: storedWarpingMode(template.warping_mode) ?? storedWarpingMode(template.latest_costing_reuse?.warping_mode) ?? 'in_house',
+    warpingMode,
   }
 }
 
@@ -405,6 +426,149 @@ export function restoreSavedQualityCostingAssumptions(
     loomCount: finiteOrFallback(reuse.loom_count, state.loomCount),
     monthlyWorkingDays: finiteOrFallback(reuse.monthly_working_days, state.monthlyWorkingDays),
     avgOutputPerLoomPerDay: finiteOrFallback(reuse.avg_output_per_loom_per_day, state.avgOutputPerLoomPerDay),
+  }
+}
+
+/** The Rate Book values (factory defaults) that a reopened quality takes over its costings. */
+export type RateBookDefaults = Partial<Record<
+  'warpingRatePerKg' | 'sizingRatePerKg' | 'windingRatePerKg' | 'processingRatePerM' | 'finishingRatePerM' | 'transportPerM' | 'commissionPct',
+  number
+>>
+
+const RATE_BOOK_PROFILE_FIELDS: Array<[keyof RateBookDefaults, string]> = [
+  ['warpingRatePerKg', 'warping_rate_per_kg'],
+  ['sizingRatePerKg', 'sizing_rate_per_kg'],
+  ['windingRatePerKg', 'winding_rate_per_kg'],
+  ['processingRatePerM', 'default_processing_rate_per_m'],
+  ['finishingRatePerM', 'default_finishing_rate_per_m'],
+  ['transportPerM', 'default_transport_per_m'],
+  ['commissionPct', 'default_commission_pct'],
+]
+
+/**
+ * The Rate Book defaults a factory profile holds. A value of 0 is a real
+ * default (0% commission); only a missing or non-numeric value is left out, so
+ * the latest costing can fill it.
+ */
+export function rateBookDefaultsFromProfile(profile: Record<string, unknown> | null | undefined): RateBookDefaults {
+  const defaults: RateBookDefaults = {}
+  if (!profile) return defaults
+  for (const [field, column] of RATE_BOOK_PROFILE_FIELDS) {
+    const value = profile[column]
+    if (value === null || value === undefined || value === '') continue
+    const parsed = Number(value)
+    if (Number.isFinite(parsed)) defaults[field] = parsed
+  }
+  return defaults
+}
+
+/** The saved-quality (estimator_templates) fields that reopening a quality reads. */
+export type SavedQualityTemplateInput = {
+  warp_rows?: WarpRow[] | null
+  weft_rows?: WeftRow[] | null
+  loom_type?: LoomType | null
+  loom_rpm?: number | string | null
+  loom_power_kw?: number | string | null
+  warping_mode?: 'in_house' | 'outsourced' | null
+  sizing_mode?: 'in_house' | 'outsourced' | null
+  hours_per_shift?: number | string | null
+  tape_length_m?: number | string | null
+  warp_crimp_pct?: number | string | null
+  per_pick_cost_paise?: number | string | null
+  yarn_shortage_pct?: number | string | null
+  overhead_override_per_m?: number | string | null
+  calculated_yarn_denier?: number | string | null
+  yarn_denier?: number | string | null
+  beam_ends?: number | string | null
+  ppi?: number | string | null
+  reed_space?: number | string | null
+  weft_denier?: number | string | null
+  default_yarn_rate?: number | string | null
+  latest_costing_reuse?: SavedQualityCostingReuse | null
+}
+
+/** The first value that is a real number, else the fallback. Unlike Number(), null is not 0. */
+function firstNumber<T extends number | null>(fallback: T, ...values: unknown[]): number | T {
+  for (const value of values) {
+    if (value === null || value === undefined || value === '') continue
+    const parsed = Number(value)
+    if (Number.isFinite(parsed)) return parsed
+  }
+  return fallback
+}
+
+/**
+ * The estimate state when a saved quality is reopened, per input:
+ * - fabric: the quality, with its Rate Book yarn rates;
+ * - the Rate Book's seven rates: the Rate Book, else the latest costing, else
+ *   the current editor;
+ * - everything else: the latest costing, else the quality, else the editor;
+ * - per-layer GST, wastage and crimp: the latest costing's rows, but only when
+ *   that costing is the same fabric (older costings may not be).
+ */
+export function resolveReopenedQualityState(
+  state: EstimateState,
+  template: SavedQualityTemplateInput,
+  rateBookDefaults: RateBookDefaults,
+): EstimateState {
+  const reuse = template.latest_costing_reuse ?? null
+  const restored = restoreSavedQualityCostingAssumptions(state, reuse)
+  const basis = resolveAppliedQualityBasis(template, restored)
+
+  const construction = templateConstructionRows({ ...template, default_yarn_rate: template.default_yarn_rate })
+  const costingMatchesFabric = Boolean(
+    reuse?.warp_rows && reuse.weft_rows
+    && constructionSignature({ warpRows: reuse.warp_rows, weftRows: reuse.weft_rows }) === constructionSignature(construction),
+  )
+  const warpRows = construction.warpRows.map((row, index): WarpRow => {
+    const saved = costingMatchesFabric ? reuse?.warp_rows?.[index] : undefined
+    return {
+      ...row,
+      id: nanoid(),
+      ...(saved ? {
+        gstPct: firstNumber(row.gstPct, saved.gstPct),
+        shortagePct: saved.shortagePct === undefined ? row.shortagePct : firstNumber(null, saved.shortagePct),
+        ...(saved.crimpPct !== undefined ? { crimpPct: firstNumber(null, saved.crimpPct) } : {}),
+      } : {}),
+    }
+  })
+  const weftRows = construction.weftRows.map((row, index): WeftRow => {
+    const saved = costingMatchesFabric ? reuse?.weft_rows?.[index] : undefined
+    return {
+      ...row,
+      id: nanoid(),
+      ...(saved ? {
+        gstPct: firstNumber(row.gstPct, saved.gstPct),
+        shortagePct: saved.shortagePct === undefined ? row.shortagePct : firstNumber(null, saved.shortagePct),
+        ...(saved.crimpPct !== undefined ? { crimpPct: firstNumber(null, saved.crimpPct) } : {}),
+      } : {}),
+    }
+  })
+
+  // RPM and power belong to the loom type they were saved with, so they come
+  // from the same source as the type.
+  const loomFromCosting = Boolean(reuse?.loom_type)
+  const loomType = (loomFromCosting ? reuse?.loom_type : template.loom_type) ?? null
+  const loomRpm = loomFromCosting ? firstNumber(null, reuse?.estimator_rpm) : firstNumber(null, template.loom_rpm)
+  const loomPowerKw = loomFromCosting ? firstNumber(null, reuse?.estimator_power_kw) : firstNumber(null, template.loom_power_kw)
+
+  return {
+    ...restored,
+    ...rateBookDefaults,
+    loomType,
+    loomRpm,
+    loomPowerKw,
+    loomRpmIsCustomised: false,
+    loomPowerKwIsCustomised: false,
+    sizingMode: reuse?.sizing_mode ?? template.sizing_mode ?? 'in_house',
+    hoursPerShift: firstNumber(state.hoursPerShift, reuse?.hours_per_shift, template.hours_per_shift),
+    warpRows,
+    weftRows,
+    tapeLengthM: firstNumber(state.tapeLengthM, reuse?.tape_length_m, template.tape_length_m),
+    warpCrimpPct: firstNumber(state.warpCrimpPct, reuse?.warp_crimp_pct, template.warp_crimp_pct),
+    perPickCostPaisa: firstNumber(state.perPickCostPaisa, reuse?.per_pick_cost_paise, template.per_pick_cost_paise),
+    yarnShortagePct: firstNumber(state.yarnShortagePct, reuse?.yarn_shortage_pct, template.yarn_shortage_pct),
+    ...basis,
   }
 }
 

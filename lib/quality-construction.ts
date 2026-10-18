@@ -162,6 +162,7 @@ type TemplateConstructionInput = {
     ppi?: unknown
     reed_space?: unknown
     weft_denier?: unknown
+    default_yarn_rate?: unknown
 }
 
 /**
@@ -176,7 +177,7 @@ export function templateConstructionRows(template: TemplateConstructionInput): C
             id: 'legacy-warp',
             calcDenier: Number(template.calculated_yarn_denier ?? template.yarn_denier ?? 75),
             beamEnds: Number(template.beam_ends ?? 3200),
-            yarnRate: 0,
+            yarnRate: Number(template.default_yarn_rate ?? 107),
             gstPct: 0,
             shortagePct: null,
         }]
@@ -187,7 +188,7 @@ export function templateConstructionRows(template: TemplateConstructionInput): C
             picks: Number(template.ppi ?? 68),
             reedSpace: Number(template.reed_space ?? 110),
             calcDenier: Number(template.weft_denier ?? 75),
-            yarnRate: 0,
+            yarnRate: Number(template.default_yarn_rate ?? 107),
             gstPct: 0,
             shortagePct: null,
         }]

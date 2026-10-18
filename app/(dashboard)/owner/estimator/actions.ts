@@ -690,6 +690,18 @@ export async function getEstimatorTemplates(options?: { includeArchived?: boolea
     const reuseColumns = `
             template_id,
             updated_at,
+            version_number,
+            warp_rows,
+            weft_rows,
+            per_pick_cost_paise,
+            yarn_shortage_pct,
+            warp_crimp_pct,
+            tape_length_m,
+            loom_type,
+            estimator_rpm,
+            estimator_power_kw,
+            hours_per_shift,
+            sizing_mode,
             warping_rate_per_kg,
             sizing_rate_per_kg,
             winding_rate_per_kg,
@@ -723,9 +735,21 @@ export async function getEstimatorTemplates(options?: { includeArchived?: boolea
     if (costingError) return { error: costingError.message }
 
     const latestByTemplate = new Map<string, SavedQualityCostingReuse>()
+    const highestVersionByTemplate = new Map<string, number>()
     for (const costing of costings ?? []) {
-        if (!costing.template_id || latestByTemplate.has(costing.template_id)) continue
+        if (!costing.template_id) continue
+        // The next costing is the next version after the highest one saved,
+        // which is not always the most recently touched costing.
+        const version = Number(costing.version_number)
+        if (Number.isFinite(version)) {
+            highestVersionByTemplate.set(costing.template_id, Math.max(version, highestVersionByTemplate.get(costing.template_id) ?? 0))
+        }
+        if (latestByTemplate.has(costing.template_id)) continue
         latestByTemplate.set(costing.template_id, costing)
+    }
+    for (const [templateId, reuse] of latestByTemplate) {
+        const highest = highestVersionByTemplate.get(templateId)
+        if (highest !== undefined) reuse.version_number = highest
     }
 
     return {

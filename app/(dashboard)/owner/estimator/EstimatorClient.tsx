@@ -197,7 +197,7 @@ import {
 } from '@/lib/factory-cost-profiles'
 import { formatTimestampDate } from '@/lib/format'
 import { formatSuratDateTime } from '@/lib/time'
-import { resolveAppliedQualityBasis, restoreSavedQualityCostingAssumptions, type SavedQualityCostingReuse } from '@/lib/saved-costings'
+import { rateBookDefaultsFromProfile, resolveReopenedQualityState, type RateBookDefaults, type SavedQualityCostingReuse } from '@/lib/saved-costings'
 import { trackPlanEvent } from '@/lib/plan-analytics'
 import { warpConstructionText, weftConstructionText } from '@/lib/estimator-construction'
 import { formatEstimatorPlaceholder, type EstimatorPlaceholderKind } from '@/lib/estimator-placeholder'
@@ -522,7 +522,7 @@ function resizeYarnRows<T>(rows: T[], requestedCount: number, makeRow: () => T) 
 type Action =
     | { type: 'INIT_FROM_PROFILE'; data: { profile: FactoryCostProfile; sections: FactorySections } }
     | { type: 'MERGE_FIXED_WORKERS'; workers: FixedWorkerOverhead[] }
-    | { type: 'APPLY_TEMPLATE'; template: EstimatorTemplate }
+    | { type: 'APPLY_TEMPLATE'; template: EstimatorTemplate; rateBookDefaults: RateBookDefaults }
     | { type: 'SET'; field: keyof EstimateState; value: EstimateStateValue }
     | { type: 'SET_LOOM_TYPE'; loomType: LoomType | null }
     | { type: 'SET_LOOM_RPM'; rpm: number | null }
@@ -598,68 +598,8 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 ] 
             }
         }
-        case 'APPLY_TEMPLATE': {
-            const tpl = action.template
-            // Base Saved Quality reuse is deliberately full-costing reuse.
-            // The live template rows below carry the current Rate Book values;
-            // the linked costing snapshot restores the saved overhead,
-            // commercial, quantity, and enablement context.
-            const restoredAssumptions = restoreSavedQualityCostingAssumptions(state, tpl.latest_costing_reuse)
-            // The quality's own direct overhead first, else the reused
-            // costing's basis; never the editor's leftover overhead.
-            const appliedBasis = resolveAppliedQualityBasis(tpl, restoredAssumptions)
-            // Explicit null fallbacks for pre-loom-type templates (Gap 4)
-            // Ensures undefined template fields never corrupt existing session state.
-            const loomFields = {
-                loomType:              (tpl.loom_type ?? null) as LoomType | null,
-                loomRpm:               tpl.loom_rpm != null ? Number(tpl.loom_rpm) : null,
-                loomPowerKw:           tpl.loom_power_kw != null ? Number(tpl.loom_power_kw) : null,
-                loomRpmIsCustomised:   false,
-                loomPowerKwIsCustomised: false,
-                sizingMode:            (tpl.sizing_mode ?? 'in_house') as 'in_house' | 'outsourced',
-                hoursPerShift:         tpl.hours_per_shift != null ? Number(tpl.hours_per_shift) : state.hoursPerShift,
-            }
-            if (tpl.warp_rows && tpl.warp_rows.length > 0) {
-                return {
-                    ...restoredAssumptions,
-                    ...loomFields,
-                    warpRows: tpl.warp_rows.map((r: WarpRow) => ({ ...r, id: nanoid() })),
-                    weftRows: tpl.weft_rows && tpl.weft_rows.length > 0
-                        ? tpl.weft_rows.map((r: WeftRow) => ({ ...r, id: nanoid() }))
-                        : state.weftRows,
-                    tapeLengthM:      Number(tpl.tape_length_m ?? state.tapeLengthM),
-                    warpCrimpPct:     tpl.warp_crimp_pct != null ? Number(tpl.warp_crimp_pct) : state.warpCrimpPct,
-                    perPickCostPaisa: Number(tpl.per_pick_cost_paise ?? state.perPickCostPaisa),
-                    yarnShortagePct:  Number(tpl.yarn_shortage_pct ?? state.yarnShortagePct),
-                    ...appliedBasis,
-                }
-            }
-            return {
-                ...restoredAssumptions,
-                ...loomFields,
-                warpRows: [{
-                    id:          nanoid(),
-                    calcDenier:  Number(tpl.calculated_yarn_denier ?? tpl.yarn_denier ?? 75),
-                    beamEnds:    Number(tpl.beam_ends ?? 3200),
-                    yarnRate:    Number(tpl.default_yarn_rate ?? 107),
-                    gstPct:      0,
-                    shortagePct: null,
-                }],
-                weftRows: [{
-                    id:          nanoid(),
-                    picks:       Number(tpl.ppi ?? 68),
-                    reedSpace:   Number(tpl.reed_space ?? 110),
-                    calcDenier:  Number(tpl.weft_denier ?? 75),
-                    yarnRate:    Number(tpl.default_yarn_rate ?? 107),
-                    gstPct:      0,
-                    shortagePct: null,
-                }],
-                tapeLengthM:      Number(tpl.tape_length_m ?? state.tapeLengthM),
-                warpCrimpPct:     tpl.warp_crimp_pct != null ? Number(tpl.warp_crimp_pct) : state.warpCrimpPct,
-                perPickCostPaisa: Number(tpl.per_pick_cost_paise ?? state.perPickCostPaisa),
-                ...appliedBasis,
-            }
-        }
+        case 'APPLY_TEMPLATE':
+            return resolveReopenedQualityState(state, action.template, action.rateBookDefaults)
         case 'SET':
             return { ...state, [action.field]: action.value }
         case 'SET_LOOM_TYPE': {
@@ -2662,13 +2602,10 @@ function getDirectWeavingRateInput(
 }
 
 function getTemplateDirectWeavingRateInput(template: EstimatorTemplate, state: EstimateState) {
-    const weftRows = template.weft_rows && template.weft_rows.length > 0
-        ? template.weft_rows
-        : state.weftRows
-    return getDirectWeavingRateInput(
-        template.per_pick_cost_paise ?? state.perPickCostPaisa,
-        weftRows,
-    )
+    // The per-pick rate shown is the one the reopened quality will use: the
+    // latest costing's, else the quality's.
+    const reopened = resolveReopenedQualityState(state, template, {})
+    return getDirectWeavingRateInput(reopened.perPickCostPaisa, reopened.weftRows)
 }
 
 /**
@@ -3677,7 +3614,7 @@ export default function EstimatorClient({
     } | null>(null)
     const [rateUpdateCheck, setRateUpdateCheck] = useState<null | 'checking' | 'check_failed' | 'conflict' | 'missing'>(null)
     const rateImpact = useMemo(() => editRatesTpl ? calculateRateImpact(
-        estimateReducer(state, { type: 'APPLY_TEMPLATE', template: editRatesTpl }),
+        estimateReducer(state, { type: 'APPLY_TEMPLATE', template: editRatesTpl, rateBookDefaults: rateBookDefaultsFromProfile(currentProfileRef.current) }),
         editingWarpRates.map(row => row.yarnRate),
         editingWeftRates.map(row => row.yarnRate),
     ) : null, [state, editRatesTpl, editingWarpRates, editingWeftRates])
@@ -4376,7 +4313,7 @@ export default function EstimatorClient({
         }
         setQualityCheckpoint({ draft: buildCurrentDraft(), template: appliedTemplate })
         setDirectWeavingRateInput(getTemplateDirectWeavingRateInput(tpl, state))
-        dispatch({ type: 'APPLY_TEMPLATE', template: tpl })
+        dispatch({ type: 'APPLY_TEMPLATE', template: tpl, rateBookDefaults: rateBookDefaultsFromProfile(currentProfileRef.current) })
         setAppliedTemplate(tpl)
         setQualityLabel(tpl.name)
         // Choosing a Saved Quality is a fresh estimate context. It must not
@@ -4778,6 +4715,7 @@ export default function EstimatorClient({
         dispatch({
             type: 'APPLY_TEMPLATE',
             template: applied,
+            rateBookDefaults: rateBookDefaultsFromProfile(currentProfileRef.current),
         })
         setAppliedTemplate(applied)
         setQualityLabel(name)
@@ -4923,7 +4861,7 @@ export default function EstimatorClient({
         setPendingQualityChange(null)
         setQualityCheckpoint({ draft: buildCurrentDraft(), template: appliedTemplate })
         setDirectWeavingRateInput(getTemplateDirectWeavingRateInput(editRatesTpl, state))
-        dispatch({ type: 'APPLY_TEMPLATE', template: editRatesTpl })
+        dispatch({ type: 'APPLY_TEMPLATE', template: editRatesTpl, rateBookDefaults: rateBookDefaultsFromProfile(currentProfileRef.current) })
         setAppliedTemplate(editRatesTpl)
         setQualityLabel(editRatesTpl.name)
         setSourceQuoteId(null)
