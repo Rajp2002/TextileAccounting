@@ -12,18 +12,20 @@ describe('Sprint 1 costing save trust', () => {
     const migration = read('supabase/migrations/20260801174038_sprint1_save_trust_v2.sql')
     const english = read('lib/i18n/locales/en.ts')
 
-    it('keeps quality updates separate from costing snapshots', () => {
-        expect(estimator).toContain('Update Fabric Quality')
-        expect(estimator).toContain('hasActiveQualityRecipeChanges')
+    it('never edits a saved quality from the estimator; a different fabric is a new quality', () => {
+        expect(estimator).toContain('resolveCostingActionState')
         expect(estimator).toContain('openSaveAsNewQualityDialog')
         expect(estimator).toContain('data-testid="save-costing-action-top"')
-        expect(estimator).toContain("estimator.sprint1.quality_updated_no_snapshot")
-        expect(estimator).toContain("estimator.sprint1.save_version_only")
-        expect(estimator).toContain("estimator.sprint1.save_version_update_quality")
-        // LT04 (LC27) restated the two scopes; the keys and their meaning are unchanged.
-        expect(english).toContain('save_version_only: "Save this version only"')
-        expect(english).toContain('save_version_update_quality: "Save version and update {name} for future costings"')
-        expect(actions).toContain('updateSavedQuality?: boolean')
+        expect(estimator).not.toContain('Update Fabric Quality')
+        expect(estimator).not.toContain('hasActiveQualityRecipeChanges')
+        expect(estimator).not.toContain('handleUpdateTemplate')
+        expect(estimator).not.toContain('pendingQualityVersionSave')
+        expect(estimator).not.toContain('save_version_only')
+        expect(actions).not.toContain('updateSavedQuality')
+        expect(actions).not.toContain('export async function updateFabricTemplate')
+        expect(english).not.toContain('save_version_update_quality')
+        // The RPC parameter stays for old callers; the estimator always sends false.
+        expect(actions).toContain('p_update_saved_quality: false')
     })
 
     it('uses one transaction for the optional combined save', () => {
@@ -68,5 +70,23 @@ describe('Sprint 1 costing save trust', () => {
         expect(actions).toContain('if (!params.templateId && !params.sourceQuoteId) {')
         expect(actions).toContain('p_source_quote_id: params.sourceQuoteId ?? null')
         expect(migration).toContain('v_template_id := v_source.template_id')
+    })
+
+    it('compares an opened costing with its own fabric, and the server accepts a re-costing of it', () => {
+        const baseline = estimator.slice(estimator.indexOf('baseline: hasOpenedCosting && sourceState'))
+        expect(baseline.indexOf('? sourceState')).toBeGreaterThan(-1)
+        expect(baseline.indexOf('? sourceState')).toBeLessThan(baseline.indexOf('templateConstructionRows(appliedTemplate)'))
+        expect(actions).toContain('matchesSourceCosting')
+        expect(actions).toContain(".eq('template_id', params.templateId)")
+    })
+
+    it('refuses a costing whose fabric differs from its saved quality before any write', () => {
+        const start = actions.indexOf('export async function saveEstimatorQuoteV3')
+        const next = actions.indexOf('\nexport async function ', start + 1)
+        const body = actions.slice(start, next === -1 ? actions.length : next)
+        expect(body).toContain('sameConstruction(templateConstructionRows(')
+        expect(body).toContain('Save it as a new quality.')
+        // The guard runs on the template lookup, ahead of the revision RPC.
+        expect(body.indexOf('sameConstruction(templateConstructionRows(')).toBeLessThan(body.indexOf('save_estimator_costing_revision_v2'))
     })
 })

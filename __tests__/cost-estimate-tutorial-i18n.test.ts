@@ -44,7 +44,7 @@ describe('Estimator approved copy and live-label parity', () => {
             const fresh = estimatorControlLabels(t, tx, false)
             if (language !== 'en') for (const row of tokenRows) expect(fresh[row[0].replaceAll('`', '') as keyof typeof fresh]).toBe(row[language === 'gu' ? 3 : 4])
             const existing = estimatorControlLabels(t, tx, true)
-            expect(existing.saveCosting).toBe(dictionary.tourControls.estimator.saveNewVersion)
+            expect(existing.saveCosting).toBe(dictionary.tourControls.estimator.updateCosting)
             expect(spec).toContain(existing.saveCosting)
             for (const controls of [fresh, existing]) for (const freePlan of [true, false]) for (const productionPipeline of [true, false]) for (const step of estimatorTourSteps) {
                 const copy = estimatorStepCopy(language, step.id, { freePlan, productionPipeline, controls })
@@ -57,10 +57,10 @@ describe('Estimator approved copy and live-label parity', () => {
         }
     })
     it('pins the owner-supplied navi wording and shared save-quality key', () => {
-        expect(gu.tourControls.estimator.saveNewVersion).toBe('નવી વર્ઝન સાચવો')
-        expect(hi.tourControls.estimator.saveNewVersion).toBe('नया वर्ज़न सेव करें')
+        expect(gu.tourControls.estimator.updateCosting).toBe('કોસ્ટિંગ અપડેટ કરો')
+        expect(hi.tourControls.estimator.updateCosting).toBe('कॉस्टिंग अपडेट करें')
         const page = readFileSync('app/(dashboard)/owner/estimator/EstimatorClient.tsx', 'utf8')
-        for (const key of ['tourControls.estimator.saveCosting', 'tourControls.estimator.saveNewVersion', 'estimator.quality.saveQualityAndCosting']) expect(page).toContain(`t('${key}')`)
+        for (const key of ['tourControls.estimator.saveCosting', 'tourControls.estimator.updateCosting', 'estimator.quality.saveQualityAndCosting']) expect(page).toContain(`t('${key}')`)
         expect(page).toContain("freeMeter.completed ? 'recalculateSave' : 'calculateSave'")
         for (const label of ['Live cost', 'Change quality', 'Start Production', 'Detailed']) expect(page).toContain(`tx('${label}')`)
     })

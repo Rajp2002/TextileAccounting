@@ -13,7 +13,7 @@ Shared rules: [`GUIDED_TOURS_REFINEMENT_PLAN.md`](../../GUIDED_TOURS_REFINEMENT_
 | Entry today | Rail guide card (halo on first visit), rail button "Field-by-field help · Optional walkthrough". Launcher enabled only when `state.isConfigured && !saving` (`EstimatorClient.tsx:5351`). |
 | Default view | Quick (`entryMode` initial `'quick'`, `EstimatorClient.tsx:3572`); Quick sections are seven `EstimatorCard`s (`EstimatorClient.tsx:2838-3246`). |
 | Live cost | A floating shortcut on every breakpoint `[data-estimator-field="liveCostShortcut"]` (1484) opens the sheet `#mobile-live-estimate-panel` with `liveCostMetrics` (1558) and `liveCostActions` (1622). |
-| Consequential actions | Save Costing / Save New Version (snapshot), Save Quality & Create Costing (recipe + v1), Save baseline (profile), Free "Calculate & save" (uses one Free costing). |
+| Consequential actions | Save Costing / Update Costing (snapshot), Save Quality & Costing (recipe + v1), Save as New Quality, Save baseline (profile), Free "Calculate & save" (uses one Free costing). |
 
 ## B. Diagnosis
 
@@ -132,7 +132,7 @@ Words to confirm in native review: "તાર/तार" for ends (UI uses "Beam
 | `changeQuality` | quality picker "Change quality" (5797) | `tx('Change quality')` | ક્વોલિટી બદલો | क्वालिटी बदलें | Add phrase (today: word order) |
 | `liveCost` | shortcut and sheet title (1492, 1543) | `tx('Live cost')` | લાઇવ ખર્ચ | लाइव लागत | Wrap literals in `tx()` + add phrase |
 | `saveCosting` | `topCostingActionLabel` (4189-4191) | same expression as the button | કોસ્ટિંગ સાચવો | कॉस्टिंग सेव करें | Add phrases for "Save Costing" and "Save New Version" |
-| `saveQuality` | "Save Quality & Create Costing" | `t('estimator…saveQualityAndCosting')` if present, else `tx(…)` | ક્વોલિટી સાચવો અને કોસ્ટિંગ બનાવો | क्वालिटी सेव करें और कॉस्टिंग बनाएं | none (already translated) |
+| `saveQuality` | "Save Quality & Costing" (renamed 2026-10-18 from "Save Quality & Create Costing") | `t('estimator…saveQualityAndCosting')` if present, else `tx(…)` | ક્વોલિટી અને કોસ્ટિંગ સાચવો | क्वालिटी और कॉस्टिंग सेव करें | none (already translated) |
 | `calculateSave` | Free save button | same expression as the button | ગણતરી કરો અને સાચવો · 1 કોસ્ટિંગ વપરાશે | गणना करें और सेव करें · 1 कॉस्टिंग लगेगी | Add phrase (today: half English) |
 | `startProduction` | post-save panel (5084) | same expression | ઉત્પાદન શરૂ કરો | उत्पादन शुरू करें | Add phrase |
 | `detailed` | view tabs | same expression as the tab | વિગતવાર | विस्तृत | none |
@@ -143,9 +143,9 @@ The owner supplied the missing Save New Version wording in the Wave 1 coordinato
 
 | Label | English | Gujarati | Hindi |
 | --- | --- | --- | --- |
-| Save New Version | Save New Version | નવી વર્ઝન સાચવો | नया वर्ज़न सेव करें |
+| Update Costing (was Save New Version until 2026-10-18) | Update Costing | કોસ્ટિંગ અપડેટ કરો | कॉस्टिंग अपडेट करें |
 
-For these two Estimator labels only, use `t('tourControls.estimator.saveCosting')` and `t('tourControls.estimator.saveNewVersion')` for the live control and the matching tour token. This scoped exception resolves existing phrase overrides; do not change global translation maps or precedence. Save Costing retains §F.2's English/Gujarati/Hindi values. All other task contracts stay unchanged.
+For these two Estimator labels only, use `t('tourControls.estimator.saveCosting')` and `t('tourControls.estimator.updateCosting')` for the live control and the matching tour token. This scoped exception resolves existing phrase overrides; do not change global translation maps or precedence. Save Costing retains §F.2's English/Gujarati/Hindi values. All other task contracts stay unchanged.
 
 ## G. State variants
 

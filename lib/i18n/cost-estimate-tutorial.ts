@@ -106,7 +106,7 @@ export const costEstimateTutorialCopy = { en, gu, hi }
 export function estimatorControlLabels(t: (key: string) => string, tx: (text: string) => string, existingCosting: boolean) {
     return {
         changeQuality: tx('Change quality'), liveCost: tx('Live cost'),
-        saveCosting: existingCosting ? t('tourControls.estimator.saveNewVersion') : t('tourControls.estimator.saveCosting'),
+        saveCosting: existingCosting ? t('tourControls.estimator.updateCosting') : t('tourControls.estimator.saveCosting'),
         saveQuality: t('estimator.quality.saveQualityAndCosting'),
         calculateSave: tx('Calculate & save · uses 1 costing'), startProduction: tx('Start Production'), detailed: tx('Detailed'),
     }

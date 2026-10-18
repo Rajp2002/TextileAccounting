@@ -100,10 +100,15 @@ describe('applying a saved quality keeps the reused costing basis', () => {
         expect(resolveAppliedQualityBasis({ latest_costing_reuse: reuse }, restored)).toEqual({ overheadMode: 'monthly_expenses', overheadOverridePerM: 2.5, warpingMode: 'in_house' })
     })
 
-    it("keeps the quality's own direct overhead first", () => {
+    it("keeps the latest costing's overhead over the quality's own", () => {
         const reuse = { overhead_mode: 'monthly_expenses' as const, overhead_override_per_m: 2.5 }
         const restored = restoreSavedQualityCostingAssumptions(editor, reuse)
-        expect(resolveAppliedQualityBasis({ overhead_override_per_m: 4, latest_costing_reuse: reuse }, restored)).toMatchObject({ overheadMode: 'direct', overheadOverridePerM: 4 })
+        expect(resolveAppliedQualityBasis({ overhead_override_per_m: 4, latest_costing_reuse: reuse }, restored)).toMatchObject({ overheadMode: 'monthly_expenses', overheadOverridePerM: 2.5 })
+    })
+
+    it("uses the quality's own direct overhead only when it has no costing", () => {
+        const restored = restoreSavedQualityCostingAssumptions(editor, null)
+        expect(resolveAppliedQualityBasis({ overhead_override_per_m: 4, latest_costing_reuse: null }, restored)).toMatchObject({ overheadMode: 'direct', overheadOverridePerM: 4 })
     })
 
     it('without a reused costing, behaves as before: editor overhead and in-house warping', () => {
@@ -111,12 +116,13 @@ describe('applying a saved quality keeps the reused costing basis', () => {
         expect(resolveAppliedQualityBasis({ latest_costing_reuse: null }, restored)).toEqual({ overheadMode: 'direct', overheadOverridePerM: 9, warpingMode: 'in_house' })
     })
 
-    it('the estimator reducer uses it in both template branches', () => {
+    it('the estimator reducer reopens a quality through the one resolver that applies it', () => {
         const source = readFileSync('app/(dashboard)/owner/estimator/EstimatorClient.tsx', 'utf8')
-        const applyTemplate = source.slice(source.indexOf("case 'APPLY_TEMPLATE': {"), source.indexOf("case 'SET':"))
-        expect(applyTemplate).toContain('const appliedBasis = resolveAppliedQualityBasis(tpl, restoredAssumptions)')
-        expect(applyTemplate.match(/\.\.\.appliedBasis/g)).toHaveLength(2)
-        expect(applyTemplate).not.toContain('state.overheadOverridePerM')
-        expect(applyTemplate).not.toContain('state.overheadMode')
+        const applyTemplate = source.slice(source.indexOf("case 'APPLY_TEMPLATE':"), source.indexOf("case 'SET':"))
+        expect(applyTemplate).toContain('resolveReopenedQualityState(state, action.template, action.rateBookDefaults)')
+        const resolver = readFileSync('lib/saved-costings.ts', 'utf8')
+        const body = resolver.slice(resolver.indexOf('export function resolveReopenedQualityState'))
+        expect(body).toContain('resolveAppliedQualityBasis(template, restored)')
+        expect(body).toContain('...basis')
     })
 })

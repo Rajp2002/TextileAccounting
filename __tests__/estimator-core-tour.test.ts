@@ -39,7 +39,7 @@ describe('Estimator Quick tour', () => {
     it('keeps plan-specific save, production, recipe and Free-allowance guidance', () => {
         const options = { controls, freePlan: false, productionPipeline: false }
         const lite = estimatorStepCopy('en', 'est-save', options)
-        expect(lite.body).toContain('Save Quality & Create Costing')
+        expect(lite.body).toContain('Save Quality & Costing')
         expect(lite.detail).toContain('earlier one stays as it was')
         expect(lite.detail).not.toContain('Start Production')
         expect(estimatorStepCopy('en', 'est-save', { ...options, productionPipeline: true }).detail).toContain('Start Production')
@@ -52,8 +52,8 @@ describe('Estimator Quick tour', () => {
         expect(estimatorStepCopy('en', 'est-live', { ...options, freePlan: true }).body).toContain('after you calculate and save')
     })
     it('names the existing-version button through the same approved resolver', () => {
-        const existing = estimatorControlLabels(key => key === 'tourControls.estimator.saveNewVersion' ? 'Save New Version' : key, text => text, true)
-        expect(estimatorStepCopy('en', 'est-save', { freePlan: false, productionPipeline: false, controls: existing }).body).toContain('“Save New Version”')
+        const existing = estimatorControlLabels(key => key === 'tourControls.estimator.updateCosting' ? 'Update Costing' : key, text => text, true)
+        expect(estimatorStepCopy('en', 'est-save', { freePlan: false, productionPipeline: false, controls: existing }).body).toContain('“Update Costing”')
     })
     it('computes both approved worked examples with the real costing engine', () => {
         const overhead = calcOverheadCostPerMeter([{ id: 'example', label: 'Example', monthlyAmount: 60000, category: 'custom', isPreset: false, isLocked: false, source: 'manual' }], 30000, 1)

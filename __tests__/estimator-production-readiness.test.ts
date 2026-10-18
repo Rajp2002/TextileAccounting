@@ -222,7 +222,7 @@ describe('Estimator production-readiness regressions', () => {
 
   it('keeps applied-quality actions inside narrow mobile viewports', () => {
     expect(estimatorClientSource).toContain('col-span-2 flex min-w-0 flex-wrap items-center gap-1')
-    expect(estimatorClientSource).toContain('h-12 min-w-0 max-w-full flex-1 rounded-[10px]')
+    expect(estimatorClientSource).toContain('h-12 min-w-0 rounded-[10px] border border-[var(--color-hairline)]')
   })
 
   it('prevents iOS Safari focus zoom on estimator text controls', () => {

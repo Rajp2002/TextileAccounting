@@ -17,7 +17,7 @@ export const gu = {
     rateBook: {"addRate": "યાર્ન ભાવ ઉમેરો", "needsReview": "સમીક્ષા બાકી", "advancedEdit": "વિગતવાર ફેરફાર"},
     estimator: {
     "saveCosting": "કોસ્ટિંગ સાચવો",
-    "saveNewVersion": "નવી વર્ઝન સાચવો"
+    "updateCosting": "કોસ્ટિંગ અપડેટ કરો"
     },
     savedCostings: {
   "viewBreakdown": "વિગત જુઓ",
@@ -1321,14 +1321,10 @@ export const gu = {
       new_costing_snapshot: "નવી કોસ્ટિંગ",
       costing: "કોસ્ટિંગ",
       save_new_version: "નવું કોસ્ટિંગ વર્ઝન સેવ કરો",
-      save_version_only: "ફક્ત આ વર્ઝન સેવ કરો",
-      save_version_update_quality: "વર્ઝન સેવ કરો અને આગળની કૉસ્ટિંગ માટે {name} અપડેટ કરો",
       cancel: "રદ કરો",
-      recipe_changed: "તમે સાચવેલી ક્વોલિટી {name} ની રેસીપી બદલી છે.",
       version_explanation: "કોસ્ટિંગ સાચવવાથી તે નવા વર્ઝન તરીકે રહે છે. સાચવેલી ક્વોલિટી ત્યારે જ બદલાશે જ્યારે તમે નીચે તે પસંદ કરશો.",
       next_version: "આગલું કોસ્ટિંગ વર્ઝન: v{version}",
       next_version_generic: "આથી આગલું કોસ્ટિંગ વર્ઝન બનશે",
-      future_quality_explanation: "સાચવેલી ક્વોલિટીમાં ફેરફારથી આ ક્વોલિટી વાપરતા આગળના અંદાજ બદલાશે. પહેલાં સાચવેલી કોસ્ટિંગના આંકડા એ જ રહેશે.",
       quality_updated_no_snapshot: "સાચવેલી ક્વોલિટી અપડેટ થઈ. કોઈ નવી કોસ્ટિંગ સાચવાઈ નથી.",
       rates_updated_no_snapshot: "સાચવેલી ક્વોલિટીના ભાવ અપડેટ થયા. કોઈ નવી કોસ્ટિંગ સાચવાઈ નથી.",
       baseline_updated: "ફેક્ટરી બેઝલાઇન અપડેટ થઈ. નવા અંદાજમાં તેનો ઉપયોગ થશે; સેવ કરેલી કોસ્ટિંગ બદલાશે નહીં.",
@@ -1355,6 +1351,39 @@ export const gu = {
       net_profit: "ચોખ્ખો નફો",
       order_btn: "કોટ સેવ કરો"
     },
+    actions: {
+      saveAsNewQuality: "નવી ક્વોલિટી તરીકે સાચવો",
+      hint: {
+        new: "કોસ્ટિંગ સાચવો ફક્ત આ કોસ્ટિંગ રાખે છે. ક્વોલિટી અને કોસ્ટિંગ સાચવો કાપડને ફરી વાપરવા માટે પણ સાચવે છે.",
+        sameFabric: "ક્વોલિટીમાં ફેરફાર નથી. કોસ્ટિંગ અપડેટ કરો v{version} સાચવશે. અગાઉના વર્ઝન પોતાના જ આંકડા રાખે છે.",
+        firstCosting: "{quality} ની પહેલી કોસ્ટિંગ સચવાશે.",
+        fabricChanged: "કાપડ બદલાયું: {changes}. અલગ કાપડ નવી ક્વોલિટી તરીકે સચવાય છે."
+      },
+      side: {
+        warp: "તાણા",
+        weft: "ભરણ"
+      },
+      mode: {
+        formula: "ફોર્મ્યુલા",
+        manual: "મેન્યુઅલ"
+      },
+      change: {
+        warpLayers: "તાણા લેયર {from} → {to}",
+        weftLayers: "ભરણ લેયર {from} → {to}",
+        beamEnds: "તાર {from} → {to}",
+        yarnCount: "{side} કાઉન્ટ {from} → {to}",
+        yarnName: "{side} યાર્ન {from} → {to}",
+        picks: "પિક્સ {from} → {to}",
+        pickRatio: "પિક ગુણોત્તર {from} → {to}",
+        width: "પહોળાઈ {from} → {to} સેમી",
+        calculation: "{side} ગણતરી {from} → {to}",
+        manualKg: "{side} મેન્યુઅલ kg {from} → {to}",
+        more: "+{count} વધુ",
+        layer: "લેયર {layer}"
+      },
+      differentFabricError: "આ {quality} થી અલગ કાપડ છે. તેને નવી ક્વોલિટી તરીકે સાચવો.",
+      reopenNote: "આ ક્વોલિટી ફરી ખોલવાથી તેનું કાપડ, આજના Rate Book રેટ અને તેની છેલ્લી કોસ્ટિંગની બાકીની બાબતો પાછી આવે છે. પહેલેથી સાચવેલી કોસ્ટિંગ બદલાતી નથી."
+    },
     quality: {
       noQualities: "હજી કોઈ ક્વોલિટી નથી. અંદાજ આગળ વધારવા તમારી પહેલી કાપડ ક્વોલિટી ઉમેરો.",
       addFirstQuality: "પહેલી ક્વોલિટી ઉમેરો",
@@ -1372,10 +1401,10 @@ export const gu = {
       emptySavedDescription: "હાલની રેસિપી આગલી વાર ફરી વાપરવા માટે સાચવો.",
       fabricQualityNameHelper: "આ એસ્ટીમેટરને નામ આપો, દા.ત. 60g જ્યોર્જેટ અથવા D.246.",
       saveCurrentAsQuality: "કરંટ સેટઅપને ક્વોલિટીમાં સેવ કરો",
-      saveQualityAndCosting: "ક્વોલિટી સાચવો અને કોસ્ટિંગ બનાવો",
+      saveQualityAndCosting: "ક્વોલિટી અને કોસ્ટિંગ સાચવો",
       saveQualityAndCostingTitle: "ક્વોલિટી સાચવો + કોસ્ટિંગ બનાવો",
       saveQualityAndCostingDescription: "કાપડની ક્વોલિટી ફરી વાપરવા માટે તેની પહેલી કોસ્ટિંગ સાથે સાચવો. આ ક્વોલિટી તમારે ફરી લખવી નહીં પડે.",
-      saveQualityAndCostingHint: "આનાથી ક્વોલિટી ફરી વાપરવા માટે કોસ્ટિંગ v1 સાથે સચવાય છે. પછી Save Costing ત્યારે જ પસંદ કરો જ્યારે તમારે બીજું કોસ્ટિંગ વર્ઝન જોઈએ.",
+      saveQualityAndCostingHint: "આનાથી ક્વોલિટી ફરી વાપરવા માટે કોસ્ટિંગ v1 સાથે સચવાય છે. પછી બીજું કોસ્ટિંગ વર્ઝન જોઈએ ત્યારે કોસ્ટિંગ અપડેટ કરો પસંદ કરો.",
       newQuality: "નવી ક્વોલિટી / રિસેટ",
       editQuality: "ક્વોલિટી સંપાદિત કરો",
       saveQuality: "ક્વોલિટી સાચવો",

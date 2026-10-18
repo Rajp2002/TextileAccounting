@@ -116,7 +116,6 @@ describe('Estimator persistence safety', () => {
 
         expect(estimatorActions).toContain('function validateTemplateRecipe(data: TemplateRecipeInput)')
         expect(functionBody(estimatorActions, 'saveAsFabricTemplate')).toContain('validateTemplateRecipe(data)')
-        expect(functionBody(estimatorActions, 'updateFabricTemplate')).toContain(".eq('updated_at', data.expectedUpdatedAt)")
         expect(functionBody(estimatorActions, 'updateTemplateRates')).toContain(".eq('updated_at', data.expectedUpdatedAt)")
         expect(estimatorActions).toContain('getEffectiveYarnDenier(firstWarp)')
     })
