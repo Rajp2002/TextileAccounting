@@ -72,6 +72,14 @@ describe('Sprint 1 costing save trust', () => {
         expect(migration).toContain('v_template_id := v_source.template_id')
     })
 
+    it('compares an opened costing with its own fabric, and the server accepts a re-costing of it', () => {
+        const baseline = estimator.slice(estimator.indexOf('baseline: hasOpenedCosting && sourceState'))
+        expect(baseline.indexOf('? sourceState')).toBeGreaterThan(-1)
+        expect(baseline.indexOf('? sourceState')).toBeLessThan(baseline.indexOf('templateConstructionRows(appliedTemplate)'))
+        expect(actions).toContain('matchesSourceCosting')
+        expect(actions).toContain(".eq('template_id', params.templateId)")
+    })
+
     it('refuses a costing whose fabric differs from its saved quality before any write', () => {
         const start = actions.indexOf('export async function saveEstimatorQuoteV3')
         const next = actions.indexOf('\nexport async function ', start + 1)

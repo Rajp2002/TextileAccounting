@@ -4263,9 +4263,12 @@ export default function EstimatorClient({
         return resolveCostingActionState({
             hasSavedQuality: appliedTemplate != null,
             hasOpenedCosting,
-            baseline: appliedTemplate
-                ? templateConstructionRows(appliedTemplate)
-                : hasOpenedCosting && sourceState ? sourceState : null,
+            // An opened costing is compared with its own fabric: one saved before
+            // quality edits were retired may differ from its quality, and
+            // re-costing it on that fabric is still an update of that costing.
+            baseline: hasOpenedCosting && sourceState
+                ? sourceState
+                : appliedTemplate ? templateConstructionRows(appliedTemplate) : null,
             current: { warpRows: state.warpRows, weftRows: state.weftRows },
             latestVersion: versions.length > 0 ? Math.max(...versions) : null,
         })

@@ -188,4 +188,44 @@ describe('costing lineage: a quality saved first', () => {
         expect(refused).toMatchObject({ error: expect.stringContaining('different fabric from Linen') })
         expect(await costingRows(owner.orgId)).toHaveLength(1)
     })
+
+    it('still lets a costing saved before an in-place quality update be re-costed on its own fabric', async () => {
+        const owner = await seedOwnerOrg(db, { tier: 'lite', name: 'Legacy Drift Weaver' })
+        const actor = { userId: owner.userId, orgId: owner.orgId }
+
+        ctx.actor = actor
+        const quality = await saveAsFabricTemplate(qualityInput('Wool', 12))
+        expect(quality).toMatchObject({ success: true, versionNumber: 1 })
+
+        // Until 2026-10-18 the estimator could edit a quality's recipe in place,
+        // leaving its earlier costings on the old fabric. Simulate that drift.
+        await asSuperuser(db)
+        await db.query(
+            `UPDATE public.estimator_templates SET warp_rows = jsonb_set(warp_rows, '{0,beamEnds}', '9999'::jsonb) WHERE org_id = $1 AND name = 'Wool'`,
+            [owner.orgId],
+        )
+        const template = await templateUpdatedAt(owner.orgId, 'Wool')
+        await asSuperuser(db)
+        const { rows: [source] } = await db.query(`SELECT id, updated_at FROM public.estimator_quotes WHERE org_id = $1 AND record_kind = 'costing'`, [owner.orgId])
+
+        ctx.actor = actor
+        const recosted = await saveEstimatorQuoteV3({
+            clientRequestId: randomUUID(), qualityLabel: 'Wool', ...atMargin(13),
+            templateId: template.id, expectedTemplateUpdatedAt: template.updated_at,
+            sourceQuoteId: source.id, expectedSourceUpdatedAt: source.updated_at,
+        })
+        expect(recosted).toMatchObject({ success: true, versionNumber: 2 })
+
+        // A genuinely different fabric is still refused.
+        const base = atMargin(12).estimate
+        const changed = { ...base, warpRows: base.warpRows.map((row, index) => index === 0 ? { ...row, beamEnds: row.beamEnds + 400 } : row) }
+        ctx.actor = actor
+        const refused = await saveEstimatorQuoteV3({
+            clientRequestId: randomUUID(), qualityLabel: 'Wool', estimate: changed,
+            totalProductionCostPerM: 26.23, quotePricePerM: PRICE[12],
+            templateId: template.id, expectedTemplateUpdatedAt: template.updated_at,
+            sourceQuoteId: source.id, expectedSourceUpdatedAt: source.updated_at,
+        })
+        expect(refused).toMatchObject({ error: expect.stringContaining('different fabric from Wool') })
+    })
 })

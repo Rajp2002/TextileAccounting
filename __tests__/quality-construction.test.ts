@@ -55,7 +55,7 @@ describe('sameConstruction', () => {
         ['extra weft layer', { weftRows: [weft({}), weft({ label: 'Zari' })] }],
         ['extra warp layer', { warpRows: [warp({}), warp({ label: 'Selvedge' })] }],
     ])('treats a %s change as a different fabric', (_, patch) => {
-        const base = { warpRows: [warp({})], weftRows: [weft({})] }
+        const base = { warpRows: [warp({})], weftRows: [weft({ pickRatio: null })] }
         expect(sameConstruction(base, { ...base, ...patch })).toBe(false)
         expect(constructionSignature(base)).not.toBe(constructionSignature({ ...base, ...patch }))
     })
@@ -104,6 +104,27 @@ describe('sameConstruction', () => {
     })
 })
 
+describe('a quality saved before the pick convention existed', () => {
+    it('is the same fabric once the owner picks a convention that fills the ratio from the same picks', () => {
+        const baseline = { warpRows: [warp({})], weftRows: [weft({ picks: 32 }), weft({ picks: 32, label: 'Zari' })] }
+        const current = { warpRows: [warp({})], weftRows: [weft({ picks: 32, pickRatio: 32 }), weft({ picks: 32, pickRatio: 32, label: 'Zari' })] }
+        expect(sameConstruction(baseline, current)).toBe(true)
+        expect(describeConstructionChanges(baseline, current)).toEqual([])
+    })
+
+    it('still treats changed picks as a different fabric', () => {
+        const baseline = { warpRows: [warp({})], weftRows: [weft({ picks: 32 })] }
+        const current = { warpRows: [warp({})], weftRows: [weft({ picks: 30, pickRatio: 30 })] }
+        expect(sameConstruction(baseline, current)).toBe(false)
+    })
+
+    it('still treats a changed recorded ratio as a different fabric', () => {
+        const baseline = { warpRows: [warp({})], weftRows: [weft({ pickRatio: 1 })] }
+        expect(sameConstruction(baseline, { warpRows: [warp({})], weftRows: [weft({ pickRatio: 2 })] })).toBe(false)
+        expect(sameConstruction({ warpRows: [warp({})], weftRows: [weft({ pickRatio: null })] }, { warpRows: [warp({})], weftRows: [weft({ pickRatio: 2 })] })).toBe(false)
+    })
+})
+
 describe('describeConstructionChanges', () => {
     it('describes changes in warp-then-weft, layer order', () => {
         expect(describeConstructionChanges(
@@ -124,7 +145,7 @@ describe('describeConstructionChanges', () => {
 
     it('reports picks, ratio, width and denier changes on a weft layer', () => {
         const changes = describeConstructionChanges(
-            { warpRows: [warp({})], weftRows: [weft({})] },
+            { warpRows: [warp({})], weftRows: [weft({ pickRatio: null })] },
             { warpRows: [warp({})], weftRows: [weft({ picks: 64, pickRatio: 2, effectiveCostingWidthCm: 125, calcDenier: 80 })] },
         )
         expect(changes.map(c => c.kind)).toEqual(['picks', 'pickRatio', 'width', 'yarnCount'])

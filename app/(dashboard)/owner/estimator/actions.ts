@@ -1345,7 +1345,26 @@ export async function saveEstimatorQuoteV3(params: {
         // even from an old tab or a crafted request. Only new saves are checked;
         // a legacy costing that already differs is left alone.
         if (!sameConstruction(templateConstructionRows(template), estimate)) {
-            return {
+            // Re-costing an existing costing on its own fabric is not a fabric
+            // change, even if that quality was edited in place before this rule
+            // (the old Update Quality). Only a request that matches neither the
+            // quality nor its source costing is refused.
+            let matchesSourceCosting = false
+            if (params.sourceQuoteId && UUID_PATTERN.test(params.sourceQuoteId)) {
+                const { data: source, error: sourceError } = await supabase
+                    .from('estimator_quotes')
+                    .select('warp_rows, weft_rows')
+                    .eq('id', params.sourceQuoteId)
+                    .eq('org_id', profile.org_id)
+                    .eq('record_kind', 'costing')
+                    .eq('template_id', params.templateId)
+                    .maybeSingle()
+                if (sourceError) return { error: sourceError.message }
+                if (Array.isArray(source?.warp_rows) && Array.isArray(source?.weft_rows) && source.warp_rows.length > 0 && source.weft_rows.length > 0) {
+                    matchesSourceCosting = sameConstruction({ warpRows: source.warp_rows as WarpRow[], weftRows: source.weft_rows as WeftRow[] }, estimate)
+                }
+            }
+            if (!matchesSourceCosting) return {
                 error: `This is a different fabric from ${template.name}. Save it as a new quality.`,
                 errorCode: 'different_fabric' as const,
                 qualityName: template.name as string,

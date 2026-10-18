@@ -21,6 +21,8 @@ type LayerFabric = {
     beamEnds: number | null
     picks: number | null
     pickRatio: number | null
+    /** False for a row saved before the pick convention existed: its ratio is unknown, not null. */
+    ratioRecorded: boolean
     width: number | null
     unit: YarnLinearDensityUnit
     count: number | null
@@ -45,6 +47,7 @@ function layerFabric(row: WarpRow | WeftRow): LayerFabric {
         beamEnds: toNumber(warp.beamEnds),
         picks: toNumber(weft.picks),
         pickRatio: toNumber(weft.pickRatio),
+        ratioRecorded: weft.pickRatio !== undefined,
         width: toNumber(weft.effectiveCostingWidthCm ?? weft.reedSpace),
         unit,
         count: toNumber(unit === 'cotton_count_ne' ? row.cottonCountNe : row.calcDenier),
@@ -127,6 +130,10 @@ function diffSide(
         for (const field of fields) {
             // Naming a yarn that had no name is not a different fabric.
             if (field === 'yarnName' && before.name === '') continue
+            // A quality saved before the pick convention existed has no ratio.
+            // Choosing a convention fills it from the same picks, which is not
+            // a different fabric; a change to the picks themselves still is.
+            if (field === 'pickRatio' && !before.ratioRecorded) continue
             if (fieldValue(before, field) === fieldValue(after, field)) continue
             changes.push({ kind: field, side, layer: index + 1, from: fieldLabel(before, field), to: fieldLabel(after, field) })
         }
@@ -147,7 +154,8 @@ export function describeConstructionChanges(baseline: ConstructionRows, current:
 
 /**
  * Same fabric as the baseline. A baseline yarn with no name matches any name,
- * because older qualities often have none.
+ * and a baseline weft with no recorded pick ratio matches any ratio, because
+ * older qualities often have neither.
  */
 export function sameConstruction(baseline: ConstructionRows, current: ConstructionRows): boolean {
     return describeConstructionChanges(baseline, current).length === 0
