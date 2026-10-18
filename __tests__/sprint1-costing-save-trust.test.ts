@@ -69,4 +69,14 @@ describe('Sprint 1 costing save trust', () => {
         expect(actions).toContain('p_source_quote_id: params.sourceQuoteId ?? null')
         expect(migration).toContain('v_template_id := v_source.template_id')
     })
+
+    it('refuses a costing whose fabric differs from its saved quality before any write', () => {
+        const start = actions.indexOf('export async function saveEstimatorQuoteV3')
+        const next = actions.indexOf('\nexport async function ', start + 1)
+        const body = actions.slice(start, next === -1 ? actions.length : next)
+        expect(body).toContain('sameConstruction(templateConstructionRows(')
+        expect(body).toContain('Save it as a new quality.')
+        // The guard runs on the template lookup, ahead of the revision RPC.
+        expect(body.indexOf('sameConstruction(templateConstructionRows(')).toBeLessThan(body.indexOf('save_estimator_costing_revision_v2'))
+    })
 })

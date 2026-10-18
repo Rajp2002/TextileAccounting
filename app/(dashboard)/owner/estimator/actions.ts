@@ -27,6 +27,7 @@ import {
     MAX_STANDARD_MONTHLY_PRODUCTION_METRES,
 } from '@/lib/monthly-overhead'
 import { detectTemplateYarnRenames } from '@/lib/yarn-rate-reconciliation'
+import { sameConstruction, templateConstructionRows } from '@/lib/quality-construction'
 
 const ESTIMATOR_NAME_MAX_LENGTH = 120
 const ESTIMATOR_QUOTE_PAGE_SIZE = 500
@@ -1485,13 +1486,19 @@ export async function saveEstimatorQuoteV3(params: {
     if (params.templateId) {
         const { data: template, error: templateError } = await supabase
             .from('estimator_templates')
-            .select('id')
+            .select('id, name, warp_rows, weft_rows, calculated_yarn_denier, yarn_denier, beam_ends, ppi, reed_space, weft_denier')
             .eq('id', params.templateId)
             .eq('org_id', profile.org_id)
             .eq('is_active', true)
             .maybeSingle()
         if (templateError) return { error: templateError.message }
         if (!template) return { error: 'The selected saved quality is no longer available.' }
+        // A saved quality is one fabric: a different fabric is a new quality,
+        // even from an old tab or a crafted request. Only new saves are checked;
+        // a legacy costing that already differs is left alone.
+        if (!sameConstruction(templateConstructionRows(template), estimate)) {
+            return { error: `This is a different fabric from ${template.name}. Save it as a new quality.` }
+        }
     }
     // A legacy costing can be missing template_id while still carrying a
     // source quote identity. It is an edit of an existing immutable lineage,

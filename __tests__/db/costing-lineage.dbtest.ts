@@ -168,4 +168,24 @@ describe('costing lineage: a quality saved first', () => {
         expect(rows.map(row => row.version_number)).toEqual([1, 2])
         expect(new Set(rows.map(row => row.costing_group_id)).size).toBe(1)
     })
+
+    it('refuses a costing whose fabric differs from its quality', async () => {
+        const owner = await seedOwnerOrg(db, { tier: 'lite', name: 'Different Fabric Weaver' })
+        const actor = { userId: owner.userId, orgId: owner.orgId }
+
+        ctx.actor = actor
+        await saveAsFabricTemplate(qualityInput('Linen', 12))
+        const template = await templateUpdatedAt(owner.orgId, 'Linen')
+
+        const base = atMargin(12).estimate
+        const estimate = { ...base, warpRows: base.warpRows.map((row, index) => index === 0 ? { ...row, beamEnds: row.beamEnds + 400 } : row) }
+        ctx.actor = actor
+        const refused = await saveEstimatorQuoteV3({
+            clientRequestId: randomUUID(), qualityLabel: 'Linen', estimate,
+            totalProductionCostPerM: 26.23, quotePricePerM: PRICE[12],
+            templateId: template.id, expectedTemplateUpdatedAt: template.updated_at,
+        })
+        expect(refused).toMatchObject({ error: expect.stringContaining('different fabric from Linen') })
+        expect(await costingRows(owner.orgId)).toHaveLength(1)
+    })
 })
