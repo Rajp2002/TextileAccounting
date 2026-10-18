@@ -86,7 +86,8 @@ describe('Daily Sheet tour contract', () => {
         expect(sheet).toContain("const saveLabel = currentBatch && !isSavedBatchProtected ? t('dailySheet.saveCorrection') : t('dailySheet.saveShift')")
         // PI-04 (fixed): a date or shift change stays on the Daily Sheet's own path; see base-daily-sheet-navigation.test.ts.
         expect(sheet).toContain("window.history.replaceState(null, '', baseDailySheetHref({ ...navigation, date, shift: nextShift, entry: undefined }))")
-        expect(sheet).toContain('max={initialData.today}')
+        // No future dates; during setup the date is fixed on go-live (base-go-live-surfaces.test.ts).
+        expect(sheet).toContain('max={inSetup ? setupDate : initialData.today}')
     })
     it('uses the existing mounted-child runtime with the guide in the page header', () => {
         const wrapper = readFileSync('components/production/DailySheetGuidedTour.tsx', 'utf8')

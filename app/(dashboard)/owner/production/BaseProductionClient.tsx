@@ -87,6 +87,9 @@ import BaseActiveQualities from './BaseActiveQualities'
 import BaseAssignmentWorkspace from './BaseAssignmentWorkspace'
 import BaseProductionLoomChart from './BaseProductionLoomChart'
 import BaseProductionTodayBand from './BaseProductionTodayBand'
+import BaseGoLiveSetupCard from './BaseGoLiveSetupCard'
+import { GoLiveNotice } from '@/components/production/GoLiveNotice'
+import { formatGoLiveDate, goLiveReadiness } from '@/lib/base-go-live'
 import BaseDailyProductionSheet from './BaseDailyProductionSheet'
 import BasePayrollReadinessPanel from './BasePayrollReadinessPanel'
 import BaseWorkerIncentives from './BaseWorkerIncentives'
@@ -172,12 +175,12 @@ type BaseProductionView = 'production' | 'operations' | 'payroll'
 // The shared production client also serves daily entry and assignments. Keep
 // payroll's full-history calculations dormant until the payroll view needs them.
 export function useBasePayrollForView(view: BaseProductionView, initialData: BaseProductionInitialData, period: { start: string; end: string }) {
-    const { workers, staffDaysOff, entries, allocations, incentives, advances, settlements, payrollPeriods, today } = initialData
+    const { workers, staffDaysOff, entries, allocations, incentives, advances, settlements, payrollPeriods, today, goLiveDate } = initialData
     return useMemo(() => {
         if (view !== 'payroll') return null
         const cutoff = period.end < today ? period.end : today
         const payables = calculateBaseWorkerPayables({
-            workers: withStaffDaysOff(workers, staffDaysOff), entries, allocations, incentives: incentives ?? [], advances, settlements, periodEnd: cutoff,
+            workers: withStaffDaysOff(workers, staffDaysOff), entries, allocations, incentives: incentives ?? [], advances, settlements, periodEnd: cutoff, goLiveDate,
         })
         const periodRecord = (payrollPeriods ?? []).find(record => record.period_start === period.start && record.period_end === period.end) ?? null
         return {
@@ -186,7 +189,7 @@ export function useBasePayrollForView(view: BaseProductionView, initialData: Bas
             summary: calculateBasePayrollPeriodSummary({ payables, periodRecord: periodRecord ?? undefined }),
             readiness: buildBasePayrollReadiness({ payables, entries, allocations }),
         }
-    }, [view, workers, staffDaysOff, entries, allocations, incentives, advances, settlements, payrollPeriods, today, period.start, period.end])
+    }, [view, workers, staffDaysOff, entries, allocations, incentives, advances, settlements, payrollPeriods, today, goLiveDate, period.start, period.end])
 }
 
 const NO_PAYABLES: ReturnType<typeof calculateBaseWorkerPayables> = []
@@ -250,11 +253,17 @@ export default function BaseProductionClient({
 }) {
     const router = useRouter()
     const pathname = usePathname()
-    const { tx, t } = useTranslation()
+    const { tx, t, language } = useTranslation()
     const tourSample = useTourSample()
     const payrollTourStep = useTourSample('payroll')?.step
     const surface = tourSurfaceProps(Boolean(tourSample))
     useLocalizedPageTitle(view === 'operations' ? `${tx('Worker–Machine Assignments')} | Weavly` : null)
+    // Before go-live the factory is setting up: nothing is recorded yet. Tours keep their sample pages.
+    const goLivePhase = initialData.goLivePhase ?? 'live'
+    const inSetup = !tourSample && goLivePhase !== 'live'
+    // During setup the board shows and edits the arrangement on go-live, the day it takes effect.
+    const assignmentData = useMemo(() => (initialData.effectiveDate && initialData.effectiveDate !== initialData.today
+        ? { ...initialData, today: initialData.effectiveDate } : initialData), [initialData])
     const searchParams = useSearchParams()
     const navigation = readBaseProductionNavigation(searchParams)
     const [payrollTab, setPayrollTab] = useState('pay')
@@ -617,7 +626,7 @@ export default function BaseProductionClient({
                         </Button>
                     )}
                     {view === 'payroll' && activeTab !== 'history' && activePeriodSummary && (
-                        <Button data-tour-anchor="payroll.settle" onClick={() => setWorkspaceOpen(true)} className={railPrimaryAction}>
+                        <Button data-tour-anchor="payroll.settle" onClick={() => setWorkspaceOpen(true)} disabled={inSetup} className={railPrimaryAction}>
                             <WalletCards className="size-4" aria-hidden="true" />
                             <span data-i18n-skip="true">{activePeriodSummary.status === 'settled'
                                 ? t('payroll.viewSettledPayroll')
@@ -667,7 +676,28 @@ export default function BaseProductionClient({
                 <BasePayrollRecords initialData={initialData} initialPeriodStart={recordsPeriodStart} onBack={() => setPayrollTab('pay')} />
             )}
 
-            {view === 'production' && !isDailySheetView && (
+            {view === 'production' && !isDailySheetView && inSetup && (
+                <BaseGoLiveSetupCard
+                    phase={goLivePhase === 'unscheduled' ? 'unscheduled' : 'setup'}
+                    goLive={initialData.goLiveDate ?? null}
+                    options={initialData.goLiveOptions ?? []}
+                    readiness={initialData.goLiveDate ? goLiveReadiness({
+                        goLive: initialData.goLiveDate,
+                        machines: activeMachines,
+                        jobContexts: initialData.machineJobContexts,
+                        assignments: initialData.assignments,
+                        legacyCounts: initialData.legacyCounts ?? [],
+                    }) : null}
+                />
+            )}
+
+            {view === 'payroll' && activeTab !== 'history' && inSetup && (
+                <GoLiveNotice>{initialData.goLiveDate
+                    ? t('goLive.payrollStarts', { date: formatGoLiveDate(initialData.goLiveDate, language) })
+                    : t('goLive.scheduleTitle')}</GoLiveNotice>
+            )}
+
+            {view === 'production' && !isDailySheetView && !inSetup && (
                 <BaseProductionTodayBand
                     today={todayProduction}
                     comparison={yesterdayComparison}
@@ -745,7 +775,7 @@ export default function BaseProductionClient({
                 </Card>
             )}
 
-            {view === 'operations' && <BaseAssignmentWorkspace key={`${initialData.orgId}:${navigation.worker ?? "all"}:${navigation.machine ?? "all"}:${navigation.shift ?? "day"}`} initialData={initialData} focusWorkerId={searchParams.get("worker") ?? undefined} focusMachineId={searchParams.get("machine") ?? undefined} initialShift={navigation.shift} tourMetadata={tourMetadata} />}
+            {view === 'operations' && <BaseAssignmentWorkspace key={`${initialData.orgId}:${navigation.worker ?? "all"}:${navigation.machine ?? "all"}:${navigation.shift ?? "day"}`} initialData={assignmentData} focusWorkerId={searchParams.get("worker") ?? undefined} focusMachineId={searchParams.get("machine") ?? undefined} initialShift={navigation.shift} tourMetadata={tourMetadata} />}
 
             {(view === 'production' || (view === 'payroll' && activeTab !== 'history')) && <div className={view === 'production' && !isDailySheetView ? 'space-y-8 pt-2' : view === 'payroll' ? 'payroll-pay-region space-y-4' : 'space-y-4'}>
                 {view === 'production' && activeTab === 'jobs' && (
@@ -754,7 +784,7 @@ export default function BaseProductionClient({
                         costings={initialData.costings}
                         machines={initialData.machines}
                         machineJobContexts={initialData.machineJobContexts}
-                        today={initialData.today}
+                        today={initialData.effectiveDate ?? initialData.today}
                         todayMetersByJobId={todayProduction.metersByJobId}
                         todayEntered={todayProduction.hasSavedSheet}
                         onViewHistory={() => router.push('/owner/production/daily-sheet')}

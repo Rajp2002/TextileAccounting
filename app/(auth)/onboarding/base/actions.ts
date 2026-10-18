@@ -10,19 +10,15 @@ import { getSuratTodayString } from '@/lib/time'
 import {
     BASE_ONBOARDING_VERSION,
     getDefaultBaseOnboardingDraft,
+    onboardingCycleRule,
     type BaseOnboardingDraft,
     type FactoryDefaultsInput,
     type PayrollCycleInput,
 } from '@/lib/base-onboarding'
 import { getFactoryReadiness } from '@/lib/base-onboarding.server'
-import {
-    validateCycleRule,
-    type PayrollCycleRule,
-    type MonthlyCycleRule,
-    type WeeklyCycleRule,
-    type IntervalDaysCycleRule,
-    type WeekdayName,
-} from '@/lib/payroll-cycle-engine'
+import { getBaseGoLiveState, scheduleBaseGoLiveForOrg } from '@/lib/base-go-live.server'
+import { nextGoLiveDate } from '@/lib/base-go-live'
+import { validateCycleRule } from '@/lib/payroll-cycle-engine'
 
 // ─── 1. Load Initial State ────────────────────────────────────────────────────
 
@@ -569,36 +565,12 @@ export async function saveBaseOnboardingWorkersBulkAction(
 
 export async function saveBaseOnboardingPayrollAction(input: PayrollCycleInput) {
     try {
-        await requireWritableOrg(['owner'])
+        const { user, profile } = await requireWritableOrg(['owner'])
         const supabase = await createClient()
         const today = getSuratTodayString()
 
-        let cycleRule: PayrollCycleRule
         const cycleType = input.cycleType || 'monthly'
-
-        if (cycleType === 'monthly') {
-            const rule: MonthlyCycleRule = {
-                type: 'monthly',
-                anchorDay: Math.min(31, Math.max(1, input.anchorDay || 1)),
-            }
-            cycleRule = rule
-        } else if (cycleType === 'weekly') {
-            const rule: WeeklyCycleRule = {
-                type: 'weekly',
-                anchorWeekday: (input.anchorWeekday as WeekdayName) || 'monday',
-            }
-            cycleRule = rule
-        } else if (cycleType === 'interval_days') {
-            const rule: IntervalDaysCycleRule = {
-                type: 'interval_days',
-                interval: Math.max(1, input.intervalDays || 14),
-                anchorDate: input.anchorDate || today,
-            }
-            cycleRule = rule
-        } else {
-            const rule: MonthlyCycleRule = { type: 'monthly', anchorDay: 1 }
-            cycleRule = rule
-        }
+        const cycleRule = onboardingCycleRule({ ...input, cycleType }, today)
 
         const validation = validateCycleRule(cycleRule)
         if (!validation.valid || !validation.normalizedRule) {
@@ -608,15 +580,25 @@ export async function saveBaseOnboardingPayrollAction(input: PayrollCycleInput) 
         // The RPC checks owner and Base access and handles same-day edits in
         // place (20260915120000). There is deliberately no service-role
         // fallback: a refused write must not bypass those checks.
+        // During setup the current cycle starts at go-live; replace it there, then move go-live to the new
+        // cycle's next start, as the payroll settings do. Read with the owner's own client: this step never
+        // touches the service role before the owner's write has passed the RPC's checks (AS-01).
+        const { data: org } = await supabase.from('organizations').select('base_go_live_date').eq('id', profile.org_id).maybeSingle()
+        const goLive = (org?.base_go_live_date as string | null | undefined) ?? null
+        const inSetup = goLive !== null && goLive > today
         const { error: rpcError } = await supabase.rpc('update_base_payroll_cycle', {
             p_cycle_type: cycleType,
             p_rule: validation.normalizedRule,
-            p_effective_from: today,
+            p_effective_from: inSetup ? goLive : today,
         })
 
         if (rpcError) {
             console.error('update_base_payroll_cycle failed during onboarding:', rpcError.message)
             return { error: 'Failed to configure payroll cycle. Please try again.' }
+        }
+        if (inSetup) {
+            const scheduled = await scheduleBaseGoLiveForOrg(profile.org_id, user.id, nextGoLiveDate(today, validation.normalizedRule))
+            if ('error' in scheduled) return { error: scheduled.error }
         }
 
         revalidatePath('/owner/production')
@@ -692,8 +674,20 @@ export async function completeBaseOnboardingAction() {
             console.warn('[completeBaseOnboardingAction] Failed to update user app_metadata:', authErr)
         }
 
+        // Daily recording starts at the next pay-cycle start (the first option). A failure here leaves
+        // go-live unscheduled, which the production page's "Schedule daily recording" card recovers.
+        try {
+            const goLive = await getBaseGoLiveState(profile.org_id)
+            if (goLive.phase === 'unscheduled' && goLive.options[0]) {
+                const scheduled = await scheduleBaseGoLiveForOrg(profile.org_id, user.id, goLive.options[0])
+                if ('error' in scheduled) console.warn('[completeBaseOnboardingAction] Go-live not scheduled:', scheduled.error)
+            }
+        } catch (goLiveErr) {
+            console.warn('[completeBaseOnboardingAction] Go-live not scheduled:', goLiveErr)
+        }
+
         revalidatePath('/owner/production')
-        revalidatePath('/owner/production')
+        revalidatePath('/owner/production/daily-sheet')
         revalidatePath('/owner/machines')
         revalidatePath('/owner/workers')
         revalidatePath('/owner/payroll')

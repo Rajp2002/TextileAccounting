@@ -98,14 +98,14 @@ describe('SwitchShiftsPanel', () => {
 })
 
 describe('switch shifts wiring', () => {
-    it('exposes an owner-only server action that calls the rotation function for today', () => {
+    it('exposes an owner-only server action that calls the rotation function from today, or go-live during setup', () => {
         const actions = read('app/(dashboard)/owner/production/actions.ts')
         const start = actions.indexOf('export async function rotateBaseWorkerShifts')
         expect(start).toBeGreaterThan(-1)
         const body = actions.slice(start, actions.indexOf('\nexport async function', start + 10))
         expect(body).toContain('requireBaseProductionOwner()')
         expect(body).toContain("supabase.rpc('rotate_base_worker_shifts'")
-        expect(body).toContain('p_effective_from: getSuratTodayString()')
+        expect(body).toContain('p_effective_from: effectiveDateFor(getSuratTodayString(), (await getBaseGoLiveState(profile.org_id)).goLive)')
         expect(body).toContain("revalidatePath('/owner/workers')")
         expect(body).toContain("revalidatePath('/owner/payroll')")
     })

@@ -62,7 +62,8 @@ beforeEach(() => {
     fixture.errorTable = fixture.rejectTable = fixture.truncateTable = ''
     fixture.orgId = 'tenant-one'
     fixture.rows = {
-        organizations: [{ id: 'tenant-one', name: 'Test factory' }],
+        // A live factory; the setup-phase reads are covered below.
+        organizations: [{ id: 'tenant-one', name: 'Test factory', base_go_live_date: '2000-01-01' }],
         base_payroll_cycle_configs: [{ id: 'cycle', cycle_type: 'monthly', rule: DEFAULT_MONTHLY_CYCLE_RULE, effective_from: '2020-01-01', effective_until: null }],
         estimator_quotes: [{ id: 'costing', quality_label: 'Grey cloth', record_kind: 'costing', is_archived: false, worker_rate_per_m: 2 }],
         base_production_jobs: [{ id: 'job', costing_id: 'costing', quality_label: 'Grey cloth', status: 'planned', start_date: '2025-01-01' }],
@@ -113,6 +114,17 @@ describe('task-scoped production and payroll loading', () => {
                 expect(query.range).toEqual([0, 499])
             }
         }
+    })
+
+    it('reads legacy counts for the setup readiness list only before go-live', async () => {
+        fixture.rows.organizations[0].base_go_live_date = '2999-01-01'
+        const setup = await load('production')
+        expect(queriedTables()).toContain('legacy_stock')
+        expect(setup.goLivePhase).toBe('setup')
+        expect(setup.effectiveDate).toBe('2999-01-01')
+        fixture.queries.length = 0
+        await load('payroll')
+        expect(queriedTables()).not.toContain('legacy_stock')
     })
 
     it('retains the complete loader as the default for existing callers', async () => {

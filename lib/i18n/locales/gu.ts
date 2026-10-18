@@ -1723,5 +1723,26 @@ export const gu = {
     "liveCost": "લાઇવ ખર્ચ",
     "calculateSave": "ગણતરી કરો અને સાચવો · 1 કોસ્ટિંગ વપરાશે",
     "startProduction": "ઉત્પાદન શરૂ કરો"
+},
+
+  // Base go-live: setup before the first recorded pay-cycle start (lib/base-go-live.ts).
+  goLive: {
+    "setupCardTitle": "રોજની નોંધ {date} થી શરૂ થશે",
+    "setupCardBody": "ત્યાં સુધી લૂમ અને કારીગરો સેટ કરો. {date} પહેલાંના દિવસોનો પગાર કાગળ પર જ રહેશે, અને ગોડાઉનમાં પહેલેથી પડેલું કાપડ લેગસી સ્ટોક છે.",
+    "changeDate": "તારીખ બદલો",
+    "readinessQualities": "{total} માંથી {count} લૂમ પર ક્વોલિટી છે",
+    "readinessStaffed": "દિવસ: {total} માંથી {day} લૂમ પર કારીગર · રાત: {total} માંથી {night}",
+    "readinessLegacyNone": "ટેગ વગરના કાપડને {date} ની આગલી સાંજે અથવા તે દિવસે લેગસી સ્ટોક તરીકે ગણો",
+    "readinessLegacyStale": "{counted} એ ગણ્યું. {date} ની નજીક ફરી ગણો",
+    "readinessLegacyFresh": "લેગસી સ્ટોક {counted} એ ગણ્યો",
+    "scheduleTitle": "રોજની નોંધની તારીખ નક્કી કરો",
+    "scheduleBody": "નોંધ તમારા આગલા પગાર ચક્રની શરૂઆતથી થશે: {date}.",
+    "scheduleAction": "{date} થી શરૂ કરો",
+    "sheetPreview": "{date} નું પૂર્વાવલોકન. રીડિંગ તે જ દિવસથી ભરી શકાશે.",
+    "payrollStarts": "Weavly માં પહેલું પગાર ચક્ર {date} થી શરૂ થશે. તે પહેલાંનો પગાર કાગળ પર જ રહેશે.",
+    "challansStart": "ચલણ {date} થી ખુલશે. ત્યાં સુધી લેગસી સ્ટોકમાંથી ડિસ્પેચ કાગળ પર કરો.",
+    "openingDisabled": "જૂનું કાપડ લેગસી સ્ટોક છે. તેને લેગસી ગણતરીથી નોંધો.",
+    "supervisorStarts": "રોજની નોંધ {date} થી શરૂ થશે.",
+    "wizardStarts": "રોજની નોંધ {date} થી શરૂ થશે."
 }
 }

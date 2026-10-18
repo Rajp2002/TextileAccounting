@@ -1721,5 +1721,26 @@ export const hi = {
     "liveCost": "लाइव लागत",
     "calculateSave": "गणना करें और सेव करें · 1 कॉस्टिंग लगेगी",
     "startProduction": "उत्पादन शुरू करें"
+},
+
+  // Base go-live: setup before the first recorded pay-cycle start (lib/base-go-live.ts).
+  goLive: {
+    "setupCardTitle": "रोज़ की एंट्री {date} से शुरू होगी",
+    "setupCardBody": "तब तक लूम और कारीगर सेट करें। {date} से पहले के दिनों का वेतन कागज़ पर ही रहेगा, और गोदाम में पहले से रखा कपड़ा लेगेसी स्टॉक है।",
+    "changeDate": "तारीख बदलें",
+    "readinessQualities": "{total} में से {count} लूम पर क्वालिटी लगी है",
+    "readinessStaffed": "दिन: {total} में से {day} लूम पर कारीगर · रात: {total} में से {night}",
+    "readinessLegacyNone": "बिना टैग वाले कपड़े को {date} की पिछली शाम या उसी दिन लेगेसी स्टॉक के रूप में गिनें",
+    "readinessLegacyStale": "{counted} को गिना गया। {date} के पास फिर से गिनें",
+    "readinessLegacyFresh": "लेगेसी स्टॉक {counted} को गिना गया",
+    "scheduleTitle": "रोज़ की एंट्री की तारीख तय करें",
+    "scheduleBody": "एंट्री आपके अगले वेतन चक्र की शुरुआत से होगी: {date}।",
+    "scheduleAction": "{date} से शुरू करें",
+    "sheetPreview": "{date} का पूर्वावलोकन। रीडिंग उसी दिन से भरी जा सकेंगी।",
+    "payrollStarts": "Weavly में पहला वेतन चक्र {date} से शुरू होगा। उससे पहले का वेतन कागज़ पर ही रहेगा।",
+    "challansStart": "चालान {date} से खुलेंगे। तब तक लेगेसी स्टॉक से डिस्पैच कागज़ पर करें।",
+    "openingDisabled": "पुराना कपड़ा लेगेसी स्टॉक है। इसे लेगेसी गिनती से दर्ज करें।",
+    "supervisorStarts": "रोज़ की एंट्री {date} से शुरू होगी।",
+    "wizardStarts": "रोज़ की एंट्री {date} से शुरू होगी।"
 }
 }

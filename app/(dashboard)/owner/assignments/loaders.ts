@@ -1,4 +1,6 @@
 import 'server-only'
+import { effectiveDateFor } from '@/lib/base-go-live'
+import { getBaseGoLiveState } from '@/lib/base-go-live.server'
 
 import { requireRole } from '@/lib/auth'
 import { readCompleteBaseRows } from '@/lib/base-complete-query'
@@ -43,7 +45,8 @@ export async function loadBaseAssignmentsInitialData(today?: string): Promise<{
     const access = await getCachedOrgPlanAccess(profile.org_id)
     if (!hasCapability(access.effectiveTier, 'production_management')) return null
     const orgId = profile.org_id
-    const effectiveDate = today ?? getSuratTodayString()
+    // Setup changes take effect from go-live, so the board shows and edits the arrangement on that day.
+    const effectiveDate = effectiveDateFor(today ?? getSuratTodayString(), (await getBaseGoLiveState(orgId)).goLive)
     const db = await createClient()
     const [workersResult, machinesResult, jobsResult, assignmentsResult, contextsResult] = await Promise.all([
         readCompleteBaseRows((from, to) => db.from('base_production_workers')

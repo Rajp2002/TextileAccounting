@@ -14,6 +14,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { usePwaRefreshGuard } from '@/hooks/use-pwa-refresh-guard'
 import { usePwaInstallBlocker } from '@/hooks/use-pwa-install-blocker'
 import { useTranslation } from '@/lib/i18n/context'
+import { GoLiveNotice } from '@/components/production/GoLiveNotice'
+import { formatGoLiveDate } from '@/lib/base-go-live'
 import { supervisorText, type SupervisorTextKey } from '@/lib/i18n/supervisor-access'
 import { baseProductionDraftKey, parseBaseProductionDraft } from '@/lib/base-production-draft'
 import { machineReadingState, machineWorkerStatus } from '@/lib/base-machine-register'
@@ -120,9 +122,11 @@ const ReadingRow = memo(function ReadingRow({ row, value, state, absent, disable
     )
 })
 
-export function SupervisorDailySheet({ data, date, shift, actorId }: { data: SupervisorSheetData; date: string; shift: 'day' | 'night'; actorId: string }) {
+/** goLiveDate: the day recording opens; null when not scheduled, undefined when unknown (treated as open). */
+export function SupervisorDailySheet({ data, date, shift, actorId, goLiveDate }: { data: SupervisorSheetData; date: string; shift: 'day' | 'night'; actorId: string; goLiveDate?: string | null }) {
     const router = useRouter()
-    const { language } = useTranslation()
+    const { language, t } = useTranslation()
+    const beforeGoLive = goLiveDate === null || (typeof goLiveDate === 'string' && date < goLiveDate)
     const text = useCallback<Text>((key, values) => supervisorText(language, key, values), [language])
 
     const sheet = useMemo(() => buildSupervisorSheet(data, date, shift), [data, date, shift])
@@ -172,7 +176,7 @@ export function SupervisorDailySheet({ data, date, shift, actorId }: { data: Sup
 
     const isFinalized = batch?.status === 'finalized' || (sheet.workers.length > 0 && sheet.workers.every(worker => worker.paid))
     const isProtected = Boolean(batch) && !isFinalized && !unlocked
-    const inputsDisabled = saving || isFinalized || isProtected || draftStatus === 'conflict'
+    const inputsDisabled = saving || isFinalized || isProtected || draftStatus === 'conflict' || beforeGoLive
     const paidWorkers = useMemo(() => new Set(sheet.workers.filter(worker => worker.paid).map(worker => worker.id)), [sheet.workers])
     const summary = summarizeSupervisorSheet(sheet, rows)
     const unmatchedDraft = Object.entries(rows).some(([workerId, row]) => {
@@ -293,6 +297,12 @@ export function SupervisorDailySheet({ data, date, shift, actorId }: { data: Sup
             <div className="text-center">
                 <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink">{text('sheetTitle')}</h1>
             </div>
+
+            {beforeGoLive && (
+                <GoLiveNotice>{goLiveDate
+                    ? t('goLive.supervisorStarts', { date: formatGoLiveDate(goLiveDate, language) })
+                    : t('goLive.scheduleTitle')}</GoLiveNotice>
+            )}
 
             <div className="grid gap-2 sm:grid-cols-2">
                 <LiquidSegmented

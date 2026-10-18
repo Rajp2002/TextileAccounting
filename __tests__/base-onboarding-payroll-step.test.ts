@@ -87,7 +87,8 @@ describe('Base Onboarding — Payroll Persistence Contract & Same-Day Updates', 
     // (20260915120000, asserted below), so the action now uses only the RPC.
     it('persists through the atomic update_base_payroll_cycle RPC effective today', () => {
         expect(payrollAction).toContain(".rpc('update_base_payroll_cycle', {")
-        expect(payrollAction).toContain('p_effective_from: today,')
+        // Today, or go-live while the factory is still setting up (the current cycle starts there).
+        expect(payrollAction).toContain('p_effective_from: inSetup ? goLive : today,')
         expect(payrollAction).toContain('rule: validation.normalizedRule')
     })
 

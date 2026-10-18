@@ -1,5 +1,6 @@
 import { normalizeWorker, normalizeMachine } from './registers/normalize'
 import 'server-only'
+import { effectiveDateFor, goLiveOptions, goLivePhase, type BaseGoLivePhase } from '@/lib/base-go-live'
 
 import { readCompleteBaseRows } from '@/lib/base-complete-query'
 import { readBaseRevisionEntries } from '@/lib/base-production-audit'
@@ -41,6 +42,15 @@ export type BaseProductionInitialData = {
     actorId?: string
     factoryName?: string
     today: string
+    /** First day recorded in Weavly (organizations.base_go_live_date); null while not scheduled. */
+    goLiveDate?: string | null
+    goLivePhase?: BaseGoLivePhase
+    /** Cycle starts the owner may move go-live to; empty once live. */
+    goLiveOptions?: string[]
+    /** The later of today and go-live: the date setup changes take effect from. */
+    effectiveDate?: string
+    /** Legacy stock count dates for the setup readiness list; loaded only while not live. */
+    legacyCounts?: { basis: 'unknown' | 'estimated' | 'counted'; basis_at: string | null }[]
     payrollPeriod: { start: string; end: string }
     payrollCycleConfig?: PayrollCycleConfig
     costings: BaseProductionCosting[]
@@ -182,7 +192,7 @@ export async function loadBaseProductionInitialData(
     ] = await Promise.all([
         supabase
             .from('organizations')
-            .select('name')
+            .select('name, base_go_live_date')
             .eq('id', orgId)
             .maybeSingle(),
         includeProduction ? readCompleteBaseRows((from, to) => supabase
@@ -591,9 +601,19 @@ export async function loadBaseProductionInitialData(
         updated_at: String(row.updated_at || new Date(0).toISOString()),
     }))
 
+    const goLiveDate = (organizationResult.data?.base_go_live_date as string | null | undefined) ?? null
+    // Setup readiness asks for a legacy count near go-live. A failed read only hides that line.
+    const legacyCounts = includeProduction && goLivePhase(today, goLiveDate) !== 'live'
+        ? ((await supabase.from('legacy_stock').select('basis, basis_at').eq('org_id', orgId)).data ?? []) as BaseProductionInitialData['legacyCounts']
+        : undefined
     return {
         orgId,
         factoryName: String(organizationResult.data?.name || 'Weavly'),
+        goLiveDate,
+        goLivePhase: goLivePhase(today, goLiveDate),
+        goLiveOptions: goLivePhase(today, goLiveDate) === 'live' ? [] : goLiveOptions(today, payrollCycleConfig.rule),
+        effectiveDate: effectiveDateFor(today, goLiveDate),
+        ...(legacyCounts ? { legacyCounts } : {}),
         today,
         payrollPeriod,
         payrollCycleConfig,

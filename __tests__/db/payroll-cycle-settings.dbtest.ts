@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { getEarliestSafeCycleChangeDate } from '@/lib/payroll-cycle-engine'
+import { nextGoLiveDate } from '@/lib/base-go-live'
 import { getSuratTodayString } from '@/lib/time'
 import { asSuperuser, freshDatabase, seedOwnerOrg, type Db } from './helpers'
 import { createTestSupabase, type RpcCall } from './supabase-adapter'
@@ -24,8 +25,12 @@ vi.mock('@/lib/subscription', () => ({ getOrgTier: async () => 'base' }))
 vi.mock('@/lib/supabase/server', () => ({
     createClient: async () => createTestSupabase(ctx.db as Db, { kind: 'user', ...(ctx.actor as Actor) }, ctx.calls as RpcCall[]),
 }))
+// Go-live is read and scheduled with the service role (lib/base-go-live.server.ts).
+vi.mock('@/lib/supabase/admin', () => ({
+    createAdminClient: () => createTestSupabase(ctx.db as Db, { kind: 'service' }, ctx.calls as RpcCall[]),
+}))
 
-const { saveBasePayrollCycleConfig } = await import('@/app/(dashboard)/owner/production/actions')
+const { saveBasePayrollCycleConfig, scheduleBaseGoLiveAction } = await import('@/app/(dashboard)/owner/production/actions')
 
 let db: Db
 let safeDay: (offset: number) => string
@@ -65,6 +70,43 @@ afterAll(async () => { await db?.end() })
 beforeEach(() => { (ctx.calls as RpcCall[]).length = 0 })
 
 describe('payroll cycle settings (OS-13 fixed)', () => {
+    it('schedules a factory that never saved a pay cycle on the default monthly cycle', async () => {
+        ctx.actor = await seedOwnerOrg(db, { tier: 'base', goLive: null })
+        const next = nextGoLiveDate(getSuratTodayString(), { type: 'monthly', anchorDay: 1 })
+        expect(await scheduleBaseGoLiveAction(next)).toEqual({ goLive: next })
+    })
+
+    it('replaces the setup cycle in place when the new cycle starts earlier than go-live', async () => {
+        const today = getSuratTodayString()
+        const tomorrow = new Date(Date.parse(`${today}T00:00:00Z`) + 86400000).toISOString().slice(0, 10)
+        const goLive = nextGoLiveDate(tomorrow, { type: 'weekly', anchorWeekday: 'monday' })
+        ctx.actor = await seedOwnerOrg(db, { tier: 'base', goLive })
+        const owner = ctx.actor as Actor
+        await asSuperuser(db)
+        await db.query("INSERT INTO public.base_payroll_cycle_configs(org_id, cycle_type, rule, effective_from) VALUES ($1, 'weekly', '{\"type\":\"weekly\",\"anchorWeekday\":\"monday\"}', $2)", [owner.orgId, goLive])
+        const rule = { type: 'monthly' as const, anchorDay: 16 }
+        const next = nextGoLiveDate(today, rule)
+        // The settings card sends the earliest safe date, which can be later than go-live.
+        expect(await saveBasePayrollCycleConfig({ cycleType: 'monthly', rule, effectiveFrom: safeDay(0) })).toMatchObject({ success: true, goLiveDate: next, effectiveFrom: next })
+        expect(await configs(owner.orgId)).toEqual([{ cycle_type: 'monthly', from: next, until: null }])
+    })
+
+    it('moves go-live to the next start of a cycle changed during setup', async () => {
+        const today = getSuratTodayString()
+        const goLive = nextGoLiveDate(today === nextGoLiveDate(today, { type: 'monthly', anchorDay: 1 }) ? `${today.slice(0, 8)}02` : today, { type: 'monthly', anchorDay: 1 })
+        ctx.actor = await seedOwnerOrg(db, { tier: 'base', goLive })
+        const owner = ctx.actor as Actor
+        await asSuperuser(db)
+        await db.query("INSERT INTO public.base_payroll_cycle_configs(org_id, cycle_type, rule, effective_from) VALUES ($1, 'monthly', '{\"type\":\"monthly\",\"anchorDay\":1}', $2)", [owner.orgId, goLive])
+        const weeklyStart = nextGoLiveDate(today, { type: 'weekly', anchorWeekday: 'monday' })
+        expect(await weekly(today)).toMatchObject({ success: true, goLiveDate: weeklyStart, effectiveFrom: weeklyStart })
+        expect(await configs(owner.orgId)).toEqual([{ cycle_type: 'weekly', from: weeklyStart, until: null }])
+        await asSuperuser(db)
+        const org = (await db.query('SELECT base_go_live_date::text AS go_live FROM public.organizations WHERE id = $1', [owner.orgId])).rows[0]
+        expect(org.go_live).toBe(weeklyStart)
+        expect((ctx.calls as RpcCall[]).map(call => `${call.identity}:${call.fn}`)).toEqual(['user:update_base_payroll_cycle', 'service:schedule_base_go_live'])
+    })
+
     it('INVARIANT: a later effective date goes through the RPC and closes the previous cycle', async () => {
         const owner = await newOwner()
         expect(await monthly(safeDay(10))).toMatchObject({ success: true, effectiveFrom: safeDay(10) })

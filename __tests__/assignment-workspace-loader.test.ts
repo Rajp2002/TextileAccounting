@@ -9,11 +9,13 @@ const fixture = vi.hoisted(() => ({
     rows: {} as Record<string, Row[]>, queries: [] as Query[], events: [] as string[],
     errorTable: '', cap: 500, truncateAfterFirst: '',
     query: new URLSearchParams(), title: vi.fn(), metadata: { assignments: 'completed' },
-    client: vi.fn(), role: vi.fn(), plan: vi.fn(),
+    client: vi.fn(), role: vi.fn(), plan: vi.fn(), goLive: null as string | null,
 }))
 vi.mock('server-only', () => ({}))
 vi.mock('@/lib/auth', () => ({ requireRole: fixture.role }))
 vi.mock('@/lib/subscription', () => ({ getCachedOrgPlanAccess: fixture.plan }))
+// Go-live is read with the service role, outside the five operational datasets.
+vi.mock('@/lib/base-go-live.server', () => ({ getBaseGoLiveState: async () => ({ goLive: fixture.goLive, phase: fixture.goLive && fixture.goLive > fixture.today ? 'setup' : 'live', options: [] }) }))
 vi.mock('@/lib/supabase/server', () => ({ createClient: fixture.client }))
 vi.mock('@/lib/time', async importOriginal => ({ ...(await importOriginal<typeof import('../lib/time')>()), getSuratTodayString: () => fixture.today }))
 vi.mock('next/navigation', () => ({ useSearchParams: () => fixture.query }))
@@ -59,6 +61,7 @@ function client() {
 
 beforeEach(() => {
     vi.clearAllMocks()
+    fixture.goLive = null
     fixture.tier = 'base'
     fixture.orgId = 'tenant-one'
     fixture.userId = 'owner-one'
@@ -103,6 +106,12 @@ describe('authorized, focused assignment loading', () => {
         expect(data?.initialData).toMatchObject({ orgId: 'tenant-one', actorId: 'owner-one', today: fixture.today })
         expect(data?.tourMetadata).toEqual({ tour_preferences: fixture.metadata })
         expect(Object.keys(data!.initialData).sort()).toEqual(['actorId', 'assignments', 'jobs', 'machineJobContexts', 'machines', 'orgId', 'today', 'workers'])
+    })
+
+    it('evaluates the board on go-live while the factory is in setup', async () => {
+        fixture.goLive = '2026-11-01'
+        const data = await loadBaseAssignmentsInitialData()
+        expect(data?.initialData.today).toBe('2026-11-01')
     })
 
     it.each(['none', 'free', 'lite'])('denies %s before constructing a database client', async tier => {

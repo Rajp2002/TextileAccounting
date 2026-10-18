@@ -15,6 +15,8 @@ import {
     findBulkNameIssues, isValidMonthlySalary, normalizeBulkName,
 } from '@/lib/base-bulk-register'
 import { getSuratTodayString } from '@/lib/time'
+import { effectiveDateFor, nextGoLiveDate } from '@/lib/base-go-live'
+import { getBaseGoLiveState, scheduleBaseGoLiveForOrg } from '@/lib/base-go-live.server'
 import {
     validateCycleRule,
     getEarliestSafeCycleChangeDate,
@@ -563,14 +565,15 @@ const ShiftRotationSchema = z.object({ workerIds: z.array(UuidSchema).min(1).max
  * looms, starting today. All or nothing; clashes come back for the modal to show.
  */
 export async function rotateBaseWorkerShifts(input: { workerIds: string[] }) {
-    await requireBaseProductionOwner()
+    const { profile } = await requireBaseProductionOwner()
     const parsed = safeParse(ShiftRotationSchema, input)
     if ('error' in parsed) return parsed
 
     const supabase = await createServerClient()
     const { data, error } = await supabase.rpc('rotate_base_worker_shifts', {
         p_worker_ids: [...new Set(parsed.data.workerIds)],
-        p_effective_from: getSuratTodayString(),
+        // During setup the switch takes effect from go-live, like every other setup change.
+        p_effective_from: effectiveDateFor(getSuratTodayString(), (await getBaseGoLiveState(profile.org_id)).goLive),
     })
 
     if (error) return databaseError(error, 'Shifts could not be switched. Please try again.')
@@ -1444,7 +1447,7 @@ export async function saveBasePayrollCycleConfig(input: {
     rule: unknown
     effectiveFrom?: string
 }) {
-    const { profile } = await requireBaseProductionOwner()
+    const { user, profile } = await requireBaseProductionOwner()
     const parsed = safeParse(SavePayrollCycleSchema, input)
     if ('error' in parsed) return parsed
 
@@ -1467,8 +1470,12 @@ export async function saveBasePayrollCycleConfig(input: {
         today: getSuratTodayString(),
     })
 
-    const effectiveDate = parsed.data.effectiveFrom || safeResult.safeEffectiveDate
-    if (effectiveDate < safeResult.safeEffectiveDate) {
+    // During setup nothing is paid yet and the current cycle starts at go-live, so a new cycle replaces it
+    // there in place; go-live then moves to the new cycle's next start (below).
+    const goLive = await getBaseGoLiveState(profile.org_id)
+    const inSetup = goLive.phase === 'setup' && goLive.goLive !== null
+    const effectiveDate = inSetup ? goLive.goLive! : parsed.data.effectiveFrom || safeResult.safeEffectiveDate
+    if (!inSetup && effectiveDate < safeResult.safeEffectiveDate) {
         return {
             error: `The requested effective date (${effectiveDate}) falls inside a protected payroll period. The earliest safe date is ${safeResult.safeEffectiveDate}.`,
         }
@@ -1488,13 +1495,23 @@ export async function saveBasePayrollCycleConfig(input: {
         return databaseError(rpcError, 'Failed to save payroll cycle configuration. Your existing settings have not changed.')
     }
 
+    // Go-live is always a cycle start, so a new cycle during setup moves it to the next start of that cycle.
+    let goLiveDate = goLive.goLive
+    if (inSetup) {
+        const scheduled = await scheduleBaseGoLiveForOrg(profile.org_id, user.id, nextGoLiveDate(getSuratTodayString(), validation.normalizedRule))
+        if ('error' in scheduled) return { error: `Pay cycle saved, but the recording start date could not move: ${scheduled.error}` }
+        goLiveDate = scheduled.goLive
+    }
+
     revalidateNextPath('/owner/settings')
     revalidateNextPath('/owner/payroll')
     revalidateNextPath('/owner/production')
+    revalidateNextPath('/owner/production/daily-sheet')
 
     return {
         success: true,
-        effectiveFrom: effectiveDate,
+        goLiveDate,
+        effectiveFrom: inSetup && goLiveDate ? goLiveDate : effectiveDate,
         rule: validation.normalizedRule,
     }
 }
@@ -1558,3 +1575,15 @@ export async function getSafePayrollCycleEffectiveDateAction() {
     }
 }
 
+/** Sets or moves the day daily recording starts. Only one of the offered pay-cycle starts is accepted. */
+export async function scheduleBaseGoLiveAction(goLive: string): Promise<{ goLive: string } | { error: string }> {
+    const { user, profile } = await requireBaseProductionOwner()
+    const parsed = safeParse(DateSchema, goLive)
+    if ('error' in parsed) return { error: 'Choose one of the listed start dates.' }
+    const result = await scheduleBaseGoLiveForOrg(profile.org_id, user.id, parsed.data)
+    if ('error' in result) return result
+    for (const path of ['/owner/production', '/owner/production/daily-sheet', '/owner/payroll', '/owner/assignments', '/owner/stock', '/owner/dispatches']) {
+        revalidateNextPath(path)
+    }
+    return result
+}
