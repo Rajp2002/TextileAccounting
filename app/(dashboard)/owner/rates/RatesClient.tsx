@@ -51,6 +51,8 @@ import {
     type CostRateInput,
     type CostRateUnit,
 } from './actions'
+import { getYarnRatePropagationCounts } from './propagation-actions'
+import { PropagateYarnRateDialog } from '@/components/rates/PropagateYarnRateDialog'
 import {
     COST_RATE_CATEGORY_LABELS,
     filterCostRates,
@@ -657,6 +659,16 @@ export default function RatesClient({
     const [searchQuery, setSearchQuery] = useState('')
     const [showArchived, setShowArchived] = useState(false)
     const [tourStep, setTourStep] = useState<RateBookStep | null>(null)
+    // Saved costings each yarn would re-cost; the Propagate pill shows while a yarn has any.
+    const [propagationCounts, setPropagationCounts] = useState<Record<string, number>>({})
+    const [propagateRate, setPropagateRate] = useState<CostRateRow | null>(null)
+    const refreshPropagationCounts = useCallback(() => {
+        // Secondary read: without it there is simply no pill.
+        void getYarnRatePropagationCounts()
+            .then(result => { if (result.data) setPropagationCounts(result.data) })
+            .catch(() => {})
+    }, [])
+    useEffect(() => { refreshPropagationCounts() }, [refreshPropagationCounts])
     const searchRef = useRef<HTMLInputElement>(null)
     const boardRef = useRef<HTMLDivElement>(null)
 
@@ -890,6 +902,7 @@ export default function RatesClient({
                 } else {
                     toast.success(tx(target.id ? 'Rate updated. Costings you already saved did not change.' : 'Rate added for future estimates.'))
                 }
+                refreshPropagationCounts()
                 void trackPlanEvent('rate_book_action', {
                     action: target.id ? 'update' : 'save',
                     category: target.category,
@@ -986,6 +999,7 @@ export default function RatesClient({
                 } else {
                     toast.success(tx('Rate updated. Costings you already saved did not change.'))
                 }
+                refreshPropagationCounts()
                 void trackPlanEvent('rate_book_action', {
                     action: 'update',
                     category: target.category,
@@ -1318,6 +1332,7 @@ export default function RatesClient({
         const reviewState = getRateReviewStatus(rate)
         const actionKind = pendingAction?.id === rate.id ? pendingAction.kind : null
         const reviewLabel = reviewState === 'needs_review' ? 'Confirm current rate' : 'Confirm review'
+        const propagateCount = !due && !archived ? propagationCounts[rate.id] ?? 0 : 0
         const { amount, suffix } = ratePriceParts(rate.current_value, rate.unit)
         const trail = due || archived ? null : priceTrail(rate.price_points ?? [], Number(rate.current_value), todayDate)
         const dueDate = reviewDueDate(rate)
@@ -1416,6 +1431,18 @@ export default function RatesClient({
                                 className={secondaryAction}
                             >
                                 <Pencil className="h-4 w-4" aria-hidden="true" />{tx('Edit rate')}
+                            </Button>
+                        )}
+                        {propagateCount > 0 && (
+                            <Button
+                                data-ratebook-field="propagateAction"
+                                variant="outline"
+                                disabled={isPending}
+                                onClick={() => setPropagateRate(rate)}
+                                aria-label={`Propagate ${rate.name} to ${propagateCount} saved costings`}
+                                className={cn(secondaryAction, 'whitespace-normal')}
+                            >
+                                {tx(`Propagate · ${propagateCount}`)}
                             </Button>
                         )}
                         {/* Activity opens the price-history chart; its Full activity button switches to the audit list. A due card keeps to its two answers; its price still opens the chart. */}
@@ -1857,6 +1884,15 @@ export default function RatesClient({
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <PropagateYarnRateDialog
+                rate={propagateRate}
+                onOpenChange={open => { if (!open) setPropagateRate(null) }}
+                onApplied={(rateId, resolvedCount) => setPropagationCounts(current => {
+                    const remaining = Math.max(0, (current[rateId] ?? 0) - resolvedCount)
+                    return { ...current, [rateId]: remaining }
+                })}
+            />
 
             <QuickRateEditDialog
                 rate={quickEditRate}

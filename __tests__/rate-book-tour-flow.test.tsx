@@ -78,7 +78,7 @@ describe('Rate Book approved copy and control parity', () => {
     it.each(['en', 'gu', 'hi'] as const)('keeps the six existing help topics and principles in %s', language => {
         state.language = language
         const copy = rateBookHelpCopy[language]
-        expect(Object.keys(copy.fields)).toEqual(['directionFilter', 'quickReviewAction', 'rateAndTrend', 'rateDrawerFields', 'reviewRailWidget', 'activityAndArchive'])
+        expect(Object.keys(copy.fields)).toEqual(['directionFilter', 'quickReviewAction', 'rateAndTrend', 'propagate', 'rateDrawerFields', 'reviewRailWidget', 'activityAndArchive'])
         // Help is a Guide topic in the active language; its topics render, all open, as the topic view.
         const Topic = () => {
             const topic = useRateBookHelpTopic()
@@ -90,7 +90,7 @@ describe('Rate Book approved copy and control parity', () => {
         expect(pill).toContain(copy.helpTitle)
         const html = renderToStaticMarkup(<RateBookHelpTopics />)
         expect(html).not.toContain('<details')
-        expect(html.match(/<section\b/g)).toHaveLength(6)
+        expect(html.match(/<section\b/g)).toHaveLength(7)
         for (const field of Object.values(copy.fields)) {
             expect(html).toContain(formatRateBookHelpText(field.title, text => text))
             expect(formatRateBookHelpText(field.description, text => text)).not.toMatch(/\{\w+\}/)

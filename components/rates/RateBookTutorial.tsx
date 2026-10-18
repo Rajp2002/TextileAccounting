@@ -25,6 +25,10 @@ export const rateBookHelpCopy = {
         "title": "Read the change from your last price",
         "description": "The current price is in ₹/kg. The change badge compares it with the previous recorded value: ₹200 to ₹220 is +₹20 (+10%). Initial rate means there is no previous value to compare."
       },
+      "propagate": {
+        "title": "Bring saved costings up to a new yarn price",
+        "description": "After you change a yarn’s rate, a Propagate pill appears on its card with the number of saved costings still using the old rate. It opens a review of those costings with their cost before and after. Confirm to save a new version of each; earlier versions keep their own numbers. Archived costings are left out."
+      },
       "rateDrawerFields": {
         "title": "Use {advancedEdit} for full details",
         "description": "{advancedEdit} contains dates, Source, notes and {reviewEvery} (30–365 days). Existing yarn names are locked; to rename one, add a replacement rate and intentionally update Saved Qualities. A discovery source stays tied to the original quality or costing."
@@ -58,6 +62,10 @@ export const rateBookHelpCopy = {
       "rateAndTrend": {
         "title": "पिछले दर्ज भाव से अंतर देखें",
         "description": "वर्तमान भाव ₹/किग्रा में है। बैज पिछले दर्ज मूल्य से तुलना करता है: ₹200 से ₹220 यानी +₹20 (+10%)। शुरुआती रेट का मतलब तुलना के लिए कोई पिछला मूल्य नहीं है।"
+      },
+      "propagate": {
+        "title": "सेव की गई कॉस्टिंग को नए यार्न भाव पर लाएँ",
+        "description": "यार्न का रेट बदलने के बाद उसके कार्ड पर ‘कॉस्टिंग में लागू करें’ बटन दिखता है, जिसमें बताया जाता है कि कितनी सेव की गई कॉस्टिंग अब भी पुराने रेट पर हैं। इसमें हर कॉस्टिंग की पहले और बाद की लागत दिखती है। पुष्टि करने पर हर कॉस्टिंग का नया वर्ज़न बनता है; पुराने वर्ज़न के आंकड़े वैसे ही रहते हैं। आर्काइव की गई कॉस्टिंग शामिल नहीं होतीं।"
       },
       "rateDrawerFields": {
         "title": "पूरा विवरण {advancedEdit} में देखें",
@@ -93,6 +101,10 @@ export const rateBookHelpCopy = {
         "title": "પાછલા નોંધેલા ભાવથી તફાવત જુઓ",
         "description": "વર્તમાન ભાવ ₹/કિગ્રામાં છે. બેજ અગાઉ નોંધેલી કિંમત સાથે સરખાવે છે: ₹200થી ₹220 એટલે +₹20 (+10%). શરૂઆતનો રેટ એટલે સરખામણી માટે અગાઉની કિંમત નથી."
       },
+      "propagate": {
+        "title": "સાચવેલી કોસ્ટિંગને નવા યાર્ન ભાવ પર લાવો",
+        "description": "યાર્નનો ભાવ બદલ્યા પછી તેના કાર્ડ પર ‘કોસ્ટિંગમાં લાગુ કરો’ બટન દેખાય છે, જેમાં કેટલી સાચવેલી કોસ્ટિંગ હજી જૂના ભાવે છે તે જણાવાય છે. તેમાં દરેક કોસ્ટિંગનો પહેલાંનો અને પછીનો ખર્ચ દેખાય છે. પુષ્ટિ કરતાં દરેક કોસ્ટિંગનું નવું વર્ઝન બને છે; જૂના વર્ઝનના આંકડા જેમ છે તેમ રહે છે. આર્કાઇવ કરેલી કોસ્ટિંગ સામેલ થતી નથી."
+      },
       "rateDrawerFields": {
         "title": "{advancedEdit}માં પૂરી વિગતો જુઓ",
         "description": "{advancedEdit}માં તારીખો, સ્રોત, નોંધો અને {reviewEvery} (30–365 દિવસ) છે. હાલના યાર્નનું નામ લોક છે; નવું નામ જોઈએ તો નવો રેટ ઉમેરીને સેવ કરેલી ક્વોલિટી બદલો. શોધનો સ્રોત મૂળ ક્વોલિટી કે કોસ્ટિંગ સાથે જોડાયેલો રહે છે."
@@ -124,7 +136,7 @@ export function formatRateBookHelpText(text: string, tx: (phrase: string) => str
     return Object.entries(helpLabels).reduce((result, [token, label]) => result.replaceAll(`{${token}}`, tx(label)), text)
 }
 
-/** The six help topics, all open, as the body of the Rate Book help topic. */
+/** The help topics, all open, as the body of the Rate Book help topic. */
 export function RateBookHelpTopics() {
     const { language, tx } = useTranslation()
     return <>
