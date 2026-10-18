@@ -90,10 +90,11 @@ describe('estimator and Saved Costings use them', () => {
         expect(estimator).toContain('title={tpl.name}')
     })
 
-    it('states the save scope with the quality name', () => {
-        expect(english).toContain('save_version_only: "Save this version only"')
-        expect(english).toContain('save_version_update_quality: "Save version and update {name} for future costings"')
-        expect(estimator).toContain("t('estimator.sprint1.save_version_update_quality', { name: appliedTemplate?.name })")
+    it('states the save scope in the panel line instead of a quality-update dialog', () => {
+        expect(english).not.toContain('save_version_only')
+        expect(english).not.toContain('save_version_update_quality')
+        expect(estimator).toContain("t('estimator.actions.hint.firstCosting', { quality: qualityName ?? '' })")
+        expect(estimator).not.toContain('estimator.sprint1.save_version_update_quality')
     })
 
     it('leads the comparison with the versions and the price difference', () => {

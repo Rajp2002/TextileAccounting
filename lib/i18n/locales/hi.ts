@@ -17,7 +17,7 @@ export const hi = {
     rateBook: {"addRate": "धागा रेट जोड़ें", "needsReview": "समीक्षा बाकी", "advancedEdit": "विस्तृत बदलाव"},
     estimator: {
     "saveCosting": "कॉस्टिंग सेव करें",
-    "saveNewVersion": "नया वर्ज़न सेव करें"
+    "updateCosting": "कॉस्टिंग अपडेट करें"
     },
     savedCostings: {
   "viewBreakdown": "विवरण देखें",
@@ -1319,14 +1319,10 @@ export const hi = {
       new_costing_snapshot: "नई कॉस्टिंग",
       costing: "कॉस्टिंग",
       save_new_version: "नई कॉस्टिंग वर्जन सहेजें",
-      save_version_only: "सिर्फ यह वर्जन सहेजें",
-      save_version_update_quality: "वर्जन सहेजें और आगे की कॉस्टिंग के लिए {name} अपडेट करें",
       cancel: "रद्द करें",
-      recipe_changed: "आपने सेव की गई क्वालिटी {name} की रेसिपी बदली है।",
       version_explanation: "कॉस्टिंग सेव करने पर वह नए वर्ज़न के रूप में रहती है। सेव की गई क्वालिटी तभी बदलेगी जब आप नीचे यह चुनेंगे।",
       next_version: "अगला कॉस्टिंग वर्जन: v{version}",
       next_version_generic: "इससे अगला कॉस्टिंग वर्जन बनेगा",
-      future_quality_explanation: "सेव की गई क्वालिटी में बदलाव से आगे के वे अनुमान बदलेंगे जो इस क्वालिटी का उपयोग करते हैं। पहले से सेव की गई कॉस्टिंग के आँकड़े वही रहेंगे।",
       quality_updated_no_snapshot: "सेव की गई क्वालिटी अपडेट हुई। कोई नई कॉस्टिंग सेव नहीं हुई।",
       rates_updated_no_snapshot: "सेव की गई क्वालिटी के रेट अपडेट हुए। कोई नई कॉस्टिंग सेव नहीं हुई।",
       baseline_updated: "फैक्टरी बेसलाइन अपडेट हुई। नए एस्टीमेट इसे उपयोग करेंगे; सेव की गई कॉस्टिंग नहीं बदलेगी।",
@@ -1353,6 +1349,39 @@ export const hi = {
       net_profit: "शुद्ध लाभ",
       order_btn: "कोट सेव करें"
     },
+    actions: {
+      saveAsNewQuality: "नई क्वालिटी के रूप में सेव करें",
+      hint: {
+        new: "कॉस्टिंग सेव करें सिर्फ यह कॉस्टिंग रखता है। क्वालिटी और कॉस्टिंग सेव करें कपड़े को दोबारा उपयोग के लिए भी सेव करता है।",
+        sameFabric: "क्वालिटी में बदलाव नहीं। कॉस्टिंग अपडेट करें से v{version} सेव होगा। पिछले वर्ज़न अपने ही आँकड़े रखते हैं।",
+        firstCosting: "{quality} की पहली कॉस्टिंग सेव होगी।",
+        fabricChanged: "कपड़ा बदला: {changes}। अलग कपड़ा नई क्वालिटी के रूप में सेव होता है।"
+      },
+      side: {
+        warp: "ताना",
+        weft: "बाना"
+      },
+      mode: {
+        formula: "फ़ॉर्मूला",
+        manual: "मैन्युअल"
+      },
+      change: {
+        warpLayers: "ताना लेयर {from} → {to}",
+        weftLayers: "बाना लेयर {from} → {to}",
+        beamEnds: "तार {from} → {to}",
+        yarnCount: "{side} काउंट {from} → {to}",
+        yarnName: "{side} यार्न {from} → {to}",
+        picks: "पिक्स {from} → {to}",
+        pickRatio: "पिक अनुपात {from} → {to}",
+        width: "चौड़ाई {from} → {to} सेमी",
+        calculation: "{side} गणना {from} → {to}",
+        manualKg: "{side} मैन्युअल kg {from} → {to}",
+        more: "+{count} और",
+        layer: "लेयर {layer}"
+      },
+      differentFabricError: "यह {quality} से अलग कपड़ा है। इसे नई क्वालिटी के रूप में सेव करें।",
+      reopenNote: "इस क्वालिटी को दोबारा खोलने पर इसका कपड़ा, आज के Rate Book रेट और इसकी आख़िरी कॉस्टिंग की बाकी बातें वापस आती हैं। पहले से सेव की गई कॉस्टिंग नहीं बदलतीं।"
+    },
     quality: {
       noQualities: "अभी कोई क्वालिटी नहीं है। अनुमान जारी रखने के लिए अपनी पहली कपड़ा क्वालिटी जोड़ें।",
       addFirstQuality: "पहली क्वालिटी जोड़ें",
@@ -1370,10 +1399,10 @@ export const hi = {
       emptySavedDescription: "मौजूदा रेसिपी को अगली बार दोबारा उपयोग करने के लिए सेव करें।",
       fabricQualityNameHelper: "इस एस्टीमेट को नाम दें, उदा. 60g जॉर्जेट या D.246।",
       saveCurrentAsQuality: "करंट सेटअप को क्वालिटी में सहेजें",
-      saveQualityAndCosting: "क्वालिटी सेव करें और कॉस्टिंग बनाएं",
+      saveQualityAndCosting: "क्वालिटी और कॉस्टिंग सेव करें",
       saveQualityAndCostingTitle: "क्वालिटी सेव करें + कॉस्टिंग बनाएं",
       saveQualityAndCostingDescription: "कपड़े की क्वालिटी को दोबारा उपयोग के लिए उसकी पहली कॉस्टिंग के साथ सेव करें। यह क्वालिटी आपको फिर से लिखनी नहीं पड़ेगी।",
-      saveQualityAndCostingHint: "इससे क्वालिटी दोबारा उपयोग के लिए कॉस्टिंग v1 के साथ सेव होती है। बाद में Save Costing तभी चुनें जब आपको दूसरा कॉस्टिंग वर्ज़न चाहिए।",
+      saveQualityAndCostingHint: "इससे क्वालिटी दोबारा उपयोग के लिए कॉस्टिंग v1 के साथ सेव होती है। बाद में दूसरा कॉस्टिंग वर्ज़न चाहिए तो कॉस्टिंग अपडेट करें चुनें।",
       newQuality: "नई क्वालिटी / रिसेट",
       editQuality: "क्वालिटी संपादित करें",
       saveQuality: "क्वालिटी सहेजें",

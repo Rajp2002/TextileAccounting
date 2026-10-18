@@ -262,33 +262,6 @@ function validateExpectedTimestamp(value: string | undefined, label: string): st
     return null
 }
 
-function buildSavedQualityUpdatePayload(estimate: EstimateState) {
-    const firstWarp = estimate.warpRows[0]
-    const firstWeft = estimate.weftRows[0]
-
-    return {
-        warp_rows: estimate.warpRows,
-        weft_rows: estimate.weftRows,
-        per_pick_cost_paise: estimate.perPickCostPaisa,
-        tape_length_m: estimate.tapeLengthM,
-        warp_crimp_pct: estimate.warpCrimpPct ?? 0,
-        yarn_shortage_pct: estimate.yarnShortagePct ?? 0,
-        overhead_override_per_m: estimate.overheadMode === 'direct' ? estimate.overheadOverridePerM ?? null : null,
-        loom_type: estimate.loomType ?? null,
-        loom_rpm: estimate.loomRpm ?? null,
-        loom_power_kw: estimate.loomPowerKw ?? null,
-        sizing_mode: estimate.sizingMode,
-        hours_per_shift: estimate.hoursPerShift,
-        yarn_denier: Math.round(firstWarp ? getEffectiveYarnDenier(firstWarp) : 75),
-        calculated_yarn_denier: firstWarp ? getEffectiveYarnDenier(firstWarp) : 75,
-        beam_ends: firstWarp?.beamEnds ?? 3200,
-        ppi: Math.round(firstWeft?.picks ?? 68),
-        reed_space: firstWeft ? getEffectiveCostingWidthCm(firstWeft) : 62,
-        weft_denier: firstWeft ? getEffectiveYarnDenier(firstWeft) : 75,
-        default_yarn_rate: firstWarp?.yarnRate ?? 107,
-    }
-}
-
 function validateClientRequestId(value: string): string | null {
     return UUID_PATTERN.test(value)
         ? null
@@ -1164,130 +1137,6 @@ export async function updateTemplateRates(data: {
     return { success: true, updatedAt: updated.updated_at }
 }
 
-/**
- * Full update of a fabric template (recipe + charges + shortages).
- * Used when the user "saves" an active template after making modifications.
- */
-export async function updateFabricTemplate(data: {
-    id:               string
-    expectedUpdatedAt: string
-    name:             string
-    warpRows:         WarpRow[]
-    weftRows:         WeftRow[]
-    tapeLengthM:      number
-    warpCrimpPct?:    number
-    perPickCostPaisa: number
-    yarnShortagePct?: number
-    overheadMode?: OverheadMode
-    overheadOverridePerM?: number | null
-    loomType?:        string | null
-    loomRpm?:         number | null
-    loomPowerKw?:     number | null
-    warpingMode?:     'in_house' | 'outsourced'
-    sizingMode?:      'in_house' | 'outsourced'
-    hoursPerShift?:   number | null
-}) {
-    const { profile } = await requireRole(['owner'])
-    const supabase = await createServerClient()
-
-    const firstWarp = data.warpRows[0]
-    const firstWeft = data.weftRows[0]
-
-    const timestampError = validateExpectedTimestamp(data.expectedUpdatedAt, 'This saved quality')
-    if (timestampError) return { error: timestampError }
-    const recipeError = validateTemplateRecipe(data)
-    if (recipeError) return { error: recipeError }
-
-    const { data: current, error: currentError } = await supabase
-        .from('estimator_templates')
-        .select('id, updated_at, warp_rows, weft_rows, tape_length_m, warp_crimp_pct, per_pick_cost_paise, yarn_shortage_pct, overhead_override_per_m, loom_type, loom_rpm, loom_power_kw, sizing_mode, hours_per_shift')
-        .eq('id', data.id)
-        .eq('org_id', profile.org_id)
-        .eq('is_active', true)
-        .maybeSingle()
-    if (currentError) return { error: currentError.message }
-    if (!current) return { error: 'This saved quality changed in another tab or was deleted. Refresh before saving again.' }
-    if (current.updated_at !== data.expectedUpdatedAt) return { error: 'This saved quality changed in another tab or was deleted. Refresh before saving again.' }
-    if (templateRecipeSignature({
-        warpRows: current.warp_rows,
-        weftRows: current.weft_rows,
-        tapeLengthM: current.tape_length_m,
-        warpCrimpPct: current.warp_crimp_pct,
-        perPickCostPaisa: current.per_pick_cost_paise,
-        yarnShortagePct: current.yarn_shortage_pct,
-        overheadOverridePerM: current.overhead_override_per_m,
-        loomType: current.loom_type,
-        loomRpm: current.loom_rpm,
-        loomPowerKw: current.loom_power_kw,
-        warpingMode: (current as { warping_mode?: string | null }).warping_mode ?? null,
-        sizingMode: current.sizing_mode,
-        hoursPerShift: current.hours_per_shift,
-    }) === templateRecipeSignature({
-        warpRows: data.warpRows,
-        weftRows: data.weftRows,
-        tapeLengthM: data.tapeLengthM,
-        warpCrimpPct: data.warpCrimpPct,
-        perPickCostPaisa: data.perPickCostPaisa,
-        yarnShortagePct: data.yarnShortagePct,
-        overheadOverridePerM: data.overheadMode === 'direct' ? data.overheadOverridePerM ?? null : null,
-        loomType: data.loomType,
-        loomRpm: data.loomRpm,
-        loomPowerKw: data.loomPowerKw,
-        warpingMode: data.warpingMode,
-        sizingMode: data.sizingMode,
-        hoursPerShift: data.hoursPerShift,
-    })) {
-        return { success: true, updatedAt: current.updated_at, noChange: true }
-    }
-
-    const { data: updated, error } = await supabase
-        .from('estimator_templates')
-        .update({
-            // Saved Quality names are stable identities. Use the explicit
-            // rename action only for a typo correction; a different fabric
-            // construction must be saved as a new quality.
-            warp_rows:           data.warpRows,
-            weft_rows:           data.weftRows,
-            per_pick_cost_paise: data.perPickCostPaisa,
-            tape_length_m:       data.tapeLengthM,
-            warp_crimp_pct:      data.warpCrimpPct ?? 0,
-            yarn_shortage_pct:   data.yarnShortagePct ?? 0,
-            overhead_override_per_m: data.overheadMode === 'direct' ? data.overheadOverridePerM ?? null : null,
-            // Loom type + sizing mode (new)
-            loom_type:           data.loomType ?? null,
-            loom_rpm:            data.loomRpm ?? null,
-            loom_power_kw:       data.loomPowerKw ?? null,
-            sizing_mode:         data.sizingMode ?? 'in_house',
-            hours_per_shift:     data.hoursPerShift ?? 12,
-            // Legacy sync
-            yarn_denier:         Math.round(firstWarp ? getEffectiveYarnDenier(firstWarp) : 75),
-            calculated_yarn_denier: firstWarp ? getEffectiveYarnDenier(firstWarp) : 75,
-            beam_ends:           firstWarp?.beamEnds ?? 3200,
-            ppi:                 Math.round(firstWeft?.picks ?? 68),
-            reed_space:          firstWeft ? getEffectiveCostingWidthCm(firstWeft) : 62,
-            weft_denier:         firstWeft ? getEffectiveYarnDenier(firstWeft) : 75,
-            default_yarn_rate:   firstWarp?.yarnRate ?? 107,
-            updated_at:          new Date().toISOString(),
-        })
-        .eq('id', data.id)
-        .eq('org_id', profile.org_id)
-        .eq('is_active', true)
-        .eq('updated_at', data.expectedUpdatedAt)
-        .select('id, updated_at')
-        .maybeSingle()
-
-    if (error) return { error: templateWriteError(error) }
-    if (!updated) return { error: 'This saved quality changed in another tab or was deleted. Refresh before saving again.' }
-
-    await syncTemplateYarnRenames(supabase, profile.org_id, data.id, current.warp_rows, current.weft_rows, data.warpRows, data.weftRows)
-
-    revalidatePath('/owner/estimator')
-    revalidatePath('/owner/settings')
-    revalidatePath('/owner/rates')
-    return { success: true, updatedAt: updated.updated_at }
-}
-
-
 /** Rename a template (owner can fix typos without recreating). */
 export async function renameTemplate(id: string, name: string, expectedUpdatedAt: string) {
     const { profile } = await requireRole(['owner'])
@@ -1457,7 +1306,6 @@ export async function saveEstimatorQuoteV3(params: {
     templateId?:         string
     expectedTemplateUpdatedAt?: string
     factoryProfileUpdatedAt?: string
-    updateSavedQuality?: boolean
     quotationValidUntil?: string | null
     customerTerms?: string | null
 }) {
@@ -1497,7 +1345,11 @@ export async function saveEstimatorQuoteV3(params: {
         // even from an old tab or a crafted request. Only new saves are checked;
         // a legacy costing that already differs is left alone.
         if (!sameConstruction(templateConstructionRows(template), estimate)) {
-            return { error: `This is a different fabric from ${template.name}. Save it as a new quality.` }
+            return {
+                error: `This is a different fabric from ${template.name}. Save it as a new quality.`,
+                errorCode: 'different_fabric' as const,
+                qualityName: template.name as string,
+            }
         }
     }
     // A legacy costing can be missing template_id while still carrying a
@@ -1593,48 +1445,6 @@ export async function saveEstimatorQuoteV3(params: {
         factoryProfileUpdatedAt,
         reconciledAt: new Date().toISOString(),
     })
-
-    if (params.updateSavedQuality) {
-        if (!params.templateId) {
-            return { error: 'Select a Saved Quality before updating its recipe.' }
-        }
-        const timestampError = validateExpectedTimestamp(params.expectedTemplateUpdatedAt, 'The Saved Quality')
-        if (timestampError) return { error: timestampError }
-        const templateId = params.templateId
-
-        // The RPC updates both rows in one transaction. A costing version is
-        // never used as a substitute for the reusable quality record.
-        const combinedOutcome = await saveAttestedCostingPayload(user.id, profile.org_id, quotePayload, trustedQuotePayload => supabase.rpc(
-            'save_estimator_costing_revision_v2',
-            {
-                p_quote_payload: trustedQuotePayload,
-                p_source_quote_id: params.sourceQuoteId ?? null,
-                p_expected_source_updated_at: params.expectedSourceUpdatedAt ?? null,
-                p_template_id: templateId,
-                p_expected_template_updated_at: params.expectedTemplateUpdatedAt,
-                p_update_saved_quality: true,
-                p_template_payload: buildSavedQualityUpdatePayload(estimate),
-            },
-        ))
-        if ('attestationError' in combinedOutcome) return { error: combinedOutcome.attestationError }
-        const { data: combined, error: combinedError } = combinedOutcome as { data: SaveRevisionRpcResult | null; error: CostingRpcOutcome['error'] }
-
-        if (combinedError) return { error: combinedError.message }
-        if (!combined || combined.success !== true) {
-            return { error: combined?.error ?? 'The costing and Saved Quality were not saved.' }
-        }
-        return {
-            success: true,
-            quoteId: combined.quoteId,
-            updatedAt: combined.updatedAt,
-            createdAt: combined.createdAt,
-            versionNumber: combined.versionNumber,
-            qualityUpdated: true,
-            outcome: combined.outcome,
-            noChange: combined.noChange,
-            idempotentReplay: combined.idempotentReplay,
-        }
-    }
 
     // Cost Estimates always use the transactional revision boundary. It is
     // what makes “Save New Costing Version” predictable when two tabs or a

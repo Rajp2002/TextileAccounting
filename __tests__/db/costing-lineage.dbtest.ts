@@ -104,7 +104,7 @@ describe('costing lineage: a costing saved before its quality', () => {
         ctx.actor = actor
         const updated = await saveEstimatorQuoteV3({
             clientRequestId: randomUUID(), qualityLabel: 'Silk', ...atMargin(13),
-            templateId: template.id, expectedTemplateUpdatedAt: template.updated_at, updateSavedQuality: true,
+            templateId: template.id, expectedTemplateUpdatedAt: template.updated_at,
         })
         expect(updated).toMatchObject({ success: true, versionNumber: 2 })
 
@@ -160,7 +160,7 @@ describe('costing lineage: a quality saved first', () => {
         ctx.actor = actor
         const updated = await saveEstimatorQuoteV3({
             clientRequestId: randomUUID(), qualityLabel: 'Linen', ...atMargin(13),
-            templateId: template.id, expectedTemplateUpdatedAt: template.updated_at, updateSavedQuality: true,
+            templateId: template.id, expectedTemplateUpdatedAt: template.updated_at,
         })
         expect(updated).toMatchObject({ success: true, versionNumber: 2 })
 

@@ -132,7 +132,7 @@ describe('Bug 2: the Free save review shows the inputs being saved', () => {
     expect(memo).toContain('buildCostingResult(state, calcFullTotals(state))')
 
     const reviews = estimator.split('<CostingSaveReview').slice(1).map(block => block.slice(0, block.indexOf('/>')))
-    expect(reviews.length).toBeGreaterThanOrEqual(3)
+    expect(reviews.length).toBeGreaterThanOrEqual(2)
     for (const block of reviews) expect(block).toContain('result={saveReviewResult}')
   })
 

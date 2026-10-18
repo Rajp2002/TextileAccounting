@@ -17,7 +17,7 @@ export const en = {
     rateBook: {"addRate": "Add Yarn Rate", "needsReview": "Needs Review", "advancedEdit": "Advanced edit"},
     estimator: {
     "saveCosting": "Save Costing",
-    "saveNewVersion": "Save New Version"
+    "updateCosting": "Update Costing"
     },
     savedCostings: {
   "viewBreakdown": "View breakdown",
@@ -1321,14 +1321,10 @@ export const en = {
       new_costing_snapshot: "New costing",
       costing: "Costing",
       save_new_version: "Save New Costing Version",
-      save_version_only: "Save this version only",
-      save_version_update_quality: "Save version and update {name} for future costings",
       cancel: "Cancel",
-      recipe_changed: "You changed the recipe for Saved Quality {name}.",
       version_explanation: "Saving the costing keeps it as a new version. The saved quality changes only if you choose that below.",
       next_version: "Next costing version: v{version}",
       next_version_generic: "This will create the next costing version",
-      future_quality_explanation: "Saved Quality changes affect future estimates that use this quality. Costings you already saved keep their numbers.",
       quality_updated_no_snapshot: "Saved quality updated. No new costing was saved.",
       rates_updated_no_snapshot: "Saved quality rates updated. No new costing was saved.",
       baseline_updated: "Saved for new Cost Estimates. Existing saved costings are unchanged.",
@@ -1355,6 +1351,39 @@ export const en = {
       net_profit: "Net Profit",
       order_btn: "Save Quotation"
     },
+    actions: {
+      saveAsNewQuality: "Save as New Quality",
+      hint: {
+        new: "Save Costing keeps this costing only. Save Quality & Costing also saves the fabric for reuse.",
+        sameFabric: "Quality unchanged. Update Costing saves v{version}. Earlier versions keep their own numbers.",
+        firstCosting: "Saves the first costing for {quality}.",
+        fabricChanged: "Fabric changed: {changes}. A different fabric is saved as a new quality."
+      },
+      side: {
+        warp: "warp",
+        weft: "weft"
+      },
+      mode: {
+        formula: "formula",
+        manual: "manual"
+      },
+      change: {
+        warpLayers: "warp layers {from} → {to}",
+        weftLayers: "weft layers {from} → {to}",
+        beamEnds: "beam ends {from} → {to}",
+        yarnCount: "{side} count {from} → {to}",
+        yarnName: "{side} yarn {from} → {to}",
+        picks: "picks {from} → {to}",
+        pickRatio: "pick ratio {from} → {to}",
+        width: "width {from} → {to} cm",
+        calculation: "{side} calculation {from} → {to}",
+        manualKg: "{side} manual kg {from} → {to}",
+        more: "+{count} more",
+        layer: "layer {layer}"
+      },
+      differentFabricError: "This is a different fabric from {quality}. Save it as a new quality.",
+      reopenNote: "Reopening this quality brings back its fabric, today’s Rate Book rates, and the rest of its latest costing. Costings you already saved do not change."
+    },
     quality: {
       noQualities: "No qualities yet. Add your first fabric quality to continue your estimate.",
       addFirstQuality: "Add first quality",
@@ -1372,10 +1401,10 @@ export const en = {
       emptySavedDescription: "Save your current recipe to reuse it on the next estimate.",
       fabricQualityNameHelper: "Fabric Quality is the construction/specification, not a grade, Market Run, or Party Order. Example: 60g Georgette or D.246.",
       saveCurrentAsQuality: "Save Current as Quality",
-      saveQualityAndCosting: "Save Quality & Create Costing",
+      saveQualityAndCosting: "Save Quality & Costing",
       saveQualityAndCostingTitle: "Save quality + create costing",
       saveQualityAndCostingDescription: "Save the fabric quality for reuse together with its first costing. You will not need to enter this quality again.",
-      saveQualityAndCostingHint: "This saves the quality for reuse together with costing v1. Later, use Save Costing only when you want another costing version.",
+      saveQualityAndCostingHint: "This saves the quality for reuse together with costing v1. Later, use Update Costing when you want another costing version.",
       newQuality: "New Quality / Reset",
       editQuality: "Edit Quality",
       saveQuality: "Save Quality",

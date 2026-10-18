@@ -32,7 +32,6 @@ import {
     Scissors,
     Coins,
     Banknote,
-    History,
     Search,
     X,
     AlertTriangle,
@@ -101,7 +100,6 @@ import {
     saveEstimatorQuoteV3,
     getCostingSaveReceipt,
     updateTemplateRates,
-    updateFabricTemplate,
     upsertFactoryCostProfile,
     dismissFactoryCostWizard,
     archiveTemplate,
@@ -197,6 +195,8 @@ import {
 } from '@/lib/factory-cost-profiles'
 import { formatTimestampDate } from '@/lib/format'
 import { formatSuratDateTime } from '@/lib/time'
+import { resolveCostingActionState, type CostingActionState } from '@/lib/costing-action-state'
+import { templateConstructionRows, type ConstructionChange } from '@/lib/quality-construction'
 import { rateBookDefaultsFromProfile, resolveReopenedQualityState, type RateBookDefaults, type SavedQualityCostingReuse } from '@/lib/saved-costings'
 import { trackPlanEvent } from '@/lib/plan-analytics'
 import { warpConstructionText, weftConstructionText } from '@/lib/estimator-construction'
@@ -416,74 +416,6 @@ type EstimatorTemplate = {
     content_text?: string
     /** Base-only latest costing inputs used for full-costing Saved Quality reuse. */
     latest_costing_reuse?: SavedQualityCostingReuse | null
-}
-
-function normalizeRecipeRows(rows: Array<Record<string, unknown>> | null | undefined) {
-    return (rows ?? []).map(row => Object.fromEntries(Object.entries(row).filter(([key]) => key !== 'id')))
-}
-
-function recipeSignature(recipe: {
-    warpRows: WarpRow[]
-    weftRows: WeftRow[]
-    tapeLengthM: number | string | null | undefined
-    warpCrimpPct: number | string | null | undefined
-    perPickCostPaisa: number | string | null | undefined
-    yarnShortagePct: number | string | null | undefined
-    overheadOverridePerM: number | string | null | undefined
-    loomType: string | null | undefined
-    loomRpm: number | string | null | undefined
-    loomPowerKw: number | string | null | undefined
-    warpingMode: string | null | undefined
-    sizingMode: string | null | undefined
-    hoursPerShift: number | string | null | undefined
-}) {
-    return JSON.stringify({
-        warpRows: normalizeRecipeRows(recipe.warpRows as unknown as Array<Record<string, unknown>>),
-        weftRows: normalizeRecipeRows(recipe.weftRows as unknown as Array<Record<string, unknown>>),
-        tapeLengthM: Number(recipe.tapeLengthM ?? 0),
-        warpCrimpPct: Number(recipe.warpCrimpPct ?? 0),
-        perPickCostPaisa: Number(recipe.perPickCostPaisa ?? 0),
-        yarnShortagePct: Number(recipe.yarnShortagePct ?? 0),
-        overheadOverridePerM: recipe.overheadOverridePerM == null ? null : Number(recipe.overheadOverridePerM),
-        loomType: recipe.loomType ?? null,
-        loomRpm: recipe.loomRpm == null ? null : Number(recipe.loomRpm),
-        loomPowerKw: recipe.loomPowerKw == null ? null : Number(recipe.loomPowerKw),
-        warpingMode: recipe.warpingMode ?? null,
-        sizingMode: recipe.sizingMode ?? null,
-        hoursPerShift: recipe.hoursPerShift == null ? null : Number(recipe.hoursPerShift),
-    })
-}
-
-function hasSavedQualityRecipeChanges(template: EstimatorTemplate, state: EstimateState) {
-    return recipeSignature({
-        warpRows: template.warp_rows ?? [],
-        weftRows: template.weft_rows ?? [],
-        tapeLengthM: template.tape_length_m,
-        warpCrimpPct: template.warp_crimp_pct,
-        perPickCostPaisa: template.per_pick_cost_paise,
-        yarnShortagePct: template.yarn_shortage_pct,
-        overheadOverridePerM: template.overhead_override_per_m,
-        loomType: template.loom_type,
-        loomRpm: template.loom_rpm,
-        loomPowerKw: template.loom_power_kw,
-        warpingMode: template.warping_mode,
-        sizingMode: template.sizing_mode,
-        hoursPerShift: template.hours_per_shift,
-    }) !== recipeSignature({
-        warpRows: state.warpRows,
-        weftRows: state.weftRows,
-        tapeLengthM: state.tapeLengthM,
-        warpCrimpPct: state.warpCrimpPct,
-        perPickCostPaisa: state.perPickCostPaisa,
-        yarnShortagePct: state.yarnShortagePct,
-        overheadOverridePerM: state.overheadOverridePerM,
-        loomType: state.loomType,
-        loomRpm: state.loomRpm,
-        loomPowerKw: state.loomPowerKw,
-        warpingMode: state.warpingMode,
-        sizingMode: state.sizingMode,
-        hoursPerShift: state.hoursPerShift,
-    })
 }
 
 type EstimateStatePatch = Partial<EstimateState>
@@ -1841,6 +1773,7 @@ function CostingSaveReview({
     fullReuse?: boolean
     compact?: boolean
 }) {
+    const { t } = useTranslation()
     const formatPercent = (value: number) => Number.isInteger(value) ? `${value}%` : `${value.toFixed(1)}%`
     const formatRate = (value: number) => `₹${value.toFixed(2)}`
     const quantity = result.quantityM != null && result.quantityM > 0
@@ -1885,21 +1818,54 @@ function CostingSaveReview({
             </div>
             {fullReuse && (
                 <p className="mt-2 rounded-md border border-[var(--color-info-blue)]/25 bg-[var(--color-info-blue-soft)] px-2.5 py-2 text-xs font-medium leading-4 text-[var(--color-info-blue)]">
-                    Reopening this saved quality brings back its yarns, these yarn rates, factory expenses, prices, quantity and the sections you turned on. Costings you already saved do not change.
+                    {t('estimator.actions.reopenNote')}
                 </p>
             )}
         </section>
     )
 }
 
-function EstimatorLiveCostActions({
+/** One construction change as a short phrase, e.g. "beam ends 4800 → 5200". */
+function formatConstructionChange(change: ConstructionChange, t: (key: string, values?: Record<string, string | number | null | undefined>) => string) {
+    const blank = (value: string) => value === '' ? '—' : value
+    const word = change.kind === 'calculation'
+        ? (value: string) => t(`estimator.actions.mode.${value}`)
+        : blank
+    const text = t(`estimator.actions.change.${change.kind}`, {
+        side: t(`estimator.actions.side.${change.side}`),
+        from: word(change.from),
+        to: word(change.to),
+    })
+    return change.layer !== null && change.layer > 1
+        ? `${text} (${t('estimator.actions.change.layer', { layer: change.layer })})`
+        : text
+}
+
+/** The line under the save buttons: what each button will do right now. */
+function formatCostingActionHint(
+    actionState: CostingActionState,
+    qualityName: string | null,
+    t: (key: string, values?: Record<string, string | number | null | undefined>) => string,
+) {
+    if (actionState.kind === 'new') return t('estimator.actions.hint.new')
+    if (actionState.kind === 'sameFabric') {
+        return actionState.firstCosting
+            ? t('estimator.actions.hint.firstCosting', { quality: qualityName ?? '' })
+            : t('estimator.actions.hint.sameFabric', { version: actionState.nextVersion })
+    }
+    const shown = actionState.changes.slice(0, 3).map(change => formatConstructionChange(change, t))
+    const extra = actionState.changes.length - shown.length
+    if (extra > 0) shown.push(t('estimator.actions.change.more', { count: extra }))
+    return t('estimator.actions.hint.fabricChanged', { changes: shown.join(' · ') })
+}
+
+export function EstimatorLiveCostActions({
     freeCanCalculate,
     renderFreeCalculateNote,
     freeCalculateNoteId,
     savingQuote,
-    savingTemplate,
-    appliedTemplate,
-    hasActiveQualityRecipeChanges,
+    actionState,
+    qualityName,
     canPersistCostResult,
     hasValidCostResult,
     qualityLabel,
@@ -1911,8 +1877,8 @@ function EstimatorLiveCostActions({
     topCostingActionLabel,
     onSaveCosting,
     onExport,
-    onUpdateQuality,
     onSaveAsNewQuality,
+    onSaveQualityAndCosting,
     onNewQuality,
     onDismiss,
 }: {
@@ -1921,9 +1887,9 @@ function EstimatorLiveCostActions({
     renderFreeCalculateNote?: (dismiss: () => void) => React.ReactNode
     freeCalculateNoteId?: string
     savingQuote: boolean
-    savingTemplate: boolean
-    appliedTemplate: EstimatorTemplate | null
-    hasActiveQualityRecipeChanges: boolean
+    /** Which save actions apply: a new fabric, the same fabric, or a changed fabric. Free ignores it. */
+    actionState: CostingActionState
+    qualityName: string | null
     canPersistCostResult: boolean
     hasValidCostResult: boolean
     qualityLabel: string
@@ -1935,8 +1901,8 @@ function EstimatorLiveCostActions({
     topCostingActionLabel: string
     onSaveCosting: () => void
     onExport: () => void
-    onUpdateQuality: () => void
     onSaveAsNewQuality: () => void
+    onSaveQualityAndCosting: () => void
     onNewQuality: () => void
     onDismiss: () => void
 }) {
@@ -1946,11 +1912,6 @@ function EstimatorLiveCostActions({
         || !hasValidCostResult
         || !qualityLabel.trim()
         || totalProductionCostPerM <= 0
-    const qualitySaveLabel = appliedTemplate && hasActiveQualityRecipeChanges
-        ? 'Quality changed · Update Quality'
-        : appliedTemplate
-            ? 'Quality unchanged'
-            : 'Save as Quality'
     const runAction = (action: () => void) => {
         onDismiss()
         action()
@@ -1979,12 +1940,26 @@ function EstimatorLiveCostActions({
         </div>
     )
 
+    // The main button follows the fabric: a changed fabric can only be saved
+    // as a new quality, and the second button is then the disabled costing
+    // update. With the same fabric the second button is the way to save a
+    // quality, which only an opened costing without one still has.
+    const fabricChanged = actionState.kind === 'fabricChanged'
+    const secondIsQualityAndCosting = actionState.kind === 'new' || (actionState.kind === 'sameFabric' && actionState.canSaveQuality)
+    const secondLabel = fabricChanged
+        ? t('tourControls.estimator.updateCosting')
+        : secondIsQualityAndCosting
+            ? t('estimator.quality.saveQualityAndCosting')
+            : t('estimator.actions.saveAsNewQuality')
+    const secondDisabled = !secondIsQualityAndCosting
+    const hint = formatCostingActionHint(actionState, qualityName, t)
+
     return (
         <div className="space-y-3" data-testid="live-cost-action-hub">
             <div className="flex items-center justify-between gap-3">
                 <div>
                     <p className="text-xs font-bold text-[var(--color-yarn-orange-dark)]">Actions</p>
-                    <p className="mt-0.5 text-xs font-medium leading-4 text-[var(--color-muted)]">{freeCanCalculate !== undefined ? hasValidCostResult ? 'Export the saved result or start another costing.' : freeText(language, 'resultAfterCalculation') : 'Save the current result, reuse the recipe, or open a utility.'}</p>
+                    <p className="mt-0.5 text-xs font-medium leading-4 text-[var(--color-muted)]">Save the current result, reuse the recipe, or open a utility.</p>
                 </div>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -2021,8 +1996,8 @@ function EstimatorLiveCostActions({
                         type="button"
                         size="sm"
                         variant="default"
-                        className="h-12 w-full rounded-xl bg-loom px-4 text-[13px] font-semibold text-white shadow-xs transition-all duration-150 hover:bg-loom-elevated hover:text-white motion-safe:hover:-translate-y-0.5 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-55"
-                        onClick={() => runAction(onSaveCosting)}
+                        className="h-auto min-h-[44px] w-full whitespace-normal rounded-xl bg-loom px-4 py-2.5 text-[13px] font-semibold text-white shadow-xs transition-all duration-150 hover:bg-loom-elevated hover:text-white motion-safe:hover:-translate-y-0.5 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-55"
+                        onClick={() => runAction(fabricChanged ? onSaveAsNewQuality : onSaveCosting)}
                         disabled={saveCostingDisabled}
                         aria-busy={savingQuote}
                         aria-describedby={actionReadinessMessage ? actionReadinessId : undefined}
@@ -2030,47 +2005,31 @@ function EstimatorLiveCostActions({
                         title={firstCostingReadinessMessage ?? (saveCostingDisabled ? 'Complete the required inputs before saving.' : undefined)}
                     >
                         {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />}
-                        <span className="truncate">{topCostingActionLabel}</span>
+                        <span>{topCostingActionLabel}</span>
                     </Button>
                 </div>
             </div>
 
-            {freeCanCalculate === undefined && <><div className="flex flex-wrap items-center gap-2 rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-2">
-                {appliedTemplate && hasActiveQualityRecipeChanges && (
-                    <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={() => runAction(onUpdateQuality)}
-                        disabled={savingTemplate}
-                        aria-busy={savingTemplate}
-                        className="h-10 min-w-0 flex-1 rounded-[9px] border-[var(--color-yarn-orange)]/35 bg-white px-3 text-[12px] font-semibold text-[var(--color-yarn-orange-dark)] hover:bg-[var(--color-warning-amber-soft)] sm:flex-none"
-                    >
-                        {savingTemplate ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-                        <span className="truncate">{qualitySaveLabel}</span>
-                    </Button>
-                )}
+            <div className="rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-2">
                 <Button
                     type="button"
                     id="save-quality-and-costing"
                     data-testid="save-as-new-quality"
                     size="sm"
                     variant="outline"
-                    onClick={() => runAction(onSaveAsNewQuality)}
-                    className="h-10 min-w-0 flex-1 rounded-[9px] border-[var(--color-yarn-orange)]/35 bg-white px-3 text-[12px] font-semibold text-[var(--color-yarn-orange-dark)] hover:border-[var(--color-yarn-orange)] hover:bg-[var(--color-warning-amber-soft)] sm:flex-none"
-                    title={t('estimator.quality.saveQualityAndCostingHint')}
-                    aria-label={t('estimator.quality.saveQualityAndCosting')}
+                    onClick={() => runAction(onSaveQualityAndCosting)}
+                    disabled={secondDisabled}
+                    className="h-auto min-h-[44px] w-full min-w-0 whitespace-normal rounded-[9px] border-[var(--color-yarn-orange)]/35 bg-white px-3 py-2 text-[12px] font-semibold text-[var(--color-yarn-orange-dark)] hover:border-[var(--color-yarn-orange)] hover:bg-[var(--color-warning-amber-soft)] disabled:cursor-not-allowed disabled:opacity-55"
+                    title={secondIsQualityAndCosting ? t('estimator.quality.saveQualityAndCostingHint') : undefined}
+                    aria-label={secondLabel}
                 >
                     <BookmarkPlus className="h-3.5 w-3.5 shrink-0" />
-                    <span className="truncate">{t('estimator.quality.saveQualityAndCosting')}</span>
+                    <span>{secondLabel}</span>
                 </Button>
-                {appliedTemplate && !hasActiveQualityRecipeChanges && (
-                    <span className="text-xs font-medium text-[var(--color-muted)]">{qualitySaveLabel}</span>
-                )}
             </div>
-            <p className="px-1 text-xs font-medium leading-4 text-[var(--color-muted)]">
-                {t('estimator.quality.saveQualityAndCostingHint')}
-            </p></>}
+            <p role="status" data-testid="costing-action-hint" className="px-1 text-xs font-medium leading-4 text-[var(--color-muted)]">
+                {hint}
+            </p>
 
             {actionReadinessMessage && (
                 <p id={actionReadinessId} role="status" className="rounded-lg border border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] px-3 py-2 text-xs font-medium leading-relaxed text-[var(--wv-ochre-800)]">
@@ -3590,9 +3549,6 @@ export default function EstimatorClient({
     const [pendingStaleRateSave, setPendingStaleRateSave] = useState<{
         status: 'draft' | 'accepted'
     } | null>(null)
-    const [pendingQualityVersionSave, setPendingQualityVersionSave] = useState<{
-        status: 'draft' | 'accepted'
-    } | null>(null)
     const [factoryBaselineUpdatedAt, setFactoryBaselineUpdatedAt] = useState<string | null>(initialProfile?.updated_at ?? null)
     const [templateName,     setTemplateName]     = useState('')
     const [templateSaveError, setTemplateSaveError] = useState<string | null>(null)
@@ -4298,12 +4254,30 @@ export default function EstimatorClient({
             ? templates.filter(template => matchesQualitySearch(template, templateSearch))
             : templates,
     [templates, templateSearch])
-    const hasActiveQualityRecipeChanges = appliedTemplate
-        ? hasSavedQualityRecipeChanges(appliedTemplate, state)
-        : false
-    const topCostingActionLabel = freeMode ? freeText(language, freeMeter.completed ? 'recalculateSave' : 'calculateSave') : sourceQuoteId && sourceRecordKind === 'costing'
-        ? t('tourControls.estimator.saveNewVersion')
-        : t('tourControls.estimator.saveCosting')
+    // Which save actions apply. The fabric decides: a saved quality or an
+    // opened costing is compared with the fabric it was saved with.
+    const hasOpenedCosting = sourceQuoteId != null && sourceRecordKind === 'costing'
+    const costingActionState = useMemo<CostingActionState>(() => {
+        const versions = [sourceQuoteVersionNumber, appliedTemplate?.latest_costing_reuse?.version_number]
+            .filter((version): version is number => typeof version === 'number' && Number.isFinite(version))
+        return resolveCostingActionState({
+            hasSavedQuality: appliedTemplate != null,
+            hasOpenedCosting,
+            baseline: appliedTemplate
+                ? templateConstructionRows(appliedTemplate)
+                : hasOpenedCosting && sourceState ? sourceState : null,
+            current: { warpRows: state.warpRows, weftRows: state.weftRows },
+            latestVersion: versions.length > 0 ? Math.max(...versions) : null,
+        })
+    }, [appliedTemplate, hasOpenedCosting, sourceQuoteVersionNumber, sourceState, state.warpRows, state.weftRows])
+    const topCostingActionLabel = freeMode
+        ? freeText(language, freeMeter.completed ? 'recalculateSave' : 'calculateSave')
+        : costingActionState.kind === 'fabricChanged'
+            ? t('estimator.actions.saveAsNewQuality')
+            : costingActionState.kind === 'sameFabric'
+                ? t('tourControls.estimator.updateCosting')
+                : t('tourControls.estimator.saveCosting')
+    const costingActionHint = formatCostingActionHint(costingActionState, appliedTemplate?.name ?? (qualityLabel.trim() || null), t)
 
     const applyTemplate = useCallback((tpl: EstimatorTemplate, confirmed = false) => {
         if (saveQuoteLockRef.current || unconfirmedRequestId) return
@@ -4352,7 +4326,8 @@ export default function EstimatorClient({
     }, [appliedTemplate?.name, qualityLabel, freeMode, tx])
 
     const openSaveAsNewQualityDialog = useCallback(() => {
-        if (!appliedTemplate) {
+        // Neither a saved quality nor an opened costing: this is just a new quality.
+        if (!appliedTemplate && !sourceQuoteId) {
             openSaveTemplateDialog()
             return
         }
@@ -4375,7 +4350,9 @@ export default function EstimatorClient({
             sourceRecordKind,
             clientRequestId: quoteRequestIdRef.current,
         }
-        setTemplateName(`${appliedTemplate.name} - New`)
+        // The new name must differ from the costing's own label, or the quality
+        // would adopt that costing's lineage instead of starting its own.
+        setTemplateName(`${appliedTemplate?.name ?? qualityLabel.trim()} - New`)
         setAppliedTemplate(null)
         setSourceQuoteId(null)
         setSourceQuoteUpdatedAt(null)
@@ -4579,57 +4556,6 @@ export default function EstimatorClient({
         }
     }
 
-    const handleUpdateTemplate = async (warningAlreadyReviewed = false) => {
-        if (!appliedTemplate) return
-        const missingLayer = findMissingLayerLabel(state.warpRows, state.weftRows)
-        if (missingLayer) {
-            return toast.error(tx(t('estimator.quality.layerNameRequired').replace('{layer}', missingLayer)))
-        }
-        if (requireTemplateReadiness(() => handleUpdateTemplate(true), warningAlreadyReviewed)) return
-
-        const warpRows = trimLayerLabels(state.warpRows)
-        const weftRows = trimLayerLabels(state.weftRows)
-
-        setSavingTemplate(true)
-        const res = await updateFabricTemplate({
-            id:               appliedTemplate.id,
-            expectedUpdatedAt: appliedTemplate.updated_at,
-            // A Saved Quality keeps its identity. A different construction is
-            // saved as a separate quality instead of being renamed here.
-            name:             appliedTemplate.name,
-            warpRows,
-            weftRows,
-            tapeLengthM:      state.tapeLengthM,
-            warpCrimpPct:     state.warpCrimpPct,
-            perPickCostPaisa: state.perPickCostPaisa,
-            yarnShortagePct:  state.yarnShortagePct,
-            overheadMode:     state.overheadMode,
-            overheadOverridePerM: state.overheadOverridePerM,
-            loomType:         state.loomType,
-            loomRpm:          state.loomRpm,
-            loomPowerKw:      state.loomPowerKw,
-            warpingMode:      state.warpingMode,
-            sizingMode:       state.sizingMode,
-            hoursPerShift:    state.hoursPerShift,
-        })
-        setSavingTemplate(false)
-        
-        if (res.success) {
-            const tRes = await getEstimatorTemplates()
-            const refreshed = tRes.data?.find(template => template.id === appliedTemplate.id)
-            if (tRes.data) setTemplates(tRes.data)
-            setAppliedTemplate(refreshed ?? {
-                ...appliedTemplate,
-                updated_at: res.updatedAt ?? appliedTemplate.updated_at,
-            })
-            toast.success('noChange' in res && res.noChange
-                ? t('estimator.sprint1.quality_no_change')
-                : t('estimator.sprint1.quality_updated_no_snapshot'))
-        } else {
-            toast.error(tx(userFacingError(res.error, t('estimator.quality.updateFailed'))))
-        }
-    }
-
     const handleNewQualityConfirm = () => {
         if (saveQuoteLockRef.current || unconfirmedRequestId) return
         if (freeMode && (freeMeter.pending || freeMeter.busy)) return
@@ -4681,7 +4607,6 @@ export default function EstimatorClient({
         setShowDiscardDraft(false)
         setShowExportDialog(false)
         setPendingStaleRateSave(null)
-        setPendingQualityVersionSave(null)
         warningContinuationRef.current = null
         saveAsNewQualityRollbackRef.current = null
         clearDraft()
@@ -4917,7 +4842,6 @@ export default function EstimatorClient({
     const handleSaveQuote = async (
         status: 'draft' | 'accepted' = 'draft',
         staleRatesAcknowledged = false,
-        qualityUpdateDecision?: 'version_only' | 'version_and_quality',
         warningAlreadyReviewed = false,
     ) => {
         if (freeMode) {
@@ -4928,7 +4852,7 @@ export default function EstimatorClient({
                 jumpToEstimatorIssue(preflight.field)
                 return void toast.error(tx(firstEstimatorValidationMessage ?? 'Complete the highlighted inputs before saving.'))
             }
-            if (preflight.action === 'review') return void requireWarningReview(() => handleSaveQuote(status, staleRatesAcknowledged, qualityUpdateDecision, true))
+            if (preflight.action === 'review') return void requireWarningReview(() => handleSaveQuote(status, staleRatesAcknowledged, true))
             return void freeMeter.submit(preflight.acknowledged, freePage)
         }
         if (saveQuoteLockRef.current || savingQuote) return
@@ -4944,7 +4868,6 @@ export default function EstimatorClient({
         if (!warningAlreadyReviewed && requireWarningReview(() => handleSaveQuote(
             status,
             staleRatesAcknowledged,
-            qualityUpdateDecision,
             true,
         ))) return
 
@@ -4955,14 +4878,6 @@ export default function EstimatorClient({
         if (!qualityLabel.trim()) return toast.error(t('estimator.toast.quality_required'))
         if (staleRateNames.length > 0 && !staleRatesAcknowledged) {
             setPendingStaleRateSave({ status })
-            return
-        }
-
-        const shouldOfferSavedQualityUpdate = Boolean(appliedTemplate)
-            && hasSavedQualityRecipeChanges(appliedTemplate!, state)
-
-        if (shouldOfferSavedQualityUpdate && !qualityUpdateDecision) {
-            setPendingQualityVersionSave({ status })
             return
         }
 
@@ -5023,7 +4938,6 @@ export default function EstimatorClient({
                     factoryProfileUpdatedAt: (sourceQuoteId
                         ? sourceFactoryProfileUpdatedAt ?? factoryBaselineUpdatedAt
                         : factoryBaselineUpdatedAt) ?? undefined,
-                    updateSavedQuality: qualityUpdateDecision === 'version_and_quality',
             }
             pendingSaveRequestRef.current = saveRequest
             saveDraftNow({ ...buildCurrentDraft(clientRequestId, saveRequest.recordKind), pendingSaveRequest: saveRequest })
@@ -5071,9 +4985,7 @@ export default function EstimatorClient({
                 toast.success(
                     tx(('noChange' in res && res.noChange)
                         ? t('estimator.sprint1.costing_no_change', { version: String(('versionNumber' in res && res.versionNumber) || 1) })
-                        : (qualityUpdateDecision === 'version_and_quality'
-                            ? `${wasEditingCosting ? 'New costing version' : 'Costing'} saved and Saved Quality updated`
-                            : (wasEditingCosting ? 'New costing version saved' : 'Costing saved'))),
+                        : (wasEditingCosting ? 'New costing version saved' : 'Costing saved')),
                     {
                         description: tx(`Costing v${savedVersion} · ${formatSuratDateTime(savedAt)} · yarn rate ₹${Number(state.warpRows[0]?.yarnRate ?? 0).toFixed(2)}/kg${sourceQuoteStatus ? ` · status kept as ${sourceQuoteStatus}` : ''}.`),
                     },
@@ -5091,7 +5003,11 @@ export default function EstimatorClient({
                 void trackPlanEvent('save_failed', {
                     record_kind: 'costing',
                 })
-                toast.error(tx(userFacingError(res.error, 'The Customer Quotation could not be saved. Try again.')))
+                // The draft stays on this device: only the identity of the failed
+                // request is dropped, so the owner can save it as a new quality.
+                toast.error('errorCode' in res && res.errorCode === 'different_fabric'
+                    ? t('estimator.actions.differentFabricError', { quality: res.qualityName })
+                    : tx(userFacingError(res.error, 'The Customer Quotation could not be saved. Try again.')))
             }
         } catch (error) {
             if (clientRequestId) {
@@ -5112,6 +5028,13 @@ export default function EstimatorClient({
             setSavingQuote(false)
             saveQuoteLockRef.current = false
         }
+    }
+
+    // The main costing button: a changed fabric can only be saved as a new
+    // quality, anything else saves the costing.
+    const handlePrimaryCostingAction = () => {
+        if (costingActionState.kind === 'fabricChanged') return openSaveAsNewQualityDialog()
+        return handleSaveQuote('draft')
     }
 
     if (loading) {
@@ -5750,7 +5673,7 @@ export default function EstimatorClient({
                                         className="rounded-lg border border-[var(--wv-lagoon-200)] bg-[var(--wv-lagoon-50)] px-3 py-2 text-xs font-medium leading-4 text-[var(--wv-lagoon-700)]"
                                     >
                                         {appliedTemplate.latest_costing_reuse
-                                            ? 'Using today’s yarn rates with the other costs from the latest saved costing.'
+                                            ? 'Using today’s Rate Book rates with the other costs from the latest saved costing.'
                                             : 'This saved quality has no saved costing yet, so your factory defaults are used for the other costs.'}
                                     </p>
                                 )}
@@ -5797,19 +5720,17 @@ export default function EstimatorClient({
                                 size="sm"
                                 variant="default"
                                 className="col-span-2 h-12 rounded-xl bg-loom px-5 text-[14px] font-semibold text-white shadow-xs transition-all duration-150 hover:bg-loom-elevated hover:text-white motion-safe:hover:-translate-y-0.5 active:scale-[0.98] sm:col-span-1"
-                                onClick={() => handleSaveQuote('draft')}
+                                onClick={() => void handlePrimaryCostingAction()}
                                 disabled={freeMode ? !freeCanCalculate : savingQuote || !hasValidCostResult || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0}
                                 aria-describedby={actionReadinessMessage ? actionReadinessId : undefined}
                                 aria-busy={savingQuote}
-                                aria-label={sourceQuoteId
-                                    ? 'Save as a new costing version'
-                                    : 'Save costing'}
+                                aria-label={topCostingActionLabel}
                                 title={firstCostingReadinessMessage ?? ((!qualityLabel.trim() || totals.totalProductionCostPerM <= 0)
                                     ? tx('Complete quality and cost inputs first.')
                                     : undefined)}
                             >
                                 {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />}
-                                <span className="truncate">{tx(sourceQuoteId ? 'Save New Version' : 'Save Costing')}</span>
+                                <span>{topCostingActionLabel}</span>
                             </Button>
 
                             <Button
@@ -5826,21 +5747,9 @@ export default function EstimatorClient({
                                 <span className="truncate">{tx('Export Cost Sheet')}</span>
                             </Button>
 
-                            {/* Save / Update Quality template button */}
+                            {/* Save as a separate quality (the quality itself is never edited here) */}
                             {appliedTemplate ? (
                                 <div className="col-span-2 flex min-w-0 flex-wrap items-center gap-1 sm:col-span-1 sm:flex-nowrap">
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="h-12 min-w-0 max-w-full flex-1 rounded-[10px] border border-[var(--color-hairline)] bg-white px-4 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)] sm:flex-none"
-                                        onClick={() => void handleUpdateTemplate()}
-                                        disabled={savingTemplate || !hasActiveQualityRecipeChanges}
-                                        aria-busy={savingTemplate}
-                                        title={!hasActiveQualityRecipeChanges ? tx('No Saved Quality changes to update') : undefined}
-                                    >
-                                        {savingTemplate ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5 text-brand-accent shrink-0" />}
-                                        <span className="truncate">{tx(savingTemplate ? 'Saving Fabric Quality…' : 'Update Fabric Quality')}</span>
-                                    </Button>
                                     <Button
                                         data-testid="legacy-save-as-new-quality"
                                         variant="outline"
@@ -5871,9 +5780,7 @@ export default function EstimatorClient({
                                 </p>
                             )}
                             <p className="text-xs font-medium leading-relaxed text-[var(--color-muted)]">
-                                {freeMode ? `${freeText(language, 'freeCreationPolicy')} ${freeText(language, 'calculatePolicy')}` : sourceQuoteId
-                                    ? tx('Save New Version keeps this as a new costing. Earlier versions keep their own numbers.')
-                                    : tx('Save Costing saves the quality for reuse and keeps this as its first costing.')}
+                                {freeMode ? `${freeText(language, 'freeCreationPolicy')} ${freeText(language, 'calculatePolicy')}` : costingActionHint}
                             </p>
                         </div>
                     </div>
@@ -7297,9 +7204,8 @@ export default function EstimatorClient({
                         renderFreeCalculateNote={freeCalculateBlock ? dismiss => renderFreeCalculateNote(FREE_CALCULATE_LIVE_NOTE_ID, undefined, dismiss) : undefined}
                         freeCalculateNoteId={freeCalculateBlock ? FREE_CALCULATE_LIVE_NOTE_ID : undefined}
                         savingQuote={savingQuote}
-                        savingTemplate={savingTemplate}
-                        appliedTemplate={appliedTemplate}
-                        hasActiveQualityRecipeChanges={hasActiveQualityRecipeChanges}
+                        actionState={freeMode ? { kind: 'new' } : costingActionState}
+                        qualityName={appliedTemplate?.name ?? (qualityLabel.trim() || null)}
                         canPersistCostResult={canPersistCostResult}
                         hasValidCostResult={hasValidCostResult}
                         qualityLabel={qualityLabel}
@@ -7311,8 +7217,8 @@ export default function EstimatorClient({
                         topCostingActionLabel={topCostingActionLabel}
                         onSaveCosting={() => void handleSaveQuote('draft')}
                         onExport={() => setShowExportDialog(true)}
-                        onUpdateQuality={() => void handleUpdateTemplate()}
                         onSaveAsNewQuality={() => openSaveAsNewQualityDialog()}
+                        onSaveQualityAndCosting={() => openSaveTemplateDialog()}
                         onNewQuality={() => setShowConfirmNewQuality(true)}
                         onDismiss={onDismiss}
                     />
@@ -7375,66 +7281,10 @@ export default function EstimatorClient({
                             onClick={() => {
                                 const pending = pendingStaleRateSave
                                 setPendingStaleRateSave(null)
-                                if (pending) void handleSaveQuote(pending.status, true, undefined, true)
+                                if (pending) void handleSaveQuote(pending.status, true, true)
                             }}
                         >
                             Save with These Rates
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            <Dialog open={Boolean(pendingQualityVersionSave)} onOpenChange={open => { if (!open) setPendingQualityVersionSave(null) }}>
-                <DialogContent className="sm:max-w-lg">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <History className="h-5 w-5 text-[var(--color-yarn-orange)]" />
-                            {t('estimator.sprint1.save_new_version')}
-                        </DialogTitle>
-                        <DialogDescription>
-                            {t('estimator.sprint1.recipe_changed', { name: appliedTemplate?.name })}{' '}
-                            {t('estimator.sprint1.version_explanation')}
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="rounded-lg border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-4 py-3 text-sm text-[var(--color-body)]">
-                        <p className="font-semibold text-[var(--color-ink)]">
-                            {sourceQuoteVersionNumber
-                                ? t('estimator.sprint1.next_version', { version: sourceQuoteVersionNumber + 1 })
-                                : t('estimator.sprint1.next_version_generic')}
-                        </p>
-                        <p className="mt-1 text-xs leading-relaxed text-[var(--color-muted)]">
-                            {t('estimator.sprint1.future_quality_explanation')}
-                        </p>
-                    </div>
-                    <CostingSaveReview
-                        state={state}
-                        result={saveReviewResult}
-                        fullReuse={Boolean(appliedTemplate?.latest_costing_reuse)}
-                        compact
-                    />
-                    <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-end">
-                        <Button variant="ghost" onClick={() => setPendingQualityVersionSave(null)}>
-                            {t('estimator.sprint1.cancel')}
-                        </Button>
-                        <Button
-                            variant="outline"
-                            onClick={() => {
-                                const pending = pendingQualityVersionSave
-                                setPendingQualityVersionSave(null)
-                                if (pending) void handleSaveQuote(pending.status, true, 'version_only', true)
-                            }}
-                        >
-                            {t('estimator.sprint1.save_version_only')}
-                        </Button>
-                        <Button
-                            className="bg-[var(--color-yarn-orange)] text-white hover:bg-[var(--color-yarn-orange-dark)]"
-                            onClick={() => {
-                                const pending = pendingQualityVersionSave
-                                setPendingQualityVersionSave(null)
-                                if (pending) void handleSaveQuote(pending.status, true, 'version_and_quality', true)
-                            }}
-                        >
-                            {t('estimator.sprint1.save_version_update_quality', { name: appliedTemplate?.name })}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

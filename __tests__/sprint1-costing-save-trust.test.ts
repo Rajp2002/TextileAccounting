@@ -12,18 +12,20 @@ describe('Sprint 1 costing save trust', () => {
     const migration = read('supabase/migrations/20260801174038_sprint1_save_trust_v2.sql')
     const english = read('lib/i18n/locales/en.ts')
 
-    it('keeps quality updates separate from costing snapshots', () => {
-        expect(estimator).toContain('Update Fabric Quality')
-        expect(estimator).toContain('hasActiveQualityRecipeChanges')
+    it('never edits a saved quality from the estimator; a different fabric is a new quality', () => {
+        expect(estimator).toContain('resolveCostingActionState')
         expect(estimator).toContain('openSaveAsNewQualityDialog')
         expect(estimator).toContain('data-testid="save-costing-action-top"')
-        expect(estimator).toContain("estimator.sprint1.quality_updated_no_snapshot")
-        expect(estimator).toContain("estimator.sprint1.save_version_only")
-        expect(estimator).toContain("estimator.sprint1.save_version_update_quality")
-        // LT04 (LC27) restated the two scopes; the keys and their meaning are unchanged.
-        expect(english).toContain('save_version_only: "Save this version only"')
-        expect(english).toContain('save_version_update_quality: "Save version and update {name} for future costings"')
-        expect(actions).toContain('updateSavedQuality?: boolean')
+        expect(estimator).not.toContain('Update Fabric Quality')
+        expect(estimator).not.toContain('hasActiveQualityRecipeChanges')
+        expect(estimator).not.toContain('handleUpdateTemplate')
+        expect(estimator).not.toContain('pendingQualityVersionSave')
+        expect(estimator).not.toContain('save_version_only')
+        expect(actions).not.toContain('updateSavedQuality')
+        expect(actions).not.toContain('export async function updateFabricTemplate')
+        expect(english).not.toContain('save_version_update_quality')
+        // The RPC parameter stays for old callers; the estimator always sends false.
+        expect(actions).toContain('p_update_saved_quality: false')
     })
 
     it('uses one transaction for the optional combined save', () => {

@@ -118,7 +118,7 @@ describe('Base Estimator Go-readiness hardening', () => {
     expect(estimator).toContain('id="export-cost-sheet-hint" className="w-full text-xs')
     // Phase 3H: the costing save is always the primary action.
     expect(estimator).toContain('id="legacy-btn-save-accept"')
-    expect(estimator).toContain("onClick={() => handleSaveQuote('draft')}")
+    expect(estimator).toContain("onClick={() => void handlePrimaryCostingAction()}")
 
     const savedCostings = source('app/(dashboard)/owner/quotes/QuotesClient.tsx')
     // Phase 3H: Saved Costings has no production-usage or quotation variant.

@@ -44,7 +44,8 @@ describe('Estimator-only product presentation', () => {
         expect(estimator).toContain('const resolvedPartyName = partyName.trim() || null')
         expect(estimator).toContain('defaultCustomerName=""')
         expect(estimator).toContain('Quick Costing')
-        expect(estimator).toContain("'Save New Version' : 'Save Costing'")
+        expect(estimator).toContain("t('tourControls.estimator.updateCosting')")
+        expect(estimator).not.toContain("'Save New Version'")
         expect(estimator).not.toContain('legacy-btn-save-quote')
         // Phase 3G removed the hidden party-order and market-run controls.
         expect(estimator).not.toContain('btn-start-party-order')
@@ -87,7 +88,8 @@ describe('Estimator-only product presentation', () => {
     })
 
     it('saves Base edits through the authoritative versioned quote path', () => {
-        expect(estimator).toContain("onClick={() => handleSaveQuote('draft')}")
+        expect(estimator).toContain("onClick={() => void handlePrimaryCostingAction()}")
+        expect(estimator).toContain("return handleSaveQuote('draft')")
         expect(estimator).toContain('Review overdue costing rates')
         expect(estimator).toContain('Save with These Rates')
         const actions = read('app/(dashboard)/owner/estimator/actions.ts')
