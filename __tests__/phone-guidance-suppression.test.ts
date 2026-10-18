@@ -13,7 +13,7 @@ vi.mock('@/lib/phone-viewport', async importOriginal => ({
     usePhoneViewport: () => state.phone,
 }))
 // These tests cover the Guide itself, which is switched off by default (see guide-availability.ts).
-vi.mock('@/lib/tours/guide-availability', () => ({ GUIDE_SUPPRESSED: false }))
+vi.mock('@/lib/guide-availability', () => ({ GUIDE_SUPPRESSED: false }))
 vi.mock('@/lib/i18n/context', () => ({ useTranslation: () => ({ language: state.language }) }))
 vi.mock('@/hooks/use-tour-invitation', () => ({
     useTourInvitation: () => {

@@ -13,7 +13,7 @@ vi.mock('@/hooks/use-tour-invitation', () => ({
         return { presentation: 'invite', isStarting: false, handleLaunch: vi.fn(), handleDismiss: vi.fn() }
     },
 }))
-import { GUIDE_SUPPRESSED } from '../lib/tours/guide-availability'
+import { GUIDE_SUPPRESSED } from '../lib/guide-availability'
 import { PageGuide, PageTourProvider, TourInvitation } from '../components/tours/TourInvitation'
 
 const topics = [{ id: 'help', icon: () => null, title: 'Page help', content: 'Help body' }]
