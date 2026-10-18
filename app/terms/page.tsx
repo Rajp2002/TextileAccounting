@@ -10,7 +10,7 @@ import { LITE_TRIAL_DAYS } from '@/lib/lite-trial'
 
 export const metadata: Metadata = {
     title: 'Terms of Service — Weavly',
-    description: 'Terms for Weavly Free and Lite: costing allowances, the one-month Lite free trial, plan features, annual pricing, renewal, and account data.',
+    description: 'Terms for Weavly Free and Lite: costing allowances, the three-month Lite free trial, plan features, annual pricing, renewal, and account data.',
 }
 
 const sections = [
@@ -50,12 +50,12 @@ export default function TermsOfServicePage() {
         <PolicyPage
             activePath="/terms"
             title="Terms of Service"
-            description="The contract for Weavly Free costing, the one-month Lite free trial, and the complete Lite costing workspace. Weavly Base is not offered to new customers yet."
+            description="The contract for Weavly Free costing, the three-month Lite free trial, and the complete Lite costing workspace. Weavly Base is not offered to new customers yet."
             lastUpdated={LEGAL_DOCUMENTS.terms.displayDate}
             sections={sections}
             facts={[
                 { label: 'Available plans', value: 'Weavly Free and Lite', icon: Database },
-                { label: 'Starting price', value: '₹0 on Free; Lite free for the first month', icon: IndianRupee },
+                { label: 'Starting price', value: '₹0 on Free; Lite free for three months', icon: IndianRupee },
                 { label: 'Renewal', value: `Manual from ${RENEWAL_ELIGIBILITY_DAYS} days before expiry`, icon: CalendarDays },
                 { label: 'Contract location', value: 'Surat, Gujarat, India', icon: Scale },
             ]}

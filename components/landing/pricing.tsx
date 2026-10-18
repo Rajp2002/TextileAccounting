@@ -17,7 +17,7 @@ function formatRupees(paise: number) {
 }
 
 const terms = [
-    'New accounts get a one-month Lite free trial. No payment is needed to start it.',
+    'New accounts get a three-month Lite free trial. No payment is needed to start it.',
     'Paid prices include 18% GST and cover 365 days.',
     'No automatic charge. Renew by hand in the last 30 days.',
     'Free resets on the 1st of each month, 12:00 am IST. No rollover.',
@@ -61,7 +61,7 @@ export default function LandingPricing() {
                         <h3 id={`pricing-${plan.tier}-title`} className={cn(s.display, 'text-[22px] font-semibold text-[color:var(--lp-ink)]')}>{plan.name}</h3>
                         <p className="mt-2 text-[15px] leading-6 text-[color:var(--lp-body)]">{plan.summary}</p>
                         {plan.tier === 'lite' && (
-                            <p className="mt-3 text-[15px] font-semibold leading-6 text-[color:var(--lp-ink)]">First month free for new accounts</p>
+                            <p className="mt-3 text-[15px] font-semibold leading-6 text-[color:var(--lp-ink)]">First three months free for new accounts</p>
                         )}
                         <div className="mt-6">
                             <p className={cn(s.label, 'text-[color:var(--lp-muted)]')}>First year</p>
@@ -85,7 +85,7 @@ export default function LandingPricing() {
                         </div>
                         <div className="mt-auto pt-7">
                             <Link href={`/signup?plan=${plan.tier}`} className={cn(plan.tier === 'lite' ? s.primary : s.secondary, 'w-full')}>
-                                {plan.tier === 'lite' ? 'Start 1-month free trial' : <>Choose {plan.name}</>}
+                                {plan.tier === 'lite' ? 'Start 3-month free trial' : <>Choose {plan.name}</>}
                                 {plan.tier === 'lite' && <ArrowRight className="h-4 w-4" aria-hidden="true" />}
                             </Link>
                             {plan.tier === 'lite' && (

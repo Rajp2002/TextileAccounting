@@ -4,7 +4,7 @@ import { connect } from '../../scripts/test-db/cluster.mjs'
 import { asServiceRole, asSuperuser, asUser, freshDatabase, pgError, seedOwnerOrg, type Db } from './helpers'
 import { hasEstablishedPaidHistory } from '../../lib/subscription-access'
 
-// Base suppression and the one-month Lite trial: the trial schema, the
+// Base suppression and the three-month (90-day) Lite trial: the trial schema, the
 // start_lite_trial RPC and the plan-flag guard, against the replayed migrations.
 
 let db: Db
@@ -90,13 +90,13 @@ describe('Base suppression and Lite trial schema', () => {
         expect(read.rows).toEqual([{ name: 'Risk gate template' }])
     })
 
-    it('start_lite_trial inserts one 30-day Lite trial row and clears eligibility', async () => {
+    it('start_lite_trial inserts one 90-day Lite trial row and clears eligibility', async () => {
         const owner = await seedFreeOwner()
         const { rows: [started] } = await startTrial(owner.orgId)
         await asSuperuser(db)
         const { rows } = await db.query(
             `SELECT id, plan_tier, status, is_trial, razorpay_subscription_id, razorpay_payment_id,
-                    (current_end - current_start) = interval '30 days' AS thirty_days
+                    (current_end - current_start) = interval '90 days' AS ninety_days
                FROM public.org_subscriptions WHERE org_id = $1`,
             [owner.orgId],
         )
@@ -107,7 +107,7 @@ describe('Base suppression and Lite trial schema', () => {
             is_trial: true,
             razorpay_subscription_id: null,
             razorpay_payment_id: null,
-            thirty_days: true,
+            ninety_days: true,
         }])
         const { rows: [org] } = await db.query('SELECT lite_trial_eligible FROM public.organizations WHERE id = $1', [owner.orgId])
         expect(org).toEqual({ lite_trial_eligible: false })

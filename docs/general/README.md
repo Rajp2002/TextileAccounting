@@ -17,7 +17,7 @@ Yarn Stock, the Stock (Inventory) Audit and the older March/April yarn & beam in
 
 ## Base visibility and Lite trial
 
-New accounts see only Free and Lite while `BASE_PLAN_OPEN_TO_NEW_ACCOUNTS` is `false` in [`lib/base-plan-visibility.ts`](../../lib/base-plan-visibility.ts). New owners get a one-month Lite trial, stored as an `is_trial` row in `org_subscriptions`. Design: [spec](../superpowers/specs/2026-10-11-base-suppression-and-lite-trial-design.md). Migrations: `20261011120000_base_suppression_and_lite_trial.sql`, `20261011120100_admin_snapshot_trial_flag.sql`.
+New accounts see only Free and Lite while `BASE_PLAN_OPEN_TO_NEW_ACCOUNTS` is `false` in [`lib/base-plan-visibility.ts`](../../lib/base-plan-visibility.ts). New owners get a three-month (90-day) Lite trial, stored as an `is_trial` row in `org_subscriptions`. Design: [spec](../superpowers/specs/2026-10-11-base-suppression-and-lite-trial-design.md). Migrations: `20261011120000_base_suppression_and_lite_trial.sql`, `20261011120100_admin_snapshot_trial_flag.sql`.
 
 ## Base supervisors
 

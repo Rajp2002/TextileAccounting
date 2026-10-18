@@ -2,7 +2,7 @@
  * Lite trial length. Client-importable: keep this file free of server-only and
  * heavy imports so trial copy and countdowns can render in the browser.
  */
-export const LITE_TRIAL_DAYS = 30
+export const LITE_TRIAL_DAYS = 90
 
 const DAY_MS = 24 * 60 * 60 * 1000
 

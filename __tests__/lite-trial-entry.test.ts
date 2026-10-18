@@ -40,8 +40,8 @@ vi.mock('@/lib/i18n/context', () => ({
 const root = process.cwd()
 const read = (file: string) => readFileSync(join(root, file), 'utf8')
 
-const TRIAL_START = 'Start 1-month free trial'
-const TRIAL_DISCLOSURE = '30 days of Lite free, no payment needed.'
+const TRIAL_START = 'Start 3-month free trial'
+const TRIAL_DISCLOSURE = '90 days of Lite free, no payment needed.'
 const PAY_NOW = 'Or pay now: ₹2,999 for the first year'
 
 /** The Lite branch of PlanCard's CTA block, from its isLite test to the Base branch. */

@@ -15,7 +15,7 @@ const faqs: Array<{ question: string; answer: ReactNode; baseOnly?: boolean }> =
     },
     {
         question: 'Is there a free trial of Lite?',
-        answer: 'Yes. For the initial rollout, every new account can try Lite free for one month. No payment or card is needed to start. Choose Lite when you sign up, or start the trial later from your Free account. When the month ends, pay for the first Lite year to keep Lite, or carry on with Free. Your records stay either way.',
+        answer: 'Yes. For the initial rollout, every new account can try Lite free for three months. No payment or card is needed to start. Choose Lite when you sign up, or start the trial later from your Free account. When the three months end, pay for the first Lite year to keep Lite, or carry on with Free. Your records stay either way.',
     },
     {
         question: 'How does the Free allowance work?',

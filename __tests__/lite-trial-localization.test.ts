@@ -31,10 +31,10 @@ describe('Lite trial localization', () => {
   })
 
   it('keeps the English copy from the brief word for word', () => {
-    expect(liteTrialPhrases.startTrial[EN]).toBe('Start 1-month free trial')
+    expect(liteTrialPhrases.startTrial[EN]).toBe('Start 3-month free trial')
     expect(liteTrialPhrases.trialPayNow[EN]).toBe('Or pay now: ₹2,999 for the first year')
     expect(liteTrialPhrases.trialDisclosure[EN]).toBe(
-      '30 days of Lite free, no payment needed. After that, pay ₹2,999 for the first year (incl. GST) to stay on Lite, or continue on Free.',
+      '90 days of Lite free, no payment needed. After that, pay ₹2,999 for the first year (incl. GST) to stay on Lite, or continue on Free.',
     )
     expect(liteTrialPhrases.trialNotAvailable[EN]).toBe('Your free trial is not available for this account.')
     expect(liteTrialPhrases.trialBannerDays[EN]).toBe('Lite trial: {days} days left')

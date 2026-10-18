@@ -119,6 +119,11 @@ describe('a Lite trial converting to a paid first year', () => {
         const rows = (await subscriptionRows(owner.orgId)) as unknown as BillingSubscriptionRow[]
         expect(resolveBillingPurchase(rows, [], 'lite').purchaseType).toBe('initial_purchase')
 
+        // The manual-renewal window trigger counts the trial row as a same-tier period and opens only in its
+        // final 30 days. The trial is 90 days, so move it into that window before the renewal order is inserted.
+        await asSuperuser(db)
+        await db.query("UPDATE public.org_subscriptions SET current_end = now() + interval '29 days' WHERE org_id = $1 AND is_trial", [owner.orgId])
+
         // Even a renewal order cannot activate on the strength of the trial row alone.
         const order = await createOrderRow(owner.orgId, 'renewal', LITE_RENEWAL_PAISE)
         expect(await pgError(activate(owner.orgId, order.orderId, 'renewal', LITE_RENEWAL_PAISE))).toEqual({
