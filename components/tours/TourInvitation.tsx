@@ -7,6 +7,7 @@ import { useTranslation } from '@/lib/i18n/context'
 import { tourInvitationCopy } from '@/lib/i18n/tour-invitations'
 import { tourCommonCopy } from '@/lib/i18n/tour-common'
 import { usePhoneViewport } from '@/lib/phone-viewport'
+import { GUIDE_SUPPRESSED } from '@/lib/tours/guide-availability'
 import { useTourInvitation } from '@/hooks/use-tour-invitation'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
@@ -73,6 +74,7 @@ export const usePageTour = () => useContext(PageTourContext)
  */
 export function PageGuide({ topics, className }: { topics?: readonly GuideTopic[]; className?: string }) {
     const tour = usePageTour()
+    if (GUIDE_SUPPRESSED) return null
     if (tour?.sample) return <GuideTrigger className={className} sample />
     if (tour) return <LauncherFrame launcher={tour.launcher}>
         <TourInvitation tourId={tour.tourId} userId={tour.userId} orgId={tour.orgId} userMetadata={tour.userMetadata}
@@ -93,7 +95,7 @@ function LauncherFrame({ launcher, children }: { launcher?: (element: HTMLDivEle
  */
 export function TourInvitation(props: TourInvitationProps) {
     const phone = usePhoneViewport()
-    if (phone) return null
+    if (GUIDE_SUPPRESSED || phone) return null
     return <TourInvitationContent {...props} />
 }
 

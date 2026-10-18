@@ -9,6 +9,8 @@ import { tourCommonCopy } from '../lib/i18n/tour-common'
 import { tourInvitationCopy } from '../lib/i18n/tour-invitations'
 
 const state = vi.hoisted(() => ({ language: 'en' as Language, presentation: 'invite' as TourPresentation, open: false }))
+// These tests cover the Guide itself, which is switched off by default (see guide-availability.ts).
+vi.mock('@/lib/tours/guide-availability', () => ({ GUIDE_SUPPRESSED: false }))
 vi.mock('@/lib/i18n/context', () => ({ useTranslation: () => ({ language: state.language }) }))
 vi.mock('@/hooks/use-tour-invitation', () => ({ useTourInvitation: () => ({ presentation: state.presentation, isStarting: false, handleLaunch: vi.fn(), handleDismiss: vi.fn() }) }))
 // The Guide's modal renders its content only when `state.open`, so the closed header button and the
