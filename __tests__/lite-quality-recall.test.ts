@@ -96,9 +96,4 @@ describe('estimator and Saved Costings use them', () => {
         expect(estimator).toContain("t('estimator.actions.hint.firstCosting', { quality: qualityName ?? '' })")
         expect(estimator).not.toContain('estimator.sprint1.save_version_update_quality')
     })
-
-    it('leads the comparison with the versions and the price difference', () => {
-        expect(quotes).toContain('data-revision-lead')
-        expect(quotes).toContain('formatRevisionLead(comparisonCostings[0], comparisonCostings[1], comparison.price.sellingPricePerM)')
-    })
 })

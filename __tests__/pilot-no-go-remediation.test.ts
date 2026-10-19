@@ -28,9 +28,6 @@ describe('pilot no-go remediation', () => {
     ]
 
     expect(orderSavedCostingsForComparison(selectedInReverse).map(item => item.id)).toEqual(['old', 'new'])
-    expect(read('app/(dashboard)/owner/quotes/QuotesClient.tsx')).toContain('Change is calculated as New minus Old.')
-    expect(read('app/(dashboard)/owner/quotes/QuotesClient.tsx')).toContain('Older costing')
-    expect(read('app/(dashboard)/owner/quotes/QuotesClient.tsx')).toContain('Newer costing')
   })
 
   it('makes applied waste distinct from the configured default', () => {

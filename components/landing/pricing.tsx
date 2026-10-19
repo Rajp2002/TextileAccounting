@@ -90,7 +90,7 @@ export default function LandingPricing() {
                             </Link>
                             {plan.tier === 'lite' && (
                                 <p className="mt-3 text-[13px] leading-5 text-[color:var(--lp-muted)]">
-                                    {`No payment to start. After 3 months (${LITE_TRIAL_DAYS} days), pay to stay on Lite or continue on Free.`}
+                                    {`No payment to start. After ${LITE_TRIAL_DAYS} days, pay to stay on Lite or continue on Free.`}
                                 </p>
                             )}
                         </div>

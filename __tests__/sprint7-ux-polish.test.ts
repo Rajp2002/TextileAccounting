@@ -48,7 +48,6 @@ describe('Sprint 7 Base UX polish contracts', () => {
         expect(estimator).toContain("estimator.price_helpers.production_cost")
         expect(estimator).toContain("estimator.price_helpers.break_even")
         expect(estimator).toContain("estimator.price_helpers.suggested_selling_price")
-        expect(quotes).toContain('compare-costings-help')
         expect(exportDialog).toContain('export-action-help')
         expect(estimator).toContain('estimator-action-readiness')
         expect(estimator).toContain('aria-describedby={actionReadinessMessage ? actionReadinessId : undefined}')

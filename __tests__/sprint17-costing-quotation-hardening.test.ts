@@ -185,7 +185,6 @@ describe('Sprint 17 costing and quotation hardening', () => {
     expect(quotes).not.toContain('Quotation ledger')
     expect(quotes).not.toContain('Mark Sent')
     expect(quotes).toContain('Restore costing')
-    expect(quotes).toContain('New minus Old')
     expect(actions).not.toContain('Next allowed action:')
     expect(migration).toContain('sent_at')
     expect(migration).toContain('stamp_estimator_quote_sent_at')

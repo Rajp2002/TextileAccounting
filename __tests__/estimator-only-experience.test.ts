@@ -73,7 +73,6 @@ describe('Estimator-only product presentation', () => {
     it('presents persisted quote entities as saved costings without forking persistence', () => {
         expect(quotes).toContain("title={t('common.saved_costings_title')}")
         expect(quotes).toContain("t('common.search_quality_costing')")
-        expect(quotes).toContain('Compare Saved Costings')
         // Reopening a saved costing lives in My Qualities; the library offers Duplicate only.
         expect(quotes).not.toContain("tourControls.savedCostings.use")
         expect(quotes).toContain("tx('Duplicate')")

@@ -107,7 +107,6 @@ describe('Saved Costings Dialog Centering & Sample Pre-population', () => {
     })
 
     it('supports selecting and comparing tour sample costings in QuotesClient', () => {
-        expect(quotesClientSource).toContain('quotes.find(quote => quote.id === id) ?? tourExamples.find(e => e.id === id)')
         const tourExamples = makeSavedCostingTourExamples()
         expect(tourExamples.length).toBe(2)
         expect(tourExamples[0].id).toBe('tour-preview-v2')

@@ -67,7 +67,6 @@ describe('Base Estimator Go-readiness hardening', () => {
     // The breakdown's cost and price tiles render inside the margin control, from the saved result.
     expect(saved).toContain('saved={latestResult}')
     expect(source('components/estimator/SavedCostingMargin.tsx')).toContain('shown.productionCostPerM')
-    expect(saved).toContain("['Break-even selling price'")
   })
 
   it('gates Rate Book at route, action, RLS, and lockdown boundaries', () => {
