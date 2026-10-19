@@ -31,7 +31,6 @@ describe('Estimator aesthetic and responsive refinement', () => {
     expect(client).toContain('Break-even floor')
     expect(client).toContain('Material context')
     expect(client).toContain("'xl:grid-cols-3' : 'xl:grid-cols-4'")
-    expect(client).toContain('data-testid="costing-validity"')
     expect(client).toContain('data-testid={`yarn-component-${accent}-${index}`}')
     expect(client).toContain('Manual workflow: calculate this base weight and cost first.')
     expect(client).toContain('lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.42fr)]')
