@@ -35,6 +35,7 @@ describe('Estimator aesthetic and responsive refinement', () => {
     expect(client).toContain('Manual workflow: calculate this base weight and cost first.')
     expect(client).toContain('lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.42fr)]')
     expect(client).toContain('id="estimator-form-panel"')
+    expect(client).toContain('data-testid="estimator-new-pill"')
     expect(styles).toContain('#pricing-assumptions-details')
     expect(styles).toContain('@media (prefers-reduced-motion: reduce)')
   })

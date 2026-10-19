@@ -5169,20 +5169,40 @@ export default function EstimatorClient({
             <PageHeader
                 title={tx('Cost estimate')}
                 className={freeMode ? 'free-mobile-page-header' : liteMode ? 'lite-mobile-page-header' : undefined}
-                actions={<CostEstimateTutorial
-                    accountDismissed={tutorialDismissed}
-                    userMetadata={userMetadata}
-                    enabled={(state.isConfigured || !factoryWizardOpen) && !saving}
-                    freePlan={freeMode}
-                    existingCosting={Boolean(sourceQuoteId && sourceRecordKind === 'costing')}
-                    productionPipeline={canUseProductionPipeline}
-                    orgId={orgId}
-                    userId={userId}
-                    topics={[factoryGlossaryTopic, archivePolicyTopic]}
-                    onPrepare={prepareTutorial}
-                    onOpenLiveCostModal={setLiveEstimateOpen}
-                    onActiveChange={setIsTutorialActive}
-                />}
+                actions={
+                    <>
+                        <CostEstimateTutorial
+                            accountDismissed={tutorialDismissed}
+                            userMetadata={userMetadata}
+                            enabled={(state.isConfigured || !factoryWizardOpen) && !saving}
+                            freePlan={freeMode}
+                            existingCosting={Boolean(sourceQuoteId && sourceRecordKind === 'costing')}
+                            productionPipeline={canUseProductionPipeline}
+                            orgId={orgId}
+                            userId={userId}
+                            topics={[factoryGlossaryTopic, archivePolicyTopic]}
+                            onPrepare={prepareTutorial}
+                            onOpenLiveCostModal={setLiveEstimateOpen}
+                            onActiveChange={setIsTutorialActive}
+                        />
+                        <Button
+                            type="button"
+                            variant="outline"
+                            data-testid="estimator-new-pill"
+                            onClick={() => {
+                                if (!hasUnsavedEdits && !qualityLabel.trim() && !sourceQuoteId && !appliedTemplate) {
+                                    handleNewQualityConfirm()
+                                } else {
+                                    setShowConfirmNewQuality(true)
+                                }
+                            }}
+                            className="rounded-full border-2 border-[var(--color-yarn-orange)] text-[var(--color-yarn-orange-dark)] hover:bg-[var(--color-warning-amber-soft)]/60 font-bold px-5 h-9 text-sm transition-colors shadow-xs"
+                            title={tx('Clear all inputs and start a new cost estimate')}
+                        >
+                            {tx('New')}
+                        </Button>
+                    </>
+                }
             />
             {!freeMode && !disableAutosave && (
                 <LocalSaveStatus
