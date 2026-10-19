@@ -1,13 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions -- Playwright CLI evaluates this callback expression. */
 async (page) => {
   const language='LANGUAGE';const context=await page.context().browser().newContext({viewport:{width:320,height:568},hasTouch:true,isMobile:true});const p=await context.newPage();p.setDefaultTimeout(4500);const results=[];
-  const closeDetail=async()=>p.getByRole('dialog').locator('button').filter({has:p.locator('svg.lucide-x')}).first().click();
   try {
-    for(const scene of ['quotes','quotes-details','quotes-compare','quotes-export','quotes-prior','rates','rates-edit','rates-due','rates-add']){
+    for(const scene of ['quotes','quotes-details','quotes-export','quotes-prior','rates','rates-edit','rates-due','rates-add']){
       try {
         const view=scene.startsWith('quotes')?'quotes':'rates';await p.goto(`http://127.0.0.1:4195/owner/${view}?lang=${language}${scene==='quotes-prior'?'&prior=1':''}`,{timeout:15000});await p.locator('h1').last().waitFor();await p.waitForTimeout(700);
         if(scene==='quotes-details'||scene==='quotes-export'){await p.locator('[data-tour-anchor="costings.first-card"] button').first().click();await p.locator('[data-costing-card-control]').nth(1).locator('button').first().click();if(scene==='quotes-export')await p.getByRole('dialog').locator('button').filter({has:p.locator('svg.lucide-download')}).first().click()}
-        if(scene==='quotes-compare'){await p.locator('[data-lite-costings] button[aria-pressed]').click();await p.locator('[data-tour-anchor="costings.first-card"] button').first().click();await p.getByRole('checkbox').nth(0).check();await p.getByRole('checkbox').nth(1).check();await closeDetail();await p.locator('[role="status"] button').filter({has:p.locator('svg.lucide-git-compare-arrows')}).first().click()}
         if(scene==='quotes-prior')await p.locator('[data-lite-prior-history] > button').click();
         if(scene==='rates-edit')await p.locator('[data-ratebook-field="quickEditAction"]:visible').first().click();
         if(scene==='rates-due')await p.locator('[data-lite-rates] > button[aria-haspopup="dialog"]').click();

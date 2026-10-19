@@ -56,8 +56,7 @@ describe('expandable panels', () => {
         'app/(dashboard)/owner/dispatches/ChallanDraftEditor.tsx',
         'app/(dashboard)/owner/dispatches/DispatchDetailDialog.tsx',
         'app/(dashboard)/owner/estimator/EstimatorClient.tsx',
-        // Workers, Machines and Billing no longer expand help inline: it opens from the page Guide.
-        'app/(dashboard)/owner/quotes/QuotesClient.tsx',
+        // Workers, Machines, Billing and Quotes no longer expand help/diff inline.
         'components/estimator/UpgradeBenefitsPreview.tsx',
     ]
 

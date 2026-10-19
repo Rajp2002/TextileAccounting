@@ -22,9 +22,8 @@ describe('estimated economics wording', () => {
         expect(estimator).toContain("label: 'Estimate ready for review'")
     })
 
-    it('labels the saved comparison margin as estimated', () => {
+    it('does not label margin as actual margin in saved costings', () => {
         expect(quotes).not.toContain("label: 'Actual margin'")
-        expect(quotes).toContain("label: 'Estimated margin'")
     })
 
     it('uses the same label on the internal cost sheet and keeps margins off the customer quotation', () => {

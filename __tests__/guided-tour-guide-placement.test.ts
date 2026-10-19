@@ -59,9 +59,7 @@ describe('Guided tour Guide placement across all sections', () => {
         expect(freeActions).toContain('data-tour-anchor="free-costings.new"')
         expect(tutorial).toContain('<TourInvitation')
         expect(tutorial).toContain('tourId="saved-costings"')
-        // Compare versions is a Guide action on paid plans, More help a Guide topic.
-        expect(tutorial).toContain("control: 'compare-tour'")
-        expect(tutorial).toContain('topics={[...(free ? [] : [compare]), help, ...topics]}')
+        expect(tutorial).toContain('topics={[help, ...topics]}')
     })
 
     it('Rate Book: the tutorial is the header Guide with principles, help and archive as topics', () => {

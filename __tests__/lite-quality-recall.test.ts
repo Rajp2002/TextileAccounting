@@ -81,7 +81,6 @@ describe('formatRevisionLead', () => {
 
 describe('estimator and Saved Costings use them', () => {
     const estimator = readFileSync('app/(dashboard)/owner/estimator/EstimatorClient.tsx', 'utf8')
-    const quotes = readFileSync('app/(dashboard)/owner/quotes/QuotesClient.tsx', 'utf8')
     const english = readFileSync('lib/i18n/locales/en.ts', 'utf8')
 
     it('searches qualities by name and construction and shows the cue on each card', () => {
@@ -95,10 +94,5 @@ describe('estimator and Saved Costings use them', () => {
         expect(english).not.toContain('save_version_update_quality')
         expect(estimator).toContain("t('estimator.actions.hint.firstCosting', { quality: qualityName ?? '' })")
         expect(estimator).not.toContain('estimator.sprint1.save_version_update_quality')
-    })
-
-    it('leads the comparison with the versions and the price difference', () => {
-        expect(quotes).toContain('data-revision-lead')
-        expect(quotes).toContain('formatRevisionLead(comparisonCostings[0], comparisonCostings[1], comparison.price.sellingPricePerM)')
     })
 })

@@ -5121,8 +5121,6 @@ export default function EstimatorClient({
             icon: AlertCircle,
             className: 'border-[var(--wv-madder-200)] bg-[var(--wv-madder-50)] text-[var(--wv-madder-600)]',
         }
-    const freeIncompleteBeforeSubmit = freeMode && !showValidation && !estimatorValidation.valid
-    const litePristineIncomplete = liteMode && !showValidation && !hasUnsavedEdits && !sourceQuoteId && !appliedTemplate && !estimatorValidation.valid
     const litePersistenceLabel = unconfirmedRequestId ? tx('Save not yet confirmed')
         : savingQuote ? tx('Saving costing…')
         : lastSavedCosting && !hasUnsavedEdits ? liteEstimatorText(language, 'saved', { version: lastSavedCosting.version })
@@ -5171,20 +5169,40 @@ export default function EstimatorClient({
             <PageHeader
                 title={tx('Cost estimate')}
                 className={freeMode ? 'free-mobile-page-header' : liteMode ? 'lite-mobile-page-header' : undefined}
-                actions={<CostEstimateTutorial
-                    accountDismissed={tutorialDismissed}
-                    userMetadata={userMetadata}
-                    enabled={(state.isConfigured || !factoryWizardOpen) && !saving}
-                    freePlan={freeMode}
-                    existingCosting={Boolean(sourceQuoteId && sourceRecordKind === 'costing')}
-                    productionPipeline={canUseProductionPipeline}
-                    orgId={orgId}
-                    userId={userId}
-                    topics={[factoryGlossaryTopic, archivePolicyTopic]}
-                    onPrepare={prepareTutorial}
-                    onOpenLiveCostModal={setLiveEstimateOpen}
-                    onActiveChange={setIsTutorialActive}
-                />}
+                actions={
+                    <>
+                        <CostEstimateTutorial
+                            accountDismissed={tutorialDismissed}
+                            userMetadata={userMetadata}
+                            enabled={(state.isConfigured || !factoryWizardOpen) && !saving}
+                            freePlan={freeMode}
+                            existingCosting={Boolean(sourceQuoteId && sourceRecordKind === 'costing')}
+                            productionPipeline={canUseProductionPipeline}
+                            orgId={orgId}
+                            userId={userId}
+                            topics={[factoryGlossaryTopic, archivePolicyTopic]}
+                            onPrepare={prepareTutorial}
+                            onOpenLiveCostModal={setLiveEstimateOpen}
+                            onActiveChange={setIsTutorialActive}
+                        />
+                        <Button
+                            type="button"
+                            variant="outline"
+                            data-testid="estimator-new-pill"
+                            onClick={() => {
+                                if (!hasUnsavedEdits && !qualityLabel.trim() && !sourceQuoteId && !appliedTemplate) {
+                                    handleNewQualityConfirm()
+                                } else {
+                                    setShowConfirmNewQuality(true)
+                                }
+                            }}
+                            className="rounded-full border-2 border-[var(--color-yarn-orange)] text-[var(--color-yarn-orange-dark)] hover:bg-[var(--color-warning-amber-soft)]/60 font-bold px-5 h-9 text-sm transition-colors shadow-xs"
+                            title={tx('Clear all inputs and start a new cost estimate')}
+                        >
+                            {tx('New')}
+                        </Button>
+                    </>
+                }
             />
             {!freeMode && !disableAutosave && (
                 <LocalSaveStatus
@@ -5897,10 +5915,6 @@ export default function EstimatorClient({
                                         <span className="text-xs font-medium text-[var(--color-muted)]">{liteMode ? <><span className="lite-mobile-only" data-i18n-skip="true">{liteEstimatorText(language, 'sourceVersion', {version: sourceQuoteVersionNumber ?? 1})}</span><span className="lite-desktop-only">Costing v{sourceQuoteVersionNumber ?? 1}</span></> : <>Costing v{sourceQuoteVersionNumber ?? 1}</>}</span>
                                     )}
                                 </div>
-                                <p className="mt-1 text-xs font-medium leading-4 text-[var(--color-muted)]">
-                                    {tx(appliedTemplate ? 'Saved recipe loaded. Review rates before saving.' : 'New construction. Enter the required inputs below.')}
-                                    <span className="mt-1 block">{tx('Quick and Detailed use the same calculation. Detailed shows additional assumptions.')}</span>
-                                </p>
                             </div>
                             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                                 <LiquidSegmented
@@ -5945,11 +5959,6 @@ export default function EstimatorClient({
                                 <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
                             </span>
                         </button>
-                        <div data-testid="costing-validity" data-free-incomplete={freeIncompleteBeforeSubmit || undefined} data-lite-incomplete={litePristineIncomplete || undefined} className={`mt-3 flex min-h-10 items-center gap-2 rounded-[10px] border px-3 py-2 text-xs leading-4 ${validityStatus.className}`} role="status" aria-live="polite">
-                            <validityStatus.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                            <span className="font-semibold">{litePristineIncomplete ? <><span className="lite-mobile-only" data-i18n-skip="true">{liteEstimatorText(language, 'complete')}</span><span className="lite-desktop-only">{validityStatus.label}</span></> : freeIncompleteBeforeSubmit ? <><span className="free-mobile-only">{freeMobileText(language, 'complete')}</span><span className="free-desktop-only">{validityStatus.label}</span></> : validityStatus.label}</span>
-                            <span className="hidden font-medium opacity-85 sm:inline">{validityStatus.description}</span>
-                        </div>
                         {freeMode && freeDraftRestored && !freeMeter.completed && (
                             <div role="status" className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] py-1 pl-3 pr-1 text-xs font-medium leading-4 text-[var(--color-body)]">
                                 <span className="py-2">{freeText(language, 'draftRestored')}</span>

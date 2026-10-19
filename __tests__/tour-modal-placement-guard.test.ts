@@ -205,7 +205,6 @@ describe('Tour modal placement rule: the modal stays where it opens, the card ad
             expect(readFileSync('components/ui/dialog.tsx', 'utf8')).toContain('sm:max-w-lg')
             expect(readFileSync('components/estimator/CostingExportDialog.tsx', 'utf8')).toContain('sm:max-w-6xl')
             const quotes = readFileSync('app/(dashboard)/owner/quotes/QuotesClient.tsx', 'utf8')
-            expect(quotes).toContain('className="sm:max-w-4xl"')
             expect(quotes).toContain('sm:max-w-[1180px]')
             expect(globals).toMatch(/font-size: 14px;/)
         })

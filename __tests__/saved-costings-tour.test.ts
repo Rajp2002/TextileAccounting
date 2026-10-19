@@ -39,7 +39,6 @@ describe('Saved Costings reference tour', () => {
     expect(specs.slice(0, -1).every(step => step.kind === 'sample')).toBe(true)
     expect(specs.at(-1)).toMatchObject({ kind: 'handoff', context: undefined })
     expect(page).toContain('space-y-3 xl:pr-[192px]')
-    expect(page).toContain('{!tourStep && <DialogFooter>')
     expect(read('components/estimator/CostingExportDialog.tsx')).toContain('{!tutorialPreview && <Button type="button" variant="ghost"')
     expect(savedCostingTourSpecs(true).map(step => step.anchor)).toEqual(['[data-costing-tour="free-sample"]', '[data-tour-anchor="free-costings.sample-export"]', '[data-costing-tour="export-modes"]', '[data-tour-anchor="free-costings.new"]'])
     expect(savedCostingTourSpecs(false, false, true).at(-1)).toMatchObject({ id: 'compareHandoff', kind: 'handoff', anchor: '[data-tour-anchor="costings.compare"]' })
@@ -95,7 +94,6 @@ describe('Saved Costings reference tour', () => {
       expect(page + read('components/estimator/CostingExportDialog.tsx') + freePage).toContain(`tx('${label}')`)
     }
     expect(page).toContain("t('common.new_costing')")
-    expect(page).toContain("t('common.compare_costings')")
     expect(controls.newCosting).toBe(en.common.new_costing)
   })
   it('chooses existing, empty and unavailable endings and matching live anchors', () => {
@@ -138,8 +136,6 @@ describe('Saved Costings reference tour', () => {
     expect(tutorial).toContain('{step && <SavedCostingsTourRuntime')
     expect(tutorial).not.toContain("from '@/lib/i18n/saved-costings-tutorial'")
     expect(tutorial).not.toMatch(/createPortal|addEventListener|requestAnimationFrame|setTimeout/)
-    // Compare versions is a Guide action on paid plans only.
-    expect(tutorial).toContain('...(free ? [] : [compare])')
     expect(tutorial).toContain('copy.fields.organize')
     expect(tutorial).toContain('copy.fields.share')
     expect(runtime).toContain('recordCompletion={!comparison}')

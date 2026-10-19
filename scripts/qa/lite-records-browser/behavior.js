@@ -25,14 +25,7 @@ async (page) => {
       await p.getByRole('switch',{name:'Favourites',exact:true}).click();await p.getByRole('button',{name:'Archived',exact:true}).click();check((await p.locator('main').innerText()).includes('archived'),'Archive mode unavailable');await p.getByRole('button',{name:'Active',exact:true}).click();
       return 'Search/no-results and active filter state remain available after closing/reopening';
     });
-    await test('Compare exact saved versions, dismiss/reopen, exit mode',async()=>{
-      await go('quotes');await p.getByRole('button',{name:'Compare',exact:true}).click();await p.getByRole('button',{name:/^Cotton Roto Sheeting v2/}).click();
-      await p.getByRole('checkbox',{name:'Select Cotton Roto Sheeting version 1 for comparison'}).check();await p.getByRole('checkbox',{name:'Select Cotton Roto Sheeting version 2 for comparison'}).check();
-      await p.getByRole('button',{name:'Close Cotton Roto Sheeting details'}).click();await p.getByRole('button',{name:'Compare Costings',exact:true}).click();await p.waitForTimeout(450);
-      const text=await p.getByRole('dialog').innerText();check(text.includes('v1')&&text.includes('v2')&&text.includes('Old')&&text.includes('New'),'Version provenance absent');await p.keyboard.press('Escape');
-      await p.getByRole('button',{name:'Compare Costings',exact:true}).click();await p.keyboard.press('Escape');await p.getByRole('button',{name:'Exit comparison',exact:true}).click();check(await p.getByRole('button',{name:'Compare',exact:true}).getAttribute('aria-pressed')==='false','Mode did not exit');
-      return {requests:await calls(),provenance:text.slice(0,420)};
-    });
+
     await test('Export names selected saved version and date; closing sends no document',async()=>{
       await go('quotes');await p.getByRole('button',{name:/^Cotton Roto Sheeting v2/}).click();await p.getByRole('button',{name:'View version 1 breakdown for Cotton Roto Sheeting'}).click();await p.getByRole('button',{name:'Export',exact:true}).first().click();await p.waitForTimeout(450);
       const text=await p.getByRole('dialog').innerText();check(text.includes('Cotton Roto Sheeting')&&text.includes('v1'),'Selected export identity missing');check(text.includes('Oct')||text.includes('2026'),'Saved date missing');await p.keyboard.press('Escape');check(!(await calls()).some(call=>call.name==='document'),'Preview or close mutated document');return text.slice(0,500);

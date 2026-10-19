@@ -42,13 +42,11 @@ describe('Sprint 7 Base UX polish contracts', () => {
 
     it('keeps the three prices distinct and explains disabled comparison/export actions', () => {
         const estimator = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
-        const quotes = read('app/(dashboard)/owner/quotes/QuotesClient.tsx')
         const exportDialog = read('components/estimator/CostingExportDialog.tsx')
 
         expect(estimator).toContain("estimator.price_helpers.production_cost")
         expect(estimator).toContain("estimator.price_helpers.break_even")
         expect(estimator).toContain("estimator.price_helpers.suggested_selling_price")
-        expect(quotes).toContain('compare-costings-help')
         expect(exportDialog).toContain('export-action-help')
         expect(estimator).toContain('estimator-action-readiness')
         expect(estimator).toContain('aria-describedby={actionReadinessMessage ? actionReadinessId : undefined}')
