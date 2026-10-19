@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions -- Playwright CLI evaluates this callback expression. */
 async (page) => {
   const language='LANGUAGE';const context=await page.context().browser().newContext({viewport:{width:320,height:568},hasTouch:true,isMobile:true});const p=await context.newPage();p.setDefaultTimeout(4500);const results=[];
-  const closeDetail=async()=>p.getByRole('dialog').locator('button').filter({has:p.locator('svg.lucide-x')}).first().click();
   try {
     for(const scene of ['quotes','quotes-details','quotes-export','quotes-prior','rates','rates-edit','rates-due','rates-add']){
       try {

@@ -81,7 +81,6 @@ describe('formatRevisionLead', () => {
 
 describe('estimator and Saved Costings use them', () => {
     const estimator = readFileSync('app/(dashboard)/owner/estimator/EstimatorClient.tsx', 'utf8')
-    const quotes = readFileSync('app/(dashboard)/owner/quotes/QuotesClient.tsx', 'utf8')
     const english = readFileSync('lib/i18n/locales/en.ts', 'utf8')
 
     it('searches qualities by name and construction and shows the cue on each card', () => {

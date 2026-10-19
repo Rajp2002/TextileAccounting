@@ -1,7 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useRef, useState } from 'react'
+import { useRef } from 'react'
 import { CircleHelp } from 'lucide-react'
 import { GuideSection, TourInvitation, type GuideTopic } from '@/components/tours/TourInvitation'
 import { useTranslation } from '@/lib/i18n/context'
