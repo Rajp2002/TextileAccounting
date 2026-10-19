@@ -44,7 +44,7 @@ export default function PrivacyPolicyPage() {
             ]}
         >
             <p className="mb-10 max-w-3xl text-lg font-medium leading-8 text-body">
-                Weavly (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) provides a business-to-business textile costing product and, for organizations that already hold Weavly Base, a connected production-record workflow. Until a company is incorporated and this policy is updated, Weavly means {LEGAL_OPERATOR.displayName}. This policy explains our practices for personal information associated with Weavly Free, Lite, and Base. It is intended to meet the privacy-policy requirements presently applicable under India&apos;s Information Technology Act, 2000 and the Information Technology (Reasonable Security Practices and Procedures and Sensitive Personal Data or Information) Rules, 2011, while preparing for the phased commencement of the Digital Personal Data Protection Act, 2023 and Digital Personal Data Protection Rules, 2025.
+                Weavly (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) provides a business-to-business textile costing product and, for organizations that already hold Weavly Base, a connected production-record workflow. Until a company is incorporated and this policy is updated, Weavly means {LEGAL_OPERATOR.displayName}. This policy explains our practices for personal information associated with Weavly Free, the three-month Lite free trial, Lite, and Base. It is intended to meet the privacy-policy requirements presently applicable under India&apos;s Information Technology Act, 2000 and the Information Technology (Reasonable Security Practices and Procedures and Sensitive Personal Data or Information) Rules, 2011, while preparing for the phased commencement of the Digital Personal Data Protection Act, 2023 and Digital Personal Data Protection Rules, 2025.
             </p>
 
             <PolicySection id="scope" title="1. Scope and Our Data Roles">
@@ -55,7 +55,7 @@ export default function PrivacyPolicyPage() {
                     An account owner may also enter personal information about customers, suppliers, brokers, employees, or other business contacts into a costing workspace. For that customer-provided information, the account owner decides what to enter and why, and Weavly processes it to provide the selected service. The account owner is responsible for having an appropriate basis to provide that information to Weavly.
                 </p>
                 <p>
-                    This notice covers Free account data, saved completed costings, calculation-allowance records, Weavly Lite costing data and the additional Base Production Core, including owner-created production jobs, production metre entries, piece-rate worker names and rates, advances, and basic settlement records. Broader operational modules outside the current Lite and Base catalog are not covered by this product rollout. The Base workflow does not require worker phone numbers, supervisor accounts, attendance, or statutory payroll identifiers.
+                    This notice covers Free account data, saved completed costings, calculation-allowance records, the three-month Weavly Lite free trial, Weavly Lite costing data and the additional Base Production Core, including owner-created production jobs, production metre entries, piece-rate worker names and rates, advances, and basic settlement records. Broader operational modules outside the current Lite and Base catalog are not covered by this product rollout. The Base workflow does not require worker phone numbers, supervisor accounts, attendance, or statutory payroll identifiers.
                 </p>
             </PolicySection>
 
@@ -92,7 +92,7 @@ export default function PrivacyPolicyPage() {
 
                 <h3>2.4 Billing and support information</h3>
                 <ul>
-                    <li>Billing name and address, GSTIN if supplied, plan, free-trial, and subscription status, payment references, receipts, and refund or dispute records</li>
+                    <li>Billing name and address, GSTIN if supplied, plan, three-month Lite free-trial status, and subscription status, payment references, receipts, and refund or dispute records</li>
                     <li>Messages, attachments, and account references you send in support, privacy, or grievance communications</li>
                     <li>Razorpay processes payment-instrument information. Weavly receives transaction references and status information, not complete card, bank-account, or UPI credentials</li>
                 </ul>
@@ -165,7 +165,7 @@ export default function PrivacyPolicyPage() {
 
             <PolicySection id="retention" title="7. Retention and Deletion">
                 <ul>
-                    <li><strong>Active account and costing data</strong> — kept while the account remains active and as needed to provide the requested service. An owner may permanently delete the workspace through Settings.</li>
+                    <li><strong>Active account and costing data</strong> — kept while the account remains active and as needed to provide the requested service. Records created during the three-month Lite free trial are kept if the account moves to Free. An owner may permanently delete the workspace through Settings.</li>
                     <li><strong>Completed Free costings</strong> — kept as account records independently of monthly resets and operational-receipt expiry. Reaching the allowance or upgrading does not by itself delete them. Unfinished Free inputs are held in page memory and are not saved as recoverable drafts.</li>
                     <li><strong>Free allowance and usage records</strong> — operational calculation receipts have a configured lifetime of up to 30 days. Routine cleanup targets Free usage events older than 90 days and completed monthly-usage periods older than 90 days once no related receipt remains. This cleanup does not delete saved Free costings.</li>
                     <li><strong>Production data after plan change</strong> — retained when Base expires or an organization is placed in Lite; Base-only creation and mutation actions remain restricted until an eligible Base renewal is activated.</li>

@@ -37,7 +37,7 @@ const sections = [
 
 const plans = [
     { name: 'Weavly Free', firstYear: '₹0 — no subscription fee', renewal: 'No annual renewal' },
-    { name: 'Weavly Lite free trial', firstYear: `₹0 for ${LITE_TRIAL_DAYS} days`, renewal: 'Not renewable; buy Lite to continue' },
+    { name: 'Weavly Lite free trial', firstYear: `₹0 for 3 months (${LITE_TRIAL_DAYS} days)`, renewal: 'Not renewable; buy Lite to continue' },
     ...BILLING_SELF_SERVE_PLAN_TIERS.map((tier) => ({
         name: BILLING_PLANS[tier].name,
         firstYear: `${formatINR(BILLING_PLANS[tier].firstYearTotalPaise / 100, { hideDecimals: true })} total (GST included)`,
@@ -105,7 +105,7 @@ export default function TermsOfServicePage() {
             <PolicySection id="lite-trial" title="2.2 Lite Free Trial">
                 <ul>
                     <li>During the initial rollout, a new Customer organization may start one free trial of Weavly Lite. The trial is available once per organization. Organizations that existed before the trial was introduced, or that have already used a trial or paid for a plan, are not eligible. Creating additional accounts to obtain further trials is not permitted.</li>
-                    <li>{`The trial gives full Lite access for ${LITE_TRIAL_DAYS} days from the moment it starts. No payment, card, or payment details are needed to start it, and nothing is charged when it ends.`}</li>
+                    <li>{`The trial gives full Lite access for three months (${LITE_TRIAL_DAYS} days) from the moment it starts. No payment, card, or payment details are needed to start it, and nothing is charged when it ends.`}</li>
                     <li>The owner starts the trial by choosing it on the plan screen. An owner who starts on Free may start it later from the upgrade screen while the organization is still eligible.</li>
                     <li>{`To keep Lite, buy the first Lite year at the first-year price. A purchase made during the trial starts a new ${ACCESS_DAYS}-day paid period from the payment date; unused trial days are not added.`}</li>
                     <li>If Lite is not purchased by the end of the trial, the organization moves to Weavly Free. Records created during the trial are kept. Lite-only features such as reusable qualities and the Rate Book are unavailable on Free and return when Lite is purchased.</li>

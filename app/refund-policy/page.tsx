@@ -8,7 +8,7 @@ import { formatINR } from '@/lib/finance'
 
 export const metadata: Metadata = {
     title: 'Refund & Cancellation Policy — Weavly',
-    description: 'Refund and cancellation rules for Weavly Free and Lite, the Lite free trial, paid upgrades, manual renewal, and billing errors.',
+    description: 'Refund and cancellation rules for Weavly Free and Lite, the three-month Lite free trial, paid upgrades, manual renewal, and billing errors.',
 }
 
 const sections = [
@@ -28,7 +28,7 @@ export default function RefundPolicyPage() {
         <PolicyPage
             activePath="/refund-policy"
             title="Refund & Cancellation Policy"
-            description="How refunds, the Lite free trial, paid upgrades, manual renewal, and account deletion work across Free, Lite, and Base."
+            description="How refunds, the three-month Lite free trial, paid upgrades, manual renewal, and account deletion work across Free, Lite, and Base."
             lastUpdated={LEGAL_DOCUMENTS.terms.displayDate}
             sections={sections}
             facts={[
@@ -39,7 +39,7 @@ export default function RefundPolicyPage() {
             ]}
         >
             <p className="mb-10 max-w-3xl text-lg font-medium leading-8 text-body">
-                This policy covers Weavly Free accounts, the Weavly Lite free trial, and Weavly Lite and Weavly Base purchases offered by {LEGAL_OPERATOR.displayName}. It should be read with the <a href="/terms">Terms of Service</a>. Free has no subscription payment to cancel or refund. If you purchase Lite or Base from Free, the paid-plan rules below apply to that purchase.
+                This policy covers Weavly Free accounts, the three-month Weavly Lite free trial, and Weavly Lite and Weavly Base purchases offered by {LEGAL_OPERATOR.displayName}. It should be read with the <a href="/terms">Terms of Service</a>. Free has no subscription payment to cancel or refund. If you purchase Lite or Base from Free, the paid-plan rules below apply to that purchase.
             </p>
 
             <PolicySection id="scope" title="1. Scope and Plan Boundary">
@@ -61,7 +61,7 @@ export default function RefundPolicyPage() {
 
             <PolicySection id="lite-trial" title="1.1 Lite Free Trial">
                 <ul>
-                    <li><strong>No payment</strong> — The Lite free trial takes no payment and needs no card, so there is nothing to cancel or refund. It ends on its own when the trial period is over.</li>
+                    <li><strong>No payment</strong> — The three-month Lite free trial takes no payment and needs no card, so there is nothing to cancel or refund. It ends on its own when the three-month (90-day) trial period is over.</li>
                     <li><strong>After the trial</strong> — If Lite is not purchased, the organization moves to Free when the trial ends. Nothing is charged.</li>
                     <li><strong>Buying Lite during or after the trial</strong> — The purchase is an initial payment under Section 3. Use of Lite during the free trial does not by itself count as use of that paid purchase.</li>
                 </ul>
