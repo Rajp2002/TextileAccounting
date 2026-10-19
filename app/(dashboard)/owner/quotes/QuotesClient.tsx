@@ -45,7 +45,6 @@ import {
     Search,
     Eye,
     Plus,
-    GitCompareArrows,
     Star,
     Archive,
     ArchiveRestore,
@@ -60,8 +59,6 @@ import {
     X,
 } from 'lucide-react'
 import {
-  compareSavedCostingSnapshots,
-  orderSavedCostingsForComparison,
   buildSavedQualityRecipeState,
   filterAndSortSavedCostings,
   savedQualityIdsWithOnlyArchivedCostings,
@@ -70,13 +67,11 @@ import {
   getSavedCostingMetrics,
   buildDraftStateFromQuote,
   canPriceSavedRecipe,
-  formatRevisionLead,
   type SavedQualityFactoryProfile,
   type SavedQualityFixedWorker,
   type SavedQualityRecipe,
   type SavedCostingMarginFilter,
   type SavedCostingSort,
-  type SavedCostingDelta,
 } from '@/lib/saved-costings'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 import { useArchivePolicyTopic } from '@/components/records/ArchivePolicyNotice'
@@ -276,58 +271,6 @@ function formatCostingPercent(value: number | null) {
     return value == null ? 'Not available' : `${value.toFixed(1)}%`
 }
 
-const comparisonPriceLabels = ['Break-even selling price'] as const
-
-type ComparisonChangeGroup = 'cost-driving' | 'reference'
-
-type ComparisonRowMeta = {
-    group?: ComparisonChangeGroup
-    context?: { left: string; right: string }
-}
-
-type ComparisonTableRow =
-    | ({ label: string; unit: 'text'; text: { left: string | null; right: string | null }; changed: boolean } & ComparisonRowMeta)
-    | ({ label: string; unit: 'money' | 'percent' | 'number' | 'rate'; value: SavedCostingDelta; changed: boolean } & ComparisonRowMeta)
-
-type ComparisonSection = {
-    title: string
-    changed: boolean
-    rows: ComparisonTableRow[]
-}
-
-type ComparisonGroup = {
-    key: ComparisonChangeGroup
-    title: string
-    description: string
-    sections: ComparisonSection[]
-}
-
-function formatComparisonValue(value: number | null, unit: 'money' | 'percent' | 'number') {
-    if (value == null) return 'Not available'
-    if (unit === 'money') return `₹${value.toFixed(2)}/m`
-    if (unit === 'percent') return `${value.toFixed(1)}%`
-    return value.toLocaleString('en-IN', { maximumFractionDigits: 2 })
-}
-
-function formatComparisonDelta(value: SavedCostingDelta, unit: 'money' | 'percent' | 'number') {
-    if (value.delta == null) return 'Not available'
-    if (Math.abs(value.delta) <= 0.0001) return 'No change'
-    const direction = value.delta > 0 ? 'higher' : 'lower'
-    if (unit === 'money') return `₹${Math.abs(value.delta).toFixed(2)}/m ${direction}`
-    if (unit === 'percent') return `${Math.abs(value.delta).toFixed(1)} pp ${direction}`
-    return `${Math.abs(value.delta).toLocaleString('en-IN', { maximumFractionDigits: 2 })} ${direction}`
-}
-
-function formatSuggestedPriceMovement(value: SavedCostingDelta) {
-    if (value.delta == null) return 'New suggested selling price is not available for this comparison.'
-    if (Math.abs(value.delta) <= 0.0001) return 'New suggested selling price is unchanged from Old.'
-    return `New suggested selling price is ₹${Math.abs(value.delta).toFixed(2)}/m ${value.delta > 0 ? 'higher' : 'lower'} than Old.`
-}
-
-function deltaChangedForUi(value: SavedCostingDelta) {
-    return value.delta != null && Math.abs(value.delta) > 0.0001
-}
-
 function getCurrentRecipeCostPerM(
     template: SavedQuality,
     profile?: SavedQualityFactoryProfile,
@@ -356,13 +299,10 @@ function SavedQualityLibraryView({
     groups,
     canUseProductionPipeline,
     openKey,
-    comparisonMode,
-    selectedCostingIds,
     updatingId,
     detailLoadingId,
     onOpenDetails,
     onCloseDetails,
-    onToggleComparison,
     onOpen,
     onStartFrom,
     onSaveAsNewQuality,
@@ -382,13 +322,10 @@ function SavedQualityLibraryView({
     groups: SavedQualityGroup[]
     canUseProductionPipeline: boolean
     openKey: string | null
-    comparisonMode: boolean
-    selectedCostingIds: string[]
     updatingId: string | null
     detailLoadingId: string | null
     onOpenDetails: (key: string, singleSnapshot?: QuoteRow | null) => void
     onCloseDetails: () => void
-    onToggleComparison: (id: string) => void
     onOpen: (quote: QuoteRow) => void
     onStartFrom: (quote: QuoteRow) => void
     onSaveAsNewQuality: (quote: QuoteRow) => void
@@ -416,7 +353,7 @@ function SavedQualityLibraryView({
             {groups.map((group, groupIndex) => {
                 const isOpen = openKey === group.key
                 const latest = group.records[0] ?? null
-                const selectedRecordId = tourStep ? (tourStep === 'versions' || tourStep === 'compareSelect' ? null : group.records[0]?.id) : selectedRecordIdByGroup[group.key]
+                const selectedRecordId = tourStep ? (tourStep === 'versions' ? null : group.records[0]?.id) : selectedRecordIdByGroup[group.key]
                 // The breakdown always shows a version: the one picked in the history, else the latest.
                 // The tour's version steps keep it empty so they can point at the history alone.
                 const activeRecord = (selectedRecordId ? group.records.find(r => r.id === selectedRecordId) : null) ?? (tourStep && group.records.length > 1 ? null : latest)
@@ -822,12 +759,10 @@ function SavedQualityLibraryView({
                                     {group.records.length > 0 && (
                                         <section data-costing-tour="versions" className="mt-4 flex flex-col rounded-xl border border-hairline bg-surface p-4 sm:min-h-[14rem] sm:flex-1">
                                             <p className="shrink-0 text-base font-semibold text-ink">Saved Costing history</p>
-                                            <p className="mt-0.5 shrink-0 text-[13px] text-muted-foreground">{comparisonMode ? 'Select two versions to compare their saved commercial assumptions.' : 'Open a version to inspect the exact assumptions and economics saved at that time.'}</p>
+                                            <p className="mt-0.5 shrink-0 text-[13px] text-muted-foreground">{tx('Open a version to inspect the exact assumptions and economics saved at that time.')}</p>
                                             <div className="-mx-1 mt-2 space-y-2 px-1 py-1 sm:min-h-0 sm:flex-1 sm:overflow-y-auto sm:overscroll-contain">
                                                 {group.records.map(record => {
                                                     const isInspected = activeRecord?.id === record.id
-                                                    const selected = selectedCostingIds.includes(record.id)
-                                                    const preparing = detailLoadingId === record.id
                                                     const identity = getSavedCostingIdentity(record)
                                                     const contextLabel = record.record_kind === 'market_run'
                                                         ? 'Market run'
@@ -841,25 +776,15 @@ function SavedQualityLibraryView({
                                                             onClick={event => {
                                                                 const target = event.target as HTMLElement
                                                                 if (target.closest('a, button, input, [data-costing-card-control]')) return
-                                                                if (comparisonMode) {
-                                                                    onToggleComparison(record.id)
-                                                                } else {
-                                                                    handleInspectRecord(record)
-                                                                }
+                                                                handleInspectRecord(record)
                                                             }}
                                                             className={`rounded-lg border p-3 transition-colors duration-150 motion-reduce:transition-none cursor-pointer ${
-                                                                selected
-                                                                    ? 'ui-selected-row border-info/30 bg-info-soft/60'
-                                                                    : isInspected
-                                                                        ? 'border-saffron/40 bg-saffron-soft/20 shadow-sm ring-1 ring-saffron/30'
-                                                                        : 'border-hairline bg-surface hover:bg-surface-soft/70'
+                                                                isInspected
+                                                                    ? 'border-saffron/40 bg-saffron-soft/20 shadow-sm ring-1 ring-saffron/30'
+                                                                    : 'border-hairline bg-surface hover:bg-surface-soft/70'
                                                             }`}
                                                         >
                                                             <div className="flex min-w-0 items-start gap-3">
-                                                                {comparisonMode && <span className="flex shrink-0 items-center gap-1.5 pt-0.5">
-                                                                    <input type="checkbox" checked={selected} onChange={() => onToggleComparison(record.id)} aria-label={`Select ${group.name} version ${Number(record.version_number ?? 1)} for comparison`} className="h-4 w-4 accent-loom" />
-                                                                    {preparing && <Loader2 className="h-3.5 w-3.5 animate-spin text-info" aria-hidden="true" />}
-                                                                </span>}
                                                                 <div className="min-w-0 flex-1">
                                                                     <div className="flex flex-wrap items-center justify-between gap-2">
                                                                         <p className="truncate text-xs font-bold text-ink" title={identity.label}>{identity.label}</p>
@@ -989,9 +914,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
     const [costingSort, setCostingSort] = useState<SavedCostingSort>('recent')
     const [marginFilter, setMarginFilter] = useState<SavedCostingMarginFilter>('all')
     const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
-    const [comparisonMode, setComparisonMode] = useState(false)
-    const [selectedCostingIds, setSelectedCostingIds] = useState<string[]>([])
-    const [showComparison, setShowComparison] = useState(false)
     const [quoteToExport, setQuoteToExport] = useState<QuoteRow | null>(null)
     const [quoteToArchive, setQuoteToArchive] = useState<QuoteRow | null>(null)
     const [archiveAction, setArchiveAction] = useState<'archive' | 'restore'>('archive')
@@ -1068,17 +990,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             return favouriteOrder || Date.parse(b.updatedAt) - Date.parse(a.updatedAt)
         })
     }, [costingSort, initialProfile, initialTemplates, initialWorkers, marginFilter, quotes, searchQuery, showArchived, showFavoritesOnly])
-    const selectedCostings = useMemo(
-        () => selectedCostingIds.map(id => quotes.find(quote => quote.id === id) ?? tourExamples.find(e => e.id === id)).filter((quote): quote is QuoteRow => Boolean(quote)),
-        [quotes, selectedCostingIds, tourExamples],
-    )
-    const comparisonCostings = useMemo(
-        () => orderSavedCostingsForComparison<QuoteRow>(tourStep ? tourExamples : selectedCostings),
-        [selectedCostings, tourStep, tourExamples],
-    )
-    const comparison = comparisonCostings.length === 2
-        ? compareSavedCostingSnapshots(comparisonCostings[0], comparisonCostings[1])
-        : null
     const exportModel = useMemo(() => {
         if (!quoteToExport) return null
         const state = buildDraftStateFromQuote(quoteToExport)
@@ -1093,146 +1004,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             reconciliationStatus: historicalResult ? getCostingStatus(quoteToExport) : 'unreconstructable',
         })
     }, [quoteToExport])
-
-    const comparisonSections: ComparisonSection[] = comparison ? [
-        {
-            title: 'Base yarn calculation',
-            changed: comparison.yarn.changed,
-            rows: [
-                { label: 'Warp base weight (kg/100m)', value: comparison.yarn.warp.baseKgPer100m, unit: 'number' as const, changed: deltaChangedForUi(comparison.yarn.warp.baseKgPer100m) },
-                { label: 'Warp base yarn cost', value: comparison.yarn.warp.baseCostPerM, unit: 'money' as const, changed: deltaChangedForUi(comparison.yarn.warp.baseCostPerM) },
-                { label: 'Warp yarn rate', value: comparison.yarn.warp.ratePerKg, unit: 'rate' as const, changed: comparison.yarn.warp.changed },
-                { label: 'Weft base weight (kg/100m)', value: comparison.yarn.weft.baseKgPer100m, unit: 'number' as const, changed: deltaChangedForUi(comparison.yarn.weft.baseKgPer100m) },
-                { label: 'Weft base yarn cost', value: comparison.yarn.weft.baseCostPerM, unit: 'money' as const, changed: deltaChangedForUi(comparison.yarn.weft.baseCostPerM) },
-                { label: 'Weft yarn rate', value: comparison.yarn.weft.ratePerKg, unit: 'rate' as const, changed: comparison.yarn.weft.changed },
-                { label: 'Weft costing width (in)', value: comparison.yarn.weft.widthInches, unit: 'number' as const, changed: deltaChangedForUi(comparison.yarn.weft.widthInches) },
-            ],
-        },
-        {
-            title: 'Waste',
-            changed: comparison.waste.changed,
-            rows: [
-                { label: 'Yarn shortage / waste', value: comparison.waste.yarnShortagePct, unit: 'percent' as const, changed: deltaChangedForUi(comparison.waste.yarnShortagePct) },
-                { label: 'Warp crimp', value: comparison.waste.warpCrimpPct, unit: 'percent' as const, changed: deltaChangedForUi(comparison.waste.warpCrimpPct) },
-                { label: 'Warp applied waste', value: comparison.yarn.warp.wastePct, unit: 'percent' as const, changed: deltaChangedForUi(comparison.yarn.warp.wastePct) },
-                { label: 'Weft applied waste', value: comparison.yarn.weft.wastePct, unit: 'percent' as const, changed: deltaChangedForUi(comparison.yarn.weft.wastePct) },
-                { label: 'Yarn waste cost', value: comparison.waste.yarnAdjustmentCostPerM, unit: 'money' as const, changed: deltaChangedForUi(comparison.waste.yarnAdjustmentCostPerM) },
-            ],
-        },
-        {
-            title: 'Overhead',
-            changed: comparison.overhead.changed,
-            rows: [
-                { label: 'Overhead method', text: comparison.overhead.mode, unit: 'text' as const, changed: comparison.overhead.modeChanged },
-                { label: 'Overhead per metre', value: comparison.overhead.perM, unit: 'money' as const, changed: deltaChangedForUi(comparison.overhead.perM) },
-                {
-                    label: 'Monthly expenses',
-                    value: comparison.overhead.monthlyExpenseTotal,
-                    unit: 'number' as const,
-                    changed: deltaChangedForUi(comparison.overhead.monthlyExpenseTotal),
-                    group: comparison.overhead.monthlyExpenseTotalUsedForCosting.left || comparison.overhead.monthlyExpenseTotalUsedForCosting.right
-                        ? 'cost-driving'
-                        : 'reference',
-                    context: {
-                        left: comparison.overhead.monthlyExpenseTotalUsedForCosting.left
-                            ? 'Used in monthly-expense overhead'
-                            : 'Reference only; direct ₹/m overhead is used',
-                        right: comparison.overhead.monthlyExpenseTotalUsedForCosting.right
-                            ? 'Used in monthly-expense overhead'
-                            : 'Reference only; direct ₹/m overhead is used',
-                    },
-                },
-                {
-                    label: 'Monthly output',
-                    value: comparison.overhead.monthlyOutputM,
-                    unit: 'number' as const,
-                    changed: deltaChangedForUi(comparison.overhead.monthlyOutputM),
-                    group: comparison.overhead.monthlyOutputUsedForCosting.left || comparison.overhead.monthlyOutputUsedForCosting.right
-                        ? 'cost-driving'
-                        : 'reference',
-                    context: {
-                        left: comparison.overhead.monthlyOutputUsedForCosting.left
-                            ? 'Used as the monthly-expense denominator'
-                            : 'Reference only; direct ₹/m overhead is used',
-                        right: comparison.overhead.monthlyOutputUsedForCosting.right
-                            ? 'Used as the monthly-expense denominator'
-                            : 'Reference only; direct ₹/m overhead is used',
-                    },
-                },
-            ],
-        },
-        {
-            title: 'Margin',
-            changed: comparison.margin.changed,
-            rows: [
-                { label: 'Target margin', value: comparison.margin.targetPct, unit: 'percent' as const, changed: deltaChangedForUi(comparison.margin.targetPct) },
-                { label: 'Estimated margin', value: comparison.margin.actualPct, unit: 'percent' as const, changed: deltaChangedForUi(comparison.margin.actualPct) },
-            ],
-        },
-        {
-            title: 'Commercial',
-            changed: comparison.commercial.changed,
-            rows: [
-                { label: 'Broker commission', value: comparison.commercial.commissionPct, unit: 'percent' as const, changed: deltaChangedForUi(comparison.commercial.commissionPct) },
-                { label: 'Transport', value: comparison.commercial.transportPerM, unit: 'money' as const, changed: deltaChangedForUi(comparison.commercial.transportPerM) },
-            ],
-        },
-        {
-            title: 'Price',
-            changed: comparison.price.changed,
-            rows: [
-                { label: 'Production cost', value: comparison.price.productionCostPerM, unit: 'money' as const, changed: deltaChangedForUi(comparison.price.productionCostPerM) },
-                { label: comparisonPriceLabels[0], value: comparison.price.breakEvenPricePerM, unit: 'money' as const, changed: deltaChangedForUi(comparison.price.breakEvenPricePerM) },
-                { label: 'Landed cost', value: comparison.price.landedCostPerM, unit: 'money' as const, changed: deltaChangedForUi(comparison.price.landedCostPerM) },
-                { label: 'Suggested selling price', value: comparison.price.sellingPricePerM, unit: 'money' as const, changed: deltaChangedForUi(comparison.price.sellingPricePerM) },
-                { label: 'Expected profit per metre', value: comparison.price.expectedProfitPerM, unit: 'money' as const, changed: deltaChangedForUi(comparison.price.expectedProfitPerM) },
-            ],
-        },
-    ] : []
-
-    const comparisonGroups: ComparisonGroup[] = comparison
-        ? (['cost-driving', 'reference'] as const).map(group => ({
-            key: group,
-            title: group === 'cost-driving' ? 'Cost-driving changes' : 'Reference/context changes',
-            description: group === 'cost-driving'
-                ? 'Cost-driving assumptions and their resulting price movement. These changes can explain the New minus Old result.'
-                : 'Values retained for capacity and factory context. Direct overhead uses the saved ₹/m rate, so monthly expenses and output do not change that costing.',
-            sections: comparisonSections
-                .map(section => {
-                    const rows = section.rows.filter(row => {
-                        const rowGroup = row.group ?? 'cost-driving'
-                        return rowGroup === group && (group === 'cost-driving' || row.changed)
-                    })
-                    return rows.length > 0
-                        ? { ...section, rows, changed: rows.some(row => row.changed) }
-                        : null
-                })
-                .filter((section): section is ComparisonSection => Boolean(section)),
-        })).filter(group => group.sections.length > 0)
-        : []
-
-    const comparisonSummary = comparisonCostings.length === 2 ? [
-        {
-            label: 'Cost',
-            oldValue: formatCostingMoneyPerM(getProductionCostPerM(comparisonCostings[0])),
-            newValue: formatCostingMoneyPerM(getProductionCostPerM(comparisonCostings[1])),
-        },
-        {
-            label: 'Selling price',
-            oldValue: formatCostingMoneyPerM(getSuggestedSellingPricePerM(comparisonCostings[0])),
-            newValue: formatCostingMoneyPerM(getSuggestedSellingPricePerM(comparisonCostings[1])),
-        },
-        {
-            label: 'Margin',
-            oldValue: formatCostingPercent(getActualMarginPct(comparisonCostings[0])),
-            newValue: formatCostingPercent(getActualMarginPct(comparisonCostings[1])),
-        },
-        {
-            label: 'Quantity',
-            oldValue: `${Number(comparisonCostings[0].meters || 0).toLocaleString('en-IN')} m`,
-            newValue: `${Number(comparisonCostings[1].meters || 0).toLocaleString('en-IN')} m`,
-        },
-    ] : []
 
     const ensureQuoteDetail = async (quote: QuoteRow) => {
         if (quote.costing_result_snapshot || quote.snapshot_data || quote.warp_rows || quote.weft_rows || quote.orders) return quote
@@ -1251,23 +1022,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             return null
         } finally {
             setDetailLoadingId(null)
-        }
-    }
-
-    const toggleCostingSelection = async (id: string) => {
-        const target = quotes.find(quote => quote.id === id) ?? tourExamples.find(e => e.id === id)
-        if (!target) return
-
-        // Paint the selection in the next frame before any lazy detail fetch.
-        // If the detail request fails, roll the optimistic selection back.
-        if (selectedCostingIds.includes(id)) {
-            setSelectedCostingIds(current => current.filter(currentId => currentId !== id))
-            return
-        }
-        setSelectedCostingIds(current => current.length >= 2 ? [current[1], id] : [...current, id])
-        const detailed = await ensureQuoteDetail(target)
-        if (!detailed) {
-            setSelectedCostingIds(current => current.filter(currentId => currentId !== id))
         }
     }
 
@@ -1502,14 +1256,12 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
         setOpenQualityKey(null)
         setShowArchived(view === 'archived')
         setShowFavoritesOnly(view === 'favourites')
-        setSelectedCostingIds([])
     }
 
     return (
         <>
             <div className={cn("saved-costings-workspace ui-route-enter w-full space-y-4 sm:space-y-6", isLite && mobileStyles.workspace)} data-lite-costings={isLite || undefined}>
             <RouteMilestones route="/owner/quotes" shellVisible primaryUsable secondaryReady />
-            {detailLoadingId && <p role="status" aria-live="polite" className="ui-status-enter rounded-lg border border-info/25 bg-info-soft px-3 py-2 text-xs font-semibold text-info">{tx('Loading the full costing to compare…')}</p>}
             <PageHeader
                 title={t('common.saved_costings_title')}
                 description={<span data-i18n-skip="true" lang={language}>{catalogue.intro}</span>}
@@ -1621,7 +1373,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 </section>
             )}
             <div data-costing-tour="filters" className="space-y-3">
-                {/* One wrapping row: search, the view, filters and Compare; on a phone Filters and Compare share a line. */}
+                {/* One wrapping row: search, the view, and filters. */}
                 <div className="flex flex-wrap items-center gap-3">
                     <div className="contents">
                         <div className="relative w-full min-w-0 sm:w-auto sm:min-w-[14rem] sm:max-w-sm sm:flex-1">
@@ -1662,45 +1414,13 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                     <option value="all">All margins</option><option value="negative">Negative margin</option><option value="under_10">Under 10%</option><option value="10_to_20">10–20%</option><option value="over_20">Over 20%</option>
                                 </select>
                                 {isLite && <div className={cn(mobileStyles.mobileOnly, mobileStyles.filterExtras)} data-i18n-skip="true" lang={language}>
-                                    <SwitchField variant="pill" checked={showFavoritesOnly} onCheckedChange={() => { setOpenQualityKey(null); setShowFavoritesOnly(current => !current); setSelectedCostingIds([]) }}>{mobileCopy.favourites}</SwitchField>
-                                    <Button type="button" variant={showArchived ? 'secondary' : 'outline'} onClick={() => { setOpenQualityKey(null); setShowArchived(current => !current); setSelectedCostingIds([]) }}>{showArchived ? mobileCopy.active : mobileCopy.archived}</Button>
+                                    <SwitchField variant="pill" checked={showFavoritesOnly} onCheckedChange={() => { setOpenQualityKey(null); setShowFavoritesOnly(current => !current) }}>{mobileCopy.favourites}</SwitchField>
+                                    <Button type="button" variant={showArchived ? 'secondary' : 'outline'} onClick={() => { setOpenQualityKey(null); setShowArchived(current => !current) }}>{showArchived ? mobileCopy.active : mobileCopy.archived}</Button>
                                 </div>}
                             </div>
                         </details>
                     </div>
-                    <Button
-                        data-tour-anchor="costings.compare"
-                        type="button"
-                        variant={comparisonMode ? 'secondary' : 'outline'}
-                        aria-pressed={comparisonMode}
-                        onClick={() => { setComparisonMode(current => !current); setSelectedCostingIds([]) }}
-                        className={cn('md:ml-auto', secondaryAction, isLite && mobileStyles.desktopOnly)}
-                    >
-                        <GitCompareArrows className="h-4 w-4" aria-hidden="true" />
-                        {tx('Compare')}
-                    </Button>
-                    {isLite && <Button type="button" variant={comparisonMode ? 'secondary' : 'outline'} aria-pressed={comparisonMode} className={mobileStyles.mobileOnly} onClick={() => { setComparisonMode(current => !current); setSelectedCostingIds([]) }} data-i18n-skip="true" lang={language}><GitCompareArrows className="h-4 w-4" aria-hidden="true" />{comparisonMode ? mobileCopy.exitCompare : mobileCopy.compare}</Button>}
                 </div>
-                {comparisonMode && selectedCostings.length === 2 ? (
-                    <div className="ui-status-enter flex flex-col gap-3 rounded-xl border border-hairline bg-surface p-4 shadow-xs sm:flex-row sm:items-center sm:justify-between" role="status" aria-live="polite" aria-busy={Boolean(detailLoadingId)}>
-                        <div>
-                            <p className="text-sm font-semibold text-ink">Two costings selected</p>
-                            <p className="mt-0.5 text-[13px] leading-relaxed text-body">{detailLoadingId ? 'Preparing the complete saved numbers…' : 'Compare them when you need to explain a change in cost, selling price, margin, or quantity.'}</p>
-                        </div>
-                        <div className="flex shrink-0 flex-wrap gap-2">
-                            <Button onClick={() => setShowComparison(true)} className={railPrimaryAction} disabled={Boolean(detailLoadingId)}>
-                                {detailLoadingId ? <Loader2 className="h-4 w-4 animate-spin" /> : <GitCompareArrows className="h-4 w-4" />} {detailLoadingId ? 'Preparing…' : t('common.compare_costings')}
-                            </Button>
-                            <Button variant="ghost" onClick={() => setSelectedCostingIds([])} className={ghostAction}>Clear selection</Button>
-                        </div>
-                    </div>
-                ) : comparisonMode ? (
-                    <p id="compare-costings-help" className="text-[13px] text-body">
-                        {selectedCostings.length === 1
-                            ? 'One costing selected. Select one more if you want to compare.'
-                            : 'Pick two saved costings to see what changed between them.'}
-                    </p>
-                ) : null}
                 <p className="text-[13px] text-muted-foreground">
                     {tourSampleActive ? '1 sample quality' : loadError ? tx('Saved costings not loaded') : isDemoCostingActive && quotes.length === 0
                         ? (searchQuery.trim() && !tourExamples[0]?.quality_label?.toLowerCase().includes(searchQuery.trim().toLowerCase()) && !'tour sample'.includes(searchQuery.trim().toLowerCase()) ? '0 qualities' : '1 sample quality')
@@ -1715,10 +1435,9 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     selectedRecordIdByGroup={{}} onSelectRecord={() => {}} onSaveMargin={async () => false}
                         groups={tourGroups} canUseProductionPipeline={canUseProductionPipeline}
                         openKey={tourSurface === 'library' ? 'tour-preview' : null}
-                        tourStep={tourStep} comparisonMode={tourStep === 'compareSelect'}
-                        selectedCostingIds={tourStep === 'compareSelect' ? tourExamples.map(row => row.id) : []}
+                        tourStep={tourStep}
                         updatingId={null} detailLoadingId={null} auditingId={null}
-                        onOpenDetails={() => {}} onCloseDetails={() => {}} onToggleComparison={() => {}}
+                        onOpenDetails={() => {}} onCloseDetails={() => {}}
                         onOpen={() => {}} onStartFrom={() => {}} onSaveAsNewQuality={() => {}} onExport={() => {}}
                         onAudit={() => {}} onToggleFavorite={() => {}} onToggleArchived={() => {}}
                         factoryInputsCapturedLabel={tx('Factory inputs captured')}
@@ -1772,8 +1491,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                             groups={tourGroups}
                             canUseProductionPipeline={canUseProductionPipeline}
                             openKey={openQualityKey}
-                            comparisonMode={comparisonMode}
-                            selectedCostingIds={selectedCostingIds}
                             updatingId={updatingId}
                             detailLoadingId={detailLoadingId}
                             onOpenDetails={(key, singleSnapshot) => {
@@ -1781,7 +1498,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                                 if (singleSnapshot) void ensureQuoteDetail(singleSnapshot)
                             }}
                             onCloseDetails={() => setOpenQualityKey(null)}
-                            onToggleComparison={toggleCostingSelection}
                             onOpen={quote => { if (isSampleRecordId(quote.id)) toast.info(tx('This is a sample costing for exploration.')) }}
                             onStartFrom={quote => { if (isSampleRecordId(quote.id)) toast.info(tx('This is a sample costing for exploration.')) }}
                             onSaveAsNewQuality={quote => { if (isSampleRecordId(quote.id)) toast.info(tx('This is a sample costing for exploration.')) }}
@@ -1830,8 +1546,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     groups={qualityGroups}
                     canUseProductionPipeline={canUseProductionPipeline}
                     openKey={openQualityKey}
-                    comparisonMode={comparisonMode}
-                    selectedCostingIds={selectedCostingIds}
                     updatingId={updatingId}
                     detailLoadingId={detailLoadingId}
                     onOpenDetails={(key, singleSnapshot) => {
@@ -1839,7 +1553,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                         if (singleSnapshot) void ensureQuoteDetail(singleSnapshot)
                     }}
                     onCloseDetails={() => setOpenQualityKey(null)}
-                    onToggleComparison={toggleCostingSelection}
                     onOpen={quote => { setOpenQualityKey(null); void handleRestore(quote, 'edit') }}
                     onStartFrom={quote => { setOpenQualityKey(null); void handleRestore(quote, 'duplicate') }}
                     onSaveAsNewQuality={quote => { setOpenQualityKey(null); void handleRestore(quote, 'duplicate') }}
@@ -1892,114 +1605,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 isLoading={updatingId === quoteToArchive?.id}
             />
 
-            <Dialog modal={!tourStep} open={tourStep ? tourSurface === 'comparison' : showComparison} onOpenChange={open => {if (!tourStep) setShowComparison(open)}}>
-                <DialogContent showCloseButton={!tourStep} data-costing-tour-dialog={tourStep ? "true" : undefined} data-tour-surface={tourStep ? "true" : undefined} data-costing-tour="comparison" onOpenAutoFocus={event => {if (tourStep) event.preventDefault()}} onCloseAutoFocus={event => {if (tourStep) event.preventDefault()}} onInteractOutside={event => {if (tourStep) event.preventDefault()}} onEscapeKeyDown={event => {if (tourStep) event.preventDefault()}} className="sm:max-w-4xl">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <GitCompareArrows className="h-5 w-5 text-info" /> Compare Saved Costings
-                        </DialogTitle>
-                        <DialogDescription>See two saved costings side by side. Each keeps its own saved numbers; today’s Rate Book is not used.</DialogDescription>
-                    </DialogHeader>
-                    {comparisonCostings.length === 2 && comparison && (
-                        <div className="space-y-3">
-                            <p data-revision-lead className="text-sm font-bold text-ink">{formatRevisionLead(comparisonCostings[0], comparisonCostings[1], comparison.price.sellingPricePerM)}</p>
-                            <div className={`rounded-xl border px-4 py-3 text-xs ${comparison.comparable ? 'border-success/25 bg-success-soft text-success' : 'border-warning/25 bg-warning-soft text-warning'}`}>
-                                <p className="font-bold">{comparison.comparable ? 'Ready to compare' : 'This comparison needs a check'}</p>
-                                <p className="mt-1 leading-relaxed">{comparison.canonical.message || 'Both costings were calculated the same way, so their numbers can be compared directly.'}</p>
-                                <p className="mt-1 font-semibold">Change is calculated as New minus Old. Cost-driving changes are separated from reference/context changes.</p>
-                                <p className="mt-1 font-semibold">{formatSuggestedPriceMovement(comparison.price.sellingPricePerM)}</p>
-                            </div>
-                            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                                {comparisonSummary.map(metric => (
-                                    <div key={metric.label} className="rounded-xl border border-hairline bg-surface-soft p-3">
-                                        <p className="text-xs font-bold text-subtle">{metric.label}</p>
-                                        <div className="mt-2 grid grid-cols-2 gap-2">
-                                            <div>
-                                                <p className="text-xs font-semibold text-subtle">Old</p>
-                                                <p className="mt-0.5 truncate font-mono text-sm font-bold text-ink" title={metric.oldValue}>{metric.oldValue}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-xs font-semibold text-subtle">New</p>
-                                                <p className="mt-0.5 truncate font-mono text-sm font-bold text-ink" title={metric.newValue}>{metric.newValue}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                            <details data-costing-tour="comparison-details" open={tourStep ? tourStep === 'comparisonDetails' : undefined} className="ui-details group rounded-xl border border-hairline bg-surface">
-                                <summary className="mobile-touch-target flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-bold text-body marker:content-none">
-                                    <span>View calculation details (optional)</span>
-                                    <ChevronDown className="h-4 w-4 text-subtle transition-transform group-open:rotate-180" />
-                                </summary>
-                                <div className="mobile-comparison-scroll max-h-[60vh] overflow-auto border-t border-hairline">
-                                    <table role="table" className="mobile-comparison-table w-full min-w-[760px] text-sm">
-                                    <thead role="rowgroup" className="bg-surface-soft text-left">
-                                        <tr role="row">
-                                            <th scope="col" className="comparison-column-label px-4 py-3 text-xs uppercase tracking-wide text-subtle">Metric</th>
-                                            {comparisonCostings.map((costing, index) => {
-                                                const identity = getSavedCostingIdentity(costing)
-                                                return <th role="columnheader" scope="col" key={costing.id} className="px-4 py-3 font-bold text-ink"><span className="block">{index === 0 ? 'Older costing' : 'Newer costing'}</span><span className="mt-1 block max-w-[220px] break-words text-xs font-semibold text-body" title={identity.label}>{identity.label}</span><span className="mt-1 block text-xs font-medium text-subtle">saved {formatTimestampDate(costing.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</span></th>
-                                            })}
-                                            <th scope="col" className="comparison-column-label px-4 py-3 text-xs uppercase tracking-wide text-subtle">Change</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody role="rowgroup" className="divide-y divide-hairline">
-                                        {comparisonGroups.map(group => (
-                                            <Fragment key={group.key}>
-                                                <tr role="row" className="bg-info-soft/70">
-                                                    <th colSpan={4} className="px-4 py-2.5 text-left text-xs font-semibold text-info">
-                                                        {group.title}
-                                                    </th>
-                                                </tr>
-                                                <tr role="row" className="bg-info-soft/30">
-                                                    <td colSpan={4} className="px-4 py-2 text-xs leading-relaxed text-body">{group.description}</td>
-                                                </tr>
-                                                {group.sections.map(section => (
-                                                    <Fragment key={`${group.key}-${section.title}`}>
-                                                        <tr role="row" key={`${group.key}-${section.title}-heading`} className="bg-surface-soft/70">
-                                                            <th colSpan={4} className="px-4 py-2 text-left text-xs font-semibold text-body">
-                                                                <span>{section.title}</span>{section.changed && <Badge variant="outline" className="ml-2 border-info/25 bg-info-soft text-xs text-info">Changed</Badge>}
-                                                            </th>
-                                                        </tr>
-                                                        {section.rows.map(row => {
-                                                            const left = row.unit === 'text' ? row.text.left || 'Not available' : formatComparisonValue(row.value.left, row.unit === 'rate' ? 'number' : row.unit)
-                                                            const right = row.unit === 'text' ? row.text.right || 'Not available' : formatComparisonValue(row.value.right, row.unit === 'rate' ? 'number' : row.unit)
-                                                            const change = row.unit === 'text'
-                                                                ? row.changed ? 'Changed' : 'No change'
-                                                                : formatComparisonDelta(row.value, row.unit === 'rate' ? 'number' : row.unit)
-                                                            const numericDelta = row.unit === 'text' ? null : row.value.delta
-                                                            return (
-                                                                <tr role="row" key={`${group.key}-${section.title}-${row.label}`}>
-                                                                    <th scope="row" className="comparison-metric px-4 py-3 text-left font-semibold text-body">{row.label}</th>
-                                                                    <td role="cell" className="px-4 py-3 font-mono font-semibold text-ink">
-                                                                        <span aria-hidden="true" className="mobile-comparison-label">{tx('Old')}</span>
-                                                                        <span>{left}{row.unit === 'rate' && left !== 'Not available' ? '/kg' : ''}</span>
-                                                                        {row.context?.left && <span className="mt-1 block font-sans text-xs font-medium leading-4 text-subtle">{row.context.left}</span>}
-                                                                    </td>
-                                                                    <td role="cell" className="px-4 py-3 font-mono font-semibold text-ink">
-                                                                        <span aria-hidden="true" className="mobile-comparison-label">{tx('New')}</span>
-                                                                        <span>{right}{row.unit === 'rate' && right !== 'Not available' ? '/kg' : ''}</span>
-                                                                        {row.context?.right && <span className="mt-1 block font-sans text-xs font-medium leading-4 text-subtle">{row.context.right}</span>}
-                                                                    </td>
-                                                                    <td role="cell" className={`comparison-change px-4 py-3 font-mono font-bold ${row.changed ? numericDelta != null && numericDelta > 0 ? 'text-warning' : 'text-info' : 'text-subtle'}`}><span aria-hidden="true" className="mobile-comparison-label">{tx('Change')}</span>{change}</td>
-                                                                </tr>
-                                                            )
-                                                        })}
-                                                    </Fragment>
-                                                ))}
-                                            </Fragment>
-                                        ))}
-                                    </tbody>
-                                    </table>
-                                </div>
-                            </details>
-                        </div>
-                    )}
-                    {!tourStep && <DialogFooter>
-                        <Button variant="outline" onClick={() => setShowComparison(false)}>Close</Button>
-                    </DialogFooter>}
-                </DialogContent>
-            </Dialog>
 
             <Dialog
                 open={!!quoteToRestore}

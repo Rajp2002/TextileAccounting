@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import { useRef, useState } from 'react'
-import { CircleHelp, GitCompareArrows } from 'lucide-react'
+import { CircleHelp } from 'lucide-react'
 import { GuideSection, TourInvitation, type GuideTopic } from '@/components/tours/TourInvitation'
 import { useTranslation } from '@/lib/i18n/context'
 import type { SavedCostingEnding, SavedCostingStep } from '@/lib/saved-costings-tour'
@@ -127,8 +127,8 @@ export function useSavedCostingsHelpTopic(free = false): GuideTopic {
 }
 
 /**
- * The Saved Costings Guide: the main tour, the version-comparison tour (paid plans) and help, all
- * from one header button. `topics` adds the page's other help (archive policy) after these.
+ * The Saved Costings Guide: the main tour and help, all from one header button.
+ * `topics` adds the page's other help (archive policy) after these.
  */
 export function SavedCostingsTutorial({ step, onStepChange, onComplete, free = false, production = false, ending = 'empty', topics = [], userId, orgId, userMetadata }: {
     step: SavedCostingStep | null; onStepChange: (step: SavedCostingStep | null) => void; onComplete?: () => void
@@ -136,31 +136,20 @@ export function SavedCostingsTutorial({ step, onStepChange, onComplete, free = f
     topics?: readonly GuideTopic[]
     userId?: string; orgId?: string; userMetadata?: Record<string, unknown> | null
 }) {
-    const { language } = useTranslation()
-    const copy = railCopy[language]
     const help = useSavedCostingsHelpTopic(free)
-    const [comparisonTour, setComparisonTour] = useState(false)
     const launcher = useRef<HTMLDivElement>(null)
     const returnFocus = useRef<HTMLElement | null>(null)
     const guideButton = () => launcher.current?.querySelector<HTMLButtonElement>('[data-tour-control="guide"]') ?? null
-    const compare: GuideTopic = {
-        id: 'compare-versions', icon: GitCompareArrows, title: copy.compare, control: 'compare-tour', lang: language, i18nSkip: true,
-        onSelect: () => {
-            returnFocus.current = guideButton()
-            setComparisonTour(true)
-            onStepChange('compareSelect')
-        },
-    }
+
     return <>
         <div ref={launcher} data-costing-tour="guide" className="contents">
             <TourInvitation tourId="saved-costings" userId={userId} orgId={orgId} userMetadata={userMetadata}
-                topics={[...(free ? [] : [compare]), help, ...topics]}
+                topics={[help, ...topics]}
                 onLaunch={() => {
                     returnFocus.current = guideButton()
-                    setComparisonTour(false)
                     onStepChange(free ? 'snapshots' : 'find')
                 }} />
         </div>
-        {step && <SavedCostingsTourRuntime step={step} onStepChange={onStepChange} onComplete={onComplete} free={free} production={production} comparison={comparisonTour} ending={ending} userId={userId} launcher={launcher} returnFocus={returnFocus} />}
+        {step && <SavedCostingsTourRuntime step={step} onStepChange={onStepChange} onComplete={onComplete} free={free} production={production} comparison={false} ending={ending} userId={userId} launcher={launcher} returnFocus={returnFocus} />}
     </>
 }

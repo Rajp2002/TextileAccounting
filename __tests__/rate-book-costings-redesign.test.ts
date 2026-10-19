@@ -102,11 +102,9 @@ describe('Saved Costings catalogue', () => {
         expect(client).toContain('if (isSavedCostingArchived(record, template)) continue')
     })
 
-    it('switches All, Favourites and Archived from one segmented control, with Compare as a pressed button', () => {
+    it('switches All, Favourites and Archived from one segmented control', () => {
         expect(client).toContain('<LiquidSegmented')
         expect(client).toContain("{ value: 'archived', label: t('tourControls.savedCostings.archived') }")
-        expect(client).toContain('data-tour-anchor="costings.compare"')
-        expect(client).toContain('aria-pressed={comparisonMode}')
         expect(client).not.toContain('<Toolbar')
     })
 })

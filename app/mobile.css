@@ -45,8 +45,7 @@
 }
 
 .mobile-navigation,
-.mobile-record-details,
-.mobile-comparison-label { display: none; }
+.mobile-record-details { display: none; }
 
 /* Free-only presentation: paid workspaces and every desktop composition retain
    their existing controls and density. */
@@ -321,28 +320,6 @@
   [data-slot="button"] { font-size: 14px; }
   .mobile-record-details dd { font-size: 14px; }
 
-  /* Keep each saved metric and its old/new/change values together on phones.
-     The existing table data/formatting is shared with the desktop layout. */
-  .mobile-comparison-scroll { max-height: none; overflow: visible; }
-  .mobile-comparison-table { display: block; min-width: 0; font-size: 14px; }
-  .mobile-comparison-table thead,
-  .mobile-comparison-table tbody { display: block; }
-  .mobile-comparison-table tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .mobile-comparison-table th,
-  .mobile-comparison-table td { min-width: 0; overflow-wrap: anywhere; }
-  .mobile-comparison-table [colspan],
-  .mobile-comparison-table .comparison-metric,
-  .mobile-comparison-table .comparison-change { grid-column: 1 / -1; }
-  .mobile-comparison-table .comparison-metric { padding-bottom: 0; }
-  .mobile-comparison-table .comparison-change { padding-top: 0; }
-  .mobile-comparison-table .comparison-column-label {
-    position: absolute; width: 1px; height: 1px; padding: 0;
-    margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap;
-  }
-  .mobile-comparison-label {
-    display: block; margin-bottom: 4px; font-family: var(--font-sans);
-    font-size: 12px; font-weight: 500; color: var(--muted-foreground);
-  }
 
   [data-workspace-sidebar] { display: none; }
   .mobile-workspace-content {
