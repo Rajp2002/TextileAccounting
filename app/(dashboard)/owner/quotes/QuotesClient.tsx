@@ -93,6 +93,8 @@ import { fillCopy } from '@/lib/i18n/fill'
 import { costingMarginText } from '@/lib/i18n/costing-margin'
 import { offerCheckText } from '@/lib/i18n/offer-check'
 import { CostingMarginScope, marginTone, type MarginReadOnlyReason } from '@/components/estimator/SavedCostingMargin'
+import { SavedCostingSpecs } from '@/components/estimator/SavedCostingSpecs'
+import { buildSavedCostingSpecs } from '@/lib/saved-costing-specs'
 
 const CostingExportDialog = dynamic(
     () => import('@/components/estimator/CostingExportDialog').then(module => module.CostingExportDialog),
@@ -386,6 +388,10 @@ function SavedQualityLibraryView({
                             ? 'older'
                             : getCostingStatus(activeRecord) !== 'verified' ? 'checked' : null
                 const marginBase = isOpen && activeRecord && !marginReadOnly ? buildDraftStateFromQuote(activeRecord) : null
+                // The inputs this version was priced from, read from its own saved state. A record with
+                // no saved rows would fall back to today's defaults, which were never its inputs.
+                const hasSavedInputs = activeRecord != null && (activeRecord.snapshot_data != null || (activeRecord.warp_rows?.length ?? 0) > 0)
+                const activeSpecs = isOpen && activeRecord && hasSavedInputs && activeResult ? buildSavedCostingSpecs(buildDraftStateFromQuote(activeRecord), activeResult) : null
                 const openGroupDetails = () => onOpenDetails(group.key, latest)
                 const handleInspectRecord = (record: QuoteRow) => {
                     onSelectRecord(group.key, record.id)
@@ -741,6 +747,7 @@ function SavedQualityLibraryView({
                                                     ))}
                                                 </div>
                                                 <div data-costing-tour="economics" className="mt-3">{economics}</div>
+                                                {activeSpecs && <SavedCostingSpecs specs={activeSpecs} />}
                                                 {getCostingStatus(activeRecord) !== 'verified' && (
                                                     <div className="mt-3 flex flex-col gap-3 rounded-lg border border-warning/25 bg-warning-soft px-3 py-3 text-xs text-warning sm:flex-row sm:items-center sm:justify-between">
                                                         <div><p className="font-bold">{tx('Saved costing needs a check')}</p><p className="mt-1">{tx(activeRecord.reconciliation_note || getCostingTrustCopy(getCostingStatus(activeRecord)))}</p></div>

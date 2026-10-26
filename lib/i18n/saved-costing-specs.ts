@@ -1,0 +1,36 @@
+/** Copy for the inputs block of a saved costing's breakdown. Terms follow the export's fabric specification. */
+export const savedCostingSpecsText = {
+    en: {
+        title: 'Inputs used in this costing', note: 'As saved with this version. Today’s rates are not applied.',
+        fabric: 'Fabric', width: 'Width', totalEnds: 'Total ends', endsPerInch: 'Ends per inch (EPI)', totalPicks: 'Picks per inch (PPI)', quantity: 'Costed for',
+        warpYarns: 'Warp yarns', weftYarns: 'Weft yarns', warpRow: 'Warp {n}', weftRow: 'Weft {n}',
+        ends: '{n} ends', picks: '{n} PPI', manualWeight: '{kg} kg / 100 m (manual)', ratePerKg: '₹{rate}/kg',
+        gst: 'GST {pct}%', waste: 'Waste {pct}%', crimp: 'Crimp {pct}%',
+        rates: 'Rates', weavingRate: 'Weaving rate', paisePerPick: '{p} paise per pick',
+        warping: 'Warping', sizing: 'Sizing', inHouse: 'In-house', winding: 'Winding',
+        processing: 'Processing', finishing: 'Finishing', factoryExpenses: 'Factory expenses',
+        monthlyBasis: '₹{total} a month ÷ {m} m', commission: 'Commission', transport: 'Transport',
+    },
+    hi: {
+        title: 'इस कॉस्टिंग में लगे इनपुट', note: 'इस वर्ज़न के साथ जैसे सेव हुए। आज के रेट नहीं लगाए गए।',
+        fabric: 'कपड़ा', width: 'पना', totalEnds: 'कुल तार', endsPerInch: 'तार प्रति इंच (EPI)', totalPicks: 'पिक प्रति इंच (PPI)', quantity: 'कितने मीटर के लिए',
+        warpYarns: 'ताने के धागे', weftYarns: 'बाने के धागे', warpRow: 'ताना {n}', weftRow: 'बाना {n}',
+        ends: '{n} तार', picks: '{n} PPI', manualWeight: '{kg} किलो / 100 मी (हाथ से डाला)', ratePerKg: '₹{rate}/किलो',
+        gst: 'GST {pct}%', waste: 'वेस्टेज {pct}%', crimp: 'क्रिम्प {pct}%',
+        rates: 'रेट', weavingRate: 'बुनाई रेट', paisePerPick: '{p} पैसे प्रति पिक',
+        warping: 'वार्पिंग', sizing: 'साइज़िंग', inHouse: 'फैक्ट्री में', winding: 'वाइंडिंग',
+        processing: 'प्रोसेसिंग', finishing: 'फिनिशिंग', factoryExpenses: 'फैक्ट्री खर्च',
+        monthlyBasis: '₹{total} महीना ÷ {m} मी', commission: 'कमीशन', transport: 'ट्रांसपोर्ट',
+    },
+    gu: {
+        title: 'આ કોસ્ટિંગમાં વપરાયેલા ઇનપુટ', note: 'આ વર્ઝન સાથે જેમ સાચવ્યા હતા તેમ. આજના ભાવ લાગુ નથી કર્યા.',
+        fabric: 'કાપડ', width: 'પનો', totalEnds: 'કુલ તાર', endsPerInch: 'તાર પ્રતિ ઇંચ (EPI)', totalPicks: 'પિક પ્રતિ ઇંચ (PPI)', quantity: 'કેટલા મીટર માટે',
+        warpYarns: 'તાણાના યાર્ન', weftYarns: 'ભરણના યાર્ન', warpRow: 'તાણા {n}', weftRow: 'ભરણ {n}',
+        ends: '{n} તાર', picks: '{n} PPI', manualWeight: '{kg} કિલો / 100 મી (હાથે નાખેલું)', ratePerKg: '₹{rate}/કિલો',
+        gst: 'GST {pct}%', waste: 'વેસ્ટેજ {pct}%', crimp: 'ક્રિમ્પ {pct}%',
+        rates: 'ભાવ', weavingRate: 'વણાટ ભાવ', paisePerPick: '{p} પૈસા પ્રતિ પિક',
+        warping: 'વાર્પિંગ', sizing: 'સાઇઝિંગ', inHouse: 'ફેક્ટરીમાં', winding: 'વાઇન્ડિંગ',
+        processing: 'પ્રોસેસિંગ', finishing: 'ફિનિશિંગ', factoryExpenses: 'ફેક્ટરી ખર્ચ',
+        monthlyBasis: '₹{total} મહિને ÷ {m} મી', commission: 'કમિશન', transport: 'ટ્રાન્સપોર્ટ',
+    },
+} as const
