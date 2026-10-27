@@ -79,7 +79,7 @@ describe('the answer to an offer', () => {
         const html = renderResult(19, null)
         // 19.00 − 17.44 = 1.56 a metre, 8.2% of the offer; the sample has no transport or commission.
         expect(html).toContain('₹1.56')
-        expect(html).toContain('8.2% of the offer')
+        expect(html).toContain('8.2% margin')
         expect(html).toContain(offerCheckText.en.keep)
         expect(html).toContain('₹19.00')
         expect(html).toContain('₹17.44')
@@ -87,24 +87,26 @@ describe('the answer to an offer', () => {
         expect(html).not.toContain('Commission')
     })
 
-    it('puts the offer between break-even and the costing price, in words as well as on the track', () => {
+    it('says where the offer stands against the costing price once, and marks both prices on the track', () => {
         const html = renderResult(19, null)
-        expect(html).toContain(offerCheckText.en.verdictBelow.replace('{amount}', '0.82'))
-        // The track is the page's one slider: the offer is its thumb, break-even and the costing price its ticks.
+        expect(html).toContain('₹0.82 below your price')
+        // The track is the page's one slider: the offer is its thumb, break-even and the costing price its marks.
         expect(html).toContain('data-offer-track')
         expect(html).toContain('type="range"')
         expect(html).toContain(`aria-label="${offerCheckText.en.priceSlider}"`)
         expect(html).toContain(offerCheckText.en.legendBreakEven)
         expect(html).toContain(offerCheckText.en.legendPrice)
-        expect(html).toContain('Offer ₹0.82 below')
-        expect(html).toContain('(4.1%)')
-        expect(html).toContain('Offer ₹1.56 above')
+        // No second list repeating the same gaps (the figure already is the gap to break-even).
+        expect(html).not.toContain('Offer ₹0.82 below')
+        expect(html).not.toContain('Offer ₹1.56 above')
+        expect(html).not.toContain('Against your costing')
     })
 
     it('shows a loss as a loss', () => {
         const html = renderResult(16, 1000)
         expect(html).toContain(offerCheckText.en.lose)
-        expect(html).toContain(offerCheckText.en.verdictLoss.replace('{amount}', '1.44'))
+        expect(html).toContain('−9.0% margin')
+        expect(html).toContain('₹3.82 below your price')
         expect(html).toContain('text-[var(--wv-madder-600)]')
         expect(html).toContain('Loss on 1,000 m')
         expect(html).toContain('₹1,440')
@@ -137,13 +139,30 @@ describe('the answer to an offer', () => {
         expect(html).toContain('₹1.66')
     })
 
-    it('shows the yarn and output cases, and explains a fixed factory rate', () => {
+    it('shows the cases that move the cost, and leaves out one that does not', () => {
         const html = renderResult(19.82, 1000)
         expect(html).toContain(offerCheckText.en.whatIfTitle)
         expect(html).toContain(offerCheckText.en.caseYarn)
-        expect(html).toContain(offerCheckText.en.caseOutput)
         expect(html).toContain('Cost ₹18.07/m')
-        expect(html).toContain(offerCheckText.en.caseFixed.replace('{amount}', '3.00'))
+        // The sample's factory rate is fixed, so lower output leaves the cost (and the answer) where it is.
+        expect(html).not.toContain(offerCheckText.en.caseOutput)
+    })
+
+    it('shows the output case when lower output does raise the cost', () => {
+        const moving: OfferBase = {
+            ...base,
+            stress: {
+                available: true,
+                fixedOverheadPerM: null,
+                cases: [
+                    { id: 'yarn-up-10', productionCostPerM: 18.07, costChangePerM: 0.63 },
+                    { id: 'output-down-15', productionCostPerM: 17.97, costChangePerM: 0.53 },
+                ],
+            },
+        }
+        const html = renderResult(19.82, null, 'en', moving)
+        expect(html).toContain(offerCheckText.en.caseOutput)
+        expect(html).toContain('Cost ₹17.97/m')
     })
 
     it('explains why the what-ifs are missing when the costing cannot supply them', () => {
@@ -158,47 +177,42 @@ describe('the answer to an offer', () => {
     })
 })
 
-describe("Weavly's look on the offer check", () => {
-    it('puts the answer, and the prompt before it, on the loom-navy panel with the price track', () => {
+describe('the offer check looks like the rest of the app', () => {
+    it('keeps the answer on the white sheet, with no navy panel, stripe, texture or watermark', () => {
         for (const offer of [null, 19]) {
             const html = renderResult(offer, null)
-            expect(html).toContain('data-offer-loom')
             expect(html).toContain('data-offer-track')
+            expect(html).not.toContain('data-offer-loom')
+            expect(html).not.toMatch(/wv-bg-inverse|wv-text-inverse|bg-white\/|text-white/)
         }
-        // The working (per metre, costing, what-ifs) stays on white beneath the panel.
-        expect(renderResult(19, null)).toContain(offerCheckText.en.linesTitle)
+        expect(fs.existsSync(path.join(root, 'components/estimator/offer-check.module.css'))).toBe(false)
+        for (const file of ['app/(dashboard)/owner/quotes/offer/OfferCheckClient.tsx', 'app/(dashboard)/owner/quotes/offer/loading.tsx', 'components/estimator/OfferCheckResult.tsx']) {
+            const source = read(file)
+            expect(source, file).not.toContain('offer-check.module.css')
+            expect(source, file).not.toContain('WeavlyLogoDark')
+        }
     })
 
-    it('tunes the tones for the dark ground and keeps losses red', () => {
-        expect(renderResult(16, 1000)).toContain('text-[var(--loom-loss)]')
-        expect(renderResult(19, null)).toContain('text-[var(--loom-thin)]')
-        expect(renderResult(25, null)).not.toMatch(/text-\[var\(--loom-(loss|thin)\)\]/)
+    it('keeps the figures in ink and only a loss in red', () => {
+        const thin = renderResult(19, null)
+        expect(thin).toMatch(/text-5xl[^"]*text-ink[^"]*" data-offer-profit/)
+        // An 8.2% margin carries the thin-margin tone on its own line, as on Saved Costings.
+        expect(thin).toContain('text-[var(--wv-ochre-800)]')
+        expect(renderResult(16, 1000)).toMatch(/text-5xl[^"]*text-\[var\(--wv-madder-600\)\][^"]*" data-offer-profit/)
+        expect(renderResult(25, null)).not.toMatch(/wv-(madder|ochre)/)
     })
 
-    it('lays tape-measure ticks along the track, every fifth one longer', () => {
-        const html = renderResult(19, null)
-        const ticks = html.match(/absolute top-\[calc\(50%\+9px\)\] w-px[^"]*"/g) ?? []
-        expect(ticks.length).toBeGreaterThanOrEqual(8)
-        expect(ticks.length).toBeLessThanOrEqual(18)
-        expect(ticks.some(tick => tick.includes('h-2'))).toBe(true)
-        expect(ticks.some(tick => tick.includes('h-1'))).toBe(true)
+    it("uses the app's own slider, with no painted zones or tape-measure ticks", () => {
+        const track = read('components/estimator/OfferCheckResult.tsx')
+        expect(track).toContain('<RangeSlider')
+        expect(track).not.toContain('--range-track')
+        expect(track).not.toContain('tapeTicks')
+        // Two marks: break-even and the costing's price.
+        expect(renderResult(19, null).match(/h-3\.5 w-0\.5/g)).toHaveLength(2)
     })
 
-    it('draws the brand surfaces from theme tokens, never hard-coded colours', () => {
-        const css = read('components/estimator/offer-check.module.css')
-        expect(css).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
-        for (const token of ['--wv-bg-inverse', '--wv-saffron-500', '--wv-text-inverse', '--wv-madder-200', '--wv-ochre-400']) expect(css).toContain(token)
-        // The logo's own thread and spool, not a redrawn one.
-        expect(css).toContain('/images/WeavlyLogoDark.png')
-        expect(fs.existsSync(path.join(root, 'public/images/WeavlyLogoDark.png'))).toBe(true)
-    })
-
-    it('keeps decoration out of the way: no watermark on phones or in forced colours, and none behind an answer', () => {
-        const css = read('components/estimator/offer-check.module.css')
-        expect(css).toMatch(/@media \(max-width: 767px\)\s*\{\s*\.thread\s*\{\s*display: none/)
-        expect(css).toMatch(/@media \(forced-colors: active\)/)
-        // The thread appears only while there is no evaluation (idle and prompt), as the result passes `thread={!evaluation}`.
-        expect(read('components/estimator/OfferCheckResult.tsx')).toContain('thread={!evaluation}')
+    it('labels its sections in sentence case, as Saved Costings does', () => {
+        expect(read('components/estimator/OfferCheckResult.tsx')).not.toContain('uppercase')
     })
 })
 
@@ -226,12 +240,12 @@ describe('the check an offer page', () => {
         }))
     }
 
-    it('wears the selvedge and keeps its inputs on the warm band', async () => {
+    it('puts the inputs and the answer on one plain white sheet', async () => {
         const client = read('app/(dashboard)/owner/quotes/offer/OfferCheckClient.tsx')
-        expect(client).toContain('styles.selvedge')
-        expect(client.match(/styles\.band/g)).toHaveLength(2)
+        expect(client).not.toContain('styles.')
+        expect(client).toContain('@container overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs')
         const html = await renderPage({})
-        expect(html).toContain('data-offer-loom')
+        expect(html).not.toContain('data-offer-loom')
     })
 
     it('asks for a saved costing first, with the inputs waiting', async () => {
@@ -243,8 +257,9 @@ describe('the check an offer page', () => {
         expect(html).not.toMatch(/<select(?![^>]*aria-hidden="true")/)
         expect(html).toContain(offerCheckText.en.qualityPlaceholder)
         expect(html).toContain('disabled=""')
-        expect(html).toContain(offerCheckText.en.stepQuality)
-        expect(html).toContain(offerCheckText.en.stepPrice.replace("'", '&#x27;'))
+        // One quiet line, not numbered steps repeating the labels above it.
+        expect(html).toContain(offerCheckText.en.start.replace("'", '&#x27;'))
+        expect(html).not.toMatch(/<ol/)
         expect(html).not.toContain('data-offer-profit')
     })
 
