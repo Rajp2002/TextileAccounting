@@ -165,7 +165,6 @@ const FactoryCostWizard = dynamic(() => import('./FactoryCostWizard'), {
 import {
     getFirstEstimatorValidationMessage,
     getEstimatorReadiness,
-    getYarnDensityWarning,
     requiresFactoryCapacity,
     validateEstimatorSnapshot,
 } from '@/lib/estimator-validation'
@@ -187,6 +186,13 @@ import { parseNonNegativeInput, parseNumericInput } from '@/lib/numeric-input'
 import { initWebVitals } from '@/lib/web-vitals'
 import { calculateRateImpact } from '@/lib/estimator-rate-impact'
 import { RateImpactSummary } from '@/components/estimator/RateImpactSummary'
+import {
+    PlausibilityConfirmationProvider,
+    PlausibilityNudge,
+    usePlausibilityConfirmationStore,
+    usePlausibilityQuestion,
+} from '@/components/estimator/PlausibilityNudge'
+import { convertPlausibilityCheck, plausibilityRuleForField } from '@/lib/input-plausibility'
 import { nextCostingJourney, type CostingJourney, type CostingJourneySource } from '@/lib/costing-journey'
 import {
     getMatchingFactoryProfileId,
@@ -1039,6 +1045,9 @@ function NumField({
     // the first digit typed replaces the visual default instead of appending
     // to it (for example, entering 55 must never appear as 055).
     const isGhostValue = ghostValue !== undefined && value === ghostValue
+    // Asked once the owner leaves the field, never mid-typing (7 on the way to 75).
+    const plausibility = usePlausibilityQuestion(plausibilityRuleForField(fieldKey), isGhostValue ? null : value)
+    const unusualValue = focused ? null : plausibility.check
     const calculatedDisplayValue = isGhostValue || (value === 0 && !preserveZero) ? '' : (value ?? '')
     const displayValue = focused && draftText !== null ? draftText : calculatedDisplayValue
     const displayPlaceholder = isGhostValue || (value === 0 && !preserveZero)
@@ -1054,7 +1063,7 @@ function NumField({
                     id={inputId}
                     inputMode="decimal"
                     aria-invalid={isEmpty || undefined}
-                    aria-describedby={isEmpty || warning || hint ? `${inputId}-help` : undefined}
+                    aria-describedby={isEmpty || unusualValue || warning || hint ? `${inputId}-help` : undefined}
                     type="number"
                     step={step}
                     min={min}
@@ -1078,7 +1087,9 @@ function NumField({
                         onChange(val)
                     }}
                     className={`h-11 text-xs sm:text-sm font-mono font-semibold text-center ${unit ? 'px-10 sm:px-14' : 'px-3'} border ${placeholderClass} focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-[9px] text-[var(--color-yarn-orange)] shadow-xs ${
-                        isEmpty ? 'bg-[var(--color-warning-amber-soft)] border-[var(--color-warning-amber)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]' : 'bg-[var(--color-canvas-white)] border-[var(--color-hairline)] hover:border-[var(--color-hairline-strong)]'
+                        isEmpty ? 'bg-[var(--color-warning-amber-soft)] border-[var(--color-warning-amber)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]'
+                            : unusualValue ? 'bg-[var(--color-canvas-white)] border-[var(--color-warning-amber)]'
+                            : 'bg-[var(--color-canvas-white)] border-[var(--color-hairline)] hover:border-[var(--color-hairline-strong)]'
                     }`}
                 />
                 {unit && (
@@ -1088,7 +1099,14 @@ function NumField({
                 )}
             </div>
             {isEmpty && <p id={`${inputId}-help`} className="text-xs font-semibold text-[var(--color-warning-amber)]">Required</p>}
-            {warning ? (
+            {unusualValue ? (
+                <PlausibilityNudge
+                    id={!isEmpty ? `${inputId}-help` : undefined}
+                    check={unusualValue}
+                    onUseSuggestion={onChange}
+                    onConfirm={plausibility.confirm}
+                />
+            ) : warning ? (
                 <div className="flex flex-col gap-0.5 mt-1">
                     <div className="flex items-center gap-1">
                         <AlertTriangle className="h-3 w-3 text-[var(--color-warning-amber)] shrink-0" />
@@ -1122,7 +1140,6 @@ function YarnDensityFields({
     onChange: (field: YarnDensityField, value: YarnLinearDensityUnit | number | null) => void
 }) {
     const effectiveDenier = getEffectiveYarnDenier(row)
-    const densityWarning = getYarnDensityWarning(effectiveDenier)
 
     return (
         <NumField
@@ -1142,7 +1159,6 @@ function YarnDensityFields({
             step={0.1}
             placeholder="e.g. 75"
             hint="Enter total linear density after any ply or doubling"
-            warning={densityWarning}
             attentionWhenEmpty
         />
     )
@@ -1170,6 +1186,12 @@ function WidthField({
     attentionWhenEmpty?: boolean
 }) {
     const isEmpty = attentionWhenEmpty && (!value || value <= 0)
+    const [focused, setFocused] = useState(false)
+    // Narrow widths already ask "Did you mean inches?" through `warning`.
+    const plausibility = usePlausibilityQuestion('widthCm', value)
+    const tooWide = !focused && plausibility.check?.direction === 'high'
+        ? (unit === 'inch' ? convertPlausibilityCheck(plausibility.check, 2.54, 'inch') : plausibility.check)
+        : null
     const displayValue = useMemo(() => {
         if (!value) return ''
         if (unit === 'inch') {
@@ -1215,6 +1237,8 @@ function WidthField({
                     min={0}
                     placeholder={placeholder}
                     value={displayValue}
+                    onFocus={() => setFocused(true)}
+                    onBlur={() => setFocused(false)}
                     onChange={e => {
                         const raw = parseNonNegativeInput(e.target.value) ?? 0
                         if (unit === 'inch') {
@@ -1252,6 +1276,13 @@ function WidthField({
                             </button>
                         )}
                     </p>
+                )}
+                {tooWide && !warning && (
+                    <PlausibilityNudge
+                        check={tooWide}
+                        onUseSuggestion={suggestion => onChange(unit === 'inch' ? Number((suggestion * 2.54).toFixed(4)) : suggestion)}
+                        onConfirm={plausibility.confirm}
+                    />
                 )}
                 {hint && <p className="text-xs text-[var(--color-muted)] font-medium leading-tight pl-1">{hint}</p>}
             </div>
@@ -2733,6 +2764,21 @@ function WeavingRateFields({
     const isRateEmpty = inputMode === 'perMeter'
         ? (parseNonNegativeInput(directRateInput) ?? 0) <= 0
         : state.perPickCostPaisa <= 0
+    const [rateFocused, setRateFocused] = useState(false)
+    // The usual range is in paise per pick; a ₹/m entry is asked about in ₹/m.
+    const weavingPlausibility = usePlausibilityQuestion('paisePerPick', state.perPickCostPaisa * 100)
+    const unusualRate = rateFocused || !weavingPlausibility.check ? null
+        : inputMode === 'perPick' ? weavingPlausibility.check
+        : totalPicks > 0 ? convertPlausibilityCheck(weavingPlausibility.check, 100 / totalPicks, '₹/m')
+        : null
+    const applyRateSuggestion = (suggestion: number) => {
+        if (inputMode === 'perMeter') {
+            onDirectRateInputChange(String(suggestion))
+            dispatch({ type: 'SET', field: 'perPickCostPaisa', value: calcPerPickCostFromWeavingRate(suggestion, totalPicks) })
+            return
+        }
+        dispatch({ type: 'SET', field: 'perPickCostPaisa', value: suggestion / 100 })
+    }
 
     // If the owner enters the direct ₹/m rate before completing the PPI
     // fields, apply it as soon as total picks become available.
@@ -2815,8 +2861,10 @@ function WeavingRateFields({
                                 dispatch({ type: 'SET', field: 'perPickCostPaisa', value: paisa / 100 })
                             }}
                             onFocus={event => {
+                                setRateFocused(true)
                                 if (inputMode === 'perMeter') event.currentTarget.select()
                             }}
+                            onBlur={() => setRateFocused(false)}
                             aria-invalid={isRateEmpty || undefined}
                             className={`h-11 rounded-[9px] border px-16 text-center text-xs font-semibold placeholder:text-[var(--color-placeholder)] placeholder:font-normal shadow-xs focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${isRateEmpty ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)] text-[var(--color-yarn-orange)]'}`}
                         />
@@ -2825,6 +2873,9 @@ function WeavingRateFields({
                         </span>
                     </div>
                     <InlineInputWarning show={isRateEmpty}>Required</InlineInputWarning>
+                    {unusualRate && (
+                        <PlausibilityNudge check={unusualRate} onUseSuggestion={applyRateSuggestion} onConfirm={weavingPlausibility.confirm} />
+                    )}
                     {inputMode === 'perMeter' && (
                         <p className="text-xs font-medium leading-tight text-[var(--color-muted)]">
                             Converted from {totalPicks} total picks to paise per pick.
@@ -3577,6 +3628,7 @@ export default function EstimatorClient({
     const [deletingTpl,      setDeletingTpl]      = useState<string | null>(null)
     const [templateToArchive, setTemplateToArchive] = useState<EstimatorTemplate | null>(null)
     const [dismissedWarnings, setDismissedWarnings] = useState<string[]>([])
+    const { store: plausibilityConfirmations, reset: resetPlausibilityConfirmations } = usePlausibilityConfirmationStore()
     const [acknowledgedWarningKey, setAcknowledgedWarningKey] = useState<string | null>(null)
     const [showWarningAcknowledgement, setShowWarningAcknowledgement] = useState(false)
     const [warningSavePending, setWarningSavePending] = useState(false)
@@ -3930,6 +3982,7 @@ export default function EstimatorClient({
             })
         }
         setDismissedWarnings([])
+        resetPlausibilityConfirmations()
         setAcknowledgedWarningKey(null)
         warningContinuationRef.current = null
         setWarningSavePending(false)
@@ -3946,7 +3999,7 @@ export default function EstimatorClient({
                 ? restored.sourceRecordKind === 'costing' ? 'Costing specifications loaded' : 'Quotation specifications loaded'
                 : 'Cost Estimate draft restored'))
         }
-    }, [restoreDraft, suppressAutosaveUntilChanged, templates, tx, startJourney])
+    }, [restoreDraft, suppressAutosaveUntilChanged, templates, tx, startJourney, resetPlausibilityConfirmations])
 
     const draftDetectedTrackedRef = useRef(false)
     useEffect(() => {
@@ -4073,7 +4126,13 @@ export default function EstimatorClient({
         () => warningAcknowledgementKey(estimatorWarnings, state),
         [estimatorWarnings, state],
     )
-    const warningsAcknowledged = !warningKey || acknowledgedWarningKey === warningKey
+    // "Yes, it's correct" under a field answers that field's warning here too,
+    // so an owner who confirmed every unusual value is not asked again on save.
+    const warningsConfirmedAtFields = estimatorWarnings.length > 0 && estimatorWarnings.every(warning => (
+        warning.plausibility !== undefined
+        && plausibilityConfirmations.isConfirmed(warning.plausibility.rule, warning.plausibility.value)
+    ))
+    const warningsAcknowledged = !warningKey || acknowledgedWarningKey === warningKey || warningsConfirmedAtFields
     const totals: EstimatorV3Totals = useMemo(() => {
         try {
             if (freeMode) return freeMeter.completed?.totals ?? calcFullTotals(makeFreeEstimate())
@@ -4616,6 +4675,7 @@ export default function EstimatorClient({
         suppressAutosaveUntilChanged()
         setShowValidation(false)
         setDismissedWarnings([])
+        resetPlausibilityConfirmations()
         setAcknowledgedWarningKey(null)
         setShowWarningAcknowledgement(false)
         setWarningSavePending(false)
@@ -5158,6 +5218,7 @@ export default function EstimatorClient({
         { label: 'Factory expenses / other', value: totals.audit.overheadCostPerMeter },
     ].filter(line => line.value > 0)
     return (
+        <PlausibilityConfirmationProvider store={plausibilityConfirmations}>
         <div ref={estimatorGutterRef} data-free-costing={freeMode || undefined} data-lite-costing={liteMode || undefined} data-sentry-block={freeMode || undefined} className="ui-route-enter estimator-mobile-form space-y-5 pb-floating-button md:pb-20 relative">
             <span hidden data-signin-ready="true" />
             <RouteMilestones
@@ -6347,13 +6408,12 @@ export default function EstimatorClient({
                                             <NumField fieldKey="beamEnds" label={`${t('estimator.field_labels.beam_ends')} — REQUIRED`} value={row.beamEnds} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'beamEnds', value: v ?? 0 })} placeholder="e.g. 3200" attentionWhenEmpty />
                                         </>
                                     )}
-                                    <NumField fieldKey="shortagePct" label="Waste %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'shortagePct', value: v })} unit="%" step={0.5} preserveZero placeholder={String(state.yarnShortagePct ?? 0)} placeholderKind="applied-default" hint={`Blank uses ${state.yarnShortagePct}% default; 0 overrides`} warning={row.shortagePct !== null && row.shortagePct > 15 ? 'High waste %' : undefined} />
-                                    <NumField fieldKey="crimpPct" label={tx('Crimp %')} value={row.crimpPct ?? null} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'crimpPct', value: v })} unit="%" step={0.5} preserveZero placeholder={String(state.warpCrimpPct ?? 0)} placeholderKind="applied-default" hint={`${tx('Blank uses the fabric warp crimp of')} ${state.warpCrimpPct ?? 0}%`} warning={row.crimpPct != null && row.crimpPct > 15 ? tx('High crimp %') : undefined} />
+                                    <NumField fieldKey="shortagePct" label="Waste %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'shortagePct', value: v })} unit="%" step={0.5} preserveZero placeholder={String(state.yarnShortagePct ?? 0)} placeholderKind="applied-default" hint={`Blank uses ${state.yarnShortagePct}% default; 0 overrides`} />
+                                    <NumField fieldKey="crimpPct" label={tx('Crimp %')} value={row.crimpPct ?? null} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'crimpPct', value: v })} unit="%" step={0.5} preserveZero placeholder={String(state.warpCrimpPct ?? 0)} placeholderKind="applied-default" hint={`${tx('Blank uses the fabric warp crimp of')} ${state.warpCrimpPct ?? 0}%`} />
                                     {(() => {
                                         const templateRate = appliedTemplate?.warp_rows?.[i]?.yarnRate ?? null
-                                        const isUnusuallyLow = templateRate !== null
-                                            ? row.yarnRate < templateRate * 0.6
-                                            : row.yarnRate > 0 && row.yarnRate < 50
+                                        // A rate under the usual range is asked about by the field itself.
+                                        const isUnusuallyLow = templateRate !== null && row.yarnRate < templateRate * 0.6
                                         const warningId = `warp-${row.id}-rate`
                                         const isDismissed = dismissedWarnings.includes(warningId)
                                         return (
@@ -6542,13 +6602,12 @@ export default function EstimatorClient({
                                                 }}
                                             />
                                         )}
-                                        <NumField fieldKey="shortagePct" label="Waste %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'shortagePct', value: v })} unit="%" step={0.5} preserveZero placeholder={String(state.yarnShortagePct ?? 0)} placeholderKind="applied-default" hint={`Blank uses ${state.yarnShortagePct}% default; 0 overrides`} warning={row.shortagePct !== null && row.shortagePct > 15 ? 'High waste %' : undefined} />
-                                        <NumField fieldKey="crimpPct" label={tx('Crimp %')} value={row.crimpPct ?? null} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'crimpPct', value: v })} unit="%" step={0.5} preserveZero placeholder="0" placeholderKind="applied-default" hint={tx('Weft take-up for this system. Blank means none.')} warning={row.crimpPct != null && row.crimpPct > 15 ? tx('High crimp %') : undefined} />
+                                        <NumField fieldKey="shortagePct" label="Waste %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'shortagePct', value: v })} unit="%" step={0.5} preserveZero placeholder={String(state.yarnShortagePct ?? 0)} placeholderKind="applied-default" hint={`Blank uses ${state.yarnShortagePct}% default; 0 overrides`} />
+                                        <NumField fieldKey="crimpPct" label={tx('Crimp %')} value={row.crimpPct ?? null} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'crimpPct', value: v })} unit="%" step={0.5} preserveZero placeholder="0" placeholderKind="applied-default" hint={tx('Weft take-up for this system. Blank means none.')} />
                                         {(() => {
                                             const templateRate = appliedTemplate?.weft_rows?.[i]?.yarnRate ?? null
-                                            const isUnusuallyLow = templateRate !== null
-                                                ? row.yarnRate < templateRate * 0.6
-                                                : row.yarnRate > 0 && row.yarnRate < 50
+                                            // A rate under the usual range is asked about by the field itself.
+                                            const isUnusuallyLow = templateRate !== null && row.yarnRate < templateRate * 0.6
                                             const warningId = `weft-${row.id}-rate`
                                             const isDismissed = dismissedWarnings.includes(warningId)
                                             return (
@@ -7512,7 +7571,7 @@ export default function EstimatorClient({
                     </DialogHeader>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setShowDiscardDraft(false)}>{tx('Keep for later')}</Button>
-                        <Button variant="destructive" onClick={() => { dismissDraft(); void trackPlanEvent('draft_discarded'); setShowDiscardDraft(false); setShowValidation(false); setDismissedWarnings([]); setAcknowledgedWarningKey(null); setShowWarningAcknowledgement(false); toast.success(tx('Cost Estimate draft discarded')) }}>{tx('Discard draft')}</Button>
+                        <Button variant="destructive" onClick={() => { dismissDraft(); void trackPlanEvent('draft_discarded'); setShowDiscardDraft(false); setShowValidation(false); setDismissedWarnings([]); resetPlausibilityConfirmations(); setAcknowledgedWarningKey(null); setShowWarningAcknowledgement(false); toast.success(tx('Cost Estimate draft discarded')) }}>{tx('Discard draft')}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -7671,5 +7730,6 @@ export default function EstimatorClient({
 
 
         </div>
+        </PlausibilityConfirmationProvider>
     )
 }

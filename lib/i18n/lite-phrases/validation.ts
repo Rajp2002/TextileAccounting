@@ -277,6 +277,21 @@ export const VALIDATION_PHRASES: LitePhraseRow[] = [
     ["This fabric has more than one weft yarn. Choose whether the picks are entered for each weft yarn or as the total picks shared by a ratio.", "इस कपड़े में एक से ज़्यादा बाना यार्न है। चुनें कि पिक्स हर बाने के लिए अलग लिखे हैं या कुल पिक्स अनुपात से बाँटे गए हैं।", "આ કાપડમાં એકથી વધુ ભરણ યાર્ન છે. પસંદ કરો કે પિક્સ દરેક ભરણ માટે અલગ લખ્યા છે કે કુલ પિક્સ ગુણોત્તરથી વહેંચ્યા છે."],
     ["{0} crimp %", "{0} क्रिम्प %", "{0} ક્રિમ્પ %"],
     ["{0} crimp above 15% is unusual. Confirm this is a percentage of take-up.", "{0} का 15% से ज़्यादा क्रिम्प असामान्य है। पक्का करें कि यह टेक-अप का प्रतिशत है।", "{0} નો 15% થી વધુ ક્રિમ્પ અસામાન્ય છે. ખાતરી કરો કે આ ટેક-અપની ટકાવારી છે."],
+    // Unusual-value questions under estimator fields (lib/input-plausibility.ts).
+    ["{0} is higher than usual ({1}). Is it correct?", "{0} सामान्य से ज़्यादा है ({1})। क्या यह सही है?", "{0} સામાન્ય કરતાં વધારે છે ({1}). શું આ સાચું છે?"],
+    ["{0} is lower than usual ({1}). Is it correct?", "{0} सामान्य से कम है ({1})। क्या यह सही है?", "{0} સામાન્ય કરતાં ઓછું છે ({1}). શું આ સાચું છે?"],
+    ["up to {0}", "{0} तक", "{0} સુધી"],
+    ["Change to {0}", "{0} कर दें", "{0} કરી દો"],
+    ["Yes, it's correct", "हाँ, यह सही है", "હા, આ સાચું છે"],
+    ["{0} is higher than usual (over {1}). Confirm the value.", "{0} सामान्य से ज़्यादा है ({1} से ऊपर)। वैल्यू जाँचें।", "{0} સામાન્ય કરતાં વધારે છે ({1} થી ઉપર). આંકડો તપાસો."],
+    ["{0} is lower than usual (under {1}). Confirm the value.", "{0} सामान्य से कम है ({1} से नीचे)। वैल्यू जाँचें।", "{0} સામાન્ય કરતાં ઓછું છે ({1} થી નીચે). આંકડો તપાસો."],
+    ["{0} beam ends are unusually low. Confirm the beam plan and unit.", "{0} तार बहुत कम हैं। बीम प्लान और यूनिट जाँचें।", "{0} તાર બહુ ઓછા છે. બીમ પ્લાન અને યુનિટ તપાસો."],
+    ["{0} yarn rate is below ₹{1}/kg. Confirm the rate and unit.", "{0} यार्न रेट ₹{1}/kg से कम है। रेट और यूनिट जाँचें।", "{0} યાર્ન ભાવ ₹{1}/kg થી ઓછો છે. ભાવ અને યુનિટ તપાસો."],
+    ["{0} GST is above {1}%. Confirm the GST rate.", "{0} GST {1}% से ज़्यादा है। GST रेट जाँचें।", "{0} GST {1}% થી વધુ છે. GST દર તપાસો."],
+    ["{0} consumption is unusual. Confirm it is kg per 100 metres.", "{0} खपत असामान्य है। पक्का करें कि यह हर 100 मीटर का kg है।", "{0} વપરાશ અસામાન્ય છે. ખાતરી કરો કે આ દર 100 મીટરનો kg છે."],
+    ["Weaving rate", "वीविंग रेट", "વીવિંગ ભાવ"],
+    ["Warping rate", "वार्पिंग रेट", "વાર્પિંગ ભાવ"],
+    ["Direct overhead rate", "सीधा ओवरहेड रेट", "સીધો ઓવરહેડ ભાવ"],
     // Database error text; kept in English in code because the save retry matches it.
     ["The costing payload contains unsupported fields.", "इस कॉस्टिंग में कुछ ऐसी जानकारी है जिसे Weavly इस्तेमाल नहीं कर सकता। पेज रीफ़्रेश करें और फिर से कोशिश करें।", "આ કોસ્ટિંગમાં એવી વિગતો છે જે Weavly વાપરી શકતું નથી. પેજ રિફ્રેશ કરો અને ફરી પ્રયાસ કરો."],
 ]

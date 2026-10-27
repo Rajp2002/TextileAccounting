@@ -4,7 +4,7 @@ import {validateEstimatorSnapshot,requiresFactoryCapacity} from '@/lib/estimator
 import {getFreeCostingSections} from '@/lib/free-costing-sections'
 
 const validEstimate=()=>{
-  const state=makeFreeDemo();state.weftRows[0].picks=60;state.perPickCostPaisa=13.75
+  const state=makeFreeDemo();state.weftRows[0].picks=60;state.perPickCostPaisa=0.1375
   return state
 }
 const check=(state=validEstimate(),label='Test quality',acknowledged=false)=>getFreeCostingSections(

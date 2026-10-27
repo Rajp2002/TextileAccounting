@@ -8,9 +8,9 @@ import {
   makeDefaultEstimateState,
 } from '../lib/estimator'
 import {
-  getYarnDensityWarning,
   validateEstimatorSnapshot,
 } from '../lib/estimator-validation'
+import { checkPlausibility } from '../lib/input-plausibility'
 import { resolveEffectiveSubscription } from '../lib/subscription-access'
 
 const estimatorClientSource = readFileSync(
@@ -117,15 +117,15 @@ describe('Estimator production-readiness regressions', () => {
       })
     }
 
-    expect(getYarnDensityWarning(0)).toBeUndefined()
-    expect(getYarnDensityWarning(19.9)).toContain('Unusually low')
-    expect(getYarnDensityWarning(20)).toBeUndefined()
+    expect(checkPlausibility('denier', 0)).toBeNull()
+    expect(checkPlausibility('denier', 19.9)?.direction).toBe('low')
+    expect(checkPlausibility('denier', 20)).toBeNull()
   })
 
   it('does not present an invalid draft as a final cost breakdown', () => {
     expect(estimatorClientSource).toContain('Costing incomplete')
     expect(estimatorClientSource).toContain('Draft values are not treated as a final result')
-    expect(estimatorClientSource).toContain('warning={densityWarning}')
+    expect(estimatorClientSource).toContain('usePlausibilityQuestion(plausibilityRuleForField(fieldKey)')
   })
 
   it('converts English cotton count to denier using the documented 5315/Ne basis', () => {

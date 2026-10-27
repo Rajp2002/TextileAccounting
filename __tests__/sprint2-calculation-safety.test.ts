@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { buildCostingResult, calcFullTotals, makeDefaultEstimateState } from '../lib/estimator'
-import { getEstimatorReadiness, getYarnDensityWarning, validateCostingResultBoundary, validateEstimatorSnapshot, validateFactoryCostProfile } from '../lib/estimator-validation'
+import { getEstimatorReadiness, validateCostingResultBoundary, validateEstimatorSnapshot, validateFactoryCostProfile } from '../lib/estimator-validation'
+import { checkPlausibility } from '../lib/input-plausibility'
 import { parseNonNegativeInput, parseNumericInput } from '../lib/numeric-input'
 import { isValidIndianPhone, normalizeIndianPhone } from '../lib/phone'
 import { CreateOrgSchema, PasswordSchema } from '../lib/schemas'
@@ -25,7 +26,7 @@ describe('Sprint 2 calculation safety', () => {
     expect(warned.warnings).toEqual(expect.arrayContaining([
       expect.objectContaining({ field: 'warpRows.0.calcDenier' }),
     ]))
-    expect(getYarnDensityWarning(1_500)).toContain('Unusually heavy')
+    expect(checkPlausibility('denier', 1_500)?.direction).toBe('high')
   })
 
   it('rejects negative values and missing layer labels before costing is saved', () => {
