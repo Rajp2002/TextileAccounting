@@ -53,8 +53,10 @@ async function produce(owner: Actor, jobId: string, meters: number) {
     await asSuperuser(db)
     const worker = randomUUID()
     await db.query("INSERT INTO public.base_production_workers(id, org_id, name, rate_per_meter) VALUES ($1, $2, $3, 2)", [worker, owner.orgId, `Worker ${worker.slice(0, 4)}`])
+    // Dated in Surat like the job's start date: the column's current_date default is the server's UTC day,
+    // which falls a day before the job between midnight and 5:30 am in Surat.
     const { rows: [entry] } = await db.query(
-        'INSERT INTO public.base_production_entries(org_id, job_id, worker_id, meters, worker_rate_snapshot) VALUES ($1, $2, $3, $4, 2) RETURNING id',
+        "INSERT INTO public.base_production_entries(org_id, job_id, worker_id, meters, worker_rate_snapshot, production_date) VALUES ($1, $2, $3, $4, 2, (now() AT TIME ZONE 'Asia/Kolkata')::date) RETURNING id",
         [owner.orgId, jobId, worker, meters])
     await db.query('SELECT private.reconcile_quality_stock($1, NULL, NULL)', [owner.orgId])
     return entry.id as string
