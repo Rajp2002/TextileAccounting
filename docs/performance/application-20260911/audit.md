@@ -90,7 +90,9 @@ Command: `node scripts/performance/estimator-benchmark.mjs`. This transpiles the
 
 Table uses `estimator-comparison-2.json`, run after builds/lint/tests completed. `estimator-comparison-1.json` retains an independent paired run: full-path medians 2.215→0.972ms, 5.800→2.156ms and 19.477→6.590ms. Host timing varied substantially between runs; both reproduce reduced work, and neither proves field responsiveness. `estimator-baseline-idle.json` is the pre-edit run without concurrent repository build/test commands; the initial `estimator-baseline.json` overlapped baseline-build activity and is retained but not used for a latency comparison. No memory-growth or React profiler claim is made.
 
-Exact reference reproduction: `node scripts/performance/estimator-benchmark.mjs --reference` should match `estimator-reference.json`; do not overwrite expectations to accommodate a change. The benchmark also checks all four custom-target choices for the complete stress scenario API. Existing calculation/parity/validation/save/export tests remain authoritative beyond these fixtures.
+Exact reference reproduction: `node scripts/performance/estimator-benchmark.mjs --reference` should match `estimator-reference.json`; do not overwrite expectations to accommodate a change.
+
+One deliberate update since: on 2026-10-27 the usual-range checks (`lib/input-plausibility.ts`) added a "higher than usual" warning to the already-blocked `invalidMargin` (99% margin) and `invalidCommission` (100% commission) fixtures. Their two `sha256` values were replaced only after confirming that removing those two warnings reproduces the original hashes exactly; totals, results, readiness and scenarios are unchanged, and the other 14 fixtures still match. The benchmark also checks all four custom-target choices for the complete stress scenario API. Existing calculation/parity/validation/save/export tests remain authoritative beyond these fixtures.
 
 ### Production bundles — Measured resource reduction
 

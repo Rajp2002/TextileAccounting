@@ -14,10 +14,18 @@ import {
   type WarpRow,
   type WeftRow,
 } from './estimator'
+import {
+  checkPlausibility,
+  formatPlausibleValue,
+  PLAUSIBLE_RANGES,
+  type PlausibilityRule,
+} from './input-plausibility'
 
 export type EstimatorValidationIssue = {
   field: string
   message: string
+  /** Set on an unusual-value warning the owner can confirm at the field itself. */
+  plausibility?: { rule: PlausibilityRule; value: number }
 }
 
 export type EstimatorValidationResult =
@@ -39,7 +47,6 @@ const MIN_DENIER = 0.1
 const MAX_DENIER = 5_000
 const MAX_COTTON_COUNT_NE = 500
 const MAX_BEAM_ENDS = 250_000
-const MAX_COMMON_BEAM_ENDS = 25_000
 const MAX_PICKS = 500
 const MIN_WIDTH_CM = 10
 const MAX_WIDTH_CM = 300
@@ -59,19 +66,11 @@ const MAX_OUTPUT_PER_LOOM_PER_DAY = 1_000
 const MAX_LOOM_RPM = 3_000
 const MAX_LOOM_POWER_KW = 100
 const MAX_SHIFT_HOURS = 24
-const MAX_RATE_WARNING_PER_KG = 1_000
-const MAX_COMMON_DENIER = 1_200
-const MIN_COMMON_DENIER = 20
+const MAX_RATE_WARNING_PER_KG = PLAUSIBLE_RANGES.yarnRatePerKg.high
+const MIN_RATE_WARNING_PER_KG = PLAUSIBLE_RANGES.yarnRatePerKg.low
+const MAX_YARN_GST_WARNING_PCT = PLAUSIBLE_RANGES.yarnGstPct.high
 const MAX_COMMON_COTTON_COUNT_NE = 120
 const MIN_COMMON_COTTON_COUNT_NE = 10
-const MAX_COMMON_PICKS = 150
-const MIN_COMMON_PICKS = 10
-const MAX_COMMON_WIDTH_CM = 203.2
-const MIN_COMMON_WIDTH_CM = 76.2
-const MAX_COMMON_CRIMP_PCT = 15
-const MAX_COMMON_WASTE_PCT = 15
-const MAX_COMMON_OUTPUT_PER_LOOM_PER_DAY = 500
-export const UNUSUALLY_LOW_DENIER = 20
 
 function formatValidationNumber(value: number): string {
   return value.toLocaleString('en-IN', { maximumFractionDigits: 2 })
@@ -97,22 +96,6 @@ export function requiresFactoryCapacity(
  * monthly-expense overhead, stays required by the snapshot validation itself.
  */
 export const FREE_ESTIMATE_VALIDATION_OPTIONS = { requireTapeLength: false, requireCapacity: false } as const
-
-export function getYarnDensityWarning(effectiveDenier: number): string | undefined {
-  if (!Number.isFinite(effectiveDenier) || effectiveDenier <= 0) {
-    return undefined
-  }
-
-  if (effectiveDenier < MIN_COMMON_DENIER) {
-    return `Unusually low (under ${UNUSUALLY_LOW_DENIER} D). Confirm the yarn numbering and unit.`
-  }
-
-  if (effectiveDenier > MAX_COMMON_DENIER) {
-    return `Unusually heavy (over ${MAX_COMMON_DENIER} D). Confirm the yarn numbering and unit.`
-  }
-
-  return undefined
-}
 
 export type FactoryCostProfileInput = {
   warping_rate_per_kg: number
@@ -159,6 +142,11 @@ function addNumberIssue(
     warningMin?: number
     warningMax?: number
     warningMessage?: string
+    /** Checks the usual range from lib/input-plausibility.ts instead of warningMin/warningMax. */
+    plausibility?: PlausibilityRule
+    /** Used only when the value is above, or below, the usual range. */
+    warningHighMessage?: string
+    warningLowMessage?: string
   }
 ) {
   const isBlank = value === null || value === undefined || (typeof value === 'string' && value.trim() === '')
@@ -192,6 +180,11 @@ function addNumberIssue(
     return
   }
 
+  if (options.plausibility) {
+    addPlausibilityWarning(warnings, field, label, options.plausibility, numberValue, options)
+    return
+  }
+
   const belowWarning = options.warningMin !== undefined && numberValue < options.warningMin
   const aboveWarning = options.warningMax !== undefined && numberValue > options.warningMax
   if (belowWarning || aboveWarning) {
@@ -200,6 +193,25 @@ function addNumberIssue(
       message: options.warningMessage ?? `${label} is unusual. Confirm the value before saving.`,
     })
   }
+}
+
+function addPlausibilityWarning(
+  warnings: EstimatorValidationIssue[],
+  field: string,
+  label: string,
+  rule: PlausibilityRule,
+  value: number,
+  messages: { warningMessage?: string; warningHighMessage?: string; warningLowMessage?: string } = {},
+) {
+  const check = checkPlausibility(rule, value)
+  if (!check) return
+  const { range } = check
+  const message = (check.direction === 'high' ? messages.warningHighMessage : messages.warningLowMessage)
+    ?? messages.warningMessage
+    ?? (check.direction === 'low'
+      ? `${label} is lower than usual (under ${formatPlausibleValue(range.low, range.unit)}). Confirm the value.`
+      : `${label} is higher than usual (over ${formatPlausibleValue(range.high, range.unit)}). Confirm the value.`)
+  warnings.push({ field, message, plausibility: { rule, value } })
 }
 
 function isBlankNumericValue(value: unknown): boolean {
@@ -265,9 +277,9 @@ export function validateFactoryCostProfile(input: FactoryCostProfileInput): Esti
   }
   if (input.loom_count != null) addNumberIssue(issues, warnings, 'loom_count', 'Loom count', input.loom_count, { max: MAX_LOOMS, allowZero: true })
   if (input.monthly_working_days != null) addNumberIssue(issues, warnings, 'monthly_working_days', 'Monthly working days', input.monthly_working_days, { max: 31 })
-  if (input.avg_output_per_loom_per_day != null) addNumberIssue(issues, warnings, 'avg_output_per_loom_per_day', 'Average output per loom per day', input.avg_output_per_loom_per_day, { max: MAX_OUTPUT_PER_LOOM_PER_DAY, warningMax: MAX_COMMON_OUTPUT_PER_LOOM_PER_DAY, warningMessage: 'Output above 500 m per loom per day is unusual. Confirm the loom, shift, and unit.' })
-  if (input.yarn_shortage_pct != null) addNumberIssue(issues, warnings, 'yarn_shortage_pct', 'Default yarn waste %', input.yarn_shortage_pct, { max: MAX_WASTE_PERCENT, allowZero: true, warningMax: MAX_COMMON_WASTE_PCT, warningMessage: 'Waste above 15% is unusual. Confirm this is a percentage, not a multiplier.' })
-  if (input.warp_crimp_pct != null) addNumberIssue(issues, warnings, 'warp_crimp_pct', 'Warp crimp %', input.warp_crimp_pct, { max: 50, allowZero: true, warningMax: MAX_COMMON_CRIMP_PCT, warningMessage: 'Warp crimp above 15% is unusual. Confirm the fabric construction and unit.' })
+  if (input.avg_output_per_loom_per_day != null) addNumberIssue(issues, warnings, 'avg_output_per_loom_per_day', 'Average output per loom per day', input.avg_output_per_loom_per_day, { max: MAX_OUTPUT_PER_LOOM_PER_DAY, plausibility: 'outputPerLoomPerDay', warningMessage: 'Output above 500 m per loom per day is unusual. Confirm the loom, shift, and unit.' })
+  if (input.yarn_shortage_pct != null) addNumberIssue(issues, warnings, 'yarn_shortage_pct', 'Default yarn waste %', input.yarn_shortage_pct, { max: MAX_WASTE_PERCENT, allowZero: true, plausibility: 'wastePct', warningMessage: 'Waste above 15% is unusual. Confirm this is a percentage, not a multiplier.' })
+  if (input.warp_crimp_pct != null) addNumberIssue(issues, warnings, 'warp_crimp_pct', 'Warp crimp %', input.warp_crimp_pct, { max: 50, allowZero: true, plausibility: 'crimpPct', warningMessage: 'Warp crimp above 15% is unusual. Confirm the fabric construction and unit.' })
   if (input.enabled_sections?.winding && Number(input.winding_rate_per_kg) <= 0) {
     issues.push({ field: 'winding_rate_per_kg', message: 'Enter a winding rate or switch Winding off.' })
   }
@@ -331,26 +343,28 @@ function validateWarpRow(row: WarpRow, index: number, issues: EstimatorValidatio
         warningMax: MAX_COMMON_COTTON_COUNT_NE,
         warningMessage: `${label} cotton count is unusual. Confirm the Ne unit and ply count.`,
       })
-      addNumberIssue(issues, warnings, `${prefix}.effectiveDenier`, `${label} converted denier`, getEffectiveYarnDenier(row), { min: 0, hardMin: MIN_DENIER, max: MAX_DENIER, warningMin: MIN_COMMON_DENIER, warningMax: MAX_COMMON_DENIER, warningMessage: `${label} converted denier is unusual. Confirm the yarn numbering and unit.` })
+      addNumberIssue(issues, warnings, `${prefix}.effectiveDenier`, `${label} converted denier`, getEffectiveYarnDenier(row), { min: 0, hardMin: MIN_DENIER, max: MAX_DENIER, plausibility: 'denier', warningMessage: `${label} converted denier is unusual. Confirm the yarn numbering and unit.` })
     } else {
-      addNumberIssue(issues, warnings, `${prefix}.calcDenier`, `${label} denier`, row.calcDenier, { min: 0, hardMin: MIN_DENIER, max: MAX_DENIER, warningMin: MIN_COMMON_DENIER, warningMax: MAX_COMMON_DENIER, warningMessage: `${label} denier is unusual. Confirm the yarn numbering and unit.` })
+      addNumberIssue(issues, warnings, `${prefix}.calcDenier`, `${label} denier`, row.calcDenier, { min: 0, hardMin: MIN_DENIER, max: MAX_DENIER, plausibility: 'denier', warningMessage: `${label} denier is unusual. Confirm the yarn numbering and unit.` })
     }
-    addNumberIssue(issues, warnings, `${prefix}.beamEnds`, `${label} beam ends`, row.beamEnds, { max: MAX_BEAM_ENDS, warningMax: MAX_COMMON_BEAM_ENDS, warningMessage: `${label} beam ends are unusually high. Confirm the beam plan and unit.` })
+    addNumberIssue(issues, warnings, `${prefix}.beamEnds`, `${label} beam ends`, row.beamEnds, { max: MAX_BEAM_ENDS, plausibility: 'beamEnds', warningHighMessage: `${label} beam ends are unusually high. Confirm the beam plan and unit.`, warningLowMessage: `${label} beam ends are unusually low. Confirm the beam plan and unit.` })
   }
-  addNumberIssue(issues, warnings, `${prefix}.yarnRate`, `${label} yarn rate`, row.yarnRate, { max: MAX_RATE_PER_KG, warningMax: MAX_RATE_WARNING_PER_KG, warningMessage: `${label} yarn rate is above ₹${MAX_RATE_WARNING_PER_KG}/kg. Confirm the rate and unit.` })
-  addNumberIssue(issues, warnings, `${prefix}.gstPct`, `${label} GST %`, row.gstPct, { max: MAX_PERCENT, allowZero: true })
+  addNumberIssue(issues, warnings, `${prefix}.yarnRate`, `${label} yarn rate`, row.yarnRate, { max: MAX_RATE_PER_KG, plausibility: 'yarnRatePerKg', warningHighMessage: `${label} yarn rate is above ₹${MAX_RATE_WARNING_PER_KG}/kg. Confirm the rate and unit.`, warningLowMessage: `${label} yarn rate is below ₹${MIN_RATE_WARNING_PER_KG}/kg. Confirm the rate and unit.` })
+  addNumberIssue(issues, warnings, `${prefix}.gstPct`, `${label} GST %`, row.gstPct, { max: MAX_PERCENT, allowZero: true, plausibility: 'yarnGstPct', warningMessage: `${label} GST is above ${MAX_YARN_GST_WARNING_PCT}%. Confirm the GST rate.` })
 
   if (row.shortagePct !== null && row.shortagePct !== undefined) {
-    addNumberIssue(issues, warnings, `${prefix}.shortagePct`, `${label} waste %`, row.shortagePct, { max: MAX_WASTE_PERCENT, allowZero: true, warningMax: MAX_COMMON_WASTE_PCT, warningMessage: `${label} waste above 15% is unusual. Confirm this is a percentage, not a multiplier.` })
+    addNumberIssue(issues, warnings, `${prefix}.shortagePct`, `${label} waste %`, row.shortagePct, { max: MAX_WASTE_PERCENT, allowZero: true, plausibility: 'wastePct', warningMessage: `${label} waste above 15% is unusual. Confirm this is a percentage, not a multiplier.` })
   }
   if (row.crimpPct !== null && row.crimpPct !== undefined) {
-    addNumberIssue(issues, warnings, `${prefix}.crimpPct`, `${label} crimp %`, row.crimpPct, { max: 50, allowZero: true, warningMax: MAX_COMMON_CRIMP_PCT, warningMessage: `${label} crimp above 15% is unusual. Confirm this is a percentage of take-up.` })
+    addNumberIssue(issues, warnings, `${prefix}.crimpPct`, `${label} crimp %`, row.crimpPct, { max: 50, allowZero: true, plausibility: 'crimpPct', warningMessage: `${label} crimp above 15% is unusual. Confirm this is a percentage of take-up.` })
   }
 
   if (row.calculationMode === 'manual') {
     addNumberIssue(issues, warnings, `${prefix}.manualKgPer100m`, `${label} manual kg/100m`, row.manualKgPer100m, {
       max: MAX_RATE_PER_KG,
       required: true,
+      plausibility: 'kgPer100m',
+      warningMessage: `${label} consumption is unusual. Confirm it is kg per 100 metres.`,
     })
   }
 }
@@ -370,9 +384,9 @@ function validateWeftRow(row: WeftRow, index: number, issues: EstimatorValidatio
 
   // Picks remain required in manual-yarn mode because loom wages are still
   // calculated per pick. Manual mode overrides yarn kg, not weaving labour.
-  addNumberIssue(issues, warnings, `${prefix}.picks`, `${label} picks`, row.picks, { max: MAX_PICKS, warningMin: MIN_COMMON_PICKS, warningMax: MAX_COMMON_PICKS, warningMessage: `${label} picks are unusual. Confirm the PPI unit and fabric construction.` })
+  addNumberIssue(issues, warnings, `${prefix}.picks`, `${label} picks`, row.picks, { max: MAX_PICKS, plausibility: 'picks', warningMessage: `${label} picks are unusual. Confirm the PPI unit and fabric construction.` })
   if (row.calculationMode !== 'manual') {
-    addNumberIssue(issues, warnings, `${prefix}.effectiveCostingWidthCm`, `${label} effective costing width`, getEffectiveCostingWidthCm(row), { min: MIN_WIDTH_CM, hardMin: MIN_WIDTH_CM, max: MAX_WIDTH_CM, warningMin: MIN_COMMON_WIDTH_CM, warningMax: MAX_COMMON_WIDTH_CM, warningMessage: `${label} width is unusual. Confirm whether the value is in centimetres or inches.` })
+    addNumberIssue(issues, warnings, `${prefix}.effectiveCostingWidthCm`, `${label} effective costing width`, getEffectiveCostingWidthCm(row), { min: MIN_WIDTH_CM, hardMin: MIN_WIDTH_CM, max: MAX_WIDTH_CM, plausibility: 'widthCm', warningMessage: `${label} width is unusual. Confirm whether the value is in centimetres or inches.` })
     if (row.linearDensityUnit === 'cotton_count_ne') {
       addNumberIssue(issues, warnings, `${prefix}.cottonCountNe`, `${label} English cotton count`, row.cottonCountNe, {
         min: 0,
@@ -383,25 +397,27 @@ function validateWeftRow(row: WeftRow, index: number, issues: EstimatorValidatio
         warningMax: MAX_COMMON_COTTON_COUNT_NE,
         warningMessage: `${label} cotton count is unusual. Confirm the Ne unit and ply count.`,
       })
-      addNumberIssue(issues, warnings, `${prefix}.effectiveDenier`, `${label} converted denier`, getEffectiveYarnDenier(row), { min: 0, hardMin: MIN_DENIER, max: MAX_DENIER, warningMin: MIN_COMMON_DENIER, warningMax: MAX_COMMON_DENIER, warningMessage: `${label} converted denier is unusual. Confirm the yarn numbering and unit.` })
+      addNumberIssue(issues, warnings, `${prefix}.effectiveDenier`, `${label} converted denier`, getEffectiveYarnDenier(row), { min: 0, hardMin: MIN_DENIER, max: MAX_DENIER, plausibility: 'denier', warningMessage: `${label} converted denier is unusual. Confirm the yarn numbering and unit.` })
     } else {
-      addNumberIssue(issues, warnings, `${prefix}.calcDenier`, `${label} denier`, row.calcDenier, { min: 0, hardMin: MIN_DENIER, max: MAX_DENIER, warningMin: MIN_COMMON_DENIER, warningMax: MAX_COMMON_DENIER, warningMessage: `${label} denier is unusual. Confirm the yarn numbering and unit.` })
+      addNumberIssue(issues, warnings, `${prefix}.calcDenier`, `${label} denier`, row.calcDenier, { min: 0, hardMin: MIN_DENIER, max: MAX_DENIER, plausibility: 'denier', warningMessage: `${label} denier is unusual. Confirm the yarn numbering and unit.` })
     }
   }
-  addNumberIssue(issues, warnings, `${prefix}.yarnRate`, `${label} yarn rate`, row.yarnRate, { max: MAX_RATE_PER_KG, warningMax: MAX_RATE_WARNING_PER_KG, warningMessage: `${label} yarn rate is above ₹${MAX_RATE_WARNING_PER_KG}/kg. Confirm the rate and unit.` })
-  addNumberIssue(issues, warnings, `${prefix}.gstPct`, `${label} GST %`, row.gstPct, { max: MAX_PERCENT, allowZero: true })
+  addNumberIssue(issues, warnings, `${prefix}.yarnRate`, `${label} yarn rate`, row.yarnRate, { max: MAX_RATE_PER_KG, plausibility: 'yarnRatePerKg', warningHighMessage: `${label} yarn rate is above ₹${MAX_RATE_WARNING_PER_KG}/kg. Confirm the rate and unit.`, warningLowMessage: `${label} yarn rate is below ₹${MIN_RATE_WARNING_PER_KG}/kg. Confirm the rate and unit.` })
+  addNumberIssue(issues, warnings, `${prefix}.gstPct`, `${label} GST %`, row.gstPct, { max: MAX_PERCENT, allowZero: true, plausibility: 'yarnGstPct', warningMessage: `${label} GST is above ${MAX_YARN_GST_WARNING_PCT}%. Confirm the GST rate.` })
 
   if (row.shortagePct !== null && row.shortagePct !== undefined) {
-    addNumberIssue(issues, warnings, `${prefix}.shortagePct`, `${label} waste %`, row.shortagePct, { max: MAX_WASTE_PERCENT, allowZero: true, warningMax: MAX_COMMON_WASTE_PCT, warningMessage: `${label} waste above 15% is unusual. Confirm this is a percentage, not a multiplier.` })
+    addNumberIssue(issues, warnings, `${prefix}.shortagePct`, `${label} waste %`, row.shortagePct, { max: MAX_WASTE_PERCENT, allowZero: true, plausibility: 'wastePct', warningMessage: `${label} waste above 15% is unusual. Confirm this is a percentage, not a multiplier.` })
   }
   if (row.crimpPct !== null && row.crimpPct !== undefined) {
-    addNumberIssue(issues, warnings, `${prefix}.crimpPct`, `${label} crimp %`, row.crimpPct, { max: 50, allowZero: true, warningMax: MAX_COMMON_CRIMP_PCT, warningMessage: `${label} crimp above 15% is unusual. Confirm this is a percentage of take-up.` })
+    addNumberIssue(issues, warnings, `${prefix}.crimpPct`, `${label} crimp %`, row.crimpPct, { max: 50, allowZero: true, plausibility: 'crimpPct', warningMessage: `${label} crimp above 15% is unusual. Confirm this is a percentage of take-up.` })
   }
 
   if (row.calculationMode === 'manual') {
     addNumberIssue(issues, warnings, `${prefix}.manualKgPer100m`, `${label} manual kg/100m`, row.manualKgPer100m, {
       max: MAX_RATE_PER_KG,
       required: true,
+      plausibility: 'kgPer100m',
+      warningMessage: `${label} consumption is unusual. Confirm it is kg per 100 metres.`,
     })
   }
 }
@@ -493,14 +509,18 @@ export function validateEstimatorSnapshot(
     allowZero: options.requireTapeLength === false,
   })
   addNumberIssue(issues, warnings, 'perPickCostPaisa', 'Weaving rate', estimate.perPickCostPaisa, { max: MAX_PICK_COST })
-  addNumberIssue(issues, warnings, 'warpingRatePerKg', 'Warping rate', estimate.warpingRatePerKg, { max: MAX_RATE_PER_KG, allowZero: estimate.warpingMode !== 'outsourced', required: estimate.warpingMode === 'outsourced' })
-  addNumberIssue(issues, warnings, 'sizingRatePerKg', 'Sizing rate', estimate.sizingRatePerKg, { max: MAX_RATE_PER_KG, allowZero: estimate.sizingMode !== 'outsourced', required: estimate.sizingMode === 'outsourced' })
+  // Stored as ₹ per pick; owners enter and read it as paise per pick.
+  if (Number(estimate.perPickCostPaisa) <= MAX_PICK_COST) addPlausibilityWarning(warnings, 'perPickCostPaisa', 'Weaving rate', 'paisePerPick', Number(estimate.perPickCostPaisa) * 100)
+  // A rate only questions the owner while it is part of the cost.
+  const usedRateRule = (used: boolean, rule: PlausibilityRule) => used ? rule : undefined
+  addNumberIssue(issues, warnings, 'warpingRatePerKg', 'Warping rate', estimate.warpingRatePerKg, { max: MAX_RATE_PER_KG, allowZero: estimate.warpingMode !== 'outsourced', required: estimate.warpingMode === 'outsourced', plausibility: usedRateRule(estimate.warpingMode === 'outsourced', 'warpingRatePerKg') })
+  addNumberIssue(issues, warnings, 'sizingRatePerKg', 'Sizing rate', estimate.sizingRatePerKg, { max: MAX_RATE_PER_KG, allowZero: estimate.sizingMode !== 'outsourced', required: estimate.sizingMode === 'outsourced', plausibility: usedRateRule(estimate.sizingMode === 'outsourced', 'sizingRatePerKg') })
   const sections = estimate.enabledSections
-  addNumberIssue(issues, warnings, 'windingRatePerKg', 'Winding rate', estimate.windingRatePerKg, { max: MAX_RATE_PER_KG, allowZero: !sections?.winding, required: Boolean(sections?.winding) })
-  addNumberIssue(issues, warnings, 'processingRatePerM', 'Processing rate', estimate.processingRatePerM, { max: MAX_COST_PER_M, allowZero: !sections?.processing, required: Boolean(sections?.processing) })
-  addNumberIssue(issues, warnings, 'finishingRatePerM', 'Finishing rate', estimate.finishingRatePerM, { max: MAX_COST_PER_M, allowZero: !sections?.finishing, required: Boolean(sections?.finishing) })
-  addNumberIssue(issues, warnings, 'yarnShortagePct', 'Default yarn waste %', estimate.yarnShortagePct, { max: MAX_WASTE_PERCENT, allowZero: true, warningMax: MAX_COMMON_WASTE_PCT, warningMessage: 'Waste above 15% is unusual. Confirm this is a percentage, not a multiplier.' })
-  addNumberIssue(issues, warnings, 'warpCrimpPct', 'Warp crimp %', estimate.warpCrimpPct, { max: 50, allowZero: true, warningMax: MAX_COMMON_CRIMP_PCT, warningMessage: 'Warp crimp above 15% is unusual. Confirm the fabric construction and unit.' })
+  addNumberIssue(issues, warnings, 'windingRatePerKg', 'Winding rate', estimate.windingRatePerKg, { max: MAX_RATE_PER_KG, allowZero: !sections?.winding, required: Boolean(sections?.winding), plausibility: usedRateRule(Boolean(sections?.winding), 'windingRatePerKg') })
+  addNumberIssue(issues, warnings, 'processingRatePerM', 'Processing rate', estimate.processingRatePerM, { max: MAX_COST_PER_M, allowZero: !sections?.processing, required: Boolean(sections?.processing), plausibility: usedRateRule(Boolean(sections?.processing), 'processingRatePerM') })
+  addNumberIssue(issues, warnings, 'finishingRatePerM', 'Finishing rate', estimate.finishingRatePerM, { max: MAX_COST_PER_M, allowZero: !sections?.finishing, required: Boolean(sections?.finishing), plausibility: usedRateRule(Boolean(sections?.finishing), 'finishingRatePerM') })
+  addNumberIssue(issues, warnings, 'yarnShortagePct', 'Default yarn waste %', estimate.yarnShortagePct, { max: MAX_WASTE_PERCENT, allowZero: true, plausibility: 'wastePct', warningMessage: 'Waste above 15% is unusual. Confirm this is a percentage, not a multiplier.' })
+  addNumberIssue(issues, warnings, 'warpCrimpPct', 'Warp crimp %', estimate.warpCrimpPct, { max: 50, allowZero: true, plausibility: 'crimpPct', warningMessage: 'Warp crimp above 15% is unusual. Confirm the fabric construction and unit.' })
   const overheadMode = estimate.overheadMode
     ?? (estimate.overheadOverridePerM != null ? 'direct' : 'monthly_expenses')
   const requireCapacity = options.requireCapacity === true
@@ -511,6 +531,7 @@ export function validateEstimatorSnapshot(
     addNumberIssue(issues, warnings, 'overheadOverridePerM', 'Direct overhead rate', estimate.overheadOverridePerM, {
       max: MAX_COST_PER_M,
       required: true,
+      plausibility: 'overheadPerM',
     })
   }
   if (overheadMode === 'monthly_expenses' && estimate.overheadOverridePerM != null) {
@@ -524,15 +545,15 @@ export function validateEstimatorSnapshot(
     allowZero: !requireCapacity && overheadMode === 'direct',
     required: requireCapacity || overheadMode === 'monthly_expenses',
   })
-  addNumberIssue(issues, warnings, 'commissionPct', 'Commission %', estimate.commissionPct, { max: MAX_PERCENT, allowZero: true })
-  addNumberIssue(issues, warnings, 'profitPct', 'Profit margin %', estimate.profitPct, { max: MAX_PERCENT, allowZero: true })
-  addNumberIssue(issues, warnings, 'transportPerM', 'Transport per meter', estimate.transportPerM, { max: MAX_COST_PER_M, allowZero: true })
+  addNumberIssue(issues, warnings, 'commissionPct', 'Commission %', estimate.commissionPct, { max: MAX_PERCENT, allowZero: true, plausibility: 'commissionPct' })
+  addNumberIssue(issues, warnings, 'profitPct', 'Profit margin %', estimate.profitPct, { max: MAX_PERCENT, allowZero: true, plausibility: 'marginPct' })
+  addNumberIssue(issues, warnings, 'transportPerM', 'Transport per meter', estimate.transportPerM, { max: MAX_COST_PER_M, allowZero: true, plausibility: 'transportPerM' })
   addNumberIssue(issues, warnings, 'loomCount', 'Loom count', estimate.loomCount, { max: MAX_LOOMS, allowZero: !requireCapacity })
   addNumberIssue(issues, warnings, 'monthlyWorkingDays', 'Monthly working days', estimate.monthlyWorkingDays, { max: MAX_WORKING_DAYS })
   addNumberIssue(issues, warnings, 'avgOutputPerLoomPerDay', 'Average output per loom per day', estimate.avgOutputPerLoomPerDay, {
     max: MAX_OUTPUT_PER_LOOM_PER_DAY,
     allowZero: !requireCapacity && estimate.loomCount === 0,
-    warningMax: MAX_COMMON_OUTPUT_PER_LOOM_PER_DAY,
+    plausibility: 'outputPerLoomPerDay',
     warningMessage: 'Output above 500 m per loom per day is unusual. Confirm the loom, shift, and unit.',
   })
 

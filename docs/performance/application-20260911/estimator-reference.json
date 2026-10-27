@@ -116,7 +116,7 @@
         "costDeltaPct": 0,
         "profitDelta": 0
       },
-      "sha256": "0313634713987a180549f41d925bdaf883068908060d3e4717950119c3ad0035"
+      "sha256": "8d427b121d8c356a5838814a498018333a742f6b38834cf5254f09d3890aeabe"
     },
     "invalidCommission": {
       "scenario": {
@@ -129,7 +129,7 @@
         "costDeltaPct": 0,
         "profitDelta": 0
       },
-      "sha256": "a497dd655b8f7b8d87dcf1be56fb5f9b617d53b67a4d53e02e37ae32a51cf196"
+      "sha256": "9c5d1e6375b9f47c0ddf8b14f58a7f27ec9fba4ec725dde011e2aea45d90cf8f"
     },
     "missingWidth": {
       "scenario": {

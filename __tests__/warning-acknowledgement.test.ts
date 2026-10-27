@@ -16,7 +16,8 @@ describe('warningAcknowledgementKey', () => {
   it('changes when a warned value changes, even if the warning text is identical', () => {
     const reviewed = withWarpRate(1001)
     const changed = withWarpRate(2000)
-    const warnings = (state: typeof reviewed) => validateEstimatorSnapshot(state, { requireTapeLength: false }).warnings ?? []
+    const warnings = (state: typeof reviewed) => (validateEstimatorSnapshot(state, { requireTapeLength: false }).warnings ?? [])
+      .map(({ field, message }) => ({ field, message }))
     // Same field and message for both rates: the old key could be reused.
     expect(warnings(changed)).toEqual(warnings(reviewed))
     expect(warnings(reviewed).length).toBeGreaterThan(0)
