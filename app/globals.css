@@ -813,6 +813,22 @@
     }
   }
 
+  /* Lite pages keep the left side exactly as every other page (centring space
+     plus --main-pad beside the sidebar) and drop only the right gap: the column
+     runs on to the window edge with a slim gutter. The docked Live Cost
+     shortcut reads --main-inset, so it follows the new right edge. */
+  @media (min-width: 768px) {
+    :root:has([data-owner-shell][data-plan-tier="lite"]) {
+      --main-inset: 0.75rem;
+    }
+    :root:has([data-owner-shell][data-plan-tier="lite"]) .dashboard-main {
+      max-width: none;
+      margin-left: calc((var(--shell-area) - min(var(--shell-area), var(--main-max))) / 2);
+      margin-right: 0;
+      padding-right: 0.75rem;
+    }
+  }
+
   .estimator-workspace-shell,
   .stock-workspace-shell,
   .payroll-workspace-shell,
