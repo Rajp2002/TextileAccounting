@@ -45,6 +45,15 @@ describe('Desktop workspace composition (sidebar | full-width workspace)', () =>
         expect(read('components/settings/plan-aware/plan-aware-settings-view.tsx')).toContain('max-w-[960px]')
     })
 
+    it('lets Lite pages run to the right window edge while keeping the left gap', () => {
+        expect(read('app/(dashboard)/owner/layout.tsx')).toContain('data-plan-tier={access.effectiveTier}')
+        // Only the right gap goes: the left keeps the shared centring offset and --main-pad.
+        expect(styles).toMatch(/--main-max:\s*1440px;/)
+        expect(styles).toMatch(/:root:has\(\[data-owner-shell\]\[data-plan-tier="lite"\]\) \.dashboard-main \{\s*max-width: none;\s*margin-left: calc\(\(var\(--shell-area\) - min\(var\(--shell-area\), var\(--main-max\)\)\) \/ 2\);\s*margin-right: 0;\s*padding-right: 0\.75rem;/)
+        // The tour lane comes later, so it still wins while a tour runs.
+        expect(styles.indexOf('data-plan-tier="lite"]) .dashboard-main')).toBeLessThan(styles.indexOf(':root:has(.guided-tour-panel) .dashboard-main'))
+    })
+
     it('gives every route workspace the full content width at every breakpoint', () => {
         const composition = styles.slice(styles.indexOf('/* ── Workspace composition'), styles.indexOf('.estimator-workspace-main {'))
         for (const shell of shells) expect(composition).toContain(`.${shell}`)
