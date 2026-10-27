@@ -23,7 +23,6 @@ function renderScope(options: { readOnly?: MarginReadOnlyReason | null; base?: t
             versionNumber={2}
             latestVersionNumber={2}
             isSample
-            costLabel="Production Cost / m"
             priceLabel="Suggested price / m"
             onSave={async () => true}
         >
@@ -78,6 +77,14 @@ describe('margin control in the breakdown', () => {
         expect(html).not.toContain('Save as v3')
         expect(html).not.toContain('Reset')
         expect(paused).toBe(false)
+    })
+
+    it('works the price out from the production cost and the margin', () => {
+        const { html } = renderScope()
+        const text = html.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ')
+        expect(text).toContain('₹17.44 ÷ (1 − 12.0% margin)')
+        // A costing whose saved price no longer earns its saved margin shows the price without a sum.
+        expect(renderScope({ readOnly: 'older', saved: { ...sampleV2.result, actualMarginPct: 8.3 } }).html).not.toContain('÷')
     })
 
     it('names the sample as explore-only', () => {

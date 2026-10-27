@@ -23,6 +23,7 @@ export const costingMarginText = {
         readOnlyArchived: 'Archived costings are read-only. Restore it to change the margin.',
         readOnlyOlder: 'Only the latest version can be changed. Open v{n} to change its margin.',
         readOnlyChecked: 'This costing cannot be adjusted here. Recalculate it into a new version to change its margin.',
+        marginTerm: '{pct}% margin', commissionTerm: '{pct}% commission', transportTerm: '₹{amount} transport',
     },
     hi: {
         title: 'लक्षित मार्जिन',
@@ -47,6 +48,7 @@ export const costingMarginText = {
         readOnlyArchived: 'आर्काइव की गई कॉस्टिंग सिर्फ़ देखी जा सकती है। मार्जिन बदलने के लिए इसे वापस लाएँ।',
         readOnlyOlder: 'सिर्फ़ सबसे नया वर्ज़न बदला जा सकता है। मार्जिन बदलने के लिए v{n} खोलें।',
         readOnlyChecked: 'इस कॉस्टिंग का मार्जिन यहाँ नहीं बदला जा सकता। बदलने के लिए इसे नए वर्ज़न में दोबारा गिनें।',
+        marginTerm: '{pct}% मार्जिन', commissionTerm: '{pct}% कमीशन', transportTerm: '₹{amount} ट्रांसपोर्ट',
     },
     gu: {
         title: 'લક્ષિત માર્જિન',
@@ -71,6 +73,7 @@ export const costingMarginText = {
         readOnlyArchived: 'આર્કાઇવ કરેલી કોસ્ટિંગ ફક્ત જોઈ શકાય છે. માર્જિન બદલવા તેને પાછી લાવો.',
         readOnlyOlder: 'ફક્ત સૌથી નવું વર્ઝન બદલી શકાય છે. માર્જિન બદલવા v{n} ખોલો.',
         readOnlyChecked: 'આ કોસ્ટિંગનું માર્જિન અહીં બદલી શકાતું નથી. બદલવા તેને નવા વર્ઝનમાં ફરી ગણો.',
+        marginTerm: '{pct}% માર્જિન', commissionTerm: '{pct}% કમિશન', transportTerm: '₹{amount} ટ્રાન્સપોર્ટ',
     },
 } as const
 

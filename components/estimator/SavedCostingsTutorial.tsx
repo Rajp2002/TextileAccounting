@@ -24,7 +24,7 @@ const railCopy = {
       ],
       "breakdown": [
         "Read the selected breakdown",
-        "The active version badge identifies the snapshot being shown. Review yarn and other cost components, production cost, selling price and profit. Saved numbers do not use today’s rates. Older incomplete snapshots may show a review notice instead of a detailed breakdown."
+        "Choose a version in the list on the left; the highlighted one is shown. The breakdown works out each yarn’s weight and cost from its saved inputs, then adds wastage, weaving and factory expenses, and the margin gives the selling price. Saved numbers do not use today’s rates. Older versions may show only their saved totals."
       ],
       "organize": [
         "Find and maintain records",
@@ -58,7 +58,7 @@ const railCopy = {
       ],
       "breakdown": [
         "પસંદ કરેલી વિગતો વાંચો",
-        "Active breakdown બેજ પસંદ કરેલો સ્નેપશોટ બતાવે છે. યાર્ન, અન્ય ખર્ચ, ઉત્પાદન ખર્ચ, વેચાણ ભાવ અને નફો જુઓ. સાચવેલા આંકડા આજના રેટ વાપરતા નથી. જૂના અધૂરા સ્નેપશોટમાં વિગતોને બદલે સમીક્ષા સૂચના હોઈ શકે."
+        "ડાબી બાજુની યાદીમાંથી વર્ઝન પસંદ કરો; હાઇલાઇટ થયેલું વર્ઝન બતાવાય છે. વિગતમાં દરેક યાર્નનું વજન અને ખર્ચ તેના સાચવેલા ઇનપુટ પરથી ગણાય છે, પછી વેસ્ટેજ, વણાટ અને ફેક્ટરી ખર્ચ ઉમેરાય છે, અને માર્જિન પરથી વેચાણ ભાવ મળે છે. સાચવેલા આંકડા આજના રેટ વાપરતા નથી. જૂના વર્ઝનમાં ફક્ત સાચવેલા કુલ આંકડા દેખાઈ શકે."
       ],
       "organize": [
         "રેકોર્ડ શોધો અને જાળવો",
@@ -92,7 +92,7 @@ const railCopy = {
       ],
       "breakdown": [
         "चुना हुआ विवरण पढ़ें",
-        "Active breakdown बैज चुना स्नैपशॉट बताता है। धागा, अन्य खर्च, उत्पादन लागत, बिक्री मूल्य और लाभ देखें। सेव किए आंकड़े आज के रेट नहीं लेते। पुराने अधूरे स्नैपशॉट में विवरण की जगह समीक्षा सूचना हो सकती है।"
+        "बाईं ओर की सूची से वर्ज़न चुनें; हाइलाइट वाला वर्ज़न दिखता है। विवरण में हर यार्न का वज़न और लागत उसके सेव किए इनपुट से निकलती है, फिर वेस्टेज, बुनाई और फैक्ट्री खर्च जुड़ते हैं, और मार्जिन से बिक्री मूल्य मिलता है। सेव किए आंकड़े आज के रेट नहीं लेते। पुराने वर्ज़न में सिर्फ़ सेव किए कुल आंकड़े दिख सकते हैं।"
       ],
       "organize": [
         "रिकॉर्ड खोजें और सँभालें",

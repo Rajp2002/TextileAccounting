@@ -89,10 +89,12 @@ describe('Saved Costings reference tour', () => {
   it('uses the same resolver as each live control, including the two approved scoped keys', () => {
     expect(page).not.toContain("tourControls.savedCostings.use")
     expect(page).toContain("t('tourControls.savedCostings.archived')")
-    for (const key of ['viewBreakdown', 'internalEstimate', 'customerQuotation', 'activateForProduction', 'export'] as const) {
+    for (const key of ['internalEstimate', 'customerQuotation', 'activateForProduction', 'export'] as const) {
       const label = en.tourControls.savedCostings[key]
       expect(page + read('components/estimator/CostingExportDialog.tsx') + freePage).toContain(`tx('${label}')`)
     }
+    // A version is chosen from the breakdown's version list, so no step names the retired View breakdown button.
+    for (const copy of Object.values(savedCostingsTutorialCopy)) expect(Object.values(copy).join(' ')).not.toContain('{c:viewBreakdown}')
     expect(page).toContain("t('common.new_costing')")
     expect(controls.newCosting).toBe(en.common.new_costing)
   })
