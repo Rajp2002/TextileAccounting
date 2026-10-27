@@ -43,7 +43,6 @@ import {
     AlertTriangle,
     Copy,
     Search,
-    Eye,
     Plus,
     Star,
     Archive,
@@ -80,7 +79,7 @@ import { isStandaloneCosting, type CostingRecordKind } from '@/lib/costing-works
 import { useTranslation } from '@/lib/i18n/context'
 import { trackPlanEvent } from '@/lib/plan-analytics'
 import { RouteMilestones } from '@/components/performance/route-milestones'
-import { EmptyState, PageHeader, StatusBadge } from '@/components/ui/page-header'
+import { EmptyState, PageHeader } from '@/components/ui/page-header'
 import { LiquidSegmented } from '@/components/ui/liquid-segmented'
 import { useOwnerPlan } from '@/components/providers/owner-plan-provider'
 import { liteRecordsCopy } from '@/lib/i18n/lite-records'
@@ -93,8 +92,9 @@ import { fillCopy } from '@/lib/i18n/fill'
 import { costingMarginText } from '@/lib/i18n/costing-margin'
 import { offerCheckText } from '@/lib/i18n/offer-check'
 import { CostingMarginScope, marginTone, type MarginReadOnlyReason } from '@/components/estimator/SavedCostingMargin'
-import { SavedCostingSpecs } from '@/components/estimator/SavedCostingSpecs'
-import { buildSavedCostingSpecs } from '@/lib/saved-costing-specs'
+import { SavedCostingFormula } from '@/components/estimator/SavedCostingFormula'
+import { buildSavedCostingFormula } from '@/lib/saved-costing-formula'
+import { savedCostingFormulaText } from '@/lib/i18n/saved-costing-formula'
 
 const CostingExportDialog = dynamic(
     () => import('@/components/estimator/CostingExportDialog').then(module => module.CostingExportDialog),
@@ -265,10 +265,6 @@ function getHistoricalCostingResult(quote: QuoteRow): CostingResultSnapshot | nu
     return parseCostingResultSnapshot(quote.costing_result_snapshot)
 }
 
-function formatCostingMoneyPerM(value: number | null) {
-    return value == null ? 'Not available' : `₹${value.toFixed(2)}/m`
-}
-
 function formatCostingPercent(value: number | null) {
     return value == null ? 'Not available' : `${value.toFixed(1)}%`
 }
@@ -314,7 +310,6 @@ function SavedQualityLibraryView({
     onToggleFavorite,
     onToggleArchived,
     onEnsureDetail,
-    factoryInputsCapturedLabel,
     tourStep,
     selectedRecordIdByGroup,
     onSelectRecord,
@@ -337,7 +332,6 @@ function SavedQualityLibraryView({
     onToggleFavorite: (quote: QuoteRow) => void
     onToggleArchived: (quote: QuoteRow) => void
     onEnsureDetail?: (quote: QuoteRow) => Promise<QuoteRow | null>
-    factoryInputsCapturedLabel: string
     selectedRecordIdByGroup: Record<string, string>
     onSelectRecord: (groupKey: string, recordId: string) => void
     /** Saves a what-if margin from the breakdown as the next version; true when it was saved. */
@@ -349,6 +343,7 @@ function SavedQualityLibraryView({
     const { t, tx, language } = useTranslation()
     const copy = costingCatalogueText[language]
     const offerCopy = offerCheckText[language]
+    const formulaCopy = savedCostingFormulaText[language]
 
     return (
         <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(min(100%,30rem),1fr))]">
@@ -363,19 +358,6 @@ function SavedQualityLibraryView({
                 const latestResult = activeRecord ? getHistoricalCostingResult(activeRecord) : null
                 const activeResult = latestResult
                 const activeDetailLoading = targetRecord != null && detailLoadingId === targetRecord.id
-                const activeYarnCostLines: Array<[string, number]> = activeResult?.audit
-                    ? [
-                        ['Base warp yarn', activeResult.audit.warp.layers.reduce((sum, row) => sum + row.baseCostPerMeter, 0)],
-                        ['Base weft yarn', activeResult.audit.weft.layers.reduce((sum, row) => sum + row.baseCostPerMeter, 0)],
-                        ['Yarn wastage / crimp', activeResult.audit.yarnAdjustmentCostPerMeter],
-                    ]
-                    : activeResult
-                        ? [
-                            ['Warp yarn (saved adjusted cost)', activeResult.breakdown.warpCostPerM],
-                            ['Weft yarn (saved adjusted cost)', activeResult.breakdown.weftCostPerM],
-                        ]
-                        : []
-                const activeMix = activeResult ? costMix(activeResult.breakdown) : null
                 // The breakdown's margin slider: only the latest, checked, unarchived version can
                 // be changed (a save adds the next version), and only while its dialog is open.
                 const activeVersionNumber = Number(activeRecord?.version_number ?? 1)
@@ -388,10 +370,24 @@ function SavedQualityLibraryView({
                             ? 'older'
                             : getCostingStatus(activeRecord) !== 'verified' ? 'checked' : null
                 const marginBase = isOpen && activeRecord && !marginReadOnly ? buildDraftStateFromQuote(activeRecord) : null
-                // The inputs this version was priced from, read from its own saved state. A record with
-                // no saved rows would fall back to today's defaults, which were never its inputs.
+                // The worksheet is read from this version's own saved inputs. A record with no saved
+                // rows would fall back to today's defaults, which were never its inputs, so it shows
+                // the saved figures without the rates behind them.
                 const hasSavedInputs = activeRecord != null && (activeRecord.snapshot_data != null || (activeRecord.warp_rows?.length ?? 0) > 0)
-                const activeSpecs = isOpen && activeRecord && hasSavedInputs && activeResult ? buildSavedCostingSpecs(buildDraftStateFromQuote(activeRecord), activeResult) : null
+                const activeFormula = isOpen && activeRecord && activeResult
+                    ? buildSavedCostingFormula(activeResult, hasSavedInputs ? marginBase ?? buildDraftStateFromQuote(activeRecord) : null)
+                    : null
+                const hasVersionList = group.records.length > 1
+                const shownRecord = activeRecord ?? (hasVersionList ? null : latest)
+                const dialogDescription = shownRecord
+                    ? [
+                        fillCopy(formulaCopy.version, { n: Number(shownRecord.version_number ?? 1) }),
+                        fillCopy(formulaCopy.savedOn, { date: formatTimestampDate(shownRecord.created_at, { day: 'numeric', month: 'short', year: 'numeric' }) }),
+                        Number(shownRecord.meters) > 0 ? fillCopy(formulaCopy.costedFor, { m: Number(shownRecord.meters).toLocaleString('en-IN') }) : null,
+                    ].filter(Boolean).join(' · ')
+                    : group.records.length > 0
+                        ? `${group.records.length} saved ${group.records.length === 1 ? 'version' : 'versions'} · updated ${formatTimestampDate(group.updatedAt, { day: 'numeric', month: 'short', year: 'numeric' })}`
+                        : 'Saved recipe · no saved costing yet'
                 const openGroupDetails = () => onOpenDetails(group.key, latest)
                 const handleInspectRecord = (record: QuoteRow) => {
                     onSelectRecord(group.key, record.id)
@@ -601,20 +597,19 @@ function SavedQualityLibraryView({
                                     // Beside the nav the dialog centres in the content area. On a phone it is a bottom
                                     // sheet (app/mobile.css) and must keep its own `left: 0`, so the offset is for sm+ only.
                                     style={{ '--costing-dialog-left': 'calc(50% + clamp(0px, calc((100vw - 1212px) / 2), calc(var(--shell-sidebar-w) / 2)))' } as CSSProperties}
-                                    className="w-[calc(100vw-2rem)] max-h-[calc(100dvh-2rem)] max-w-[calc(100vw-2rem)] gap-0 overflow-hidden p-0 sm:left-[var(--costing-dialog-left)] sm:w-[calc(100vw-2rem)] sm:max-h-[calc(100dvh-2rem)] sm:max-w-[1180px]"
+                                    className="@container w-[calc(100vw-2rem)] max-h-[calc(100dvh-2rem)] max-w-[calc(100vw-2rem)] gap-0 overflow-hidden p-0 sm:left-[var(--costing-dialog-left)] sm:p-0 sm:w-[calc(100vw-2rem)] sm:max-h-[calc(100dvh-2rem)] sm:max-w-[1180px]"
                                 >
-                                    <div className="max-h-[calc(100dvh-2rem)] min-w-0 overflow-x-hidden overflow-y-auto sm:flex sm:flex-col sm:overflow-y-hidden">
+                                    {/* The layout follows the dialog's own width, which a tour narrows to fit its card: from 840px the
+                                        version list sits beside the breakdown and each scrolls on its own, and with several versions the
+                                        dialog keeps one height so picking another never resizes it. Narrower, the versions are a row
+                                        above the breakdown and the whole dialog scrolls. */}
+                                    <div className={cn('max-h-[calc(100dvh-2rem)] min-w-0 overflow-x-hidden overflow-y-auto @min-[840px]:flex @min-[840px]:flex-col @min-[840px]:overflow-y-hidden', hasVersionList && '@min-[840px]:h-[min(880px,calc(100dvh-2rem))]')}>
                                         <DialogHeader className="relative sticky top-0 z-20 shrink-0 border-b border-hairline bg-surface px-5 py-4 pr-16 sm:px-6 sm:pr-16">
                                             <div className="flex min-w-0 items-center gap-2">
-                                                <DialogTitle className="min-w-0 flex-1 truncate text-xl font-semibold tracking-[-0.01em]" title={group.name}>{group.name}</DialogTitle>
+                                                <DialogTitle data-i18n-skip="true" className="min-w-0 flex-1 truncate text-xl font-semibold tracking-[-0.01em]" title={group.name}>{group.name}</DialogTitle>
                                                 {group.template?.is_active === false && <Badge variant="outline" className="border-hairline bg-surface-soft text-xs font-bold text-subtle">{tx('Archived · read-only')}</Badge>}
-                                                {(activeRecord ?? latest) && <Badge variant="outline" className="text-xs font-bold">v{Number((activeRecord ?? latest)?.version_number ?? 1)}</Badge>}
                                             </div>
-                                            <DialogDescription>
-                                                {group.records.length > 0
-                                                    ? `${group.records.length} saved ${group.records.length === 1 ? 'version' : 'versions'} · updated ${formatTimestampDate(group.updatedAt, { day: 'numeric', month: 'short', year: 'numeric' })}`
-                                                    : 'Saved recipe · no saved costing yet'}
-                                            </DialogDescription>
+                                            <DialogDescription data-i18n-skip={shownRecord ? 'true' : undefined} lang={shownRecord ? language : undefined} className="tabular-nums">{dialogDescription}</DialogDescription>
                                             {!tourStep && <DialogClose asChild>
                                                 <button
                                                     type="button"
@@ -626,234 +621,169 @@ function SavedQualityLibraryView({
                                             </DialogClose>}
                                         </DialogHeader>
 
-                                        {/* Beside the nav the breakdown stays put and only the version history scrolls; the history keeps a
-                                            minimum height, so on a short window the whole body scrolls instead. */}
-                                        <div className="ui-disclosure-content w-full min-w-0 bg-surface-soft/60 p-4 sm:flex sm:min-h-0 sm:flex-1 sm:flex-col sm:overflow-y-auto sm:p-5">
-                                    {!activeRecord || activeDetailLoading || !activeResult ? (
-                                        <div className="flex w-full shrink-0 flex-col items-center justify-center rounded-xl border border-dashed border-hairline bg-surface px-6 py-10 text-center">
-                                            {activeDetailLoading ? <Loader2 className="h-6 w-6 animate-spin text-info" /> : (activeRecord ?? latest) ? <AlertTriangle className="h-6 w-6 text-warning" /> : <FileText className="h-6 w-6 text-subtle" />}
-                                            <p className="mt-3 text-sm font-bold text-body">{tx(activeDetailLoading
-                                                ? 'Loading saved costing details…'
-                                                : !activeRecord
-                                                    ? group.records.length > 1
-                                                        ? 'Choose a costing version to view its breakdown'
-                                                        : 'No costing saved for this quality yet'
-                                                    : !activeResult
-                                                        ? 'This saved costing does not have a detailed breakdown yet'
-                                                        : group.currentRecipeCostPerM != null
-                                                            ? `Current recipe estimate: ₹${group.currentRecipeCostPerM.toFixed(2)}/m`
-                                                            : 'No costing saved for this quality yet')}</p>
-                                            <p className="mt-1 max-w-md text-xs text-subtle">{tx(activeDetailLoading
-                                                ? 'Loading the saved costs and price breakdown for this costing.'
-                                                : !activeRecord
-                                                    ? group.records.length > 1
-                                                        ? 'This quality has multiple saved versions. Select View breakdown on the version you want to inspect; saved commercial totals remain unchanged.'
-                                                        : group.currentRecipeCostPerM != null
-                                                            ? 'This is a live estimate from the saved yarns and today’s factory costs, not a saved costing. Set a quantity and choose Save Costing to keep the full breakdown.'
-                                                            : 'Open Cost Estimate, choose this saved quality, set the costing quantity, and choose Save Costing. Its analysis will then appear here.'
-                                                    : 'The saved commercial totals remain available in Saved Costing history. Open this version in Cost Estimate to review its saved assumptions.')}</p>
-                                            {targetRecord && !activeDetailLoading && (
-                                                <div className="mt-4 flex flex-wrap justify-center gap-2">
-                                                    <Button variant="outline" size="sm" onClick={() => onStartFrom(targetRecord)}><Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}</Button>
-                                                    <Button variant="outline" size="sm" onClick={() => onExport(targetRecord)}><Download className="h-3.5 w-3.5" /> {tx('Export')}</Button>
-                                                    <Button variant="outline" size="sm" onClick={() => onSaveAsNewQuality(targetRecord)}><BookmarkPlus className="h-3.5 w-3.5" /> {tx('Save as separate quality')}</Button>
-                                                    {canUseProductionPipeline && isStandaloneCosting(targetRecord.record_kind) && !targetRecord.is_archived && (
-                                                        <Link
-                                                                prefetch={tourStep ? false : undefined}
-                                                                data-costing-tour="production"
-                                                            href={`/owner/production?tab=jobs&costingId=${encodeURIComponent(targetRecord.id)}`}
-                                                            onClick={() => trackPlanEvent('production_cta_clicked', { source: 'saved_costing_detail' })}
-                                                            className="inline-flex h-9 items-center gap-1.5 rounded-md border border-saffron/30 bg-saffron-soft px-3 text-xs font-semibold text-saffron-deep hover:bg-saffron-soft/80"
-                                                        >
-                                                            <Factory className="h-3.5 w-3.5" /> {tx('Activate for Production')}
-                                                        </Link>
-                                                    )}
-                                                </div>
+                                        <div className={cn('ui-disclosure-content min-w-0 @min-[840px]:grid @min-[840px]:min-h-0 @min-[840px]:flex-1 @min-[840px]:grid-rows-[minmax(0,1fr)_auto]', hasVersionList && '@min-[840px]:grid-cols-[264px_minmax(0,1fr)]')}>
+                                            {hasVersionList && (
+                                                <nav
+                                                    data-costing-tour="versions"
+                                                    data-i18n-skip="true"
+                                                    lang={language}
+                                                    aria-label={fillCopy(formulaCopy.versionsLabel, { name: group.name })}
+                                                    className="min-w-0 border-b border-hairline bg-[var(--wv-bg-canvas)] @min-[840px]:min-h-0 @min-[840px]:overflow-y-auto @min-[840px]:overscroll-contain @min-[840px]:border-b-0 @min-[840px]:border-r"
+                                                >
+                                                    <p className="px-5 pt-3 text-[13px] font-semibold text-muted-foreground @min-[840px]:pt-4">{formulaCopy.versions}</p>
+                                                    <ul className="flex gap-2 overflow-x-auto px-4 pb-3 pt-2 @min-[840px]:flex-col @min-[840px]:gap-1 @min-[840px]:overflow-visible @min-[840px]:px-3 @min-[840px]:pb-4">
+                                                        {group.records.map(record => {
+                                                            const isInspected = activeRecord?.id === record.id
+                                                            const versionNumber = Number(record.version_number ?? 1)
+                                                            const cost = getProductionCostPerM(record)
+                                                            const price = getSuggestedSellingPricePerM(record)
+                                                            const margin = getActualMarginPct(record)
+                                                            const costingStatus = getCostingStatus(record)
+                                                            return (
+                                                                <li key={record.id} className="w-[15.5rem] shrink-0 @min-[840px]:w-auto">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => handleInspectRecord(record)}
+                                                                        aria-current={isInspected ? 'true' : undefined}
+                                                                        className={cn(
+                                                                            'w-full rounded-lg border px-3 py-2.5 text-left transition-colors duration-150 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/50',
+                                                                            isInspected ? 'border-[var(--wv-neel-200)] bg-[var(--wv-bg-selected)]' : 'border-transparent hover:border-hairline hover:bg-surface',
+                                                                        )}
+                                                                    >
+                                                                        <span className="flex items-baseline justify-between gap-2">
+                                                                            <span className="text-sm font-semibold text-ink">{fillCopy(formulaCopy.version, { n: versionNumber })}</span>
+                                                                            {detailLoadingId === record.id
+                                                                                ? <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" aria-hidden="true" />
+                                                                                : versionNumber === latestVersionNumber && <span className="text-xs text-muted-foreground">{formulaCopy.latest}</span>}
+                                                                        </span>
+                                                                        <span className="mt-0.5 block text-[13px] tabular-nums text-muted-foreground">{fillCopy(formulaCopy.savedOn, { date: formatTimestampDate(record.created_at, { day: 'numeric', month: 'short', year: 'numeric' }) })}</span>
+                                                                        <span className="mt-2 block text-sm font-semibold tabular-nums text-ink">{cost == null ? formulaCopy.noCost : `₹${cost.toFixed(2)}/m`}</span>
+                                                                        {price != null && (
+                                                                            <span className="block text-[13px] tabular-nums text-muted-foreground">
+                                                                                {fillCopy(formulaCopy.sellsAt, { price: price.toFixed(2) })}
+                                                                                {margin != null && <> · <span className={marginTone(margin)}>{fillCopy(formulaCopy.marginPct, { pct: margin.toFixed(1) })}</span></>}
+                                                                            </span>
+                                                                        )}
+                                                                        {costingStatus !== 'verified' && <span className="mt-1 block text-[13px] font-medium text-[var(--wv-ochre-800)]">{tx(getCostingBadge(costingStatus))}</span>}
+                                                                    </button>
+                                                                </li>
+                                                            )
+                                                        })}
+                                                    </ul>
+                                                </nav>
                                             )}
-                                        </div>
-                                    ) : (
-                                        <div className="grid gap-4 sm:shrink-0">
-                                            <CostingMarginScope
-                                                key={activeRecord.id}
-                                                base={marginBase}
-                                                saved={latestResult}
-                                                readOnly={marginReadOnly}
-                                                versionNumber={activeVersionNumber}
-                                                latestVersionNumber={latestVersionNumber}
-                                                isSample={isSampleRecordId(activeRecord.id)}
-                                                costLabel={t('common.production_cost_per_m')}
-                                                priceLabel={t('common.suggested_selling_price_per_m')}
-                                                onSave={(marginPct, clientRequestId) => onSaveMargin(activeRecord, group.key, marginPct, clientRequestId)}
-                                            >
-                                            {({ paused, pausedTitle, economics }) => (
-                                            <section data-costing-tour="breakdown" className="rounded-xl border border-hairline bg-surface p-4">
-                                                <div className="flex flex-wrap items-start justify-between gap-3">
-                                                    <div>
-                                                        <p className="text-base font-semibold text-ink">{tx(group.records.length > 1 ? `Saved Costing v${Number(activeRecord.version_number ?? 1)} breakdown` : 'Latest Saved Costing breakdown')}</p>
-                                                        <p className="mt-0.5 text-[13px] text-muted-foreground">{`Version ${Number(activeRecord.version_number ?? 1)} · ${formatTimestampDate(activeRecord.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}`}</p>
-                                                    </div>
-                                                    <div data-costing-tour="reuse" className="flex flex-wrap gap-2">
-                                                        <Button variant="outline" size="sm" onClick={() => onStartFrom(activeRecord)} disabled={paused} title={pausedTitle}><Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}</Button>
-                                                        <Button variant="outline" size="sm" onClick={() => onExport(activeRecord)} disabled={paused} title={pausedTitle}><Download className="h-3.5 w-3.5" /> {tx('Export')}</Button>
-                                                        <Button variant="outline" size="sm" onClick={() => onSaveAsNewQuality(activeRecord)} disabled={paused} title={pausedTitle}><BookmarkPlus className="h-3.5 w-3.5" /> {tx('Save as separate quality')}</Button>
-                                                        {canUseProductionPipeline && isStandaloneCosting(activeRecord.record_kind) && !activeRecord.is_archived && (
-                                                            <Link
-                                                                prefetch={tourStep ? false : undefined}
-                                                                data-costing-tour="production"
-                                                                href={`/owner/production?tab=jobs&costingId=${encodeURIComponent(activeRecord.id)}`}
-                                                                onClick={event => { if (paused) event.preventDefault(); else trackPlanEvent('production_cta_clicked', { source: 'saved_costing_breakdown' }) }}
-                                                                aria-disabled={paused || undefined}
-                                                                title={pausedTitle}
-                                                                className={cn('inline-flex h-9 items-center gap-1.5 rounded-md border border-saffron/30 bg-saffron-soft px-3 text-xs font-semibold text-saffron-deep hover:bg-saffron-soft/80', paused && 'pointer-events-none opacity-50')}
-                                                            >
-                                                                <Factory className="h-3.5 w-3.5" /> {tx('Activate for Production')}
-                                                            </Link>
+
+                                            {!activeRecord || activeDetailLoading || !activeResult ? (
+                                                <div className="min-w-0 p-4 sm:p-6 @min-[840px]:min-h-0 @min-[840px]:overflow-y-auto">
+                                                    <div className="flex w-full flex-col items-center justify-center rounded-xl border border-dashed border-hairline bg-surface px-6 py-10 text-center">
+                                                        {activeDetailLoading ? <Loader2 className="h-6 w-6 animate-spin text-info" /> : (activeRecord ?? latest) ? <AlertTriangle className="h-6 w-6 text-warning" /> : <FileText className="h-6 w-6 text-subtle" />}
+                                                        <p className="mt-3 text-sm font-bold text-body">{tx(activeDetailLoading
+                                                            ? 'Loading saved costing details…'
+                                                            : !activeRecord
+                                                                ? group.records.length > 1
+                                                                    ? 'Choose a costing version to view its breakdown'
+                                                                    : 'No costing saved for this quality yet'
+                                                                : !activeResult
+                                                                    ? 'This saved costing does not have a detailed breakdown yet'
+                                                                    : group.currentRecipeCostPerM != null
+                                                                        ? `Current recipe estimate: ₹${group.currentRecipeCostPerM.toFixed(2)}/m`
+                                                                        : 'No costing saved for this quality yet')}</p>
+                                                        <p className="mt-1 max-w-md text-xs text-subtle">{tx(activeDetailLoading
+                                                            ? 'Loading the saved costs and price breakdown for this costing.'
+                                                            : !activeRecord
+                                                                ? group.records.length > 1
+                                                                    ? 'Choose a version from the list to see how its cost was worked out.'
+                                                                    : group.currentRecipeCostPerM != null
+                                                                        ? 'This is a live estimate from the saved yarns and today’s factory costs, not a saved costing. Set a quantity and choose Save Costing to keep the full breakdown.'
+                                                                        : 'Open Cost Estimate, choose this saved quality, set the costing quantity, and choose Save Costing. Its analysis will then appear here.'
+                                                                : 'Its saved cost and price are kept as they were saved. Open this version in Cost Estimate to review its saved assumptions.')}</p>
+                                                        {targetRecord && !activeDetailLoading && (
+                                                            <div className="mt-4 flex flex-wrap justify-center gap-2">
+                                                                <Button variant="outline" size="sm" onClick={() => onStartFrom(targetRecord)}><Copy className="h-3.5 w-3.5" /> {tx('Duplicate')}</Button>
+                                                                <Button variant="outline" size="sm" onClick={() => onExport(targetRecord)}><Download className="h-3.5 w-3.5" /> {tx('Export')}</Button>
+                                                                <Button variant="outline" size="sm" onClick={() => onSaveAsNewQuality(targetRecord)}><BookmarkPlus className="h-3.5 w-3.5" /> {tx('Save as separate quality')}</Button>
+                                                                {canUseProductionPipeline && isStandaloneCosting(targetRecord.record_kind) && !targetRecord.is_archived && (
+                                                                    <Link
+                                                                        prefetch={tourStep ? false : undefined}
+                                                                        data-costing-tour="production"
+                                                                        href={`/owner/production?tab=jobs&costingId=${encodeURIComponent(targetRecord.id)}`}
+                                                                        onClick={() => trackPlanEvent('production_cta_clicked', { source: 'saved_costing_detail' })}
+                                                                        className="inline-flex h-9 items-center gap-1.5 rounded-md border border-saffron/30 bg-saffron-soft px-3 text-xs font-semibold text-saffron-deep hover:bg-saffron-soft/80"
+                                                                    >
+                                                                        <Factory className="h-3.5 w-3.5" /> {tx('Activate for Production')}
+                                                                    </Link>
+                                                                )}
+                                                            </div>
                                                         )}
-                                                        <Button variant="outline" size="sm" onClick={() => onToggleArchived(activeRecord)} disabled={updatingId === activeRecord.id} aria-busy={updatingId === activeRecord.id}>
-                                                            {updatingId === activeRecord.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : activeRecord.is_archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />}
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <CostingMarginScope
+                                                    key={activeRecord.id}
+                                                    base={marginBase}
+                                                    saved={latestResult}
+                                                    readOnly={marginReadOnly}
+                                                    versionNumber={activeVersionNumber}
+                                                    latestVersionNumber={latestVersionNumber}
+                                                    isSample={isSampleRecordId(activeRecord.id)}
+                                                    priceLabel={t('common.suggested_selling_price_per_m')}
+                                                    onSave={(marginPct, clientRequestId) => onSaveMargin(activeRecord, group.key, marginPct, clientRequestId)}
+                                                >
+                                                {({ paused, pausedTitle, economics }) => (
+                                                // From 840px the section's two parts join the dialog grid, so the footer runs under the version list too.
+                                                <section data-costing-tour="breakdown" className="flex min-w-0 flex-col @min-[840px]:contents">
+                                                    <div className="min-w-0 flex-1 px-4 py-4 sm:px-6 sm:py-5 @min-[840px]:min-h-0 @min-[840px]:overflow-y-auto @min-[840px]:overscroll-contain">
+                                                        {getCostingStatus(activeRecord) !== 'verified' && (
+                                                            <div className="mb-4 flex flex-col gap-3 rounded-lg border border-warning/25 bg-warning-soft px-3 py-3 text-xs text-warning sm:flex-row sm:items-center sm:justify-between">
+                                                                <div><p className="font-bold">{tx('Saved costing needs a check')}</p><p className="mt-1">{tx(activeRecord.reconciliation_note || getCostingTrustCopy(getCostingStatus(activeRecord)))}</p></div>
+                                                                <Button variant="outline" size="sm" onClick={() => onAudit(activeRecord)} disabled={auditingId === activeRecord.id} aria-busy={auditingId === activeRecord.id} className="shrink-0 border-warning/30 bg-surface text-warning hover:bg-warning-soft">
+                                                                    {auditingId === activeRecord.id && <Loader2 className="h-3.5 w-3.5 animate-spin" />} {tx(auditingId === activeRecord.id ? 'Checking…' : 'Check saved numbers')}
+                                                                </Button>
+                                                            </div>
+                                                        )}
+                                                        {activeFormula && <SavedCostingFormula formula={activeFormula} />}
+                                                        <div data-costing-tour="economics" className="mt-3 sm:-mx-4">{economics}</div>
+                                                    </div>
+                                                    <div className="flex shrink-0 flex-wrap items-center gap-2 border-t border-hairline bg-surface px-4 py-3 sm:px-6 @min-[840px]:col-span-full">
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            onClick={() => onToggleFavorite(activeRecord)}
+                                                            disabled={updatingId === activeRecord.id}
+                                                            aria-pressed={Boolean(activeRecord.is_favorite)}
+                                                            aria-label={fillCopy(activeRecord.is_favorite ? copy.removeFavourite : copy.addFavourite, { name: group.name })}
+                                                            className="h-10 w-10 shrink-0 max-md:h-11 max-md:w-11"
+                                                        >
+                                                            <Star className={cn('h-[18px] w-[18px]', activeRecord.is_favorite ? 'fill-saffron text-saffron-deep' : 'text-muted-foreground')} aria-hidden="true" />
+                                                        </Button>
+                                                        <Button variant="ghost" onClick={() => onToggleArchived(activeRecord)} disabled={updatingId === activeRecord.id} aria-busy={updatingId === activeRecord.id} className={ghostAction}>
+                                                            {updatingId === activeRecord.id ? <Loader2 className="h-4 w-4 animate-spin" /> : activeRecord.is_archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
                                                             {tx(updatingId === activeRecord.id ? activeRecord.is_archived ? `Restoring ${getSavedCostingIdentity(activeRecord).label}…` : `Archiving ${getSavedCostingIdentity(activeRecord).label}…` : (activeRecord.is_archived || latest.is_archived ? 'Restore costing' : 'Archive costing'))}
                                                         </Button>
-                                                    </div>
-                                                </div>
-
-                                                {activeMix && (
-                                                    <div className="mt-4" data-i18n-skip="true" lang={language}>
-                                                        <CompositionBar
-                                                            label={fillCopy(copy.mixLabel, { parts: activeMix.parts.map(part => `${copy[part.key]} ${Math.round((part.value / activeMix.total) * 100)}%`).join(', ') })}
-                                                            segments={activeMix.parts.map(part => ({ key: part.key, value: part.value, color: COST_MIX_COLORS[part.key] }))}
-                                                        />
-                                                        <ul className="mt-2.5 flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-muted-foreground">
-                                                            {activeMix.parts.filter(part => part.value > 0).map(part => (
-                                                                <li key={part.key} className="flex items-center gap-1.5 tabular-nums">
-                                                                    <Swatch color={COST_MIX_COLORS[part.key]} className="size-2" />
-                                                                    {copy[part.key]} <span className="text-body">{Math.round((part.value / activeMix.total) * 100)}%</span>
-                                                                </li>
-                                                            ))}
-                                                        </ul>
-                                                    </div>
-                                                )}
-                                                <div className="mt-4 divide-y divide-hairline text-sm">
-                                                    {[
-                                                        ...activeYarnCostLines,
-                                                        ['Weaving', latestResult.breakdown.weaveCostPerM],
-                                                        ['Warping & sizing', latestResult.breakdown.warpingAndSizingPerM],
-                                                        ['Processing & finishing', latestResult.breakdown.windingPerM + latestResult.breakdown.processingPerM + latestResult.breakdown.finishingPerM],
-                                                        ['Factory expenses', latestResult.breakdown.overheadPerM],
-                                                    ].map(([label, value]) => (
-                                                        <div key={String(label)} className="flex items-center justify-between py-2">
-                                                            <span className="text-body">{label}</span>
-                                                            <span className="font-mono font-semibold text-ink">₹{Number(value).toFixed(2)}/m</span>
+                                                        <div data-costing-tour="reuse" className="flex flex-wrap items-center gap-2 sm:ml-auto">
+                                                            {canUseProductionPipeline && isStandaloneCosting(activeRecord.record_kind) && !activeRecord.is_archived && (
+                                                                <Link
+                                                                    prefetch={tourStep ? false : undefined}
+                                                                    data-costing-tour="production"
+                                                                    href={`/owner/production?tab=jobs&costingId=${encodeURIComponent(activeRecord.id)}`}
+                                                                    onClick={event => { if (paused) event.preventDefault(); else trackPlanEvent('production_cta_clicked', { source: 'saved_costing_breakdown' }) }}
+                                                                    aria-disabled={paused || undefined}
+                                                                    title={pausedTitle}
+                                                                    className={cn('inline-flex h-10 items-center gap-1.5 rounded-lg border border-saffron/30 bg-saffron-soft px-3 text-sm font-semibold text-saffron-deep hover:bg-saffron-soft/80 max-md:min-h-[44px]', paused && 'pointer-events-none opacity-50')}
+                                                                >
+                                                                    <Factory className="h-4 w-4" /> {tx('Activate for Production')}
+                                                                </Link>
+                                                            )}
+                                                            <Button variant="ghost" onClick={() => onSaveAsNewQuality(activeRecord)} disabled={paused} title={pausedTitle} className={ghostAction}><BookmarkPlus className="h-4 w-4" /> {tx('Save as separate quality')}</Button>
+                                                            <Button variant="outline" onClick={() => onStartFrom(activeRecord)} disabled={paused} title={pausedTitle} className={secondaryAction}><Copy className="h-4 w-4" /> {tx('Duplicate')}</Button>
+                                                            <Button variant="outline" onClick={() => onExport(activeRecord)} disabled={paused} title={pausedTitle} className={secondaryAction}><Download className="h-4 w-4" /> {tx('Export')}</Button>
                                                         </div>
-                                                    ))}
-                                                </div>
-                                                <div data-costing-tour="economics" className="mt-3">{economics}</div>
-                                                {activeSpecs && <SavedCostingSpecs specs={activeSpecs} />}
-                                                {getCostingStatus(activeRecord) !== 'verified' && (
-                                                    <div className="mt-3 flex flex-col gap-3 rounded-lg border border-warning/25 bg-warning-soft px-3 py-3 text-xs text-warning sm:flex-row sm:items-center sm:justify-between">
-                                                        <div><p className="font-bold">{tx('Saved costing needs a check')}</p><p className="mt-1">{tx(activeRecord.reconciliation_note || getCostingTrustCopy(getCostingStatus(activeRecord)))}</p></div>
-                                                        <Button variant="outline" size="sm" onClick={() => onAudit(activeRecord)} disabled={auditingId === activeRecord.id} aria-busy={auditingId === activeRecord.id} className="shrink-0 border-warning/30 bg-surface text-warning hover:bg-warning-soft">
-                                                            {auditingId === activeRecord.id && <Loader2 className="h-3.5 w-3.5 animate-spin" />} {tx(auditingId === activeRecord.id ? 'Checking…' : 'Check saved numbers')}
-                                                        </Button>
                                                     </div>
+                                                </section>
                                                 )}
-                                            </section>
+                                                </CostingMarginScope>
                                             )}
-                                            </CostingMarginScope>
-
-                                        </div>
-                                    )}
-
-                                    {group.records.length > 0 && (
-                                        <section data-costing-tour="versions" className="mt-4 flex flex-col rounded-xl border border-hairline bg-surface p-4 sm:min-h-[14rem] sm:flex-1">
-                                            <p className="shrink-0 text-base font-semibold text-ink">Saved Costing history</p>
-                                            <p className="mt-0.5 shrink-0 text-[13px] text-muted-foreground">{tx('Open a version to inspect the exact assumptions and economics saved at that time.')}</p>
-                                            <div className="-mx-1 mt-2 space-y-2 px-1 py-1 sm:min-h-0 sm:flex-1 sm:overflow-y-auto sm:overscroll-contain">
-                                                {group.records.map(record => {
-                                                    const isInspected = activeRecord?.id === record.id
-                                                    const identity = getSavedCostingIdentity(record)
-                                                    const contextLabel = record.record_kind === 'market_run'
-                                                        ? 'Market run'
-                                                        : record.record_kind === 'quotation'
-                                                            ? `Customer Quotation · ${record.party_name || 'Customer not set'}`
-                                                            : 'Saved Costing'
-                                                    const costingStatus = getCostingStatus(record)
-                                                    return (
-                                                        <article
-                                                            key={record.id}
-                                                            onClick={event => {
-                                                                const target = event.target as HTMLElement
-                                                                if (target.closest('a, button, input, [data-costing-card-control]')) return
-                                                                handleInspectRecord(record)
-                                                            }}
-                                                            className={`rounded-lg border p-3 transition-colors duration-150 motion-reduce:transition-none cursor-pointer ${
-                                                                isInspected
-                                                                    ? 'border-saffron/40 bg-saffron-soft/20 shadow-sm ring-1 ring-saffron/30'
-                                                                    : 'border-hairline bg-surface hover:bg-surface-soft/70'
-                                                            }`}
-                                                        >
-                                                            <div className="flex min-w-0 items-start gap-3">
-                                                                <div className="min-w-0 flex-1">
-                                                                    <div className="flex flex-wrap items-center justify-between gap-2">
-                                                                        <p className="truncate text-xs font-bold text-ink" title={identity.label}>{identity.label}</p>
-                                                                        {isInspected && (
-                                                                            <Badge variant="outline" className="border-saffron/30 bg-saffron-soft text-xs font-bold text-saffron-deep">
-                                                                                {tx('Active breakdown')}
-                                                                            </Badge>
-                                                                        )}
-                                                                    </div>
-                                                                    <p className="mt-1 truncate text-xs text-subtle">{record.factory_profile_updated_at ? `${factoryInputsCapturedLabel} ${formatTimestampDate(record.factory_profile_updated_at, { day: 'numeric', month: 'short', year: 'numeric' })}` : `Saved ${formatTimestampDate(record.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}`}</p>
-                                                                    <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2 text-xs text-body">
-                                                                        <span className="min-w-0 max-w-full truncate rounded-full border border-hairline bg-surface-soft px-2 py-0.5" title={contextLabel}>{contextLabel}</span>
-                                                                        {costingStatus !== 'verified' && <StatusBadge status="needs_review" label={getCostingBadge(costingStatus)} />}
-                                                                    </div>
-                                                                    <dl className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                                                                        <div className="min-w-0 rounded-md bg-surface-soft px-2 py-1.5">
-                                                                            <dt className="truncate text-[12px] text-muted-foreground">Cost</dt>
-                                                                            <dd className="mt-0.5 truncate font-mono text-xs font-semibold text-body">{formatCostingMoneyPerM(getProductionCostPerM(record))}</dd>
-                                                                        </div>
-                                                                        <div className="min-w-0 rounded-md bg-surface-soft px-2 py-1.5">
-                                                                            <dt className="truncate text-[12px] text-muted-foreground">Selling price</dt>
-                                                                            <dd className="mt-0.5 truncate font-mono text-xs font-bold text-saffron-deep">{formatCostingMoneyPerM(getSuggestedSellingPricePerM(record))}</dd>
-                                                                        </div>
-                                                                        <div className="min-w-0 rounded-md bg-surface-soft px-2 py-1.5">
-                                                                            <dt className="truncate text-[12px] text-muted-foreground">Margin</dt>
-                                                                            <dd className="mt-0.5 truncate font-mono text-xs font-bold text-success">{formatCostingPercent(getActualMarginPct(record))}</dd>
-                                                                        </div>
-                                                                        <div className="min-w-0 rounded-md bg-surface-soft px-2 py-1.5">
-                                                                            <dt className="truncate text-[12px] text-muted-foreground">Costing qty.</dt>
-                                                                            <dd className="mt-0.5 truncate text-xs text-body">{Number(record.meters ?? 0).toLocaleString('en-IN')} m</dd>
-                                                                        </div>
-                                                                    </dl>
-                                                                    <div data-costing-card-control className="mt-3 flex flex-wrap items-center justify-end gap-1 border-t border-hairline pt-2">
-                                                                        {!record.is_archived && group.template?.is_active !== false && (
-                                                                            <Button
-                                                                                variant={isInspected ? "secondary" : "ghost"}
-                                                                                size="sm"
-                                                                                onClick={() => handleInspectRecord(record)}
-                                                                                disabled={updatingId === record.id || detailLoadingId === record.id}
-                                                                                aria-label={`View version ${Number(record.version_number ?? 1)} breakdown for ${group.name}`}
-                                                                                className="h-8 px-2 text-xs"
-                                                                            >
-                                                                                {detailLoadingId === record.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Eye className="h-3.5 w-3.5" />}
-                                                                                <span>{tx('View breakdown')}</span>
-                                                                            </Button>
-                                                                        )}
-                                                                        <Button variant="ghost" size="icon" onClick={() => onToggleFavorite(record)} disabled={updatingId === record.id} aria-label={record.is_favorite ? `Remove ${group.name} from favourites` : `Add ${group.name} to favourites`} className="h-8 w-8">
-                                                                            <Star className="h-4 w-4" fill={record.is_favorite ? 'currentColor' : 'none'} />
-                                                                        </Button>
-                                                                        <Button variant="ghost" size="sm" onClick={() => onToggleArchived(record)} disabled={updatingId === record.id} aria-label={`${record.is_archived ? 'Restore this costing' : 'Archive this costing'} ${group.name}`} className="h-8 px-2 text-xs">
-                                                                            {updatingId === record.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : record.is_archived ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />}
-                                                                            <span className="hidden sm:inline">{updatingId === record.id ? record.is_archived ? `Restoring ${group.name}…` : `Archiving ${group.name}…` : record.is_archived ? 'Restore costing' : 'Archive costing'}</span>
-                                                                        </Button>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </article>
-                                                    )
-                                                })}
-                                            </div>
-                                        </section>
-                                    )}
                                         </div>
                                     </div>
                                 </DialogContent>
@@ -1447,7 +1377,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                         onOpenDetails={() => {}} onCloseDetails={() => {}}
                         onOpen={() => {}} onStartFrom={() => {}} onSaveAsNewQuality={() => {}} onExport={() => {}}
                         onAudit={() => {}} onToggleFavorite={() => {}} onToggleArchived={() => {}}
-                        factoryInputsCapturedLabel={tx('Factory inputs captured')}
                     />
                 </div>
             ) : loadError ? (
@@ -1515,7 +1444,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                             onToggleArchived={() => { toast.info(tx('This is a sample costing for exploration.')) }}
                             onDeleteSample={handleDeleteSampleCosting}
                             onEnsureDetail={ensureQuoteDetail}
-                            factoryInputsCapturedLabel={t('estimator.sprint1.baseline_captured')}
                         />
                     </div>
                 )
@@ -1569,7 +1497,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     onToggleFavorite={quote => { void handleLibraryState(quote, { isFavorite: !quote.is_favorite }) }}
                     onToggleArchived={requestArchiveState}
                     onEnsureDetail={ensureQuoteDetail}
-                    factoryInputsCapturedLabel={t('estimator.sprint1.baseline_captured')}
                 />
             )}
             </div>

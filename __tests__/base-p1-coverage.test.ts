@@ -38,7 +38,8 @@ describe('Base P1 production coverage contracts', () => {
         expect(quotes).toContain('onToggleArchived: (quote: QuoteRow) => void')
         expect(quotes).toContain('onToggleArchived={requestArchiveState}')
         expect(quotes).toContain("latest.is_archived ? 'Restore costing' : 'Archive costing'")
-        expect(quotes).toContain("record.is_archived ? 'Restore costing' : 'Archive costing'")
+        // Archive and restore sit in the breakdown footer and act on the version on show.
+        expect(quotes).toContain('onClick={() => onToggleArchived(activeRecord)}')
         expect(quotes).toContain('const belongsInArchive = isSavedCostingArchived(item, template)')
         expect(quotes).toContain('return belongsInArchive === showArchived')
         expect(actions).toContain('updateSavedCostingLibraryState')

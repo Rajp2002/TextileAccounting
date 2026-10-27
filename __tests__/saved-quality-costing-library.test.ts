@@ -14,12 +14,11 @@ describe('saved quality costing library', () => {
 
     expect(page).toContain('getEstimatorTemplates({ includeArchived: true })')
     expect(page).toContain('initialTemplates={templates ?? []}')
-    expect(client).toContain('Latest Saved Costing breakdown')
+    expect(client).toContain('{activeFormula && <SavedCostingFormula formula={activeFormula} />}')
     expect(client).not.toContain('Applied production')
-    expect(client).toContain('Saved Costing history')
+    expect(client).toContain('data-costing-tour="versions"')
     expect(client).toContain('Choose a costing version to view its breakdown')
-    expect(client).toContain('View version ${Number(record.version_number ?? 1)} breakdown for ${group.name}')
-    expect(client).toContain("target.closest('a, button, input, [data-costing-card-control]')")
+    expect(client).toContain('Choose a version from the list to see how its cost was worked out.')
     expect(client).toContain('No costing saved for this quality yet')
     expect(client).toContain('Current recipe')
     expect(client).toContain('live estimate from the saved yarns and today’s factory costs')
@@ -131,12 +130,14 @@ describe('saved quality costing library', () => {
     expect(totals.overheadPerM).toBe(5)
   })
 
-  it('populates costing version breakdown when inspecting a version in the quality library', () => {
+  it('shows the breakdown of the version picked in the version list', () => {
     const client = read('app/(dashboard)/owner/quotes/QuotesClient.tsx')
 
-    expect(client).toContain('handleInspectRecord(record)')
+    expect(client).toContain('onClick={() => handleInspectRecord(record)}')
     expect(client).toContain('onEnsureDetail={ensureQuoteDetail}')
-    expect(client).toContain('Active breakdown')
+    // The version shown is the highlighted row of the version list beside the breakdown.
+    expect(client).toContain("aria-current={isInspected ? 'true' : undefined}")
+    expect(client).toContain("isInspected ? 'border-[var(--wv-neel-200)] bg-[var(--wv-bg-selected)]'")
     expect(client).toContain('selectedRecordIdByGroup')
   })
 

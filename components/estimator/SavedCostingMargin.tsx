@@ -17,6 +17,8 @@ import {
     snapMargin,
 } from '@/lib/costing-margin'
 import type { CostingResultSnapshot, EstimateState } from '@/lib/estimator'
+import { sellingPriceFormula } from '@/lib/saved-costing-formula'
+import { FormulaExpression, FormulaGroup, FormulaInput, type FormulaInputKind } from '@/components/estimator/SavedCostingFormula'
 
 /** Margin text: ochre under 10%, madder when a costing loses money, ink otherwise. */
 export function marginTone(margin: number | null) {
@@ -40,7 +42,6 @@ type ScopeProps = {
     latestVersionNumber: number
     /** Examples can be dragged but never saved. */
     isSample?: boolean
-    costLabel: string
     priceLabel: string
     /** Saves the margin as the next version. Resolves true when it was saved. */
     onSave: (marginPct: number, clientRequestId: string) => Promise<boolean>
@@ -59,7 +60,7 @@ function money(value: number) {
  * the breakdown to hold the actions that would read the costing, so none of them
  * quietly uses a number that has not been saved.
  */
-export function CostingMarginScope({ base, saved, readOnly, versionNumber, latestVersionNumber, isSample = false, costLabel, priceLabel, onSave, children }: ScopeProps) {
+export function CostingMarginScope({ base, saved, readOnly, versionNumber, latestVersionNumber, isSample = false, priceLabel, onSave, children }: ScopeProps) {
     const { language } = useTranslation()
     const copy = costingMarginText[language]
     const sliderId = useId()
@@ -106,17 +107,42 @@ export function CostingMarginScope({ base, saved, readOnly, versionNumber, lates
     const pct = (value: number) => `${value.toFixed(1)}%`
     const nextVersion = latestVersionNumber + 1
 
+    // The price is worked from the production cost above it. A read-only costing shows the sum
+    // only while its saved price still earns the saved margin; a typed-in price has no sum.
+    const priceFormula = editable || Math.abs(saved.actualMarginPct - saved.targetMarginPct) < 0.05 ? sellingPriceFormula(shown) : null
+    const pill = (kind: FormulaInputKind, text: string) => <FormulaInput kind={kind}>{text}</FormulaInput>
+
     const economics = (
         <div className="grid overflow-hidden rounded-xl border border-hairline">
-            <div className="grid sm:grid-cols-2">
-                <div className="p-4">
-                    <p className="text-[13px] text-muted-foreground">{costLabel}</p>
-                    <p className="mt-1.5 text-2xl font-semibold tracking-[-0.02em] text-ink tabular-nums">{money(shown.productionCostPerM)}<span className="ml-0.5 text-sm font-medium tracking-normal text-muted-foreground">/m</span></p>
+            <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-2 px-4 py-3.5">
+                <div className="min-w-0">
+                    <p className="text-[15px] font-semibold leading-7 text-ink">{priceLabel}</p>
+                    {priceFormula && (
+                        <p className="text-sm leading-7 text-body" data-i18n-skip="true" lang={language}>
+                            <FormulaExpression
+                                op="÷"
+                                terms={[
+                                    priceFormula.transportPerM != null
+                                        ? <FormulaGroup key="cost"><FormulaExpression terms={[money(shown.productionCostPerM), pill('rate', fillCopy(copy.transportTerm, { amount: priceFormula.transportPerM.toFixed(2) }))]} op="+" /></FormulaGroup>
+                                        : money(shown.productionCostPerM),
+                                    <FormulaGroup key="share">
+                                        <FormulaExpression
+                                            op="−"
+                                            terms={[
+                                                '1',
+                                                ...(priceFormula.commissionPct != null ? [pill('percent', fillCopy(copy.commissionTerm, { pct: priceFormula.commissionPct.toFixed(1) }))] : []),
+                                                pill('percent', fillCopy(copy.marginTerm, { pct: priceFormula.marginPct.toFixed(1) })),
+                                            ]}
+                                        />
+                                    </FormulaGroup>,
+                                ]}
+                            />
+                        </p>
+                    )}
                 </div>
-                <div className="border-t border-hairline p-4 sm:border-l sm:border-t-0">
-                    <p className="text-[13px] text-muted-foreground">{priceLabel}</p>
-                    <p className="mt-1.5 text-2xl font-semibold tracking-[-0.02em] text-ink tabular-nums">{money(shown.suggestedSellingPricePerM)}<span className="ml-0.5 text-sm font-medium tracking-normal text-muted-foreground">/m</span></p>
-                    <p className="mt-1 text-[13px] text-muted-foreground tabular-nums">{fillCopy(copy.profit, { amount: money(shown.profitPerM) })}</p>
+                <div className="text-right">
+                    <p className="text-2xl font-semibold leading-8 tracking-[-0.02em] text-ink tabular-nums">{money(shown.suggestedSellingPricePerM)}<span className="ml-0.5 text-sm font-medium tracking-normal text-muted-foreground">/m</span></p>
+                    <p className="text-[13px] text-muted-foreground tabular-nums">{fillCopy(copy.profit, { amount: money(shown.profitPerM) })}</p>
                 </div>
             </div>
             <div className="border-t border-hairline p-4">

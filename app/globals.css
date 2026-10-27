@@ -248,6 +248,28 @@
   --wv-lagoon-700: #315C78;
 
   --wv-stone-400: #A39D8F;
+
+  /* Saved costing worksheet pills: one soft colour per kind of input, so each kind
+     reads the same in every step (counts pink, ends blue, picks lavender, width green,
+     rates yellow, percentages peach). Each text colour keeps AA contrast on its fill. */
+  --wv-iris-50: #ECE8F8;
+  --wv-iris-700: #5A43A0;
+  --wv-rose-50: #FCE4EF;
+  --wv-rose-700: #9E2A5E;
+  --wv-formula-count-bg: var(--wv-rose-50);
+  --wv-formula-count-fg: var(--wv-rose-700);
+  --wv-formula-ends-bg: var(--wv-lagoon-50);
+  --wv-formula-ends-fg: var(--wv-lagoon-700);
+  --wv-formula-picks-bg: var(--wv-iris-50);
+  --wv-formula-picks-fg: var(--wv-iris-700);
+  --wv-formula-width-bg: var(--wv-moss-50);
+  --wv-formula-width-fg: var(--wv-moss-700);
+  --wv-formula-rate-bg: var(--wv-ochre-50);
+  --wv-formula-rate-fg: var(--wv-ochre-800);
+  --wv-formula-percent-bg: #FBE6D8;
+  --wv-formula-percent-fg: var(--wv-saffron-700);
+  --wv-formula-other-bg: var(--wv-neel-50);
+  --wv-formula-other-fg: var(--wv-neel-600);
   --wv-disabled: #8A8F9C;
   --wv-viz-teal: #29706C;
 
@@ -2089,6 +2111,17 @@ button[aria-expanded="true"] .nav-chevron {
 }
 @media (prefers-reduced-motion: reduce) {
   .modal-spring[data-state] { animation-duration: 0.01ms !important; }
+}
+
+/* Saved costing worksheet pills (components/estimator/SavedCostingFormula.tsx), coloured by the kind of input they hold. */
+@layer components {
+  [data-formula-input] { background-color: var(--wv-formula-other-bg); color: var(--wv-formula-other-fg); }
+  [data-formula-input="count"] { background-color: var(--wv-formula-count-bg); color: var(--wv-formula-count-fg); }
+  [data-formula-input="ends"] { background-color: var(--wv-formula-ends-bg); color: var(--wv-formula-ends-fg); }
+  [data-formula-input="picks"] { background-color: var(--wv-formula-picks-bg); color: var(--wv-formula-picks-fg); }
+  [data-formula-input="width"] { background-color: var(--wv-formula-width-bg); color: var(--wv-formula-width-fg); }
+  [data-formula-input="rate"] { background-color: var(--wv-formula-rate-bg); color: var(--wv-formula-rate-fg); }
+  [data-formula-input="percent"] { background-color: var(--wv-formula-percent-bg); color: var(--wv-formula-percent-fg); }
 }
 
 /* ── Toasts ──────────────────────────────────────────────────────

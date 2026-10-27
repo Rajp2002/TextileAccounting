@@ -108,7 +108,7 @@ Step id → copy key: paid `find` → `find`, `versions`, `economics`, `reuse`, 
 | `find.title` | Every saved costing is a fixed record | દરેક સાચવેલી કોસ્ટિંગ એક પાકો રેકોર્ડ છે | हर सेव की गई कॉस्टिंग एक पक्का रिकॉर्ड है |
 | `find.body` | Each card is one quality. Its versions keep the inputs and prices from the day you saved them; later yarn rates never change them. | દરેક કાર્ડ એક ક્વોલિટી છે. તેના વર્ઝનમાં સાચવ્યા દિવસના ઇનપુટ અને ભાવ રહે છે; પછીના યાર્નના ભાવ તેને બદલતા નથી. | हर कार्ड एक क्वालिटी है। उसके वर्ज़न में सेव करने वाले दिन के इनपुट और भाव रहते हैं; बाद के धागे के रेट उन्हें नहीं बदलते। |
 | `versions.title` | Open the version you mean | તમને જોઈતું વર્ઝન ખોલો | जो वर्ज़न चाहिए, उसे खोलें |
-| `versions.body` | Open a quality card to see its versions. Choose {c:viewBreakdown} next to a date to read that version. | વર્ઝન જોવા ક્વોલિટી કાર્ડ ખોલો. તારીખની બાજુમાં {c:viewBreakdown} પસંદ કરીને તે વર્ઝન વાંચો. | वर्ज़न देखने के लिए क्वालिटी कार्ड खोलें। तारीख के पास {c:viewBreakdown} चुनकर वह वर्ज़न पढ़ें। |
+| `versions.body` | Open a quality card to see its versions. Choose a version in the list to read its breakdown. | વર્ઝન જોવા ક્વોલિટી કાર્ડ ખોલો. યાદીમાંથી વર્ઝન પસંદ કરીને તેની વિગત વાંચો. | वर्ज़न देखने के लिए क्वालिटी कार्ड खोलें। सूची से वर्ज़न चुनकर उसका विवरण पढ़ें। |
 | `versions.detail` | A quality with only one version opens it directly. Archived versions stay under {c:archived}. | એક જ વર્ઝન હોય તો તે સીધું ખૂલે છે. આર્કાઇવ કરેલા વર્ઝન {c:archived}માં રહે છે. | एक ही वर्ज़न हो तो वह सीधे खुलता है। आर्काइव किए वर्ज़न {c:archived} में रहते हैं। |
 | `economics.title` | Read cost, price and profit | ખર્ચ, ભાવ અને નફો વાંચો | लागत, भाव और मुनाफ़ा पढ़ें |
 | `economics.body` | In sample v2, production cost is ₹{cost}/m and the selling price is ₹{price}/m, so you keep ₹{profit} on every metre. | નમૂના v2માં ઉત્પાદન ખર્ચ ₹{cost}/મીટર અને વેચાણ ભાવ ₹{price}/મીટર છે, એટલે દરેક મીટરે ₹{profit} નફો રહે છે. | नमूना v2 में उत्पादन लागत ₹{cost}/मीटर और बिक्री भाव ₹{price}/मीटर है, यानी हर मीटर पर ₹{profit} मुनाफ़ा बचता है। |
@@ -155,7 +155,7 @@ Resolver = the exact call the live control renders with (LR-02). "Add phrase" = 
 
 | Token | Live render site | Resolver | Gujarati | Hindi | Action |
 | --- | --- | --- | --- | --- | --- |
-| `viewBreakdown` | `QuotesClient.tsx:746` `tx('View breakdown')` | `tx('View breakdown')` | વિગત જુઓ | विवरण देखें | Add phrase (today: word-order fallback) |
+| `viewBreakdown` | none since 2026-10-27: a version is chosen from the breakdown's version list, and `versions.body` no longer names a button | `tx('View breakdown')` | વિગત જુઓ | विवरण देखें | none (kept so the locale keys stay complete) |
 | `archived` | toolbar toggle `tx('Archived')` | `tx('Archived')` | આર્કાઇવ કરેલી | आर्काइव की गई | none |
 | `duplicate` | reuse group `tx('Duplicate')` | `tx('Duplicate')` | નકલ બનાવો | कॉपी बनाएं | none |
 | `internalEstimate` | `CostingExportDialog.tsx:421` literal | wrap in `tx()`; resolver `tx('Internal Cost Estimate')` | આંતરિક ખર્ચ અંદાજ | आंतरिक लागत अनुमान | Wrap + add phrase |
