@@ -60,7 +60,7 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
     const staleFreeWorkspaceHint = hasFreeWorkspaceHint(cookieStore.get(WORKSPACE_HINT_COOKIE)?.value, user.id)
     const sidebarPreference = parseSidebarPreference(cookieStore.get(SIDEBAR_PREFERENCE_COOKIE)?.value)
     return (
-        <div className="relative isolate min-h-svh overflow-x-hidden bg-background" data-owner-shell data-workspace-shell data-sidebar-preference={sidebarPreference}>
+        <div className="relative isolate min-h-svh overflow-x-hidden bg-background" data-owner-shell data-workspace-shell data-sidebar-preference={sidebarPreference} data-plan-tier={access.effectiveTier}>
             {staleFreeWorkspaceHint && <WorkspaceHintSync />}
             <BrandBackground variant={pathname.startsWith('/owner/billing') ? 'billing' : pathname.startsWith('/owner/payroll') ? 'payroll' : pathname.startsWith('/owner/machines') ? 'machines' : pathname === '/owner/dispatches' ? 'dispatches' : pathname === '/owner/workers' ? 'workers' : 'app'} />
             <a href="#owner-main" className="sr-only fixed left-3 top-[calc(0.75rem+var(--safe-area-top))] z-[100] rounded bg-surface p-3 text-ink focus:not-sr-only">Skip to content</a>
