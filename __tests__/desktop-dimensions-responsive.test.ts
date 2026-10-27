@@ -49,7 +49,7 @@ describe('Desktop workspace composition (sidebar | full-width workspace)', () =>
         expect(read('app/(dashboard)/owner/layout.tsx')).toContain('data-plan-tier={access.effectiveTier}')
         // Only the right gap goes: the left keeps the shared centring offset and --main-pad.
         expect(styles).toMatch(/--main-max:\s*1440px;/)
-        expect(styles).toMatch(/:root:has\(\[data-owner-shell\]\[data-plan-tier="lite"\]\) \.dashboard-main \{\s*max-width: none;\s*margin-left: calc\(\(var\(--shell-area\) - min\(var\(--shell-area\), var\(--main-max\)\)\) \/ 2\);\s*margin-right: 0;\s*padding-right: 0\.75rem;/)
+        expect(styles).toMatch(/:root:has\(\[data-owner-shell\]\[data-plan-tier="lite"\]\) \.dashboard-main \{\s*width: auto;\s*max-width: none;\s*margin-left: calc\(\(var\(--shell-area\) - min\(var\(--shell-area\), var\(--main-max\)\)\) \/ 2\);\s*margin-right: 0;\s*padding-right: 24px;/)
         // The tour lane comes later, so it still wins while a tour runs.
         expect(styles.indexOf('data-plan-tier="lite"]) .dashboard-main')).toBeLessThan(styles.indexOf(':root:has(.guided-tour-panel) .dashboard-main'))
     })
