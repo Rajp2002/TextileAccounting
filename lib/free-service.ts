@@ -1,4 +1,5 @@
 import 'server-only'
+import { cache } from 'react'
 import { makeFreeDemo } from './free-estimator-defaults'
 import { getCachedSession } from './auth'
 import { getOrgPlanAccess } from './subscription'
@@ -12,10 +13,19 @@ import { FREE_ESTIMATE_VALIDATION_OPTIONS, getEstimatorReadiness, validateEstima
 import { freeEditWindow } from './free-costing-window'
 import type { SavedFreeCosting } from './free-costing-window'
 import { checkAuthRateLimit } from './rate-limit'
+import { startEarly } from './start-early'
 
+/** The Free workspace's organization row. Request-scoped, so the Free layout can start it early. */
+export const getFreeOrganization = cache(async (orgId: string) => (
+  createAdminClient().from('organizations').select('owner_id,is_locked_down,name').eq('id',orgId).single()
+))
 export async function freeContext(options: { allowInactive?: boolean } = {}) {
   const session = await getCachedSession()
   if (!session || session.profile.role !== 'owner') throw new Error('FREE_AUTH_REQUIRED')
+  // The organization and plan reads need only the verified org id, so they
+  // run alongside the grant read. Each result is still checked in order.
+  const organizationRead = startEarly(getFreeOrganization(session.profile.org_id))
+  const accessRead = startEarly(getOrgPlanAccess(session.profile.org_id))
   const grant = await getFreeGrant(session.profile.org_id)
   if (!grant && session.user.app_metadata.free_signup === true) {
     if (!await finishFreeProvisioning(session.user, session.profile.org_id)) throw new Error('FREE_PROVISIONING_PENDING')
@@ -23,10 +33,9 @@ export async function freeContext(options: { allowInactive?: boolean } = {}) {
     throw new Error('FREE_PROVISIONING_RETRY')
   }
   if (!grant) throw new Error('FREE_ACCESS_DENIED')
-  const { data: org, error } = await createAdminClient().from('organizations').select('owner_id,is_locked_down,name')
-    .eq('id',session.profile.org_id).single()
+  const { data: org, error } = await organizationRead
   if (error || !org || org.owner_id !== session.user.id || org.owner_id !== grant.subjectId || org.is_locked_down) throw new Error('FREE_ACCESS_DENIED')
-  const access = await getOrgPlanAccess(session.profile.org_id)
+  const access = await accessRead
   const paid = access.effectiveTier === 'lite' || access.effectiveTier === 'base'
   if (!options.allowInactive && !paid && (access.effectiveTier !== 'free' || grant.state !== 'active')) throw new Error('FREE_ACCESS_INACTIVE')
   return { ...session, grant, paid, access, org }

@@ -9,6 +9,8 @@ import { isUserRevoked } from '@/lib/rate-limit'
 import type { User } from '@supabase/supabase-js'
 import { founderOnlyIdentity } from '@/lib/admin/founder-email'
 import { SUPERVISOR_HOME_PATH } from '@/lib/supervisor-access'
+import { parseSessionHintHeader, SESSION_HINT_HEADER } from '@/lib/session-hint'
+import { startEarly } from '@/lib/start-early'
 
 type JsonRecord = Record<string, unknown>
 type AuthClaims = {
@@ -83,6 +85,46 @@ export function getUserClaims(user: User): AuthClaims {
     }
 }
 
+// ─── Session hint (for starting reads early) ──────────────────────────────────
+//
+// Proxy forwards the user and org ids from the access token it verified
+// (SESSION_HINT_HEADER; browser-supplied values are stripped). They are a
+// routing hint, not authority: Auth and the profile row stay the authority.
+// The hint only lets the profile, plan and organization reads start while
+// Auth is still verifying the session. A read started from the hint is used
+// only when the verified identity names the same user/org; otherwise it is
+// discarded. Requests that did not pass through Proxy have no hint and read
+// in order, as before.
+
+type SessionHint = { userId: string; orgId: string | null }
+
+export const getSessionHint = cache(async (): Promise<SessionHint | null> => (
+    parseSessionHintHeader((await headers()).get(SESSION_HINT_HEADER))
+))
+
+type IdentityProfileResult = Awaited<ReturnType<typeof readIdentityProfile>>
+
+function readIdentityProfile(userId: string) {
+    const admin = createAdminClient()
+    return admin
+        .from('profiles')
+        // The original authorization projection remains the baseline; the
+        // Settings contact fields are added to this same round trip below.
+        // .select('role, org_id, full_name, access_revoked_at')
+        .select('role, org_id, full_name, phone, whatsapp_number, whatsapp_opted_in, access_revoked_at')
+        .eq('id', userId)
+        .maybeSingle()
+}
+
+/** Starts the profile read now. Never throws; a failure surfaces when awaited. */
+function startIdentityProfileRead(userId: string): Promise<IdentityProfileResult> | null {
+    try {
+        return startEarly(Promise.resolve(readIdentityProfile(userId)))
+    } catch {
+        return null
+    }
+}
+
 // ─── Request-scoped cached auth helpers ────────────────────────────────────────
 //
 // React.cache() creates a per-request memoization store during server rendering.
@@ -123,6 +165,12 @@ export const getVerifiedIdentity = cache(async (): Promise<{
     }
 
     const supabase = await createClient()
+    // Start the profile read for the user Proxy's hint names while Auth
+    // verifies the session (one round trip instead of two in a row). It is
+    // used below only after Auth returns that same user and the revocation
+    // check passes.
+    const hint = await getSessionHint()
+    const earlyProfileRead = hint ? startIdentityProfileRead(hint.userId) : null
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) return null
@@ -138,16 +186,12 @@ export const getVerifiedIdentity = cache(async (): Promise<{
 
     // Always validate authorization-critical claims against the profile row.
     // JWT app_metadata is useful for routing, but server actions/data loaders must
-     // not trust user_metadata or stale client-controlled claims for org scoping.
-     const admin = createAdminClient()
-     const { data: dbProfile, error: profileError } = await admin
-         .from('profiles')
-         // The original authorization projection remains the baseline; the
-         // Settings contact fields are added to this same round trip below.
-         // .select('role, org_id, full_name, access_revoked_at')
-         .select('role, org_id, full_name, phone, whatsapp_number, whatsapp_opted_in, access_revoked_at')
-        .eq('id', user.id)
-        .maybeSingle()
+    // not trust user_metadata or stale client-controlled claims for org scoping.
+    // The early read is keyed by the hinted user id, so it is the verified
+    // user's row only when that id matches the one Auth returned.
+    const { data: dbProfile, error: profileError } = await (
+        earlyProfileRead && hint?.userId === user.id ? earlyProfileRead : readIdentityProfile(user.id)
+    )
 
     if (profileError) return null
     if (dbProfile?.access_revoked_at) return null
@@ -188,6 +232,12 @@ export const getCachedSession = cache(async () => {
  * @throws redirect to /login if user is not authenticated or unauthorized
  */
 export async function requireRole(allowedRoles: string[], options: { allowFreeAccount?: boolean } = {}) {
+    // An owner check below needs the plan. Start it with Proxy's session hint
+    // alongside the identity reads; it is used only for the same verified org.
+    // Held here, not only in the request cache, because server actions run
+    // outside React's render cache.
+    const hint = !options.allowFreeAccount && allowedRoles.includes('owner') ? await getSessionHint() : null
+    const earlyAccess = hint?.orgId ? startEarly(getCachedOrgPlanAccess(hint.orgId)) : null
     const session = await getCachedSession()
 
     if (!session) {
@@ -202,7 +252,7 @@ export async function requireRole(allowedRoles: string[], options: { allowFreeAc
     }
 
     if (!options.allowFreeAccount && role !== 'admin') {
-        const access = await getCachedOrgPlanAccess(org_id)
+        const access = await (earlyAccess && hint?.orgId === org_id ? earlyAccess : getCachedOrgPlanAccess(org_id))
         if (access.effectiveTier === 'free' || access.freeAccount) redirect('/free')
     }
 

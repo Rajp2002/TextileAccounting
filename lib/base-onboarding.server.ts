@@ -93,9 +93,13 @@ export async function isBaseOnboardingComplete(orgId: string): Promise<boolean> 
         return fallbackData?.onboarding_complete === true
     }
 
-    if (!data) return false
-    const baseOnboarding = data.base_onboarding as Record<string, unknown> | null
+    return data ? isBaseOnboardingCompleteRow(data) : false
+}
+
+/** The same rule, for an organization row the caller already read. */
+export function isBaseOnboardingCompleteRow(row: { base_onboarding?: unknown; onboarding_complete?: boolean | null }): boolean {
+    const baseOnboarding = row.base_onboarding as Record<string, unknown> | null | undefined
     if (baseOnboarding?.status === 'completed') return true
-    if (data.onboarding_complete === true) return true
+    if (row.onboarding_complete === true) return true
     return false
 }
