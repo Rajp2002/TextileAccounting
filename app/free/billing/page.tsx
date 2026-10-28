@@ -1,7 +1,9 @@
-import { getCachedSession } from '@/lib/auth'
+import { getCachedSession, getSessionHint } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { getOrgPlanAccess } from '@/lib/subscription'
 import { getFreeGrant } from '@/lib/free-account'
+import { getFreeOrganization } from '@/lib/free-service'
+import { startEarly } from '@/lib/start-early'
 import { createClient } from '@/lib/supabase/server'
 import type { BillingHistoryEntry, BillingHistoryStatus } from '@/components/billing/PaymentHistoryDialog'
 import FreeBillingClient from './FreeBillingClient'
@@ -18,21 +20,32 @@ function normalizeStatus(status: string): BillingHistoryStatus {
     return 'incomplete'
 }
 
+function readPayments(supabase: Awaited<ReturnType<typeof createClient>>, orgId: string) {
+    return Promise.resolve(supabase
+        .from('subscription_payments')
+        .select('id, status, created_at, razorpay_payment_id, amount_paise, method, subscription_id, razorpay_order_id, captured_at')
+        .eq('org_id', orgId)
+        .order('created_at', { ascending: false })
+        .limit(10))
+}
+
 export default async function FreeBillingPage() {
+    // Payments start with Proxy's session hint while the identity is verified
+    // (RLS still applies); they are used only for the verified user and org.
+    const [hint, supabase] = await Promise.all([getSessionHint(), createClient()])
+    const earlyPayments = hint?.orgId ? { userId: hint.userId, orgId: hint.orgId, read: startEarly(readPayments(supabase, hint.orgId)) } : null
     const session = await getCachedSession()
     if (!session) redirect('/login')
 
-    const supabase = await createClient()
+    const orgId = session.profile.org_id
+    const paymentsRead = earlyPayments && earlyPayments.userId === session.user.id && earlyPayments.orgId === orgId
+        ? earlyPayments.read : readPayments(supabase, orgId)
+    // The organization name comes from the Free layout's organization read.
     const [access, grant, paymentsResult, organizationResult] = await Promise.all([
-        getOrgPlanAccess(session.profile.org_id),
-        getFreeGrant(session.profile.org_id),
-        supabase
-            .from('subscription_payments')
-            .select('id, status, created_at, razorpay_payment_id, amount_paise, method, subscription_id, razorpay_order_id, captured_at')
-            .eq('org_id', session.profile.org_id)
-            .order('created_at', { ascending: false })
-            .limit(10),
-        supabase.from('organizations').select('name').eq('id', session.profile.org_id).maybeSingle(),
+        getOrgPlanAccess(orgId),
+        getFreeGrant(orgId),
+        paymentsRead,
+        getFreeOrganization(orgId),
     ])
 
     const billingHistory: BillingHistoryEntry[] = (paymentsResult.data ?? []).map((p) => ({

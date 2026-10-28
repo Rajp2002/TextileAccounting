@@ -66,7 +66,8 @@ describe('getOrgPlanAccess trial-aware wiring', () => {
 
     it('looks up the Free grant only after the effective tier resolved to none', () => {
         const earlyReturn = planAccess.indexOf("if (access.effectiveTier !== 'none') return access")
-        const grantLookup = planAccess.indexOf('await getFreeGrant(orgId)')
+        // A caller may pass a grant read it already started (freeContext); otherwise it is read here.
+        const grantLookup = planAccess.indexOf('await (freeGrantRead ?? getFreeGrant(orgId))')
         expect(grantLookup).toBeGreaterThan(earlyReturn)
         expect(planAccess).toContain('return applyFreeGrantToAccess(access, subscriptionRows, Boolean(grant))')
     })

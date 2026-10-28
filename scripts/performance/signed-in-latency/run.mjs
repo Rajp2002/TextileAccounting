@@ -56,7 +56,10 @@ const ROUTES = [
     { account: 'free', path: '/free/costings' },
     { account: 'free', path: '/free/account' },
     { account: 'free', path: '/free/billing' },
+    { account: 'free', path: '/api/free/status', note: 'usage meter, fetched right after a Free page opens' },
+    { account: 'free', path: '/api/free/calculate', method: 'POST', note: 'Calculate: a fresh request token from /api/free/status is fetched before each timed request' },
 ]
+const freeEstimateBody = JSON.parse(readFileSync(join(here, 'free-estimate.json'), 'utf8'))
 
 function isolatedEnv() {
     const env = Object.fromEntries(['PATH', 'HOME', 'USER', 'TMPDIR', 'LANG', 'SHELL'].filter(key => process.env[key]).map(key => [key, process.env[key]]))
@@ -122,9 +125,9 @@ function firstLoadJs(html) {
     return { scripts: sources.length, rawBytes, gzipBytes, cssFiles: css.length, cssGzipBytes, chunks }
 }
 
-async function timedRequest(url, cookie) {
+async function timedRequest(url, cookie, init = {}) {
     const startedAt = performance.now()
-    const response = await fetch(url, { redirect: 'manual', headers: cookie ? { cookie } : {} })
+    const response = await fetch(url, { redirect: 'manual', ...init, headers: { ...(cookie ? { cookie } : {}), ...init.headers } })
     const ttfb = performance.now() - startedAt
     const body = await response.text()
     const total = performance.now() - startedAt
@@ -166,17 +169,26 @@ async function main() {
     try {
         await waitForServer(base, child).catch(error => { console.error(serverLog.join('')); throw error })
         const routes = only ? ROUTES.filter(route => only.some(token => `${route.account ?? 'public'}:${route.path}`.includes(token))) : ROUTES
+        // Request options, prepared outside the timed request.
+        const requestInit = async route => {
+            if (route.path !== '/api/free/calculate') return {}
+            const status = await (await fetch(`${base}/api/free/status`, { headers: { cookie: cookies[route.account] } })).json()
+            if (!status.requestToken) throw new Error(`no Free request token: ${JSON.stringify(status)}`)
+            return { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...freeEstimateBody, requestToken: status.requestToken }) }
+        }
         // Two warm-up passes so module loading and JIT are out of the numbers.
         for (let pass = 0; pass < 2; pass += 1) {
-            for (const route of routes) await timedRequest(`${base}${route.path}`, route.account ? cookies[route.account] : undefined)
+            for (const route of routes) await timedRequest(`${base}${route.path}`, route.account ? cookies[route.account] : undefined, await requestInit(route))
         }
         backend.drainLog()
         for (const route of routes) {
             const samples = []
             let lastBody = ''
             for (let index = 0; index < iterations; index += 1) {
+                const init = await requestInit(route)
+                await new Promise(resolve => setTimeout(resolve, 20))
                 backend.drainLog()
-                const sample = await timedRequest(`${base}${route.path}`, route.account ? cookies[route.account] : undefined)
+                const sample = await timedRequest(`${base}${route.path}`, route.account ? cookies[route.account] : undefined, init)
                 // Let response-finish logging settle before reading calls.
                 await new Promise(resolve => setTimeout(resolve, 20))
                 const calls = backend.drainLog()
@@ -200,8 +212,9 @@ async function main() {
                     kind: call.kind, method: call.method, target: call.target,
                     startMs: round(call.startedAt - last.calls[0].startedAt), endMs: round(call.endedAt - last.calls[0].startedAt),
                 })),
-                html: last.status === 200 ? { bytes: Buffer.byteLength(lastBody), gzipBytes: gzipSync(lastBody).length, ...firstLoadJs(lastBody) } : null,
+                html: last.status === 200 && !route.path.startsWith('/api/') ? { bytes: Buffer.byteLength(lastBody), gzipBytes: gzipSync(lastBody).length, ...firstLoadJs(lastBody) } : null,
                 errorDigest: /NEXT_HTTP_ERROR|Application error|digest/.test(lastBody) && last.status >= 500 ? 'server error' : null,
+                apiBody: route.path.startsWith('/api/') ? lastBody.slice(0, 300) : undefined,
             }
             results.push(result)
             console.log(`${result.account.padEnd(6)} ${route.path.padEnd(32)} ${String(result.status).padEnd(4)} ttfb ${String(result.ttfbMs).padStart(7)} ms  total ${String(result.totalMs).padStart(7)} ms  calls ${String(result.backendCalls).padStart(3)}  waits ${String(result.sequentialWaits).padStart(2)}${result.html ? `  js ${(result.html.gzipBytes / 1024).toFixed(1)} KB gz` : ''}`)

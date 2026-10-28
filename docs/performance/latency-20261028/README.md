@@ -167,3 +167,28 @@ Measured on Raj's laptop (Intel i9, Node 24). A mid-range phone is several times
 
 Not verified on a device: an installed iPhone/Android app picking up the new worker. Nothing in the update flow depends on these files.
 
+
+### Task F: Free usage meter, Calculate, and Free billing (HANDOFF next task 1)
+
+Branch `claude/perf-latency-pass-2` from `main@91a12427` (PR #287 was merged before this work started).
+
+- `freeContext` (every Free API route and page) starts the grant, organization and plan reads from Proxy's session hint while Auth verifies the session, and holds the promises itself: route handlers have no React request cache or fetch memoisation, so before this the API routes waited for the session and then for these reads. Reads started for a different user or org are discarded and the verified org is read instead.
+- `getOrgPlanAccess` takes an optional, already started Free-grant read. For a Free org it used to read the grant again after the plan row (a second, sequential grant read in every Free API request).
+- `freeStatus` (`/api/free/status`, fetched right after a Free page opens) starts the rollout and the database clock with the account reads, and reads monthly usage and tour state together. `calculateFreeSubmission` starts the rollout with the account reads. Error order is unchanged: authorization errors first, then throttling, then `FREE_PAUSED`; the production `FREE_TEMPORARY_ERROR` on a failed clock is unchanged.
+- `/free/billing` takes the organization name from the organization read the Free layout already starts (it read the organization twice), and starts its payment-history read (RLS client) from the session hint.
+- Harness: `/api/free/status` and `/api/free/calculate` added to `ROUTES`. Calculate posts `free-estimate.json` (written by `make-free-estimate.ts`, the estimate the Free service tests submit) with a fresh request token fetched outside the timed request. The fixture policy gained `version` and `receipt_retention_days`, and `complete_free_saved_costing` answers with a receipt. The fake Upstash answers `evalsha` in a shape the rate limiter rejects, so it uses its local fallback after the call; the call and its wait are still counted.
+
+`before-task-f.json` (main) → `after-task-f.json`:
+
+| Account | Route | TTFB ms | Full page ms | Waits | Calls |
+| --- | --- | --- | --- | --- | --- |
+| free | `/free` | 70.1 → 70.6 | 74.5 → 75 | 2 → 2 | 6 → 6 |
+| free | `/free/costings` | 65.4 → 68.1 | 68.4 → 71.1 | 2 → 2 | 6 → 6 |
+| free | `/free/account` | 65 → 67.5 | 69 → 70.8 | 2 → 2 | 6 → 6 |
+| free | `/free/billing` | 63.4 → 63.8 | 94.1 → 66.6 (−29%) | 3 → 2 | 8 → 7 |
+| free | `/api/free/status` | 254 → 91.7 (−64%) | 254.3 → 92 (−64%) | 8 → 3 | 11 → 10 |
+| free | `/api/free/calculate` | 202.3 → 107.2 (−47%) | 202.6 → 107.5 (−47%) | 7 → 4 | 10 → 9 |
+
+Checks: `npx tsc --noEmit` clean, `npx vitest run` 418 files / 4,208 passed / 1 skipped, `npm run lint` clean.
+
+The usage meter's request now waits for Proxy's Redis check, one batch of account/rollout/clock reads, and the usage and tour-state reads. Calculate waits for Redis, the account batch, the rate limiter and the save RPC. The Free pages themselves were already at two waits; their ±3 ms differences are run-to-run noise.
