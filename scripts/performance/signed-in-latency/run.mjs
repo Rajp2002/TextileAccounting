@@ -12,7 +12,8 @@
 // document, backend calls, and "sequential waits" (the longest chain of calls
 // where each started only after the previous one finished).
 import { spawn } from 'node:child_process'
-import { readFileSync, writeFileSync, existsSync } from 'node:fs'
+import { readFileSync, writeFileSync, existsSync, mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { gzipSync } from 'node:zlib'
 import { fileURLToPath } from 'node:url'
@@ -31,6 +32,10 @@ const iterations = option('iterations', 5)
 const supabaseDelayMs = option('delay', 30)
 const backendPort = option('backend-port', 54399)
 const appPort = option('port', 3012)
+// --cold N: N fresh servers per route, timing each one's first request (see coldMain).
+const coldSamples = option('cold', 0)
+// --sentry: give the server a Sentry DSN (pointing at the fake backend), as production has.
+const withSentry = args.includes('--sentry')
 const only = args.includes('--only') ? args[args.indexOf('--only') + 1].split(',') : null
 
 const ROUTES = [
@@ -61,7 +66,7 @@ const ROUTES = [
 ]
 const freeEstimateBody = JSON.parse(readFileSync(join(here, 'free-estimate.json'), 'utf8'))
 
-function isolatedEnv() {
+function isolatedEnv(extra = {}) {
     const env = Object.fromEntries(['PATH', 'HOME', 'USER', 'TMPDIR', 'LANG', 'SHELL'].filter(key => process.env[key]).map(key => [key, process.env[key]]))
     return {
         ...env,
@@ -72,13 +77,14 @@ function isolatedEnv() {
         NEXT_PUBLIC_SUPABASE_PROJECT_ID: 'localperformance',
         SUPABASE_SERVICE_ROLE_KEY: 'local-performance-placeholder',
         NEXT_PUBLIC_SITE_URL: `http://localhost:${appPort}`,
-        SENTRY_DSN: '', NEXT_PUBLIC_SENTRY_DSN: '',
+        SENTRY_DSN: '', NEXT_PUBLIC_SENTRY_DSN: withSentry ? `http://public@127.0.0.1:${backendPort}/1` : '',
         UPSTASH_REDIS_REST_URL: `http://127.0.0.1:${backendPort}/redis`,
         UPSTASH_REDIS_REST_TOKEN: 'local-performance-placeholder',
         WEAVLY_FREE_SIGNING_KEY_ID: 'launch',
         WEAVLY_FREE_SIGNING_KEYS: JSON.stringify({ launch: 'local-performance-harness-key-0123456789abcdef' }),
         WEAVLY_FAKE_BACKEND_ORIGIN: `http://127.0.0.1:${backendPort}`,
         NODE_OPTIONS: `--require "${join(here, 'redirect-fetch.cjs')}"`,
+        ...extra,
     }
 }
 
@@ -146,6 +152,114 @@ async function waitForServer(base, child) {
     throw new Error('next start did not become ready')
 }
 
+async function startServer(env) {
+    const startedAt = performance.now()
+    const child = spawn(join(repo, 'node_modules/.bin/next'), ['start', '-p', String(appPort)], { cwd: repo, env, stdio: ['ignore', 'pipe', 'pipe'] })
+    const log = []
+    const ready = new Promise((resolve, reject) => {
+        let timer
+        const onData = chunk => {
+            log.push(chunk.toString())
+            if (/Ready in/.test(log.join(''))) { clearTimeout(timer); resolve(performance.now() - startedAt) }
+        }
+        child.stdout.on('data', onData)
+        child.stderr.on('data', onData)
+        child.on('exit', code => reject(new Error(`next start exited with ${code}: ${log.join('')}`)))
+        timer = setTimeout(() => reject(new Error('next start did not become ready')), 60_000)
+    })
+    return { child, log, bootMs: await ready }
+}
+
+async function stopServer(child) {
+    if (child.exitCode !== null) return
+    const exited = new Promise(resolve => child.once('exit', resolve))
+    child.kill('SIGTERM')
+    await exited
+}
+
+// Cold mode: a fresh `next start` per sample, with Next's boot-time preload of
+// every route turned off (cold-modules.cjs) as on Vercel, so the first request
+// loads its route's server code. Reports boot time, the first request's time,
+// and the server files evaluated during that request.
+async function coldMain({ backend, cookies, routes }) {
+    const logDir = mkdtempSync(join(tmpdir(), 'weavly-cold-'))
+    const base = `http://localhost:${appPort}`
+    const results = []
+    try {
+        for (const route of routes) {
+            const samples = []
+            for (let index = 0; index < coldSamples; index += 1) {
+                const moduleLog = join(logDir, `modules-${results.length}-${index}.json`)
+                const env = isolatedEnv({
+                    NODE_OPTIONS: `--require "${join(here, 'redirect-fetch.cjs')}" --require "${join(here, 'cold-modules.cjs')}"`,
+                    WEAVLY_COLD_MODULE_LOG: moduleLog,
+                })
+                const { child, bootMs } = await startServer(env)
+                let sample
+                try {
+                    const cookie = route.account ? cookies[route.account] : undefined
+                    // Calculate is never a function's first request: the Free page's
+                    // status request comes first, so it is part of the preparation.
+                    const init = route.path === '/api/free/calculate' ? await freeCalculateInit(base, cookie) : {}
+                    await new Promise(resolve => setTimeout(resolve, 20))
+                    backend.drainLog()
+                    const requestStartedAt = performance.timeOrigin + performance.now()
+                    sample = await timedRequest(`${base}${route.path}`, cookie, init)
+                    await new Promise(resolve => setTimeout(resolve, 20))
+                    // Sentry's own posts (--sentry) are not backend reads.
+                    sample.calls = backend.drainLog().filter(call => call.kind !== 'other')
+                    sample.requestStartedAt = requestStartedAt
+                } finally {
+                    await stopServer(child)
+                }
+                const loaded = JSON.parse(readFileSync(moduleLog, 'utf8'))
+                    .filter(record => record.at >= sample.requestStartedAt && record.at <= sample.requestStartedAt + sample.total)
+                samples.push({ bootMs, ttfb: sample.ttfb, total: sample.total, status: sample.status, waits: sequentialWaits(sample.calls), loaded })
+            }
+            const last = samples.at(-1)
+            const byFile = new Map()
+            for (const record of last.loaded) {
+                const file = record.file.replace(`${repo}/`, '')
+                byFile.set(file, { file, root: record.root.replace(`${repo}/`, ''), selfMs: round((byFile.get(file)?.selfMs ?? 0) + record.selfMs), bytes: record.bytes })
+            }
+            const byRoot = new Map()
+            for (const record of last.loaded) {
+                const root = record.root.replace(`${repo}/`, '')
+                byRoot.set(root, { root, files: (byRoot.get(root)?.files ?? 0) + 1, selfMs: round((byRoot.get(root)?.selfMs ?? 0) + record.selfMs) })
+            }
+            const result = {
+                account: route.account ?? 'public', path: route.path, status: last.status,
+                bootMs: round(median(samples.map(sample => sample.bootMs))),
+                coldTtfbMs: round(median(samples.map(sample => sample.ttfb))),
+                coldTotalMs: round(median(samples.map(sample => sample.total))),
+                sequentialWaits: median(samples.map(sample => sample.waits)),
+                filesLoaded: median(samples.map(sample => sample.loaded.length)),
+                loadedSelfMs: round(median(samples.map(sample => sample.loaded.reduce((sum, record) => sum + record.selfMs, 0)))),
+                // `next start` evaluates next.config (with Sentry's build plugin,
+                // webpack, rollup, babel) on the first request; Vercel runs from the
+                // serialized config and never does. Subtracted for the comparable number.
+                configSelfMs: round(median(samples.map(sample => configTime(sample.loaded)))),
+                withoutConfigMs: round(median(samples.map(sample => sample.total - configTime(sample.loaded)))),
+                byRoot: [...byRoot.values()].sort((a, b) => b.selfMs - a.selfMs).slice(0, 12),
+                slowestFiles: [...byFile.values()].filter(entry => !entry.root.startsWith('next.config')).sort((a, b) => b.selfMs - a.selfMs).slice(0, 25),
+            }
+            results.push(result)
+            console.log(`${result.account.padEnd(6)} ${route.path.padEnd(32)} ${String(result.status).padEnd(4)} boot ${String(result.bootMs).padStart(6)} ms  first request ${String(result.coldTotalMs).padStart(7)} ms (${String(result.withoutConfigMs).padStart(6)} ms without next.config)  files ${String(result.filesLoaded).padStart(4)} (${result.loadedSelfMs} ms own time)`)
+        }
+    } finally {
+        rmSync(logDir, { recursive: true, force: true })
+    }
+    return results
+}
+
+const configTime = loaded => loaded.filter(record => /next\.config/.test(record.root)).reduce((sum, record) => sum + record.selfMs, 0)
+
+async function freeCalculateInit(base, cookie) {
+    const status = await (await fetch(`${base}/api/free/status`, { headers: { cookie } })).json()
+    if (!status.requestToken) throw new Error(`no Free request token: ${JSON.stringify(status)}`)
+    return { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...freeEstimateBody, requestToken: status.requestToken }) }
+}
+
 async function main() {
     if (!outputPath) throw new Error('Pass an output JSON path')
     const backend = createFakeBackend({ supabaseDelayMs, redisDelayMs: Math.round(supabaseDelayMs / 3) })
@@ -160,6 +274,19 @@ async function main() {
         return [name, `sb-127-auth-token=${value}; sb-localperformance-auth-token=present`]
     }))
 
+    const selectRoutes = () => only ? ROUTES.filter(route => only.some(token => `${route.account ?? 'public'}:${route.path}`.includes(token))) : ROUTES
+    if (coldSamples) {
+        let results
+        try { results = await coldMain({ backend, cookies, routes: selectRoutes() }) } finally { await backend.close() }
+        writeFileSync(outputPath, JSON.stringify({
+            generatedAt: new Date().toISOString(),
+            buildId: readFileSync(join(repo, '.next/BUILD_ID'), 'utf8').trim(),
+            method: `cold: a fresh next start per sample (boot-time route preload off, as on Vercel)${withSentry ? ', with a Sentry DSN' : ''}; first request timed against the fake backend (${supabaseDelayMs} ms per Supabase call); ${coldSamples} samples per route, medians reported. Files are CommonJS files evaluated during the request, with own time (compile and top-level evaluation).`,
+            supabaseDelayMs, coldSamples, withSentry, results,
+        }, null, 2))
+        console.log(`wrote ${outputPath}`)
+        return
+    }
     const child = spawn(join(repo, 'node_modules/.bin/next'), ['start', '-p', String(appPort)], { cwd: repo, env: isolatedEnv(), stdio: ['ignore', 'pipe', 'pipe'] })
     const serverLog = []
     child.stdout.on('data', chunk => serverLog.push(chunk.toString()))
@@ -168,14 +295,9 @@ async function main() {
     const results = []
     try {
         await waitForServer(base, child).catch(error => { console.error(serverLog.join('')); throw error })
-        const routes = only ? ROUTES.filter(route => only.some(token => `${route.account ?? 'public'}:${route.path}`.includes(token))) : ROUTES
+        const routes = selectRoutes()
         // Request options, prepared outside the timed request.
-        const requestInit = async route => {
-            if (route.path !== '/api/free/calculate') return {}
-            const status = await (await fetch(`${base}/api/free/status`, { headers: { cookie: cookies[route.account] } })).json()
-            if (!status.requestToken) throw new Error(`no Free request token: ${JSON.stringify(status)}`)
-            return { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...freeEstimateBody, requestToken: status.requestToken }) }
-        }
+        const requestInit = route => route.path === '/api/free/calculate' ? freeCalculateInit(base, cookies[route.account]) : {}
         // Two warm-up passes so module loading and JIT are out of the numbers.
         for (let pass = 0; pass < 2; pass += 1) {
             for (const route of routes) await timedRequest(`${base}${route.path}`, route.account ? cookies[route.account] : undefined, await requestInit(route))

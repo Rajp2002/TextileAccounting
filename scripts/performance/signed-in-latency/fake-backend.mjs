@@ -143,9 +143,12 @@ export function createFakeBackend({ supabaseDelayMs = 30, redisDelayMs = 10 } = 
                 }
                 res.on('finish', () => { entry.endedAt = performance.now(); log.push(entry) })
                 try {
+                    if (kind === 'rest' && api.failRest?.(url)) return respondJson(res, 500, { code: 'XX000', message: 'harness: failing this read on purpose' })
                     if (kind === 'rest') return handleRest(req, res, url, body)
                     if (kind === 'auth') return handleAuth(req, res, url)
                     if (kind === 'redis') return handleRedis(req, res, url, body)
+                    // Sentry envelopes (with --sentry) and anything else: hand to a listener.
+                    if (api.onOther) { api.onOther(req, body); return respondJson(res, 200, {}) }
                     return respondJson(res, 404, { message: 'not faked' })
                 } catch (error) {
                     return respondJson(res, 500, { message: String(error?.message ?? error) })
@@ -154,7 +157,7 @@ export function createFakeBackend({ supabaseDelayMs = 30, redisDelayMs = 10 } = 
         })
     })
 
-    return {
+    const api = {
         fixtures,
         sessionFor,
         log,
@@ -162,4 +165,5 @@ export function createFakeBackend({ supabaseDelayMs = 30, redisDelayMs = 10 } = 
         listen(port) { return new Promise(resolve => server.listen(port, '127.0.0.1', resolve)) },
         close() { return new Promise(resolve => server.close(resolve)) },
     }
+    return api
 }

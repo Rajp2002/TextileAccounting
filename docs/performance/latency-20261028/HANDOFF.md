@@ -8,6 +8,9 @@ Written 2026-10-28 for the next session (another Claude account on Raj's laptop)
 
 ## Where things stand
 
+**Pass 2 (2026-10-28):** PR #287 was merged, so work continues on `claude/perf-latency-pass-2` (draft PR #288, worktree `.claude/worktrees/performance-optimization-03b955-cfb26c`). Task 1 is done (README Task F); task 2 is measured with no app change (README Task G: the candidate fix is a Sentry decision, below). Next: task 3.
+
+
 - Branch `claude/performance-optimization-03b955`, 8 commits on `main@8a1dee0f`, pushed, PR open. Worktree used so far: `.claude/worktrees/performance-optimization-03b955`. If you work elsewhere, check out this branch; check `gh pr view` first: if Raj merged it, later commits on this branch never reach `main`, so branch again from `main` and open a new PR.
 - Done and measured (detail in `README.md`, headline in `summary.md`):
   - **A** `41d2aff4`: Proxy forwards `x-weavly-session-hint` (user:org of the verified token, browser values stripped; `lib/session-hint.ts`). `getVerifiedIdentity`, `requireRole`, the owner layout (`startOwnerShellReads` in `lib/owner-organization.ts`) and the Free layout start the profile/plan/org/grant reads from it; each is used only for the same verified ids. Base's onboarding check reuses the owner org row. `freeContext` reads grant/org/plan together.
@@ -49,6 +52,8 @@ node scripts/performance/signed-in-latency/compare.mjs docs/performance/latency-
 5. Lower priority: 43 live RLS policies call `auth.uid()` per row instead of `(select auth.uid())` (mostly Base/legacy and billing tables; the main Lite costing tables are not among them). Measure on the disposable Postgres used by `npm run test:db` with EXPLAIN ANALYZE before proposing a migration file. Never apply migrations; Raj does.
 
 ## Needs Raj's decision (do not change without asking)
+
+- **Sentry's automatic server wrappers** (added 2026-10-28, pass 2, README Task G): `webpack.autoInstrument*: false` in `withSentryConfig` cut every Free/Lite route's cold first request by 18–24% (~170–200 ms), mostly Proxy's bundle. Errors still reach Sentry through `onRequestError`; Sentry's per-page/route spans and Proxy transactions would stop.
 
 - **Sentry browser tracing**: about half of the 146 KB gzip shared chunk on every page, landing and login included. `bundleSizeOptimizations.excludeTracing` + client `tracesSampleRate: 0` would save ~30–40 KB per page but end Sentry browser performance traces.
 - **`getUser()` → `getClaims()`** on the server: one more wait per page saved, but a signed-out or deleted session stays valid until its access token expires (up to an hour).

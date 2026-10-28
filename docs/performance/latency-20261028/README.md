@@ -192,3 +192,34 @@ Branch `claude/perf-latency-pass-2` from `main@91a12427` (PR #287 was merged bef
 Checks: `npx tsc --noEmit` clean, `npx vitest run` 418 files / 4,208 passed / 1 skipped, `npm run lint` clean.
 
 The usage meter's request now waits for Proxy's Redis check, one batch of account/rollout/clock reads, and the usage and tour-state reads. Calculate waits for Redis, the account batch, the rate limiter and the save RPC. The Free pages themselves were already at two waits; their ±3 ms differences are run-to-run noise.
+
+### Task G: cold starts, the first request a Vercel function serves (HANDOFF next task 2)
+
+No app change: the one candidate that measured well changes Sentry's monitoring and is left for Raj (below); the other lost once measured fairly. Committed: the cold-start harness and its measurements.
+
+**Harness.** `run.mjs --cold N` starts a fresh `next start` per sample and times its first request. `cold-modules.cjs` (preloaded) turns off `next start`'s boot-time loading of every route (`experimental.preloadEntriesOnStart`), which Vercel's minimal mode doesn't do, and records each CommonJS file evaluated with its own time, grouped by the file that pulled it in (Proxy's `middleware.js`, `instrumentation.js`, the route's `page.js`, `next.config`). `next start` also evaluates `next.config.ts` (with Sentry's build plugin, webpack, rollup and babel: about 1,600 files, 0.8–1.5 s) on its first request, which Vercel never does, so it is subtracted. `cold-ab.mjs` alternates two builds round by round and takes medians, so the laptop's CPU limit drifting during a run affects both builds alike; it records the limit per round. `NEXT_PUBLIC_SENTRY_DSN` is compiled in, so builds take a loopback harness DSN (`WEAVLY_HARNESS_SENTRY_DSN`, accepted only for `127.0.0.1` by `isolated-command.mjs`) and Sentry initialises as in production; `sentry-check.mjs` makes one page fail and confirms the error event (and sampled transactions) reach the fake backend.
+
+**Where a cold request's time goes** (`main`, `/owner/rates`, own evaluation time): Proxy's `middleware.js` 128–160 ms (a 2.1 MB bundle), `instrumentation.js` 92 ms (1.5 MB, the Sentry SDK and OpenTelemetry), the page's own code 150 ms, of which 70 ms is chunks `1317`/`5009` (3.4 MB: another bundled copy of Sentry and OpenTelemetry). Sentry's build plugin wraps Proxy and every page and route in Sentry, so each bundle carries its own copy. The rest of a ~1 s first request is React's first render and V8 warming up.
+
+**Rejected: Sentry as a server external** (`serverExternalPackages: ['@sentry/nextjs']`). Bundles shrink (instrumentation 1.5 MB → 3 KB, Proxy 2.1 MB → 578 KB, the page copies gone) and `cold-ab-sentry-external.json` shows −20% to −42% per route, but that run is unfair: `next start` had already loaded `@sentry/nextjs` from `node_modules` while evaluating `next.config.ts`, so the externalized build found it cached. On Vercel each function would load it cold, and `sentry-require-cost.mjs` measures that at a median 433 ms (9 fresh Node processes), more than the bundled copies cost. Net on Vercel: about even or slower. Sentry did keep reporting (1 error event, 11 transactions in `sentry-check.mjs`).
+
+**Measured, needs Raj's decision: Sentry's automatic wrappers off** (`webpack.autoInstrumentServerFunctions`, `autoInstrumentMiddleware`, `autoInstrumentAppDirectory` set to `false` in `withSentryConfig`). Sentry stays bundled as on `main`; only the wrappers go. Request errors are still reported through `onRequestError` in `instrumentation.ts`: `sentry-check.mjs` received the error event and 5 transactions. Lost: Sentry's per-page and per-route spans and its Proxy transactions. `cold-ab-sentry-no-wrappers.json`, 3 rounds, CPU limit 100 in every round, first request without `next.config`:
+
+| Route | `main` → no wrappers, ms | Own evaluation ms |
+| --- | --- | --- |
+| `/` | 558 → 430 (−23%) | 383 → 264 |
+| `/login` | 732 → 570 (−22%) | 391 → 298 |
+| lite `/owner/estimator` | 1,012 → 811 (−20%) | 445 → 315 |
+| lite `/owner/quotes` | 997 → 811 (−19%) | 431 → 319 |
+| lite `/owner/rates` | 985 → 793 (−19%) | 427 → 319 |
+| lite `/owner/settings` | 989 → 800 (−19%) | 444 → 333 |
+| lite `/owner/billing` | 959 → 784 (−18%) | 414 → 303 |
+| free `/free` | 986 → 812 (−18%) | 454 → 326 |
+| free `/free/costings` | 960 → 782 (−19%) | 440 → 323 |
+| free `/free/account` | 943 → 769 (−18%) | 432 → 320 |
+| free `/free/billing` | 921 → 739 (−20%) | 417 → 290 |
+| free `/api/free/status` | 748 → 569 (−24%) | 429 → 254 |
+
+Most of it is Proxy: its bundle drops to 563 KB and its own time from 128 to 38 ms (`autoInstrumentMiddleware` alone may give most of the gain; not measured separately). Pages keep one 1.9 MB Sentry chunk because `app/global-error.tsx` imports `@sentry/nextjs` and is part of every page's server tree. `main`'s absolute numbers differ between the two A/B runs (the charger negotiated 65 W, not 100 W, during the second), so only the paired before/after within one file is meaningful.
+
+Checks: `npx tsc --noEmit` clean, `npx vitest run` 418 files / 4,208 passed / 1 skipped, `npm run lint` clean. Not verified on Vercel: real cold starts there also include function boot and network.
