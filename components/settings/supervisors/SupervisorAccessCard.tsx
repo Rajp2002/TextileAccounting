@@ -82,9 +82,9 @@ export function SupervisorAccessCard({ orgId, factoryName }: { orgId: string; fa
     }
 
     return (
-        <section aria-labelledby="supervisor-access-heading" className="space-y-5 rounded-2xl border border-hairline bg-surface p-6 shadow-xs sm:p-8">
+        <section aria-labelledby="supervisor-access-heading" className="space-y-5 rounded-2xl border border-hairline bg-surface p-5 shadow-xs sm:p-6">
             <div className="space-y-1">
-                <h2 id="supervisor-access-heading" className="text-lg font-bold text-ink">{text('cardTitle')}</h2>
+                <h2 id="supervisor-access-heading" className="text-base font-semibold text-ink">{text('cardTitle')}</h2>
                 <p className="text-sm leading-relaxed text-muted-foreground">{text('cardDescription')}</p>
             </div>
 

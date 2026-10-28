@@ -761,50 +761,6 @@
     padding-bottom: 2.5rem;
   }
 
-  /* Settings contains high-density operational copy. Keep the route's
-     typography comfortable without changing the scale of the rest of the
-     dashboard, and make small helper text hold up against the warm canvas. */
-  .settings-readable {
-    color: var(--color-body);
-    font-size: 0.9375rem;
-    line-height: 1.5;
-    -webkit-font-smoothing: auto;
-    text-rendering: optimizeLegibility;
-  }
-
-  .settings-readable :where(.text-sm) {
-    font-size: 0.9375rem;
-    line-height: 1.55;
-  }
-
-  .settings-readable :where(.text-xs, [class~="text-[11px]"]) {
-    font-size: 0.8125rem;
-    line-height: 1.45;
-  }
-
-  .settings-readable :where([class~="text-[10px]"], [class~="text-[9px]"]) {
-    font-size: 0.75rem;
-    line-height: 1.35;
-  }
-
-  /* The Settings route uses muted tokens for explanatory copy, but that copy
-     is still primary reading material. Keep it at the same near-black ink
-     color as the controls, with a medium weight for paragraphs and helper
-     blocks so it does not disappear into the warm background. */
-  .settings-readable :where(.text-muted-foreground, .text-body, .text-subtle) {
-    color: var(--color-ink);
-  }
-
-  .settings-readable :where(
-    p.text-muted-foreground,
-    p.text-body,
-    p.text-subtle,
-    div.text-body,
-    [data-slot="card-description"]
-  ) {
-    font-weight: 500;
-  }
-
   /* ── Workspace composition ──────────────────────────────────────────────
      Every route is one column beside the sidebar: the page header (title,
      the route's Guide, its primary action), then the page itself at the full

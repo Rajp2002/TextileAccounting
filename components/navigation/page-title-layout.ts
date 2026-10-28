@@ -12,7 +12,7 @@ const PAGE_TITLE_LAYOUTS: Array<[string, string]> = [
     ['/owner/assignments', 'configuration-page-frame mx-auto w-full'],
     ['/owner/stock', 'mx-auto w-full'],
     ['/owner/rates', 'mx-auto w-full'],
-    ['/owner/settings', 'mx-auto w-full max-w-6xl'],
+    ['/owner/settings', 'mx-auto w-full'],
     ['/owner/billing', 'mx-auto w-full'],
     ['/owner/quotes', 'mx-auto w-full'],
     ['/free', 'mx-auto w-full'],

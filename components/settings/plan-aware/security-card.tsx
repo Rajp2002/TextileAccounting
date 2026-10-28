@@ -46,7 +46,7 @@ export function SecurityCard({ email }: SecurityCardProps) {
     return (
         <section
             aria-labelledby="security-heading"
-            className="rounded-2xl border border-hairline bg-surface p-6 shadow-xs sm:p-8"
+            className="rounded-2xl border border-hairline bg-surface p-5 shadow-xs sm:p-6"
         >
             <div className="flex flex-wrap items-start justify-between gap-2 border-b border-hairline/80 pb-4">
                 <div className="space-y-1">
@@ -54,7 +54,7 @@ export function SecurityCard({ email }: SecurityCardProps) {
                         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-saffron-soft text-saffron-deep">
                             <ShieldCheck className="h-4 w-4" aria-hidden="true" />
                         </span>
-                        <h2 id="security-heading" className="text-lg font-bold tracking-tight text-ink">
+                        <h2 id="security-heading" className="text-base font-semibold text-ink">
                             {tx('Security')}
                         </h2>
                     </div>

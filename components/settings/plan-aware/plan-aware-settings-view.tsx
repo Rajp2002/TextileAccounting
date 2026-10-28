@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react'
-import { ChevronDown, ChevronUp, SlidersHorizontal } from 'lucide-react'
+import { ChevronDown, ChevronUp } from 'lucide-react'
 import { useTranslation } from '@/lib/i18n/context'
 import type { SubscriptionTier } from '@/lib/subscription-access'
 import { PersonalInformationCard } from './personal-information-card'
@@ -15,6 +15,8 @@ import { SupervisorAccessCard } from '../supervisors/SupervisorAccessCard'
 import { CompanyProfileCard } from './company-profile-card'
 import { brandingText } from '@/lib/i18n/document-branding'
 import { useUnloadProtection } from './unsaved-changes-dialog'
+import { PageHeader } from '@/components/ui/page-header'
+import { cn } from '@/lib/utils'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { freeSupportingText } from '@/lib/i18n/free-supporting'
 import styles from './free-settings.module.css'
@@ -86,10 +88,10 @@ function StartupIntroSetting() {
         setSaveFailed(!saved)
         if (saved) window.dispatchEvent(new Event(STARTUP_INTRO_CHANGE_EVENT))
     }
-    return <section aria-labelledby="startup-intro-heading" className="rounded-2xl border border-hairline bg-surface p-6 shadow-xs sm:p-8">
+    return <section aria-labelledby="startup-intro-heading" className="rounded-2xl border border-hairline bg-surface p-5 shadow-xs sm:p-6">
         <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0 space-y-1">
-                <h2 id="startup-intro-heading" className="text-lg font-bold text-ink">{t('common.startup_intro_title')}</h2>
+                <h2 id="startup-intro-heading" className="text-base font-semibold text-ink">{t('common.startup_intro_title')}</h2>
                 <p id="startup-intro-description" className="text-sm leading-relaxed text-muted-foreground">{t('common.startup_intro_body')}</p>
             </div>
             <Select value={preference ?? DEFAULT_STARTUP_INTRO_PREFERENCE} onValueChange={changePreference} disabled={preference === null}>
@@ -163,22 +165,12 @@ export function PlanAwareSettingsView({
     }
 
     return (
-        <div className={`min-h-screen py-6 sm:py-10 ${(tier === 'free' || tier === 'lite') ? styles.root : ''}`}>
-            <div className="mx-auto w-full max-w-[960px] space-y-8 px-4 sm:px-6 lg:px-8">
-                {/* Page Header */}
-                <header className="space-y-2 border-b border-hairline/80 pb-6 text-center">
-                    <div className="flex flex-col items-center gap-2.5">
-                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-saffron-soft text-saffron-deep dark:bg-saffron/20">
-                            <SlidersHorizontal className="h-5 w-5" aria-hidden="true" />
-                        </span>
-                        <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-ink sm:text-[2rem]">
-                            {t('settings.title') || 'Settings'}
-                        </h1>
-                    </div>
-                </header>
-
+        <div className={cn('ui-route-enter w-full space-y-6', (tier === 'free' || tier === 'lite') && styles.root)}>
+            {/* The same title row as the other workspace pages; the forms keep a readable width below it. */}
+            <PageHeader title={t('settings.title') || 'Settings'} />
+            <div className="w-full max-w-[960px]">
                 {/* Ordered Sections Stack */}
-                <main className="space-y-6 sm:space-y-8">
+                <main className="space-y-6">
                     {/* Section 1: Personal Information (Universal) */}
                     <FreeSettingsGroup compact={tier === 'free' || tier === 'lite'} title={freeSupportingText(language, 'personal')} summary={tier === 'lite' ? confirmedName : profile.fullName} dirty={personalDirty}><PersonalInformationCard
                         initialName={profile.fullName}

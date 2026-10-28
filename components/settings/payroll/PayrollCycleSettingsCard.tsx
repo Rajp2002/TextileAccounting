@@ -328,7 +328,7 @@ export function PayrollCycleSettingsCard({
     }, [safeEffectiveInfo, ruleValidation])
 
     return (
-        <div id="payroll-cycle" className="scroll-mt-6 rounded-2xl border border-hairline bg-surface p-6 shadow-xs">
+        <div id="payroll-cycle" className="scroll-mt-6 rounded-2xl border border-hairline bg-surface p-5 shadow-xs sm:p-6">
             {/* Header */}
             <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -340,7 +340,7 @@ export function PayrollCycleSettingsCard({
                             Accounting Integrity
                         </Badge>
                     </div>
-                    <h2 className="mt-1 font-heading text-lg font-bold text-ink">
+                    <h2 className="mt-1 text-base font-semibold text-ink">
                         Payroll Cycle
                     </h2>
                     <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">

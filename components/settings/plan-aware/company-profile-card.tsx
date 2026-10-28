@@ -89,13 +89,13 @@ export function CompanyProfileCard({ onDirtyChange }: { onDirtyChange?: (dirty: 
     }, [])
 
     return (
-        <section id="company-profile" aria-labelledby="company-profile-heading" data-i18n-skip="true" className="scroll-mt-24 rounded-2xl border border-hairline bg-surface p-6 shadow-xs sm:p-8">
+        <section id="company-profile" aria-labelledby="company-profile-heading" data-i18n-skip="true" className="scroll-mt-24 rounded-2xl border border-hairline bg-surface p-5 shadow-xs sm:p-6">
             <div className="space-y-1 border-b border-hairline/80 pb-4">
                 <div className="flex items-center gap-2">
                     <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-saffron-soft text-saffron-deep">
                         <Building2 className="h-4 w-4" aria-hidden="true" />
                     </span>
-                    <h2 id="company-profile-heading" className="text-lg font-bold tracking-tight text-ink">{text('companyProfileTitle')}</h2>
+                    <h2 id="company-profile-heading" className="text-base font-semibold text-ink">{text('companyProfileTitle')}</h2>
                 </div>
                 <p className="text-sm leading-relaxed text-muted-foreground">{text('companyProfileSummary')}</p>
             </div>

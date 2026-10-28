@@ -91,7 +91,7 @@ export function DeletionReviewCard({ organizationName, accountEmail, restoreMobi
             {/* Small neutral card with restrained warning heading and Review deletion... button */}
             <section
                 aria-labelledby="account-deletion-heading"
-                className="rounded-2xl border border-hairline bg-surface p-6 shadow-xs sm:p-8"
+                className="rounded-2xl border border-hairline bg-surface p-5 shadow-xs sm:p-6"
             >
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="space-y-1">

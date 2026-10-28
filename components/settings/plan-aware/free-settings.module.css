@@ -1,13 +1,8 @@
 .toggle { display: none; }
 
 @media (max-width: 767.98px) {
-  .root { padding-block: 0; min-height: 0; }
-  .root > div { padding-inline: 0; }
-  .root > div > header { text-align: left; padding-bottom: 1rem; margin-bottom: 1rem; }
-  .root > div > header > div { align-items: flex-start; }
-  .root > div > header > div > span { display: none; }
-  .root > div > header h1 { font-size: 1.375rem; }
-  .root > div > main { margin-top: 1rem; }
+  .root > header { padding-bottom: 1rem; }
+  .root > header h1 { font-size: 1.375rem; }
   .group { border: 1px solid var(--color-hairline); border-radius: .75rem; background: var(--color-surface); }
   .toggle { display: flex; align-items: center; justify-content: space-between; gap: .75rem; width: 100%; min-height: 4.25rem; padding: .875rem 1rem; text-align: left; border-radius: .75rem; }
   .toggle:focus-visible { outline: 2px solid var(--color-saffron); outline-offset: 2px; }
@@ -20,6 +15,6 @@
   .group > div > section button { min-height: 44px; min-width: 0; max-width: 100%; flex-shrink: 1; white-space: normal; overflow-wrap: anywhere; height: auto; }
   .group > div > section [data-slot="badge"] { min-width: 0; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
   .group > div > section [data-slot="input"] { height: auto; min-height: 44px; }
-  .root > div > main > section:not(.group) { padding: 1rem; }
-  .root > div > main > section button { min-height: 44px; white-space: normal; height: auto; }
+  .root main > section:not(.group) { padding: 1rem; }
+  .root main > section button { min-height: 44px; white-space: normal; height: auto; }
 }

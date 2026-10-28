@@ -89,18 +89,19 @@ export default function SettingsPage() {
     })
 
     if (profileLoading || orgLoading) {
-        return <div className="settings-page-frame settings-readable space-y-5">
-            <div className="space-y-2 border-b border-hairline/80 pb-6 text-center">
-                <Skeleton className="mx-auto size-9 rounded-xl" />
-                <Skeleton className="mx-auto h-8 w-48" />
+        return <div className="settings-page-frame space-y-6">
+            <div className="border-b border-hairline/70 pb-5 sm:pb-6">
+                <Skeleton className="h-9 w-40" />
             </div>
-            <Skeleton className="h-64 rounded-lg" />
-            <Skeleton className="h-56 rounded-lg" />
+            <div className="max-w-[960px] space-y-6">
+                <Skeleton className="h-64 rounded-2xl" />
+                <Skeleton className="h-56 rounded-2xl" />
+            </div>
         </div>
     }
     if (!userProfile) return null
 
-    return <div className={`settings-page-frame settings-readable ${tier === 'lite' ? styles.root : ''}`}>
+    return <div className={`settings-page-frame space-y-6 ${tier === 'lite' ? styles.root : ''}`}>
         <RouteMilestones route="/owner/settings" shellVisible primaryUsable secondaryReady />
         <PlanAwareSettingsView
             profile={{
@@ -135,18 +136,18 @@ export default function SettingsPage() {
             }}
             onDefaultsChange={() => queryClient.invalidateQueries({ queryKey: ['factory_cost_profile'] })}
         />
-        <div className="mx-auto max-w-[960px] space-y-6 px-4 pb-12 sm:px-6 lg:px-8">
-            <details id="account-data" className="ui-details group overflow-hidden rounded-xl border border-hairline bg-surface/80">
+        <div className="max-w-[960px]">
+            <details id="account-data" className="ui-details group overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-4 sm:px-5">
                     <div>
-                        <div className="flex items-center gap-2"><User className="h-4 w-4" /><h2 className="text-base font-bold">{tier === 'lite' ? liteSupportingText(language, 'accountData') : 'Account & data'}</h2></div>
+                        <div className="flex items-center gap-2"><User className="h-4 w-4" /><h2 className="text-base font-semibold text-ink">{tier === 'lite' ? liteSupportingText(language, 'accountData') : 'Account & data'}</h2></div>
                         {tier === 'lite' && <p className={`mt-1 text-sm text-muted-foreground ${styles.mobileSummary}`}>{liteSupportingText(language, 'accountDataSummary')}</p>}
                         <p className={`mt-1 text-sm text-muted-foreground ${tier === 'lite' ? styles.desktopSummary : ''}`}>Organization export, export history, and account deletion.</p>
                     </div>
                     <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
                 </summary>
                 <div className="space-y-4 border-t border-hairline px-4 py-4 sm:px-5">
-                    <section id="privacy-data" className="rounded-lg border border-hairline p-5">
+                    <section id="privacy-data" className="rounded-xl border border-hairline p-5">
                         <h3 className="flex items-center gap-2 font-semibold"><Download className="h-4 w-4" /> Download organization data</h3>
                         <p className="mt-2 text-sm text-muted-foreground">Create an export of the factory records your account can access.</p>
                         <div className="mt-4"><OrganizationDataExportButton /></div>
