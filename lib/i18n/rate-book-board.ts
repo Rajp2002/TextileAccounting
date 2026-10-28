@@ -16,6 +16,10 @@ export const rateBookBoardText = {
         firstPrice: 'First price · {date}', noChange: 'No change · confirmed {date}', changedOn: 'on {date}',
         example: 'Example', sampleNote: 'Sample yarn for learning the Rate Book. It is not your data and is not used in any costing. Delete it anytime.', newYarn: 'New yarn',
         trendLabel: 'Price from {from} to {to}', archived: 'Archived', defaultForNew: 'Default for new costings',
+        oldPriceOne: '1 saved costing still uses the old price', oldPrice: '{n} saved costings still use the old price',
+        deleteYarn: 'Delete', deleteYarnLabel: 'Delete {name}', inUseTitle: '{name} is still in use',
+        inUseBody: 'A saved quality uses this yarn, so it cannot be deleted. Archive it to take it off the board. Its history stays and you can restore it anytime.',
+        archiveInstead: 'Archive instead',
     },
     hi: {
         intro: 'हर धागे का आप किलो के हिसाब से जो रेट देते हैं। नई कॉस्टिंग यही रेट इस्तेमाल करती है।',
@@ -33,6 +37,10 @@ export const rateBookBoardText = {
         firstPrice: 'पहला रेट · {date}', noChange: 'कोई बदलाव नहीं · पुष्टि {date}', changedOn: '{date} को',
         example: 'उदाहरण', sampleNote: 'Rate Book सीखने के लिए सैंपल धागा। यह आपका डेटा नहीं है और किसी कॉस्टिंग में इस्तेमाल नहीं होता। कभी भी हटा सकते हैं।', newYarn: 'नया धागा',
         trendLabel: '{from} से {to} तक का रेट', archived: 'आर्काइव किया गया', defaultForNew: 'नई कॉस्टिंग के लिए डिफ़ॉल्ट',
+        oldPriceOne: '1 सेव की गई कॉस्टिंग अभी पुराना रेट इस्तेमाल कर रही है', oldPrice: '{n} सेव की गई कॉस्टिंग अभी पुराना रेट इस्तेमाल कर रही हैं',
+        deleteYarn: 'हटाएँ', deleteYarnLabel: '{name} हटाएँ', inUseTitle: '{name} अभी इस्तेमाल में है',
+        inUseBody: 'कोई सेव की गई क्वालिटी यह धागा इस्तेमाल करती है, इसलिए इसे हटाया नहीं जा सकता। बोर्ड से हटाने के लिए इसे आर्काइव करें। इसका इतिहास बना रहता है और आप इसे कभी भी वापस ला सकते हैं।',
+        archiveInstead: 'इसके बजाय आर्काइव करें',
     },
     gu: {
         intro: 'દરેક યાર્ન માટે તમે કિલોએ ચૂકવો તે ભાવ. નવી કોસ્ટિંગ આ જ ભાવ વાપરે છે.',
@@ -50,6 +58,10 @@ export const rateBookBoardText = {
         firstPrice: 'પહેલો ભાવ · {date}', noChange: 'કોઈ ફેરફાર નહીં · પુષ્ટિ {date}', changedOn: '{date}એ',
         example: 'ઉદાહરણ', sampleNote: 'Rate Book શીખવા માટે સેમ્પલ યાર્ન. તે તમારો ડેટા નથી અને કોઈ કોસ્ટિંગમાં વપરાતો નથી. ગમે ત્યારે કાઢી શકો છો.', newYarn: 'નવું યાર્ન',
         trendLabel: '{from}થી {to} સુધીનો ભાવ', archived: 'આર્કાઇવ કરેલું', defaultForNew: 'નવી કોસ્ટિંગ માટે ડિફૉલ્ટ',
+        oldPriceOne: '1 સેવ કરેલી કોસ્ટિંગ હજી જૂનો ભાવ વાપરે છે', oldPrice: '{n} સેવ કરેલી કોસ્ટિંગ હજી જૂનો ભાવ વાપરે છે',
+        deleteYarn: 'કાઢી નાખો', deleteYarnLabel: '{name} કાઢી નાખો', inUseTitle: '{name} હજી વપરાય છે',
+        inUseBody: 'કોઈ સેવ કરેલી ક્વોલિટી આ યાર્ન વાપરે છે, તેથી તેને કાઢી શકાતું નથી. બોર્ડ પરથી હટાવવા તેને આર્કાઇવ કરો. તેનો ઇતિહાસ રહે છે અને તમે ગમે ત્યારે પાછું લાવી શકો છો.',
+        archiveInstead: 'તેના બદલે આર્કાઇવ કરો',
     },
 } as const
 

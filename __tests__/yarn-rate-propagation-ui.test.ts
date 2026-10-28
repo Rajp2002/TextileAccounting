@@ -21,7 +21,7 @@ describe('Rate Book Propagate pill', () => {
         const start = client.indexOf('data-ratebook-field="propagateAction"')
         const button = client.slice(client.lastIndexOf('<Button', start), client.indexOf('</Button>', start))
         expect(button).toContain('onClick={() => setPropagateRate(rate)}')
-        expect(button).toContain('secondaryAction')
+        expect(button).toContain('variant="saffron"')
         expect(button).not.toContain('DropdownMenu')
     })
 

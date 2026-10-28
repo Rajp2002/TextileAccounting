@@ -214,6 +214,8 @@ function getRateUsageNames(rate: Pick<CostRateRow, 'fabric_names'> | null) {
 /** Card actions: a quiet bordered button and a text-only one, 44px tall on phones. */
 const secondaryAction = 'h-10 rounded-lg border-hairline bg-surface font-semibold text-ink shadow-xs hover:bg-surface-soft max-md:min-h-[44px]'
 const ghostAction = 'h-10 rounded-lg font-semibold text-body max-md:min-h-[44px]'
+// A yarn card's own actions are filled pills so they read as tappable; Propagate is saffron because it is waiting on the owner.
+const cardAction = 'h-10 rounded-lg font-semibold max-md:min-h-[44px]'
 /** Cards fill the width in columns of at least 22rem, one column on phones. */
 const yarnCardGrid = 'grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(min(100%,22rem),1fr))]'
 
@@ -1309,6 +1311,8 @@ export default function RatesClient({
                         : null
 
     const copy = rateBookBoardText[language]
+    // Only an unused yarn can be deleted; one a saved quality uses is offered archive instead.
+    const deleteRateInUse = Boolean(deleteRate && getRateUsageNames(deleteRate).length > 0)
     const todayDate = today()
     const isDue = (rate: CostRateRow) => rate.is_active !== false && getRateReviewStatus(rate) !== 'current' && (tourStep !== null || !isSampleRecordId(rate.id))
     /** How a due price stands: new, overdue by some days, or due in some days. */
@@ -1389,19 +1393,43 @@ export default function RatesClient({
                     ? <p className="text-[13px] leading-snug text-muted-foreground">{copy.sampleNote}</p>
                     : <div data-ratebook-field="linkedQualitiesPopover"><YarnUsage rate={rate} loading={usageLoading} copy={copy} /></div>}
                 {rate.apply_as_default && <p className="-mt-2 text-[13px] font-medium text-success">{copy.defaultForNew}</p>}
-                <div className="mt-auto flex flex-wrap items-center gap-2 border-t border-hairline pt-4" role="group" aria-label={tx('Actions')}>
+                <div className="mt-auto border-t border-hairline pt-4">
+                {/* Saved costings keep the old price until the owner propagates it, so the card says so above the pill. */}
+                {propagateCount > 0 && (
+                    <p
+                        role="status"
+                        data-ratebook-field="propagateNotice"
+                        className="relative mb-3 flex items-start gap-2 rounded-lg border border-[var(--wv-saffron-200)] bg-[var(--wv-saffron-100)] px-3 py-2 text-[13px] font-medium leading-snug text-saffron-deep shadow-xs animate-in fade-in slide-in-from-bottom-1 duration-300 motion-reduce:animate-none"
+                    >
+                        <AlertTriangle className="mt-px h-4 w-4 shrink-0" aria-hidden="true" />
+                        {propagateCount === 1 ? copy.oldPriceOne : fillCopy(copy.oldPrice, { n: propagateCount })}
+                        <span aria-hidden="true" className="absolute -bottom-[6px] left-12 h-2.5 w-2.5 rotate-45 border-b border-r border-[var(--wv-saffron-200)] bg-[var(--wv-saffron-100)]" />
+                    </p>
+                )}
+                <div className="flex flex-wrap items-center gap-2" role="group" aria-label={tx('Actions')}>
                     {quietSample ? (
                         <Button variant="outline" onClick={handleDeleteDemoYarn} className={secondaryAction}>
                             <Trash2 className="h-4 w-4" aria-hidden="true" />{tx('Delete sample yarn')}
                         </Button>
                     ) : <>
+                        {propagateCount > 0 && (
+                            <Button
+                                data-ratebook-field="propagateAction"
+                                variant="saffron"
+                                disabled={isPending}
+                                onClick={() => setPropagateRate(rate)}
+                                aria-label={`Propagate ${rate.name} to ${propagateCount} saved costings`}
+                                className={cn(cardAction, 'whitespace-normal')}
+                            >
+                                {tx(`Propagate · ${propagateCount}`)}
+                            </Button>
+                        )}
                         {archived ? (
                             <Button
-                                variant="outline"
                                 onClick={() => { setArchiveError(null); setArchiveRate(rate) }}
                                 disabled={isPending}
                                 aria-label={`Restore rate ${rate.name}`}
-                                className={secondaryAction}
+                                className={cardAction}
                             >
                                 {actionKind === 'restore' ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArchiveRestore className="h-4 w-4" aria-hidden="true" />}
                                 {tx(actionKind === 'restore' ? `Restoring ${rate.name}…` : 'Restore rate')}
@@ -1409,32 +1437,35 @@ export default function RatesClient({
                         ) : (
                             <Button
                                 data-ratebook-field="quickEditAction"
-                                variant="outline"
                                 disabled={isPending}
                                 onClick={() => openQuickEdit(rate)}
                                 aria-label={`Edit rate for ${rate.name}`}
-                                className={secondaryAction}
+                                className={cardAction}
                             >
                                 <Pencil className="h-4 w-4" aria-hidden="true" />{tx('Edit rate')}
                             </Button>
                         )}
-                        {propagateCount > 0 && (
-                            <Button
-                                data-ratebook-field="propagateAction"
-                                variant="outline"
-                                disabled={isPending}
-                                onClick={() => setPropagateRate(rate)}
-                                aria-label={`Propagate ${rate.name} to ${propagateCount} saved costings`}
-                                className={cn(secondaryAction, 'whitespace-normal')}
-                            >
-                                {tx(`Propagate · ${propagateCount}`)}
-                            </Button>
-                        )}
                         {/* Activity opens the price-history chart; its Full activity button switches to the audit list. */}
-                        <Button variant="ghost" onClick={() => openHistory(rate, 'trend')} className={cn('ml-auto', ghostAction)}>
+                        <Button onClick={() => openHistory(rate, 'trend')} className={cardAction}>
                             <History className="h-4 w-4" aria-hidden="true" />{tx('Activity')}
                         </Button>
+                        {/* Delete declutters the board; a yarn still in use is offered archive instead. */}
+                        {!sample && (
+                            <Button
+                                data-ratebook-field="deleteYarnAction"
+                                variant="ghost"
+                                size="icon"
+                                disabled={isPending}
+                                onClick={() => { setDeleteError(null); setDeleteRate(rate) }}
+                                aria-label={fillCopy(copy.deleteYarnLabel, { name: rate.name })}
+                                title={copy.deleteYarn}
+                                className="ml-auto text-muted-foreground hover:bg-destructive/10 hover:text-destructive max-md:size-11"
+                            >
+                                {actionKind === 'delete' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" aria-hidden="true" />}
+                            </Button>
+                        )}
                     </>}
+                </div>
                 </div>
             </article>
         )
@@ -1943,15 +1974,28 @@ export default function RatesClient({
 
             <Dialog open={Boolean(deleteRate)} onOpenChange={open => { if (!open && !isPending) { setDeleteRate(null); setDeleteError(null) } }}>
                 <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>{tx(`Delete ${deleteRate?.name ?? 'rate'} from Rate Book?`)}</DialogTitle>
-                        <DialogDescription>{tx('This removes the unused yarn rate from your Rate Book. Since it is not used in any active quality or costing, it will not affect any calculations.')}</DialogDescription>
-                    </DialogHeader>
-                    {deleteError && <p role="alert" className="text-sm font-medium text-destructive">{deleteError}</p>}
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => { setDeleteRate(null); setDeleteError(null) }} disabled={isPending}>{tx('Cancel')}</Button>
-                        <Button variant="destructive" onClick={handleDelete} disabled={isPending}>{isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} {tx(isPending ? `Deleting ${deleteRate?.name ?? 'rate'}…` : 'Delete rate')}</Button>
-                    </DialogFooter>
+                    {deleteRateInUse ? <>
+                        <DialogHeader>
+                            <DialogTitle>{fillCopy(copy.inUseTitle, { name: deleteRate?.name ?? '' })}</DialogTitle>
+                            <DialogDescription>{copy.inUseBody}</DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setDeleteRate(null)}>{tx('Cancel')}</Button>
+                            <Button onClick={() => { const target = deleteRate; setDeleteRate(null); setArchiveError(null); setArchiveRate(target) }}>
+                                <Archive className="h-4 w-4" aria-hidden="true" />{copy.archiveInstead}
+                            </Button>
+                        </DialogFooter>
+                    </> : <>
+                        <DialogHeader>
+                            <DialogTitle>{tx(`Delete ${deleteRate?.name ?? 'rate'} from Rate Book?`)}</DialogTitle>
+                            <DialogDescription>{tx('This removes the unused yarn rate from your Rate Book. Since it is not used in any active quality or costing, it will not affect any calculations.')}</DialogDescription>
+                        </DialogHeader>
+                        {deleteError && <p role="alert" className="text-sm font-medium text-destructive">{deleteError}</p>}
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => { setDeleteRate(null); setDeleteError(null) }} disabled={isPending}>{tx('Cancel')}</Button>
+                            <Button variant="destructive" onClick={handleDelete} disabled={isPending}>{isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} {tx(isPending ? `Deleting ${deleteRate?.name ?? 'rate'}…` : 'Delete rate')}</Button>
+                        </DialogFooter>
+                    </>}
                 </DialogContent>
             </Dialog>
             </div>
