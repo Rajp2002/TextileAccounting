@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { RateBookTutorial, rateBookHelpCopy, useRateBookHelpTopic } from '@/components/rates/RateBookTutorial'
 import { RateTrendDialog } from '@/components/rates/RateTrendDialog'
 import type { RateBookStep } from '@/lib/rate-book-tour'
@@ -36,7 +36,6 @@ import { cn } from '@/lib/utils'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Textarea } from '@/components/ui/textarea'
 import { useArchivePolicyTopic } from '@/components/records/ArchivePolicyNotice'
@@ -225,94 +224,128 @@ function ratePriceParts(value: number, unit: CostRateUnit) {
     return { amount, suffix: suffix ?? '' }
 }
 
-/** Every saved fabric that uses a rate, in a popover, opened from the yarn card's usage line. */
-function LinkedQualitiesPopover({
+/** Every saved quality that uses a yarn, in a modal opened from the yarn card's usage line. */
+function YarnUsageDialog({
     rate,
     usageNames,
-    label,
+    copy,
+    open,
+    onOpenChange,
 }: {
     rate: CostRateRow
     usageNames: string[]
-    label: string
+    copy: RateBookBoardCopy
+    open: boolean
+    onOpenChange: (open: boolean) => void
 }) {
-    const isCosting = rate.discovery_source === 'saved_costing'
     const count = usageNames.length
-    const qualityWord = count === 1 ? 'quality' : 'qualities'
-    const fullWord = count === 1 ? 'fabric quality' : 'fabric qualities'
-
     return (
-        <Popover>
-            <PopoverTrigger asChild>
-                <button
-                    type="button"
-                    className="inline-flex cursor-pointer items-center gap-1 rounded-md font-semibold text-ink underline decoration-hairline-strong underline-offset-4 transition-colors hover:decoration-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/50 max-md:min-h-[44px]"
-                    aria-label={`View ${count} linked ${qualityWord} for ${rate.name}`}
-                >
-                    {label}
-                    <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
-                </button>
-            </PopoverTrigger>
-            <PopoverContent
-                align="start"
-                sideOffset={6}
-                className="w-80 max-w-[calc(100vw-2rem)] rounded-xl border border-hairline bg-surface p-4 shadow-[var(--shadow-panel)]"
-            >
-                <div>
-                    <p className="text-[13px] font-medium text-muted-foreground">
-                        {isCosting ? 'Saved Costings' : 'Linked Qualities'}
-                    </p>
-                    <p className="mt-0.5 text-sm font-semibold text-ink">
-                        Used in {count} active {fullWord}
-                    </p>
-                </div>
-
-                <ul className="mt-3 max-h-48 space-y-1 overflow-y-auto pr-1">
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent data-ratebook-field="yarnUsageDialog" className="sm:max-w-md">
+                <DialogHeader className="pr-9">
+                    <DialogTitle className="break-words">{fillCopy(copy.usageDialogTitle, { name: rate.name })}</DialogTitle>
+                    <DialogDescription>{count === 1 ? copy.usageCountOne : fillCopy(copy.usageCount, { n: count })}</DialogDescription>
+                </DialogHeader>
+                <ul className="max-h-[50vh] divide-y divide-hairline overflow-y-auto border-y border-hairline">
                     {usageNames.map((name, index) => (
-                        <li key={`${name}-${index}`} className="truncate border-t border-hairline pt-1.5 text-sm text-body first:border-t-0 first:pt-0">
-                            {name}
-                        </li>
+                        <li key={`${name}-${index}`} className="break-words py-2.5 text-sm font-medium text-ink">{name}</li>
                     ))}
                 </ul>
-
                 {(rate.source || rate.notes) && (
-                    <div className="mt-3 space-y-1 border-t border-hairline pt-2.5 text-[13px] text-muted-foreground">
-                        {rate.source && (
-                            <p className="break-words">
-                                <span className="font-semibold text-ink">Source:</span> {rate.source}
-                            </p>
-                        )}
-                        {rate.notes && (
-                            <p className="break-words">
-                                <span className="font-semibold text-ink">Notes:</span> {rate.notes}
-                            </p>
-                        )}
+                    <div className="space-y-1 text-[13px] text-muted-foreground">
+                        {rate.source && <p className="break-words"><span className="font-semibold text-ink">{copy.sourceLabel}:</span> {rate.source}</p>}
+                        {rate.notes && <p className="break-words"><span className="font-semibold text-ink">{copy.notesLabel}:</span> {rate.notes}</p>}
                     </div>
                 )}
-
-                <p className="mt-2.5 border-t border-hairline pt-2 text-[13px] leading-relaxed text-muted-foreground">
-                    Future estimates for these fabrics will use this rate.
-                </p>
-            </PopoverContent>
-        </Popover>
+                <p className="text-[13px] leading-relaxed text-muted-foreground">{copy.usageNote}</p>
+            </DialogContent>
+        </Dialog>
     )
 }
 
+/** How many names fit on the usage line: the measured prefix and suffix, the names with commas, and "+N more" when any are cut. */
+function fittingNameCount(available: number, measure: HTMLElement) {
+    const widths = (part: string) => Array.from(measure.querySelectorAll<HTMLElement>(`[data-part="${part}"]`), el => el.getBoundingClientRect().width)
+    const [before = 0] = widths('before')
+    const [after = 0] = widths('after')
+    const [comma = 0] = widths('comma')
+    const [more = 0] = widths('more')
+    const names = widths('name')
+    let used = before + after
+    let count = 0
+    for (let i = 0; i < names.length; i++) {
+        const next = used + (i ? comma : 0) + names[i]
+        if (next + (i < names.length - 1 ? more : 0) > available + 0.5) break
+        used = next
+        count = i + 1
+    }
+    // One name always shows; a name too long for the line ends in an ellipsis.
+    return Math.max(1, count)
+}
+
 /**
- * Which saved qualities use a yarn: the first two by name, the rest behind a popover. A yarn no quality uses says so,
- * with the source its price came from when the owner recorded one.
+ * Which saved qualities use a yarn, on one line: as many names as fit, then "+N more". When names are cut, the whole
+ * line opens a modal with every quality. A yarn no quality uses says so, with the source its price came from when the
+ * owner recorded one.
  */
 function YarnUsage({ rate, loading, copy }: { rate: CostRateRow; loading: boolean; copy: RateBookBoardCopy }) {
     const usageNames = getRateUsageNames(rate)
+    const lineRef = useRef<HTMLDivElement>(null)
+    const measureRef = useRef<HTMLSpanElement>(null)
+    const [shown, setShown] = useState(usageNames.length)
+    const [open, setOpen] = useState(false)
+    const namesKey = usageNames.join('\n')
+
+    useLayoutEffect(() => {
+        const line = lineRef.current
+        const measure = measureRef.current
+        if (!line || !measure) return
+        let live = true
+        const fit = () => { if (live) setShown(fittingNameCount(line.clientWidth, measure)) }
+        fit()
+        const observer = new ResizeObserver(fit)
+        observer.observe(line)
+        // Names measured in the fallback font are narrower or wider than the loaded one.
+        document.fonts?.ready.then(fit).catch(() => {})
+        return () => { live = false; observer.disconnect() }
+    }, [namesKey, copy])
+
     if (usageNames.length) {
         const [before, after = ''] = copy.usedIn.split('{names}')
-        const rest = usageNames.length - 2
+        const visible = Math.min(shown, usageNames.length)
+        const rest = usageNames.length - visible
+        const moreClass = 'font-semibold text-ink underline decoration-hairline-strong underline-offset-4'
+        const line = <>
+            {before && <span className="shrink-0 whitespace-pre">{before}</span>}
+            <span className="min-w-0 truncate font-medium text-ink">{usageNames.slice(0, visible).join(', ')}</span>
+            {rest > 0 && <><span className="shrink-0 whitespace-pre"> </span><span className={cn('shrink-0 whitespace-pre transition-colors group-hover:decoration-ink', moreClass)}>{fillCopy(copy.moreNames, { n: rest })}</span></>}
+            {after && <span className="shrink-0 whitespace-pre">{after}</span>}
+        </>
         return (
-            <p className="text-[13px] leading-snug text-body">
-                {before}
-                <span className="font-medium text-ink">{usageNames.slice(0, 2).join(', ')}</span>
-                {rest > 0 && <> <LinkedQualitiesPopover rate={rate} usageNames={usageNames} label={fillCopy(copy.moreNames, { n: rest })} /></>}
-                {after}
-            </p>
+            <div ref={lineRef} className="relative min-w-0 text-[13px] leading-snug text-body">
+                {rest > 0 ? (
+                    <button
+                        type="button"
+                        onClick={() => setOpen(true)}
+                        aria-haspopup="dialog"
+                        aria-label={fillCopy(copy.usageAll, { n: usageNames.length, name: rate.name })}
+                        className="group flex w-full min-w-0 cursor-pointer items-center whitespace-nowrap rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/50 max-md:min-h-[44px]"
+                    >
+                        {line}
+                    </button>
+                ) : (
+                    <p className="flex min-w-0 items-center whitespace-nowrap">{line}</p>
+                )}
+                {/* An invisible copy of every part, measured to decide how many names fit. */}
+                <span ref={measureRef} aria-hidden="true" className="pointer-events-none invisible absolute left-0 top-0 whitespace-pre">
+                    <span data-part="before">{before}</span>
+                    <span data-part="after">{after}</span>
+                    <span data-part="comma" className="font-medium">, </span>
+                    <span data-part="more"> <span className={moreClass}>{fillCopy(copy.moreNames, { n: usageNames.length })}</span></span>
+                    {usageNames.map((name, index) => <span key={`${name}-${index}`} data-part="name" className="font-medium">{name}</span>)}
+                </span>
+                <YarnUsageDialog rate={rate} usageNames={usageNames} copy={copy} open={open} onOpenChange={setOpen} />
+            </div>
         )
     }
     const ownSource = rate.discovery_source ? null : rate.source?.trim()
@@ -1327,10 +1360,6 @@ export default function RatesClient({
         .map(category => ({ category, rates: visibleRates.filter(rate => rate.category === category) }))
         .filter(section => section.rates.length > 0)
     const dueCount = dueReviewRates.length
-    // The yarns waiting, most urgent first, as the review modal lists them.
-    const dueLine = dueCount
-        ? `${dueReviewRates.slice(0, 3).map(rate => rate.name).join(', ')}${dueCount > 3 ? ` ${fillCopy(copy.moreNames, { n: dueCount - 3 })}` : ''}`
-        : null
     const activeWarpCount = activeYarnRates.filter(rate => rate.category === 'yarn_warp').length
     const reviewDates = upcomingReviews(activeYarnRates)
     const nextReviewLine = reviewDates.length
@@ -1410,7 +1439,9 @@ export default function RatesClient({
                         <span aria-hidden="true" className="absolute -bottom-[6px] left-12 h-2.5 w-2.5 rotate-45 border-b border-r border-[var(--wv-saffron-200)] bg-[var(--wv-saffron-100)]" />
                     </p>
                 )}
-                <div className="flex flex-wrap items-center gap-2" role="group" aria-label={tx('Actions')}>
+                {/* Pills wrap among themselves so the delete icon stays on their first row instead of dropping to a line of its own. */}
+                <div className="flex items-start gap-2" role="group" aria-label={tx('Actions')}>
+                    <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
                     {quietSample ? (
                         <Button variant="outline" onClick={handleDeleteDemoYarn} className={secondaryAction}>
                             <Trash2 className="h-4 w-4" aria-hidden="true" />{tx('Delete sample yarn')}
@@ -1453,22 +1484,23 @@ export default function RatesClient({
                         <Button onClick={() => openHistory(rate, 'trend')} className={cardAction}>
                             <History className="h-4 w-4" aria-hidden="true" />{tx('Activity')}
                         </Button>
-                        {/* Delete declutters the board; a yarn still in use is offered archive instead. */}
-                        {!sample && (
-                            <Button
-                                data-ratebook-field="deleteYarnAction"
-                                variant="ghost"
-                                size="icon"
-                                disabled={isPending}
-                                onClick={() => { setDeleteError(null); setDeleteRate(rate) }}
-                                aria-label={fillCopy(copy.deleteYarnLabel, { name: rate.name })}
-                                title={copy.deleteYarn}
-                                className="ml-auto text-muted-foreground hover:bg-destructive/10 hover:text-destructive max-md:size-11"
-                            >
-                                {actionKind === 'delete' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" aria-hidden="true" />}
-                            </Button>
-                        )}
                     </>}
+                    </div>
+                    {/* Delete declutters the board; a yarn still in use is offered archive instead. */}
+                    {!sample && (
+                        <Button
+                            data-ratebook-field="deleteYarnAction"
+                            variant="ghost"
+                            size="icon"
+                            disabled={isPending}
+                            onClick={() => { setDeleteError(null); setDeleteRate(rate) }}
+                            aria-label={fillCopy(copy.deleteYarnLabel, { name: rate.name })}
+                            title={copy.deleteYarn}
+                            className="shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive max-md:size-11"
+                        >
+                            {actionKind === 'delete' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" aria-hidden="true" />}
+                        </Button>
+                    )}
                 </div>
                 </div>
             </article>
@@ -1538,8 +1570,8 @@ export default function RatesClient({
                                 { label: copy.warp, value: activeWarpCount },
                                 { label: copy.weft, value: activeYarnRates.length - activeWarpCount },
                             ].map(stat => (
-                                <div key={stat.label} className="flex min-w-0 flex-col justify-center px-4 py-5 sm:px-6">
-                                    <dt className="truncate text-[13px] font-medium text-muted-foreground">{stat.label}</dt>
+                                <div key={stat.label} className="flex min-w-0 flex-col items-center justify-center px-4 py-5 text-center sm:px-6">
+                                    <dt className="max-w-full truncate text-[13px] font-medium text-muted-foreground">{stat.label}</dt>
                                     <dd className="mt-1 text-[28px] font-semibold leading-none tracking-[-0.02em] text-ink tabular-nums">{stat.value}</dd>
                                 </div>
                             ))}
@@ -1559,7 +1591,8 @@ export default function RatesClient({
                                     <p id="ratebook-status" className="text-lg font-semibold leading-snug text-ink">
                                         {dueCount ? fillCopy(dueCount === 1 ? copy.toConfirmOne : copy.toConfirm, { n: dueCount }) : copy.allCurrent}
                                     </p>
-                                    <p className="mt-0.5 break-words text-[13px] text-body tabular-nums">{dueLine ?? statusReviewLine}</p>
+                                    {/* Which yarns are due is the review modal's job; the band only counts them. */}
+                                    {!dueCount && <p className="mt-0.5 break-words text-[13px] text-body tabular-nums">{statusReviewLine}</p>}
                                 </div>
                             </div>
                             {dueCount > 0 && (

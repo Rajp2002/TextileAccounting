@@ -1204,7 +1204,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 actions={<>
                     <SavedCostingsTutorial step={tourStep} onStepChange={setTourStep} onComplete={() => setShowCostingDeleteNudge(true)} production={canUseProductionPipeline} ending={savedCostingTourEnding(quotes.filter(quote => isStandaloneCosting(quote.record_kind)).length, tourUnavailable)} topics={[archivePolicyTopic]} userId={userId} orgId={orgId} userMetadata={userMetadata} />
                     {quotes.length > 0 && !tourStep && (
-                        <Button asChild variant="outline" className={secondaryAction}>
+                        <Button asChild variant="saffron" className="h-10 rounded-lg font-semibold max-md:min-h-[44px]">
                             <Link href="/owner/quotes/offer" data-i18n-skip="true" lang={language}>
                                 <Handshake className="h-4 w-4" aria-hidden="true" /> {offerCheckText[language].cardAction}
                             </Link>
