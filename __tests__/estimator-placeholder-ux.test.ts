@@ -12,7 +12,7 @@ describe('Estimator placeholder clarity', () => {
         expect(formatEstimatorPlaceholder('e.g. 3200')).toBe('e.g. 3200')
     })
 
-    it('keeps applied defaults as plain saffron values', () => {
+    it('keeps applied defaults as plain values', () => {
         expect(formatEstimatorPlaceholder(10, 'applied-default')).toBe('10')
         expect(formatEstimatorPlaceholder('0', 'applied-default')).toBe('0')
     })
@@ -46,11 +46,11 @@ describe('Estimator placeholder clarity', () => {
         expect(estimator.match(/onClick=\{selectFieldAfterTap\}/g)).toHaveLength(3)
     })
 
-    it('applies saffron emphasis to user inputted component count values', () => {
+    it('shows user inputted component count values in ink, like figures on Saved Costings', () => {
         const estimator = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
 
         expect(estimator).toContain('data-testid={`${accent}-component-count`}')
-        expect(estimator).toContain('text-[var(--color-yarn-orange)] shadow-xs transition-all placeholder:text-[var(--color-placeholder)] placeholder:font-normal')
+        expect(estimator).toContain('text-[var(--color-ink)] shadow-xs transition-all placeholder:text-[var(--color-placeholder)] placeholder:font-normal')
     })
 
     it('preserves zero in Warp Crimp instead of ghosting 0 into e.g. 0', () => {
@@ -73,21 +73,22 @@ describe('Estimator placeholder clarity', () => {
         expect(estimator).toContain('className={`h-full w-16 rounded-none border-0 bg-white p-0 text-center font-mono text-sm font-semibold ${valueClass}')
     })
 
-    it('ensures input values are styled in saffron and placeholders/ghost values are styled in grey', () => {
+    it('ensures input values are styled in ink and placeholders/ghost values are styled in grey', () => {
         const estimator = read('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
 
-        // NumField: input value is saffron, placeholder is grey
+        // NumField: input value is ink, placeholder is grey
         expect(estimator).toContain('function NumField(')
         expect(estimator).toContain("const placeholderClass = 'placeholder:text-[var(--color-placeholder)] placeholder:font-normal'")
         expect(estimator).not.toContain("? 'placeholder:text-[var(--color-yarn-orange)]'")
 
-        // StepperField: input value is saffron, placeholder is grey
+        // StepperField: input value is ink, placeholder is grey
         expect(estimator).toContain('function StepperField(')
-        expect(estimator).toContain("const valueClass = 'text-[var(--color-yarn-orange)]'")
+        expect(estimator).toContain("const valueClass = 'text-[var(--color-ink)]'")
 
-        // ComponentCountField: input is saffron, placeholder is grey
+        // ComponentCountField: input is ink, placeholder is grey
         expect(estimator).toContain('function ComponentCountField(')
-        expect(estimator).toContain('text-[var(--color-yarn-orange)]')
+        expect(estimator).toContain('text-[var(--color-ink)]')
+        expect(estimator).not.toContain('text-[var(--color-yarn-orange)]')
         expect(estimator).toContain('placeholder:text-[var(--color-placeholder)]')
         expect(estimator).not.toContain('placeholder:text-[var(--color-muted)]')
     })

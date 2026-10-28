@@ -671,65 +671,19 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
 
 type EstimatorAccent = 'warp' | 'weft' | 'weave' | 'overhead' | 'post' | 'neutral'
 
+// Every section shares the plain look of Saved Costings and the Rate Book: ink type on white,
+// hairline borders, no per-section colour. The accent names stay so call sites keep reading.
+const NEUTRAL_ACCENT_STYLES = {
+    icon: 'bg-[var(--color-canvas-white)] text-[var(--color-muted)] border-[var(--color-hairline)]',
+    marker: 'bg-[var(--color-surface-soft)] text-[var(--color-ink)] border-[var(--color-hairline)]',
+    text: 'text-[var(--color-muted)]',
+    panel: 'border-[var(--color-hairline)] bg-[var(--color-canvas)]',
+    ring: 'focus:border-[var(--color-yarn-orange)] focus:ring-[var(--color-yarn-orange)]/15',
+}
+
 function getAccentStyles(accent: EstimatorAccent = 'neutral') {
-    const styles: Record<EstimatorAccent, {
-        icon: string
-        marker: string
-        text: string
-        rail: string
-        panel: string
-        ring: string
-    }> = {
-        warp: {
-            icon: 'bg-[var(--color-info-blue-soft)] text-[var(--color-info-blue)] border-[var(--wv-status-info-border)]',
-            marker: 'bg-[var(--color-info-blue-soft)] text-[var(--color-info-blue)] border-[var(--wv-status-info-border)]',
-            text: 'text-[var(--color-info-blue)]',
-            rail: 'bg-[var(--color-info-blue)]',
-            panel: 'border-[var(--wv-status-info-border)] bg-[var(--color-info-blue-soft)]',
-            ring: 'focus:border-[var(--color-info-blue)] focus:ring-[var(--color-info-blue)]/15',
-        },
-        weft: {
-            icon: 'bg-[var(--color-factory-green-soft)] text-[var(--color-factory-green)] border-[var(--wv-status-success-border)]',
-            marker: 'bg-[var(--color-factory-green-soft)] text-[var(--color-factory-green)] border-[var(--wv-status-success-border)]',
-            text: 'text-[var(--color-factory-green)]',
-            rail: 'bg-[var(--color-factory-green)]',
-            panel: 'border-[var(--wv-status-success-border)] bg-[var(--color-factory-green-soft)]',
-            ring: 'focus:border-[var(--color-factory-green)] focus:ring-[var(--color-factory-green)]/15',
-        },
-        weave: {
-            icon: 'bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)] border-[var(--wv-status-warning-border)]',
-            marker: 'bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)] border-[var(--wv-status-warning-border)]',
-            text: 'text-[var(--color-warning-amber)]',
-            rail: 'bg-[var(--color-warning-amber)]',
-            panel: 'border-[var(--wv-status-warning-border)] bg-[var(--color-warning-amber-soft)]',
-            ring: 'focus:border-[var(--color-warning-amber)] focus:ring-[var(--color-warning-amber)]/15',
-        },
-        overhead: {
-            icon: 'bg-[var(--color-risk-red-soft)] text-[var(--color-risk-red)] border-[var(--wv-status-danger-border)]',
-            marker: 'bg-[var(--color-risk-red-soft)] text-[var(--color-risk-red)] border-[var(--wv-status-danger-border)]',
-            text: 'text-[var(--color-risk-red)]',
-            rail: 'bg-[var(--color-risk-red)]',
-            panel: 'border-[var(--wv-status-danger-border)] bg-[var(--color-risk-red-soft)]',
-            ring: 'focus:border-[var(--color-risk-red)] focus:ring-[var(--color-risk-red)]/15',
-        },
-        post: {
-            icon: 'bg-[var(--color-surface-soft)] text-[var(--color-muted)] border-[var(--color-hairline)]',
-            marker: 'bg-[var(--color-surface-soft)] text-[var(--color-muted)] border-[var(--color-hairline)]',
-            text: 'text-[var(--color-muted)]',
-            rail: 'bg-[var(--color-hairline-strong)]',
-            panel: 'border-[var(--color-hairline)] bg-[var(--color-canvas)]',
-            ring: 'focus:border-[var(--color-yarn-orange)] focus:ring-[var(--color-yarn-orange)]/15',
-        },
-        neutral: {
-            icon: 'bg-[var(--color-surface-soft)] text-[var(--color-muted)] border-[var(--color-hairline)]',
-            marker: 'bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)] border-[var(--wv-status-warning-border)]',
-            text: 'text-[var(--color-muted)]',
-            rail: 'bg-[var(--color-yarn-orange)]',
-            panel: 'border-[var(--color-hairline)] bg-[var(--color-canvas)]',
-            ring: 'focus:border-[var(--color-yarn-orange)] focus:ring-[var(--color-yarn-orange)]/15',
-        },
-    }
-    return styles[accent]
+    void accent
+    return NEUTRAL_ACCENT_STYLES
 }
 
 function ComponentCountField({
@@ -802,7 +756,7 @@ function ComponentCountField({
                         }
                     }}
                     onBlur={() => commitValue(draftValue)}
-                    className={`h-11 rounded-[9px] border bg-[var(--color-canvas-white)] px-24 text-center text-xs sm:text-sm font-mono font-semibold text-[var(--color-yarn-orange)] shadow-xs transition-all placeholder:text-[var(--color-placeholder)] placeholder:font-normal focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${hasInvalidDraft ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] hover:border-[var(--color-hairline-strong)]'}`}
+                    className={`h-11 rounded-[9px] border bg-[var(--color-canvas-white)] px-24 text-center text-xs sm:text-sm font-mono font-semibold text-[var(--color-ink)] shadow-xs transition-all placeholder:text-[var(--color-placeholder)] placeholder:font-normal focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${hasInvalidDraft ? 'bg-[var(--color-canvas-white)] border-[var(--wv-ochre-400)]' : 'border-[var(--color-hairline)] hover:border-[var(--color-hairline-strong)]'}`}
                 />
                 <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-[var(--color-muted)]">
                     {unit}
@@ -886,7 +840,7 @@ function SectionHeader({ title, icon: Icon, accent = 'warp', badgeContent, detai
 }) {
     const colorClass = getAccentStyles(accent)
     return (
-        <div data-tutorial-section={tutorialSection} className="flex flex-col gap-3 border-b border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+        <div data-tutorial-section={tutorialSection} className="flex flex-col gap-3 border-b border-[var(--color-hairline)] bg-[var(--color-canvas-white)] px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
             <div className="flex min-w-0 items-center gap-2.5">
                 {step != null && (
                     <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-[8px] border text-[12px] font-semibold ${colorClass.marker}`}>
@@ -897,7 +851,7 @@ function SectionHeader({ title, icon: Icon, accent = 'warp', badgeContent, detai
                     <Icon className="h-4 w-4" />
                 </div>
                 <div className="min-w-0">
-                    <span className="text-[15px] font-semibold text-[var(--color-ink)]">{title}</span>
+                    <span className="text-[17px] font-semibold leading-snug text-[var(--color-ink)]">{title}</span>
                     {detail}
                 </div>
             </div>
@@ -906,8 +860,7 @@ function SectionHeader({ title, icon: Icon, accent = 'warp', badgeContent, detai
     )
 }
 
-function EstimatorCard({ children, accent = 'neutral', audit = false, 'data-tour-anchor': tourAnchor }: { children: React.ReactNode; accent?: EstimatorAccent; audit?: boolean; 'data-tour-anchor'?: string }) {
-    const accentClass = getAccentStyles(accent).rail
+function EstimatorCard({ children, audit = false, 'data-tour-anchor': tourAnchor }: { children: React.ReactNode; accent?: EstimatorAccent; audit?: boolean; 'data-tour-anchor'?: string }) {
     return (
         <Card
             data-estimator-audit={audit || undefined}
@@ -922,8 +875,7 @@ function EstimatorCard({ children, accent = 'neutral', audit = false, 'data-tour
                     if (document.activeElement === field) scrollInputIntoComfortableView(field)
                 })
             }}
-            className="relative mb-3 overflow-hidden rounded-[14px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] shadow-[0_8px_28px_rgba(30,37,40,0.045)]">
-            <div className={`absolute left-0 top-0 h-full w-[3px] ${accentClass}`} />
+            className="relative mb-3 overflow-hidden rounded-2xl border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] shadow-xs">
             {children}
         </Card>
     )
@@ -977,7 +929,7 @@ function StepperField({
     const increment = () => onChange(Number((value + step).toFixed(2)))
     const isGhostValue = ghostValue !== undefined && value === ghostValue
     const placeholderClass = 'placeholder:text-[var(--color-placeholder)] placeholder:font-normal'
-    const valueClass = 'text-[var(--color-yarn-orange)]'
+    const valueClass = 'text-[var(--color-ink)]'
     return (
         <div data-estimator-field={fieldKey} className="min-w-0 space-y-2">
             <Label className="block text-xs font-medium text-[var(--color-body)]">
@@ -1090,8 +1042,8 @@ function NumField({
                         const val = parseNumericInput(raw, { min })
                         onChange(val)
                     }}
-                    className={`h-11 text-xs sm:text-sm font-mono font-semibold text-center ${unit ? 'px-10 sm:px-14' : 'px-3'} border ${placeholderClass} focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-[9px] text-[var(--color-yarn-orange)] shadow-xs ${
-                        isEmpty ? 'bg-[var(--color-warning-amber-soft)] border-[var(--color-warning-amber)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]'
+                    className={`h-11 text-xs sm:text-sm font-mono font-semibold text-center ${unit ? 'px-10 sm:px-14' : 'px-3'} border ${placeholderClass} focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-[9px] text-[var(--color-ink)] shadow-xs ${
+                        isEmpty ? 'bg-[var(--color-canvas-white)] border-[var(--wv-ochre-400)]'
                             : unusualValue ? 'bg-[var(--color-canvas-white)] border-[var(--color-warning-amber)]'
                             : 'bg-[var(--color-canvas-white)] border-[var(--color-hairline)] hover:border-[var(--color-hairline-strong)]'
                     }`}
@@ -1253,7 +1205,7 @@ function WidthField({
                         }
                     }}
                     aria-invalid={isEmpty || undefined}
-                    className={`h-11 text-xs sm:text-sm font-mono font-semibold text-center px-12 sm:px-16 placeholder:text-[var(--color-placeholder)] placeholder:font-normal focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-xs group-hover:border-[var(--color-hairline-strong)] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-[9px] text-[var(--color-yarn-orange)] ${isEmpty ? 'bg-[var(--color-warning-amber-soft)] border-[var(--color-warning-amber)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]' : 'bg-white border-[var(--color-hairline)]'}`}
+                    className={`h-11 text-xs sm:text-sm font-mono font-semibold text-center px-12 sm:px-16 placeholder:text-[var(--color-placeholder)] placeholder:font-normal focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-xs group-hover:border-[var(--color-hairline-strong)] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-[9px] text-[var(--color-ink)] ${isEmpty ? 'bg-[var(--color-canvas-white)] border-[var(--wv-ochre-400)]' : 'bg-white border-[var(--color-hairline)]'}`}
                 />
                 <span className="absolute right-3.5 sm:right-4 top-1/2 -translate-y-1/2 text-xs text-[var(--wv-text-secondary)] font-bold pointer-events-none">
                     {unit}
@@ -1473,16 +1425,16 @@ function MobileLiveEstimateShortcut({
                         aria-expanded={open}
                         aria-controls="mobile-live-estimate-panel"
                         onClick={() => setOpen(true)}
-                        className="group flex items-center justify-end gap-3 sm:gap-3.5 rounded-full border-2 border-[var(--color-yarn-orange)]/25 bg-[var(--color-canvas-white)]/95 p-2 pl-4 sm:p-2.5 sm:pl-5 text-left shadow-[0_12px_32px_rgba(30,37,40,0.18),0_2px_8px_rgba(30,37,40,0.06)] backdrop-blur-xl transition-all duration-200 motion-reduce:transition-none hover:border-[var(--color-yarn-orange)]/45 hover:shadow-[0_16px_38px_rgba(30,37,40,0.22),0_4px_12px_rgba(30,37,40,0.08)] hover:-translate-y-0.5 active:translate-y-0 active:shadow-[0_8px_20px_rgba(30,37,40,0.16)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)] focus-visible:ring-offset-2"
+                        className="group flex items-center justify-end gap-3 sm:gap-3.5 rounded-full border border-[var(--color-hairline-strong)] bg-[var(--color-canvas-white)]/95 p-2 pl-4 sm:p-2.5 sm:pl-5 text-left shadow-[0_12px_32px_rgba(30,37,40,0.18),0_2px_8px_rgba(30,37,40,0.06)] backdrop-blur-xl transition-all duration-200 motion-reduce:transition-none hover:border-[var(--color-hairline-strong)] hover:shadow-[0_16px_38px_rgba(30,37,40,0.22),0_4px_12px_rgba(30,37,40,0.08)] hover:-translate-y-0.5 active:translate-y-0 active:shadow-[0_8px_20px_rgba(30,37,40,0.16)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/40 focus-visible:ring-offset-2"
                     >
                         <span className="free-mobile-action-label min-w-0 max-w-[12rem] sm:max-w-[14.5rem] pr-1">
-                            <span className="free-mobile-action-eyebrow block text-xs font-bold text-[var(--color-yarn-orange-dark)]">{compactLite ? <><span className="lite-mobile-only" data-i18n-skip="true">{liteEstimatorText(language, 'live')}</span><span className="lite-desktop-only">{tx('Live cost')}</span></> : metered ? <><span className="free-mobile-only">{freeMobileText(language, hasValidCostResult ? 'saved' : 'review')}</span><span className="free-desktop-only">{tx('Live cost')}</span></> : tx('Live cost')}</span>
+                            <span className="free-mobile-action-eyebrow block text-xs font-medium text-[var(--color-muted)]">{compactLite ? <><span className="lite-mobile-only" data-i18n-skip="true">{liteEstimatorText(language, 'live')}</span><span className="lite-desktop-only">{tx('Live cost')}</span></> : metered ? <><span className="free-mobile-only">{freeMobileText(language, hasValidCostResult ? 'saved' : 'review')}</span><span className="free-desktop-only">{tx('Live cost')}</span></> : tx('Live cost')}</span>
                             <span className="mt-0.5 block truncate text-[13px] sm:text-[15px] font-bold text-[var(--color-ink)]">
                                 {compactLite ? <><span className="lite-mobile-only" data-i18n-skip="true">{hasValidCostResult ? `₹${productionCostPerM.toFixed(2)}/m` : liteEstimatorText(language, 'complete')}</span><span className="lite-desktop-only">{hasValidCostResult ? 'View costing' : 'Complete inputs'}</span></> : metered ? <><span className="free-mobile-only">{hasValidCostResult ? validityLabel : readyToCalculate ? freeText(language, 'readyToCalculate') : freeMobileText(language, 'complete')}</span><span className="free-desktop-only">{hasValidCostResult ? 'View costing' : readyToCalculate ? freeText(language, 'readyToCalculate') : 'Complete inputs'}</span></> : hasValidCostResult ? 'View costing' : readyToCalculate ? freeText(language, 'readyToCalculate') : 'Complete inputs'}
                             </span>
                             {compactLite && <span className="lite-mobile-only lite-estimator-outcome text-xs text-muted-foreground" data-i18n-skip="true">{persistenceLabel}</span>}
                         </span>
-                        <span className="free-mobile-action-icon relative flex h-[52px] w-[52px] sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-full bg-[var(--color-warning-amber-soft)] text-[var(--color-yarn-orange-dark)] transition-colors group-hover:bg-[var(--color-yarn-orange)] group-hover:text-white">
+                        <span className="free-mobile-action-icon relative flex h-[52px] w-[52px] sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-full bg-loom text-white transition-colors group-hover:bg-loom-elevated">
                             <Calculator className="h-6 w-6" aria-hidden="true" />
                             <span
                                 aria-hidden="true"
@@ -1530,7 +1482,7 @@ function MobileLiveEstimateShortcut({
                     data-lite-cost-result={compactLite || undefined}
                     className={`max-h-[min(84dvh,44rem)] overflow-y-auto rounded-t-[22px] border-x-0 border-b-0 px-0 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] pt-0 md:inset-x-0 md:mx-auto md:h-auto md:overflow-y-auto md:rounded-b-[22px] md:border md:border-[var(--color-hairline)] ${adaptiveSheet ? `gap-0 [&>*]:shrink-0 md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:max-h-[calc(100dvh-3rem)] ${showChecklist ? "md:w-[min(calc(100vw-3rem),32rem)]" : "md:w-[min(calc(100vw-3rem),38rem)]"}` : "md:bottom-6 md:top-6 md:max-h-none md:w-[min(calc(100vw-3rem),38rem)]"} ${isTutorialActive ? '!animate-none !transition-none data-[state=open]:!animate-none data-[state=open]:!transition-none' : ''}`}
                 >
-                    <SheetHeader className="border-b border-[var(--color-hairline)] bg-[var(--color-warning-amber-soft)]/70 px-5 pb-4 pt-5 pr-16 text-left">
+                    <SheetHeader className="border-b border-[var(--color-hairline)] bg-[var(--color-canvas-white)] px-5 pb-4 pt-5 pr-16 text-left">
                         <SheetTitle className="text-[17px]">{metered ? <><span className="free-mobile-only">{freeMobileText(language, hasValidCostResult ? 'saved' : 'review')}</span><span className="free-desktop-only">{tx('Live cost')}</span></> : tx('Live cost')}</SheetTitle>
                         <SheetDescription data-free-result-identity={metered || undefined} className="truncate text-[12px] font-semibold text-[var(--color-ink)]">
                             {metered ? <><span className="free-mobile-only" data-i18n-skip="true" lang={language}>{freeSnapshot ? freeMobileText(language, 'savedIdentity', freeSnapshot) : activeName}</span><span className="free-desktop-only">{activeName}{versionLabel ? ` · ${versionLabel}` : ''}</span></> : <>{activeName}{versionLabel ? ` · ${versionLabel}` : ''}</>}
@@ -1561,9 +1513,9 @@ function MobileLiveEstimateShortcut({
                                     <LiveValue value={hasValidCostResult ? `₹${productionCostPerM.toFixed(2)}` : '—'} />
                                 </p>
                             </div>
-                            <div className="min-w-0 rounded-[12px] border border-[var(--color-yarn-orange)]/25 bg-[var(--color-warning-amber-soft)]/55 px-3 py-3">
+                            <div className="min-w-0 rounded-xl border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-3">
                                 <p className="text-xs font-semibold leading-4 text-[var(--color-muted)]">Suggested price / m</p>
-                                <p className="mt-1 break-words font-mono text-[1.45rem] font-semibold leading-none tracking-tight tabular-nums text-[var(--color-yarn-orange)]">
+                                <p className="mt-1 break-words font-mono text-[1.45rem] font-semibold leading-none tracking-tight tabular-nums text-[var(--color-ink)]">
                                     <LiveValue value={hasValidPrice ? `₹${suggestedSellingPricePerM.toFixed(2)}` : '—'} />
                                 </p>
                             </div>
@@ -2193,7 +2145,7 @@ function LayerNameField({
                     className={`h-11 rounded-[9px] border font-semibold placeholder:text-[var(--color-placeholder)] placeholder:font-normal focus:border-[var(--color-yarn-orange)] focus:ring-[var(--color-yarn-orange)]/10 ${
                         suggestions.length > 0 ? 'pr-8 ' : ''
                     }${
-                        value?.trim() ? 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)] text-[var(--color-yarn-orange)]' : 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)]'
+                        value?.trim() ? 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)] text-[var(--color-ink)]' : 'bg-[var(--color-canvas-white)] border-[var(--wv-ochre-400)]'
                     }`}
                 />
                 {suggestions.length > 0 && (
@@ -2371,8 +2323,8 @@ function RowCard({
     isComplete?: boolean
 }) {
     const colors = {
-        indigo:  { strip: 'bg-[var(--color-info-blue-soft)]', badge: 'bg-[var(--color-info-blue-soft)] text-[var(--color-info-blue)] border-[var(--wv-status-info-border)]' },
-        emerald: { strip: 'bg-[var(--color-factory-green-soft)]', badge: 'bg-[var(--color-factory-green-soft)] text-[var(--color-factory-green)] border-[var(--wv-status-success-border)]' },
+        indigo:  { strip: 'bg-[var(--color-surface-soft)]/60', badge: 'bg-[var(--color-canvas-white)] text-[var(--color-ink)] border-[var(--color-hairline)]' },
+        emerald: { strip: 'bg-[var(--color-surface-soft)]/60', badge: 'bg-[var(--color-canvas-white)] text-[var(--color-ink)] border-[var(--color-hairline)]' },
     }
     const c = colors[accent]
     const [expanded, setExpanded] = useState(false)
@@ -2495,7 +2447,7 @@ function RowCard({
             data-enter-scroll-target="true"
             data-testid={`yarn-component-${accent}-${index}`}
             onKeyDown={handleRowKeyDown}
-            className={`group ${isExpanded ? 'overflow-visible' : 'overflow-hidden'} rounded-[12px] border transition-colors bg-[var(--color-canvas-white)] shadow-[0_1px_8px_rgba(30,37,40,0.035)] ${
+            className={`group ${isExpanded ? 'overflow-visible' : 'overflow-hidden'} rounded-xl border transition-colors bg-[var(--color-canvas-white)] ${
                 isComplete ? 'border-[var(--wv-moss-200)]' : 'border-[var(--color-hairline)]'
             }`}
         >
@@ -2620,7 +2572,7 @@ function WeftPickConventionField({
     const totalPicks = getTotalWeftPicks(weftRows)
     const formatPicks = (value: number) => Number.isInteger(value) ? String(value) : value.toFixed(2)
     return (
-        <div data-estimator-field="weftPickConvention" data-testid="weft-pick-convention" className={`space-y-3 rounded-[12px] border p-3 sm:p-4 ${convention === null ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)]' : 'border-[var(--color-hairline)] bg-[var(--color-surface-soft)]'}`}>
+        <div data-estimator-field="weftPickConvention" data-testid="weft-pick-convention" className={`space-y-3 rounded-[12px] border p-3 sm:p-4 ${convention === null ? 'bg-[var(--color-canvas-white)] border-[var(--wv-ochre-400)]' : 'border-[var(--color-hairline)] bg-[var(--color-surface-soft)]'}`}>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
                     <p className="text-sm font-semibold text-[var(--color-ink)]">{tx('How are the picks entered?')}</p>
@@ -2674,7 +2626,7 @@ function WeftPickConventionField({
                                             onFocus={event => event.currentTarget.select()}
                                             onChange={event => dispatch({ type: 'SET_WEFT_PICK_RATIO', id: row.id, value: parseNumericInput(event.target.value, { min: 0 }) })}
                                             aria-invalid={!(Number(row.pickRatio) > 0) || undefined}
-                                            className={`h-11 rounded-[9px] px-2 text-center font-mono text-sm font-semibold text-[var(--color-yarn-orange)] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${Number(row.pickRatio) > 0 ? 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)]' : 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)]'}`}
+                                            className={`h-11 rounded-[9px] px-2 text-center font-mono text-sm font-semibold text-[var(--color-ink)] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${Number(row.pickRatio) > 0 ? 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)]' : 'bg-[var(--color-canvas-white)] border-[var(--wv-ochre-400)]'}`}
                                         />
                                     </div>
                                 </Fragment>
@@ -2802,11 +2754,11 @@ function WeavingRateFields({
     }
 
     return (
-        <div className="space-y-3 rounded-[10px] border border-[var(--color-warning-amber-soft)] bg-[var(--color-canvas)] px-3 py-3 sm:px-4">
+        <div className="space-y-3 rounded-xl border border-[var(--color-hairline)] bg-[var(--color-canvas)] px-3 py-3 sm:px-4">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-2">
-                    <Banknote className="h-4 w-4 text-[var(--color-warning-amber)]" />
-                    <p className="text-xs font-semibold text-[var(--color-warning-amber)]">Weaving rate input</p>
+                    <Banknote className="h-4 w-4 text-[var(--color-muted)]" />
+                    <p className="text-[13px] font-medium text-[var(--color-muted)]">Weaving rate input</p>
                 </div>
                 <div data-estimator-field="weavingRateMode" className="flex min-w-0 flex-wrap items-center gap-2" role="group" aria-label="Weaving rate input mode">
                     <span className="text-xs font-medium text-[var(--color-muted)]">Enter as</span>
@@ -2870,7 +2822,7 @@ function WeavingRateFields({
                             }}
                             onBlur={() => setRateFocused(false)}
                             aria-invalid={isRateEmpty || undefined}
-                            className={`h-11 rounded-[9px] border px-16 text-center text-xs font-semibold placeholder:text-[var(--color-placeholder)] placeholder:font-normal shadow-xs focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${isRateEmpty ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)] text-[var(--color-yarn-orange)]'}`}
+                            className={`h-11 rounded-[9px] border px-16 text-center text-xs font-semibold placeholder:text-[var(--color-placeholder)] placeholder:font-normal shadow-xs focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${isRateEmpty ? 'bg-[var(--color-canvas-white)] border-[var(--wv-ochre-400)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)] text-[var(--color-ink)]'}`}
                         />
                         <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-[var(--color-muted)]">
                             {inputMode === 'perMeter' ? '₹/m' : 'paise/pick'}
@@ -2887,9 +2839,9 @@ function WeavingRateFields({
                     )}
                 </div>
 
-                <div className="rounded-[10px] border border-[var(--color-warning-amber-soft)] bg-[var(--color-canvas-white)] px-3 py-2.5">
-                    <p className="text-xs font-semibold text-[var(--color-warning-amber)]">Calculated loom cost</p>
-                    <p className="mt-1 font-mono text-xl font-semibold text-[var(--color-warning-amber)]">{formatCalculatedMoney(totals.weaveCostPerM, hasValidCostResult, '/m')}</p>
+                <div className="rounded-xl border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] px-3 py-2.5">
+                    <p className="text-[13px] font-medium text-[var(--color-muted)]">Calculated loom cost</p>
+                    <p className="mt-1 text-xl font-semibold tabular-nums text-[var(--color-ink)]">{formatCalculatedMoney(totals.weaveCostPerM, hasValidCostResult, '/m')}</p>
                     <p className="mt-1 text-xs text-[var(--color-muted)]">
                         {totalPicks} total picks × {paisaPerPickDisplay || '—'} paise per pick
                     </p>
@@ -3086,7 +3038,7 @@ function QuickCostingView({
                             <NumField fieldKey="gstPct" label="GST" value={row.gstPct} onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'gstPct', value: value ?? 0 })} unit="%" step={0.5} placeholder="0" placeholderKind="applied-default" hint={index === 0 ? YARN_GST_HINT : undefined} />
                         </RowCard>
                     )})}
-                    <Button type="button" variant="outline" className="h-11 w-full gap-2 rounded-[10px] border-dashed border-[var(--wv-status-info-border)] bg-[var(--color-info-blue-soft)] text-[var(--color-info-blue)]" onClick={() => dispatch({ type: 'ADD_WARP_ROW' })}>
+                    <Button type="button" variant="outline" className="h-11 w-full gap-2 rounded-lg border-dashed border-[var(--color-hairline-strong)] bg-[var(--color-canvas-white)] font-semibold text-[var(--color-ink)] hover:bg-[var(--color-surface-soft)]" onClick={() => dispatch({ type: 'ADD_WARP_ROW' })}>
                         <Plus className="h-4 w-4" /> Add warp yarn component
                     </Button>
                 </CardContent>
@@ -3106,7 +3058,7 @@ function QuickCostingView({
                                     type="button"
                                     onClick={() => onWidthUnitChange('cm')}
                                     aria-pressed={widthUnit === 'cm'}
-                                    className={`mobile-touch-target px-2 py-1 text-xs font-semibold ${widthUnit === 'cm' ? 'rounded bg-white text-[var(--color-factory-green)] shadow-sm' : 'text-[var(--color-muted)]'}`}
+                                    className={`mobile-touch-target px-2 py-1 text-xs font-semibold ${widthUnit === 'cm' ? 'rounded bg-white text-[var(--color-ink)] shadow-sm' : 'text-[var(--color-muted)]'}`}
                                 >
                                     cm
                                 </button>
@@ -3114,7 +3066,7 @@ function QuickCostingView({
                                     type="button"
                                     onClick={() => onWidthUnitChange('inch')}
                                     aria-pressed={widthUnit === 'inch'}
-                                    className={`mobile-touch-target px-2 py-1 text-xs font-semibold ${widthUnit === 'inch' ? 'rounded bg-white text-[var(--color-factory-green)] shadow-sm' : 'text-[var(--color-muted)]'}`}
+                                    className={`mobile-touch-target px-2 py-1 text-xs font-semibold ${widthUnit === 'inch' ? 'rounded bg-white text-[var(--color-ink)] shadow-sm' : 'text-[var(--color-muted)]'}`}
                                 >
                                     inch
                                 </button>
@@ -3184,7 +3136,7 @@ function QuickCostingView({
                             </RowCard>
                         )
                     })}
-                    <Button type="button" variant="outline" className="h-11 w-full gap-2 rounded-[10px] border-dashed border-[var(--wv-status-success-border)] bg-[var(--color-factory-green-soft)] text-[var(--color-factory-green)]" onClick={() => dispatch({ type: 'ADD_WEFT_ROW' })}>
+                    <Button type="button" variant="outline" className="h-11 w-full gap-2 rounded-lg border-dashed border-[var(--color-hairline-strong)] bg-[var(--color-canvas-white)] font-semibold text-[var(--color-ink)] hover:bg-[var(--color-surface-soft)]" onClick={() => dispatch({ type: 'ADD_WEFT_ROW' })}>
                         <Plus className="h-4 w-4" /> Add weft yarn component
                     </Button>
                 </CardContent>
@@ -5144,14 +5096,16 @@ export default function EstimatorClient({
         && costingResult.quoteIsValid
         && (freeMode || breakEvenScenario?.quotePricePerM != null)
         && costingResult.breakEvenPricePerM.toFixed(2) === costingResult.productionCostPerM.toFixed(2)
+    // The Saved Costings mix palette: navy for yarn (darkest to lightest), ochre for weaving,
+    // grey-blue for warping and processing, stone for factory overhead.
     const costSegments = hasValidCostResult ? [
-        { label: 'Base Warp Yarn', value: totals.yarnBaseWarpPerM, color: 'bg-[var(--color-yarn-orange)]', text: 'text-[var(--color-yarn-orange)]' },
-        { label: 'Base Weft Yarn', value: totals.yarnBaseWeftPerM, color: 'bg-[var(--color-warning-amber)]', text: 'text-[var(--color-warning-amber)]' },
-        { label: 'Yarn Waste / Crimp', value: totals.yarnShortageCostPerM, color: 'bg-[var(--wv-ochre-400)]', text: 'text-[var(--wv-ochre-800)]' },
-        { label: 'Weave', value: totals.weaveCostPerM, color: 'bg-[var(--color-info-blue)]', text: 'text-[var(--color-info-blue)]' },
-        { label: 'Warping', value: totals.warpingAndSizingPerM, color: 'bg-[var(--color-factory-green)]', text: 'text-[var(--color-factory-green)]' },
-        { label: 'Overhead', value: costingResult.overheadPerM, color: 'bg-[var(--color-risk-red)]', text: 'text-[var(--color-risk-red)]' },
-        { label: 'Post', value: postProcessingCostPerM, color: 'bg-[var(--color-warning-amber)]', text: 'text-[var(--color-warning-amber)]' },
+        { label: 'Base Warp Yarn', value: totals.yarnBaseWarpPerM, color: 'bg-[var(--wv-viz-1)]', text: 'text-[var(--color-muted)]' },
+        { label: 'Base Weft Yarn', value: totals.yarnBaseWeftPerM, color: 'bg-[var(--wv-neel-500)]', text: 'text-[var(--color-muted)]' },
+        { label: 'Yarn Waste / Crimp', value: totals.yarnShortageCostPerM, color: 'bg-[var(--wv-neel-200)]', text: 'text-[var(--color-muted)]' },
+        { label: 'Weave', value: totals.weaveCostPerM, color: 'bg-[var(--wv-viz-2)]', text: 'text-[var(--color-muted)]' },
+        { label: 'Warping', value: totals.warpingAndSizingPerM, color: 'bg-[var(--wv-neel-300)]', text: 'text-[var(--color-muted)]' },
+        { label: 'Overhead', value: costingResult.overheadPerM, color: 'bg-[var(--wv-viz-4)]', text: 'text-[var(--color-muted)]' },
+        { label: 'Post', value: postProcessingCostPerM, color: 'bg-[var(--wv-neel-300)]', text: 'text-[var(--color-muted)]' },
     ].filter(segment => segment.value > 0) : []
     const costStackTotal = costSegments.reduce((sum, segment) => sum + segment.value, 0)
     const actionReadinessMessage = savingQuote
@@ -5277,9 +5231,10 @@ export default function EstimatorClient({
                                     setShowConfirmNewQuality(true)
                                 }
                             }}
-                            className="rounded-full border-2 border-[var(--color-yarn-orange)] text-[var(--color-yarn-orange-dark)] hover:bg-[var(--color-warning-amber-soft)]/60 font-bold px-5 h-9 text-sm transition-colors shadow-xs"
+                            className="h-10 rounded-lg border-hairline bg-surface px-4 font-semibold text-ink shadow-xs hover:bg-surface-soft max-md:min-h-[44px]"
                             title={tx('Clear all inputs and start a new cost estimate')}
                         >
+                            <Plus className="h-4 w-4" aria-hidden="true" />
                             {tx('New')}
                         </Button>
                     </>
@@ -5686,7 +5641,7 @@ export default function EstimatorClient({
                                         <p className="mb-1 text-xs font-semibold leading-4 text-[var(--color-muted)]" aria-label={t('estimator.price_helpers.suggested_selling_price')}>
                                             {t('common.suggested_selling_price_per_m')}
                                         </p>
-                                        <p className="max-w-full break-words font-mono text-[clamp(1.45rem,7vw,2.2rem)] font-semibold leading-[1.05] tracking-tight tabular-nums text-[var(--color-yarn-orange)]">
+                                        <p className="max-w-full break-words font-mono text-[clamp(1.45rem,7vw,2.2rem)] font-semibold leading-[1.05] tracking-tight tabular-nums text-[var(--color-ink)]">
                                             <LiveValue value={hasValidCostResult && costingResult.quoteIsValid ? `₹${costingResult.suggestedSellingPricePerM.toFixed(2)}` : '—'} />
                                         </p>
                                     </div>
@@ -5755,7 +5710,7 @@ export default function EstimatorClient({
                                         )}
                                     </div>
                                     <div className="flex gap-x-4 gap-y-1 overflow-x-auto pb-1 text-xs font-semibold no-scrollbar">
-                                        {(costSegments.length > 0 ? costSegments : [{ label: 'Warp Yarn', value: 0, color: 'bg-[var(--color-yarn-orange)]', text: 'text-[var(--color-yarn-orange)]' }]).map(segment => (
+                                        {(costSegments.length > 0 ? costSegments : [{ label: 'Warp Yarn', value: 0, color: 'bg-[var(--wv-viz-1)]', text: 'text-[var(--color-muted)]' }]).map(segment => (
                                             <span key={segment.label} className={`inline-flex shrink-0 items-center gap-1.5 ${segment.text}`}>
                                                 <span className={`h-2 w-2 rounded-full ${segment.color}`} />
                                                 {segment.label}
@@ -5905,7 +5860,7 @@ export default function EstimatorClient({
                                 onChange={e => dispatch({ type: 'SET', field: 'profitPct', value: parseNonNegativeInput(e.target.value) ?? 0 })}
                                 className="h-5 flex-1 modern-slider"
                             />
-                            <p className="shrink-0 text-sm font-semibold text-[var(--color-yarn-orange)]">{state.profitPct.toFixed(1)}%</p>
+                            <p className="shrink-0 text-sm font-semibold text-[var(--color-ink)]">{state.profitPct.toFixed(1)}%</p>
                             {hasOrderQty && (
                                 <>
                                     <div className="h-6 w-px bg-[var(--color-hairline)]" />
@@ -5983,13 +5938,13 @@ export default function EstimatorClient({
                         data-free-record-loaded={freeMode ? Boolean(freeMeter.completed) : undefined}
                         data-lite-record-loaded={liteMode ? Boolean(appliedTemplate || sourceQuoteId) : undefined}
                         aria-labelledby="active-quality-title"
-                        className="ui-focus-surface rounded-[14px] border border-[var(--color-hairline)] bg-white/95 px-4 py-3 shadow-[var(--shadow-card)] sm:px-5"
+                        className="ui-focus-surface rounded-2xl border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] px-4 py-4 shadow-xs sm:px-6"
                     >
                         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                             <div className="free-mobile-quality-identity min-w-0">
-                                <p className="text-xs font-bold text-[var(--color-yarn-orange-dark)]">Current quality</p>
+                                <p className="text-[13px] font-medium text-[var(--color-muted)]">Current quality</p>
                                 <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1">
-                                    <h2 id="active-quality-title" className="max-w-full break-words text-[15px] font-bold leading-5 text-[var(--color-ink)]">
+                                    <h2 id="active-quality-title" className="max-w-full break-words text-[17px] font-semibold leading-snug text-[var(--color-ink)]">
                                         {liteMode ? <><span className="lite-mobile-only" data-i18n-skip="true">{appliedTemplate ? liteEstimatorText(language, 'recipe', {name: appliedTemplate.name}) : qualityLabel.trim() || liteEstimatorText(language, 'new')}</span><span className="lite-desktop-only">{appliedTemplate?.name ?? (qualityLabel.trim() || 'New quality')}</span></> : freeMode && freeMeter.completed ? <><span className="free-mobile-only">{freeMobileText(language, 'savedIdentity', {label: freeMeter.completed.label, revision: freeMeter.completed.editWindow?.revision ?? 1})}</span><span className="free-desktop-only">{appliedTemplate?.name ?? (qualityLabel.trim() || 'New quality')}</span></> : appliedTemplate?.name ?? (qualityLabel.trim() || 'New quality')}
                                     </h2>
                                     {sourceQuoteId && sourceRecordKind === 'costing' && (
@@ -6025,7 +5980,7 @@ export default function EstimatorClient({
                             aria-haspopup="dialog"
                             aria-expanded={showQualityLibrary}
                             aria-label={liteMode ? liteEstimatorText(language, templatesLoaded && templates.length > 0 ? 'count' : 'browse', {count: templates.length}) : templatesLoaded && templates.length > 0 ? `Tap to view ${templates.length} saved ${templates.length === 1 ? 'quality' : 'qualities'}` : tx('Saved qualities library')}
-                            className="mt-3 flex min-h-12 w-full items-center justify-between gap-3 rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)]/60 px-3.5 py-2.5 text-left transition-colors hover:border-[var(--color-yarn-orange)]/45 hover:bg-[var(--color-warning-amber-soft)]/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-yarn-orange)]/35"
+                            className="mt-3 flex min-h-12 w-full items-center justify-between gap-3 rounded-lg border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] px-3.5 py-2.5 text-left transition-colors hover:border-[var(--color-hairline-strong)] hover:bg-[var(--color-surface-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/40"
                         >
                             <span className="min-w-0">
                                 <span className="block text-xs font-bold text-[var(--color-muted)]">{liteMode ? <><span className="lite-mobile-only" data-i18n-skip="true">{liteEstimatorText(language, 'qualities')}{templatesLoaded && templates.length > 0 ? ` · ${templates.length}` : ''}</span><span className="lite-desktop-only">Saved qualities</span></> : 'Saved qualities'}</span>
@@ -6035,7 +5990,7 @@ export default function EstimatorClient({
                                         : tx('Tap to browse saved qualities library or save this recipe')}
                                 </span>
                             </span>
-                            <span className="flex shrink-0 items-center gap-1.5 text-xs font-semibold text-[var(--color-yarn-orange-dark)]">
+                            <span className="flex shrink-0 items-center gap-1.5 text-[13px] font-semibold text-[var(--color-ink)]">
                                 {templatesLoaded && templates.length > 0 ? 'View' : 'Open'}
                                 <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
                             </span>
@@ -6088,7 +6043,7 @@ export default function EstimatorClient({
                         }}
                         className={`max-h-[min(88dvh,48rem)] overflow-y-auto rounded-t-[22px] border-x-0 border-b-0 px-0 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] pt-0 md:top-1/2 md:bottom-auto md:left-1/2 md:right-auto md:-translate-x-1/2 md:-translate-y-1/2 md:w-[min(calc(100vw-3rem),48rem)] md:rounded-[22px] md:border md:border-[var(--color-hairline)] ${isTutorialActive ? '!animate-none !transition-none data-[state=open]:!animate-none data-[state=open]:!transition-none' : ''}`}
                     >
-                        <SheetHeader className="border-b border-[var(--color-hairline)] bg-[var(--color-warning-amber-soft)]/70 px-5 pb-4 pt-5 pr-16 text-left">
+                        <SheetHeader className="border-b border-[var(--color-hairline)] bg-[var(--color-canvas-white)] px-5 pb-4 pt-5 pr-16 text-left">
                             <SheetTitle className="text-[17px]">{tx('Change quality')}</SheetTitle>
                             <SheetDescription className="text-[12px] font-medium text-[var(--color-muted)]">Search and select a saved fabric recipe. Your current costing stays in place until you choose one.</SheetDescription>
                         </SheetHeader>
@@ -6131,25 +6086,25 @@ export default function EstimatorClient({
                     data-estimator-field="savedQualityPicker"
                     aria-labelledby="saved-qualities-title"
                     aria-busy={!templatesLoaded}
-                    className="ui-focus-surface mt-4 overflow-hidden rounded-[16px] border border-[var(--color-hairline)] bg-white/95 shadow-[var(--shadow-card)]"
+                    className="ui-focus-surface mt-4 overflow-hidden rounded-2xl border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] shadow-xs"
                 >
-                    <div className="border-b border-[var(--color-hairline)] bg-[var(--color-warning-amber-soft)]/70 px-4 py-4 sm:px-5 sm:py-5">
+                    <div className="border-b border-[var(--color-hairline)] bg-[var(--color-canvas-white)] px-4 py-4 sm:px-6 sm:py-5">
                         <div className="flex items-start gap-3">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[11px] border border-[var(--color-yarn-orange)]/25 bg-white text-[var(--color-yarn-orange)] shadow-[0_3px_10px_rgba(217,107,28,0.12)]">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] text-[var(--color-muted)]">
                                 <BookmarkPlus className="h-5 w-5" aria-hidden="true" />
                             </div>
                             <div className="min-w-0 flex-1">
                                 <div className="flex flex-col items-start gap-1 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-2.5 sm:gap-y-1">
-                                    <p className="text-xs font-bold text-[var(--color-yarn-orange-dark)]">{t('estimator.quality.savedQualitiesEyebrow')}</p>
+                                    <p className="text-[13px] font-medium text-[var(--color-muted)]">{t('estimator.quality.savedQualitiesEyebrow')}</p>
                                     <span
                                         role="status"
                                         aria-live="polite"
-                                        className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full border border-[var(--color-yarn-orange)]/25 bg-white px-2 py-0.5 text-xs font-bold text-[var(--color-yarn-orange-dark)]"
+                                        className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-2 py-0.5 text-xs font-semibold text-[var(--color-body)]"
                                     >
                                         {templatesLoaded ? t('estimator.quality.savedQualityCount', { count: templates.length }) : tx('Loading saved qualities…')}
                                     </span>
                                 </div>
-                                <h2 id="saved-qualities-title" className="mt-1 text-[17px] font-bold leading-5 text-[var(--color-ink)] sm:text-[18px]">{t('estimator.quality.myQualities')}</h2>
+                                <h2 id="saved-qualities-title" className="mt-1 text-[17px] font-semibold leading-snug text-[var(--color-ink)]">{t('estimator.quality.myQualities')}</h2>
                                 <p className="mt-1 max-w-2xl text-xs font-medium leading-5 text-[var(--color-body)]/80">{t('estimator.quality.myQualitiesHelper')}</p>
                             </div>
                         </div>
@@ -6163,7 +6118,7 @@ export default function EstimatorClient({
                         )}
                         {!templatesLoaded ? null : templates.length === 0 ? (
                             <div className="flex items-start gap-3 rounded-[12px] border border-dashed border-[var(--color-hairline-strong)] bg-[var(--color-surface-soft)]/55 px-3.5 py-3.5 sm:items-center">
-                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-white text-[var(--color-yarn-orange)] shadow-sm">
+                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-white text-[var(--color-muted)] shadow-sm">
                                     <BookmarkPlus className="h-4 w-4" aria-hidden="true" />
                                 </div>
                                 <div className="min-w-0">
@@ -6193,7 +6148,7 @@ export default function EstimatorClient({
                                                 role="listitem"
                                                 className={`group flex w-full min-w-0 items-stretch overflow-hidden rounded-[12px] border transition-colors ${
                                                     isActive
-                                                        ? 'border-[var(--color-yarn-orange)] bg-[var(--color-warning-amber-soft)]/70 shadow-[0_3px_10px_rgba(217,107,28,0.10)]'
+                                                        ? 'border-[var(--wv-neel-700)] bg-[var(--color-canvas-white)] ring-1 ring-[var(--wv-neel-700)]'
                                                         : 'border-[var(--color-hairline)] bg-white hover:border-[var(--color-hairline-strong)] hover:shadow-[0_3px_10px_rgba(30,37,40,0.05)]'
                                                 }`}
                                             >
@@ -6322,7 +6277,7 @@ export default function EstimatorClient({
                         </div>
 
                         {/* Global Defaults Block */}
-                        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,240px),1fr))] gap-4 rounded-[13px] border border-[var(--wv-status-info-border)] bg-[var(--color-info-blue-soft)] p-4">
+                        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,240px),1fr))] gap-4 rounded-xl border border-[var(--color-hairline)] bg-[var(--color-canvas)] p-4">
                             <div className="min-w-0">
                                 <StepperField
                                     fieldKey="warpCrimpPct"
@@ -6346,15 +6301,15 @@ export default function EstimatorClient({
                                     accent="warp"
                                 />
                             </div>
-                            <div className="col-span-full flex items-center gap-4 border-t border-[var(--wv-status-info-border)] pt-4">
+                            <div className="col-span-full flex items-center gap-4 border-t border-[var(--color-hairline)] pt-4">
                                 <div className="min-w-0">
                                     <div className="flex items-center gap-1.5">
-                                        <Calculator className="h-3.5 w-3.5 text-[var(--color-info-blue)]" />
-                                        <span className="text-xs font-semibold text-[var(--color-info-blue)]">Effective Total Shortage</span>
+                                        <Calculator className="h-3.5 w-3.5 text-[var(--color-muted)]" />
+                                        <span className="text-[13px] font-medium text-[var(--color-muted)]">Effective Total Shortage</span>
                                     </div>
-                                    <p className="mt-2 font-mono text-sm font-semibold text-[var(--color-info-blue)]">
+                                    <p className="mt-2 font-mono text-sm font-semibold text-[var(--color-ink)]">
                                         {state.warpCrimpPct || 0}% <span className="px-2 text-[var(--color-muted)]">+</span> {state.yarnShortagePct || 0}% <span className="px-2 text-[var(--color-muted)]">=</span>
-                                        <span className="ml-1 rounded-[7px] border border-[var(--wv-status-info-border)] bg-white px-2.5 py-1 text-base">
+                                        <span className="ml-1 rounded-[7px] border border-[var(--color-hairline)] bg-white px-2.5 py-1 text-base">
                                             {(state.warpCrimpPct || 0) + (state.yarnShortagePct || 0)}%
                                         </span>
                                     </p>
@@ -6458,7 +6413,7 @@ export default function EstimatorClient({
                         <Button
                             type="button"
                             variant="outline"
-                            className="h-14 w-full rounded-[12px] border-dashed border-[var(--wv-status-info-border)] bg-[var(--color-info-blue-soft)] text-[var(--color-info-blue)] hover:border-[var(--color-info-blue)] hover:bg-[var(--color-info-blue-soft)] transition-all gap-2"
+                            className="h-14 w-full rounded-xl border-dashed border-[var(--color-hairline-strong)] bg-[var(--color-canvas-white)] font-semibold text-[var(--color-ink)] hover:bg-[var(--color-surface-soft)] transition-colors gap-2"
                             onClick={() => dispatch({ type: 'ADD_WARP_ROW' })}
                         >
                             <Plus className="h-4 w-4" /> {t('estimator.warp.add_blend')}
@@ -6519,24 +6474,24 @@ export default function EstimatorClient({
                                 return `Row ${index + 1}: ${Number(effective).toFixed(1)}%`
                             }).join(' · ')
                             return (
-                                <div className="mb-6 overflow-hidden rounded-[13px] border border-[var(--wv-status-success-border)] bg-[var(--color-factory-green-soft)]">
+                                <div className="mb-6 overflow-hidden rounded-xl border border-[var(--color-hairline)] bg-[var(--color-canvas)]">
                                     <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-start sm:justify-between">
                                         <div className="min-w-0">
                                             <div className="flex items-center gap-1.5">
-                                                <Calculator className="h-3.5 w-3.5 text-[var(--color-factory-green)]" />
-                                                <span className="text-xs font-semibold text-[var(--color-factory-green)]">Default weft waste</span>
+                                                <Calculator className="h-3.5 w-3.5 text-[var(--color-muted)]" />
+                                                <span className="text-[13px] font-medium text-[var(--color-muted)]">Default weft waste</span>
                                             </div>
                                             <p className="mt-1 text-xs font-medium text-[var(--color-muted)]">Used only when a weft row has no row-specific value. A row value of 0 means no waste.</p>
                                         </div>
-                                        <span className="flex shrink-0 items-center gap-2 font-mono text-sm font-semibold text-[var(--color-factory-green)]">
+                                        <span className="flex shrink-0 items-center gap-2 font-mono text-sm font-semibold text-[var(--color-ink)]">
                                             <span>{state.yarnShortagePct ?? 0}%</span>
-                                            <span className="rounded-[7px] border border-[var(--wv-status-success-border)] bg-white px-2.5 py-1 text-base">default</span>
+                                            <span className="rounded-[7px] border border-[var(--color-hairline)] bg-white px-2.5 py-1 text-base">default</span>
                                         </span>
                                     </div>
-                                    <div className="border-t border-[var(--wv-status-success-border)] px-4 py-2.5 text-xs font-semibold text-[var(--color-factory-green)]" data-testid="applied-weft-waste-summary">
+                                    <div className="border-t border-[var(--color-hairline)] px-4 py-2.5 text-xs font-semibold text-[var(--color-body)]" data-testid="applied-weft-waste-summary">
                                         Applied to pricing: <span className="font-mono">{appliedWasteLabel}</span>
                                     </div>
-                                    <div className="border-t border-[var(--wv-status-success-border)] px-4 py-2.5 text-xs font-medium text-[var(--color-muted)]" data-testid="effective-weft-waste-summary">
+                                    <div className="border-t border-[var(--color-hairline)] px-4 py-2.5 text-xs font-medium text-[var(--color-muted)]" data-testid="effective-weft-waste-summary">
                                         Wastage applied after base yarn costing: <span className="font-mono font-semibold text-[var(--color-ink)]">{effectiveWasteLabel}</span>
                                     </div>
                                 </div>
@@ -6652,7 +6607,7 @@ export default function EstimatorClient({
                         <Button
                             type="button"
                             variant="outline"
-                            className="h-14 w-full rounded-[12px] border-dashed border-[var(--wv-status-success-border)] bg-[var(--color-factory-green-soft)] text-[var(--color-factory-green)] hover:border-[var(--color-factory-green)] hover:bg-[var(--color-factory-green-soft)] transition-all gap-2"
+                            className="h-14 w-full rounded-xl border-dashed border-[var(--color-hairline-strong)] bg-[var(--color-canvas-white)] font-semibold text-[var(--color-ink)] hover:bg-[var(--color-surface-soft)] transition-colors gap-2"
                             onClick={() => dispatch({ type: 'ADD_WEFT_ROW' })}
                         >
                             <Plus className="h-4 w-4" /> {t('estimator.weft.add_weft')}
@@ -6806,7 +6761,7 @@ export default function EstimatorClient({
                                                         onChange={e => dispatch({ type: 'SET', field: 'overheadOverridePerM', value: parseNonNegativeInput(e.target.value) })}
                                                         aria-label="Direct factory overhead per metre"
                                                         aria-invalid={state.overheadOverridePerM == null || state.overheadOverridePerM <= 0 || undefined}
-                                                        className={`h-10 w-full rounded-[9px] pl-8 pr-4 text-sm font-medium placeholder:text-[var(--color-placeholder)] placeholder:font-normal [appearance:textfield] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/30 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${state.overheadOverridePerM == null || state.overheadOverridePerM <= 0 ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)] text-[var(--color-yarn-orange)]'}`}
+                                                        className={`h-10 w-full rounded-[9px] pl-8 pr-4 text-sm font-medium placeholder:text-[var(--color-placeholder)] placeholder:font-normal [appearance:textfield] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/30 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${state.overheadOverridePerM == null || state.overheadOverridePerM <= 0 ? 'bg-[var(--color-canvas-white)] border-[var(--wv-ochre-400)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)] text-[var(--color-ink)]'}`}
                                                     />
                                                 </div>
                                             </div>
@@ -6849,7 +6804,7 @@ export default function EstimatorClient({
                                                 className="flex items-center justify-between w-full rounded-lg bg-[var(--color-surface-soft)] px-3 py-2 text-xs font-bold text-[var(--color-body)] hover:text-[var(--color-ink)] hover:bg-[var(--color-surface)] transition-all"
                                             >
                                                 <span className="flex items-center gap-2">
-                                                    <Calculator className="h-3.5 w-3.5 text-[var(--color-yarn-orange)]" />
+                                                    <Calculator className="h-3.5 w-3.5 text-[var(--color-muted)]" />
                                                     <span>Monthly expenses</span>
                                                 </span>
                                                 <div className="flex items-center gap-2">
@@ -6895,9 +6850,9 @@ export default function EstimatorClient({
                                                 }}
                                                 className={`max-h-[calc(100dvh-2rem)] gap-0 overflow-hidden p-0 sm:max-w-4xl ${isTutorialActive ? '!animate-none !transition-none data-[state=open]:!animate-none data-[state=open]:!transition-none' : ''}`}
                                             >
-                                                <DialogHeader className="border-b border-[var(--color-hairline)] bg-[var(--color-warning-amber-soft)]/70 px-5 pb-4 pt-5 pr-14 text-left sm:px-6">
+                                                <DialogHeader className="border-b border-[var(--color-hairline)] bg-[var(--color-canvas-white)] px-5 pb-4 pt-5 pr-14 text-left sm:px-6">
                                                     <DialogTitle className="flex items-center gap-2 text-[17px]">
-                                                        <Calculator className="h-4 w-4 text-[var(--color-yarn-orange)]" />
+                                                        <Calculator className="h-4 w-4 text-[var(--color-muted)]" />
                                                         Monthly expenses
                                                     </DialogTitle>
                                                     <DialogDescription className="text-[12px]">
@@ -6946,7 +6901,7 @@ export default function EstimatorClient({
                                                                                 value={item.monthlyAmount === 0 ? '' : item.monthlyAmount}
                                                                                 placeholder="e.g. 25,000"
                                                                                 onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM', id: item.id, field: 'monthlyAmount', value: parseNonNegativeInput(e.target.value) ?? 0 })}
-                                                                                className="h-8 min-w-[120px] rounded-[7px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] pl-6 pr-9 text-right text-xs font-medium text-[var(--color-yarn-orange)] placeholder:text-[var(--color-placeholder)] placeholder:font-normal [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                                                                className="h-8 min-w-[120px] rounded-[7px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] pl-6 pr-9 text-right text-xs font-medium text-[var(--color-ink)] placeholder:text-[var(--color-placeholder)] placeholder:font-normal [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                                                             />
                                                                             <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-[var(--color-muted)] font-medium pointer-events-none">/mo</span>
                                                                         </div>
@@ -6978,7 +6933,7 @@ export default function EstimatorClient({
                                                                 placeholder="e.g. 90,000"
                                                                 onChange={e => dispatch({ type: 'SET', field: 'monthlyOutputM', value: parseNonNegativeInput(e.target.value) ?? 0 })}
                                                                 aria-invalid={state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) || undefined}
-                                                                className={`h-10 rounded-[9px] pr-9 text-center text-sm font-medium placeholder:text-[var(--color-placeholder)] placeholder:font-normal [appearance:textfield] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)] text-[var(--color-yarn-orange)]'}`}
+                                                                className={`h-10 rounded-[9px] pr-9 text-center text-sm font-medium placeholder:text-[var(--color-placeholder)] placeholder:font-normal [appearance:textfield] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) ? 'bg-[var(--color-canvas-white)] border-[var(--wv-ochre-400)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)] text-[var(--color-ink)]'}`}
                                                             />
                                                             <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-[var(--color-muted)] font-medium pointer-events-none">m/mo</span>
                                                         </div>
@@ -7632,9 +7587,9 @@ export default function EstimatorClient({
                         {/* Warp rates */}
                         {editingWarpRates.length > 0 && (
                             <div className="space-y-2">
-                                <p className="text-xs font-semibold text-[var(--color-yarn-orange-dark)]">{t('estimator.quality.warpRates')}</p>
+                                <p className="text-[13px] font-semibold text-[var(--color-ink)]">{t('estimator.quality.warpRates')}</p>
                                 {(editRatesTpl?.warp_rows ?? []).map((row: WarpRow, i: number) => (
-                                    <div key={row.id} className="flex items-center gap-4 rounded-xl border border-[var(--color-yarn-orange)]/20 bg-[var(--color-warning-amber-soft)]/45 px-4 py-3 shadow-sm transition-colors hover:border-[var(--color-yarn-orange)]/45 hover:bg-[var(--color-warning-amber-soft)]">
+                                    <div key={row.id} className="flex items-center gap-4 rounded-xl border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] px-4 py-3 transition-colors hover:border-[var(--color-hairline-strong)]">
                                         <div className="flex-1 min-w-0">
                                             <p className="text-[12px] font-bold tracking-tight text-[var(--color-body)]">{row.label?.trim() || `Warp ${i + 1}`}</p>
                                             <p className="font-mono text-xs font-medium text-[var(--color-muted)]">{row.calcDenier}D · {row.beamEnds} ends · {row.gstPct}% GST</p>
@@ -7665,9 +7620,9 @@ export default function EstimatorClient({
                         {/* Weft rates */}
                         {editingWeftRates.length > 0 && (
                             <div className="space-y-2">
-                                <p className="text-xs font-semibold text-[var(--color-factory-green)]">{t('estimator.quality.weftRates')}</p>
+                                <p className="text-[13px] font-semibold text-[var(--color-ink)]">{t('estimator.quality.weftRates')}</p>
                                 {(editRatesTpl?.weft_rows ?? []).map((row: WeftRow, i: number) => (
-                                    <div key={row.id} className="flex items-center gap-4 rounded-xl border border-[var(--color-factory-green)]/20 bg-[var(--color-factory-green-soft)]/70 px-4 py-3 shadow-sm transition-colors hover:border-[var(--color-factory-green)]/45 hover:bg-[var(--color-factory-green-soft)]">
+                                    <div key={row.id} className="flex items-center gap-4 rounded-xl border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] px-4 py-3 transition-colors hover:border-[var(--color-hairline-strong)]">
                                         <div className="flex-1 min-w-0">
                                             <p className="text-[12px] font-bold tracking-tight text-[var(--color-body)]">{row.label?.trim() || `Weft ${i + 1}`}</p>
                                             <p className="font-mono text-xs font-medium text-[var(--color-muted)]">{row.calcDenier}D · {row.picks} PPI · {row.gstPct}% GST</p>
