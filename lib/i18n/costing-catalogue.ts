@@ -1,7 +1,6 @@
 /** Copy for the Saved Costings catalogue: the summary band and the quality cards. */
 export const costingCatalogueText = {
     en: {
-        intro: 'Every quality you have costed: what it costs, what it sells for, and the yarns behind it.',
         costed: 'Qualities costed', qualitiesUnit: 'qualities', qualityUnit: 'quality',
         savedCostings: '{n} saved costings', savedCostingsOne: '1 saved costing', lastSaved: 'last saved {date}',
         avgMargin: 'Average margin {pct}', yarnShare: 'yarn is about {pct} of cost',
@@ -18,7 +17,6 @@ export const costingCatalogueText = {
         whereGoes: 'Where the {cost} goes', perMetre: 'Per metre',
     },
     hi: {
-        intro: 'आपकी हर कॉस्ट की गई क्वालिटी: लागत, बिक्री कीमत और उसमें लगे धागे।',
         costed: 'कॉस्टिंग वाली क्वालिटी', qualitiesUnit: 'क्वालिटी', qualityUnit: 'क्वालिटी',
         savedCostings: '{n} सेव की गई कॉस्टिंग', savedCostingsOne: '1 सेव की गई कॉस्टिंग', lastSaved: 'आखिरी सेव {date}',
         avgMargin: 'औसत मार्जिन {pct}', yarnShare: 'लागत का लगभग {pct} धागा है',
@@ -35,7 +33,6 @@ export const costingCatalogueText = {
         whereGoes: '{cost} कहाँ लगता है', perMetre: 'प्रति मीटर',
     },
     gu: {
-        intro: 'તમે કોસ્ટ કરેલી દરેક ક્વોલિટી: ખર્ચ, વેચાણ કિંમત અને તેમાં વપરાયેલા યાર્ન.',
         costed: 'કોસ્ટિંગવાળી ક્વોલિટી', qualitiesUnit: 'ક્વોલિટી', qualityUnit: 'ક્વોલિટી',
         savedCostings: '{n} સાચવેલી કોસ્ટિંગ', savedCostingsOne: '1 સાચવેલી કોસ્ટિંગ', lastSaved: 'છેલ્લે સાચવી {date}',
         avgMargin: 'સરેરાશ માર્જિન {pct}', yarnShare: 'ખર્ચનો લગભગ {pct} યાર્ન છે',
