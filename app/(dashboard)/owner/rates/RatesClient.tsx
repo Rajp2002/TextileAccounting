@@ -1529,15 +1529,29 @@ export default function RatesClient({
                         lang={language}
                         className="grid overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]"
                     >
-                        <div className="flex flex-col justify-center p-5 sm:p-6">
-                            <p className="text-5xl font-semibold leading-none tracking-[-0.035em] text-ink tabular-nums">
-                                {activeYarnRates.length}
-                                <span className="ml-2 text-2xl font-medium tracking-normal text-muted-foreground">{activeYarnRates.length === 1 ? copy.yarnUnit : copy.yarnsUnit}</span>
+                        <div className="flex flex-col justify-center gap-4 p-5 sm:p-6">
+                            <p className="flex items-baseline gap-2">
+                                <span className="text-4xl font-semibold leading-none tracking-[-0.03em] text-ink tabular-nums">{activeYarnRates.length}</span>
+                                <span className="text-base font-medium text-body">{activeYarnRates.length === 1 ? copy.yarnUnit : copy.yarnsUnit}</span>
                             </p>
-                            <p className="mt-3 text-sm text-body tabular-nums">
-                                {fillCopy(copy.split, { warp: activeWarpCount, weft: activeYarnRates.length - activeWarpCount })}
-                                {mostRecentReview && <span className="text-muted-foreground"> · {fillCopy(copy.lastReviewed, { date: rateDateLabel(mostRecentReview, language) })}</span>}
-                            </p>
+                            <div className="flex flex-wrap items-end gap-x-6 gap-y-3">
+                                <dl className="flex items-stretch gap-4">
+                                    <div>
+                                        <dt className="text-xs font-medium text-muted-foreground">{copy.warp}</dt>
+                                        <dd className="mt-0.5 text-lg font-semibold leading-tight text-ink tabular-nums">{activeWarpCount}</dd>
+                                    </div>
+                                    <span aria-hidden="true" className="w-px bg-hairline" />
+                                    <div>
+                                        <dt className="text-xs font-medium text-muted-foreground">{copy.weft}</dt>
+                                        <dd className="mt-0.5 text-lg font-semibold leading-tight text-ink tabular-nums">{activeYarnRates.length - activeWarpCount}</dd>
+                                    </div>
+                                </dl>
+                                {mostRecentReview && (
+                                    <p className="pb-0.5 text-xs text-muted-foreground tabular-nums">
+                                        {fillCopy(copy.lastReviewed, { date: rateDateLabel(mostRecentReview, language) })}
+                                    </p>
+                                )}
+                            </div>
                         </div>
                         <div className="flex flex-col gap-4 border-t border-hairline p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6 lg:border-l lg:border-t-0">
                             <div className="flex min-w-0 items-center gap-4">
