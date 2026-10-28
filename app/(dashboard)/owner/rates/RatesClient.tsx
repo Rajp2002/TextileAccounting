@@ -214,7 +214,8 @@ function getRateUsageNames(rate: Pick<CostRateRow, 'fabric_names'> | null) {
 const secondaryAction = 'h-10 rounded-lg border-hairline bg-surface font-semibold text-ink shadow-xs hover:bg-surface-soft max-md:min-h-[44px]'
 const ghostAction = 'h-10 rounded-lg font-semibold text-body max-md:min-h-[44px]'
 // A yarn card's own actions are filled pills so they read as tappable; Propagate is saffron because it is waiting on the owner.
-const cardAction = 'h-10 rounded-lg font-semibold max-md:min-h-[44px]'
+// Card pills are a step smaller than page buttons so Propagate, Edit rate, Activity and delete share one row.
+const cardAction = 'h-9 gap-1 rounded-lg px-2.5 text-[13px] font-semibold has-[>svg]:px-2 max-md:min-h-[44px]'
 /** Cards fill the width in columns of at least 22rem, one column on phones. */
 const yarnCardGrid = 'grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(min(100%,22rem),1fr))]'
 
@@ -1383,6 +1384,8 @@ export default function RatesClient({
         const actionKind = pendingAction?.id === rate.id ? pendingAction.kind : null
         // A price due for a check is confirmed before it re-costs saved costings.
         const propagateCount = !due && !archived ? propagationCounts[rate.id] ?? 0 : 0
+        // The three pills need about 285px; below that, beside Propagate, Edit rate and Activity show only their icons.
+        const pillLabel = propagateCount > 0 ? 'hidden @min-[285px]:inline' : undefined
         const { amount, suffix } = ratePriceParts(rate.current_value, rate.unit)
         const trail = archived ? null : priceTrail(rate.price_points ?? [], Number(rate.current_value), todayDate)
         const status = archived
@@ -1440,8 +1443,9 @@ export default function RatesClient({
                     </p>
                 )}
                 {/* Pills wrap among themselves so the delete icon stays on their first row instead of dropping to a line of its own. */}
-                <div className="flex items-start gap-2" role="group" aria-label={tx('Actions')}>
-                    <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+                <div className="flex items-start gap-1.5" role="group" aria-label={tx('Actions')}>
+                    {/* A container, so a card too narrow for every label keeps Edit rate and Activity as icons beside Propagate. */}
+                    <div className="@container flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
                     {quietSample ? (
                         <Button variant="outline" onClick={handleDeleteDemoYarn} className={secondaryAction}>
                             <Trash2 className="h-4 w-4" aria-hidden="true" />{tx('Delete sample yarn')}
@@ -1454,7 +1458,7 @@ export default function RatesClient({
                                 disabled={isPending}
                                 onClick={() => setPropagateRate(rate)}
                                 aria-label={`Propagate ${rate.name} to ${propagateCount} saved costings`}
-                                className={cn(cardAction, 'whitespace-normal')}
+                                className={cardAction}
                             >
                                 {tx(`Propagate · ${propagateCount}`)}
                             </Button>
@@ -1466,7 +1470,7 @@ export default function RatesClient({
                                 aria-label={`Restore rate ${rate.name}`}
                                 className={cardAction}
                             >
-                                {actionKind === 'restore' ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArchiveRestore className="h-4 w-4" aria-hidden="true" />}
+                                {actionKind === 'restore' ? <Loader2 className="size-3.5 animate-spin" /> : <ArchiveRestore className="size-3.5" aria-hidden="true" />}
                                 {tx(actionKind === 'restore' ? `Restoring ${rate.name}…` : 'Restore rate')}
                             </Button>
                         ) : (
@@ -1476,13 +1480,14 @@ export default function RatesClient({
                                 onClick={() => openQuickEdit(rate)}
                                 aria-label={`Edit rate for ${rate.name}`}
                                 className={cardAction}
+                                title={tx('Edit rate')}
                             >
-                                <Pencil className="h-4 w-4" aria-hidden="true" />{tx('Edit rate')}
+                                <Pencil className="size-3.5" aria-hidden="true" /><span className={pillLabel}>{tx('Edit rate')}</span>
                             </Button>
                         )}
                         {/* Activity opens the price-history chart; its Full activity button switches to the audit list. */}
-                        <Button onClick={() => openHistory(rate, 'trend')} className={cardAction}>
-                            <History className="h-4 w-4" aria-hidden="true" />{tx('Activity')}
+                        <Button onClick={() => openHistory(rate, 'trend')} className={cardAction} aria-label={tx('Activity')} title={tx('Activity')}>
+                            <History className="size-3.5" aria-hidden="true" /><span className={pillLabel}>{tx('Activity')}</span>
                         </Button>
                     </>}
                     </div>
@@ -1496,7 +1501,7 @@ export default function RatesClient({
                             onClick={() => { setDeleteError(null); setDeleteRate(rate) }}
                             aria-label={fillCopy(copy.deleteYarnLabel, { name: rate.name })}
                             title={copy.deleteYarn}
-                            className="shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive max-md:size-11"
+                            className="size-9 shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive max-md:size-11"
                         >
                             {actionKind === 'delete' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" aria-hidden="true" />}
                         </Button>
@@ -1577,7 +1582,8 @@ export default function RatesClient({
                             ))}
                         </dl>
                         <div className="flex flex-col gap-4 border-t border-hairline px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:border-l lg:border-t-0">
-                            <div className="flex min-w-0 items-center gap-4">
+                            {/* Centred in the room beside Review, like the counts beside it. */}
+                            <div className="flex min-w-0 flex-1 items-center justify-center gap-4">
                                 <span
                                     aria-hidden="true"
                                     className={cn(
