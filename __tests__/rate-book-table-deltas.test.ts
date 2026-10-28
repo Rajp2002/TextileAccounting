@@ -85,7 +85,7 @@ describe('Rate Book board: one card per yarn in RatesClient.tsx', () => {
     it('groups the board into Warp and Weft sections with their counts', () => {
         expect(client).toContain('(categoryFilter === \'all\' || tourStep !== null ? YARN_CATEGORIES : [categoryFilter])')
         expect(client).toContain("{section.category === 'yarn_warp' ? copy.warp : copy.weft}")
-        expect(client).toContain('{section.rates.map(rate => renderYarnCard(rate, false))}')
+        expect(client).toContain('{section.rates.map(rate => renderYarnCard(rate))}')
     })
 
     it('reads the price large, its change in words and its trail as a small stepped line', () => {
@@ -107,9 +107,10 @@ describe('Rate Book board: one card per yarn in RatesClient.tsx', () => {
         expect(client).toContain('Minus')
     })
 
-    it('asks a due card to confirm its price instead of showing a status badge', () => {
-        expect(card).toContain('fillCopy(copy.stillPrice, { price: formatRateValue(rate.current_value, rate.unit) })')
-        expect(card).toContain("due ? 'border-[var(--wv-ochre-200)] bg-[color-mix(in_oklab,var(--wv-ochre-50)_55%,var(--color-surface))]'")
+    it('marks a due card in its status line and asks to confirm the price in the review modal, not with a badge', () => {
+        expect(card).toContain('due ? dueStatus(rate)')
+        expect(card).toContain("due ? 'font-semibold text-[var(--wv-ochre-800)]' : 'text-muted-foreground'")
+        expect(read('components/rates/RateReviewDialog.tsx')).toContain('fillCopy(copy.stillPrice, { price: formatRateValue(rate.current_value, rate.unit) })')
         expect(client).not.toContain('<StatusBadge')
     })
 })

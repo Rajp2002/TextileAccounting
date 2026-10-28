@@ -1,15 +1,12 @@
 import { getRateReviewDueDate, getRateReviewStatus, type CostRateRow } from '@/lib/cost-rates'
 
 /**
- * Figures for the Rate Book board: the month's price moves, the coming review dates and each yarn's price trail.
+ * Figures for the Rate Book board: the coming review dates, the price review in progress and each yarn's price trail.
  * Pure so the page and its tests read the same numbers.
  */
 
 /** One recorded price for a yarn, on the date it applied from. */
 export type PricePoint = { date: string; value: number }
-
-/** A yarn whose price changed this month, measured from the price before. */
-export type PriceMove = { id: string; name: string; difference: number; percent: number }
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -23,21 +20,42 @@ export function daysUntil(date: string, today: string) {
     return Math.round((Date.parse(`${date}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / DAY_MS)
 }
 
-/** Price changes that took effect in `month` (YYYY-MM), largest first, with how many went up, down or stayed. */
-export function priceMovesInMonth(rates: readonly CostRateRow[], month: string) {
-    const moves: PriceMove[] = []
-    for (const rate of rates) {
-        const previous = Number(rate.previous_value)
-        const current = Number(rate.current_value)
-        if (!rate.effective_date.startsWith(month) || rate.previous_value == null || !(previous > 0)) continue
-        const difference = Number((current - previous).toFixed(4))
-        if (Math.abs(difference) < 0.0001) continue
-        moves.push({ id: rate.id, name: rate.name, difference, percent: (difference / previous) * 100 })
+/** A calendar date ("1 Nov") in the reader's language; rate dates are stored as plain dates. */
+export function rateDateLabel(date: string, language: string) {
+    return new Date(`${date}T00:00:00Z`).toLocaleDateString(`${language}-IN`, { day: 'numeric', month: 'short', timeZone: 'UTC' })
+}
+
+const REVIEW_URGENCY = { needs_review: 0, overdue: 1, due_soon: 2, current: 3 } as const
+
+type ReviewOrderFields = Pick<CostRateRow, 'name' | 'last_reviewed_at' | 'review_interval_days' | 'is_reviewed'>
+
+/** Orders due rates for review: a yarn never confirmed, then the longest overdue, then the soonest due, then by name. */
+export function compareReviewUrgency(left: ReviewOrderFields, right: ReviewOrderFields, now = new Date()) {
+    return REVIEW_URGENCY[getRateReviewStatus(left, now)] - REVIEW_URGENCY[getRateReviewStatus(right, now)]
+        || reviewDueDate(left).localeCompare(reviewDueDate(right))
+        || left.name.localeCompare(right.name, 'en-IN')
+}
+
+/** A due price as the review found it: its value and save stamp, so the review can tell it was checked. */
+export type ReviewSnapshot = { value: number; updatedAt: string }
+
+/** The prices a review works through: the ones due when it opened, in the order they were listed. */
+export type RateReviewSession = { ids: string[]; before: Record<string, ReviewSnapshot> }
+
+export function startRateReview(rates: readonly CostRateRow[]): RateReviewSession {
+    return {
+        ids: rates.map(rate => rate.id),
+        before: Object.fromEntries(rates.map(rate => [rate.id, { value: Number(rate.current_value), updatedAt: rate.updated_at }])),
     }
-    moves.sort((left, right) => Math.abs(right.percent) - Math.abs(left.percent) || left.name.localeCompare(right.name, 'en-IN'))
-    const up = moves.filter(move => move.difference > 0).length
-    const down = moves.length - up
-    return { moves, up, down, unchanged: rates.length - moves.length }
+}
+
+/**
+ * What became of a price since the review opened: still waiting for a check, confirmed at the same price, or changed.
+ * A confirm or a new price saves the rate again, so a new save stamp marks it checked even when its interval keeps it due.
+ */
+export function reviewOutcome(rate: Pick<CostRateRow, 'current_value' | 'updated_at'>, before: ReviewSnapshot, stillDue: boolean) {
+    if (stillDue && rate.updated_at === before.updatedAt) return 'waiting' as const
+    return Math.abs(Number(rate.current_value) - before.value) < 0.0001 ? 'confirmed' as const : 'changed' as const
 }
 
 /** The coming review dates of rates not yet due for a check, soonest first, with how many yarns fall on each. */

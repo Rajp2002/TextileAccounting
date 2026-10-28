@@ -11,9 +11,11 @@ import {
     AlertTriangle,
     Archive,
     ArchiveRestore,
+    ArrowRight,
     BookOpen,
-    CheckCircle2,
+    Check,
     ChevronDown,
+    ClipboardCheck,
     History,
     Info,
     Loader2,
@@ -53,6 +55,7 @@ import {
 } from './actions'
 import { getYarnRatePropagationCounts } from './propagation-actions'
 import { PropagateYarnRateDialog } from '@/components/rates/PropagateYarnRateDialog'
+import { RateReviewDialog } from '@/components/rates/RateReviewDialog'
 import {
     COST_RATE_CATEGORY_LABELS,
     filterCostRates,
@@ -64,7 +67,18 @@ import {
     getRateReviewStatus,
     type CostRateRow,
 } from '@/lib/cost-rates'
-import { daysUntil, priceMovesInMonth, priceTrail, priceTrailPath, reviewDueDate, upcomingReviews, type PricePoint } from '@/lib/rate-book-board'
+import {
+    compareReviewUrgency,
+    daysUntil,
+    priceTrail,
+    priceTrailPath,
+    rateDateLabel,
+    reviewDueDate,
+    startRateReview,
+    upcomingReviews,
+    type PricePoint,
+    type RateReviewSession,
+} from '@/lib/rate-book-board'
 import { rateBookBoardText, type RateBookBoardCopy } from '@/lib/i18n/rate-book-board'
 import { fillCopy } from '@/lib/i18n/fill'
 import {
@@ -202,11 +216,6 @@ const secondaryAction = 'h-10 rounded-lg border-hairline bg-surface font-semibol
 const ghostAction = 'h-10 rounded-lg font-semibold text-body max-md:min-h-[44px]'
 /** Cards fill the width in columns of at least 22rem, one column on phones. */
 const yarnCardGrid = 'grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(min(100%,22rem),1fr))]'
-
-/** A calendar date ("1 Nov") in the reader's language; rate dates are stored as plain dates. */
-function rateDateLabel(date: string, language: string) {
-    return new Date(`${date}T00:00:00Z`).toLocaleDateString(`${language}-IN`, { day: 'numeric', month: 'short', timeZone: 'UTC' })
-}
 
 /** "₹130.00" and "/kg", so the amount can read large and its unit quiet. */
 function ratePriceParts(value: number, unit: CostRateUnit) {
@@ -702,6 +711,8 @@ export default function RatesClient({
     const [historyError, setHistoryError] = useState<string | null>(null)
     const [reviewRate, setReviewRate] = useState<CostRateRow | null>(null)
     const [reviewError, setReviewError] = useState<string | null>(null)
+    // Prices due for a check open in one modal from the summary band, not as cards on the page.
+    const [reviewSession, setReviewSession] = useState<RateReviewSession | null>(null)
     const [archiveRate, setArchiveRate] = useState<CostRateRow | null>(null)
     const [archiveError, setArchiveError] = useState<string | null>(null)
     const [deleteRate, setDeleteRate] = useState<CostRateRow | null>(null)
@@ -738,7 +749,7 @@ export default function RatesClient({
 
             const isModalOpen = Boolean(
                 draft || historyRate ||
-                reviewRate || archiveRate || deleteRate || showConflicts || quickEditRate
+                reviewRate || archiveRate || deleteRate || showConflicts || quickEditRate || reviewSession
             )
 
             if (event.key === '/' && !isInputFocused && !isModalOpen) {
@@ -757,7 +768,7 @@ export default function RatesClient({
 
         window.addEventListener('keydown', handleKeyDown)
         return () => window.removeEventListener('keydown', handleKeyDown)
-    }, [draft, historyRate, reviewRate, archiveRate, deleteRate, showConflicts, quickEditRate, searchQuery, tourStep])
+    }, [draft, historyRate, reviewRate, archiveRate, deleteRate, showConflicts, quickEditRate, reviewSession, searchQuery, tourStep])
 
     useEffect(() => {
         let cancelled = false
@@ -817,11 +828,7 @@ export default function RatesClient({
     const dueReviewRates = useMemo(
         () => activeYarnRates
             .filter(rate => getRateReviewStatus(rate) !== 'current' && (tourStep !== null || !isSampleRecordId(rate.id)))
-            .sort((left, right) => {
-                const priority = { needs_review: 0, overdue: 1, due_soon: 2, current: 3 }
-                const statusDifference = priority[getRateReviewStatus(left)] - priority[getRateReviewStatus(right)]
-                return statusDifference || left.name.localeCompare(right.name, 'en-IN')
-            }),
+            .sort((left, right) => compareReviewUrgency(left, right)),
         [activeYarnRates, tourStep],
     )
 
@@ -1304,17 +1311,23 @@ export default function RatesClient({
     const copy = rateBookBoardText[language]
     const todayDate = today()
     const isDue = (rate: CostRateRow) => rate.is_active !== false && getRateReviewStatus(rate) !== 'current' && (tourStep !== null || !isSampleRecordId(rate.id))
-    // Prices due for a check lead the page; the board holds the rest. Search and direction narrow both.
-    const queueRates = showArchived && tourStep === null ? [] : visibleRates.filter(isDue)
-    const boardRates = queueRates.length ? visibleRates.filter(rate => !isDue(rate)) : visibleRates
+    /** How a due price stands: new, overdue by some days, or due in some days. */
+    const dueStatus = (rate: CostRateRow) => {
+        if (getRateReviewStatus(rate) === 'needs_review') return rate.discovery_source ? copy.discovered : copy.newYarn
+        const dueIn = daysUntil(reviewDueDate(rate), todayDate)
+        if (dueIn < 0) return dueIn === -1 ? copy.overdueOne : fillCopy(copy.overdueDays, { n: -dueIn })
+        return dueIn === 0 ? copy.dueToday : dueIn === 1 ? copy.dueTomorrow : fillCopy(copy.dueInDays, { n: dueIn })
+    }
+    // Every yarn stays on the board, due ones first in each section; confirming them happens in the review modal.
     const boardSections = (categoryFilter === 'all' || tourStep !== null ? YARN_CATEGORIES : [categoryFilter])
-        .map(category => ({ category, rates: boardRates.filter(rate => rate.category === category) }))
+        .map(category => ({ category, rates: visibleRates.filter(rate => rate.category === category) }))
         .filter(section => section.rates.length > 0)
     const dueCount = dueReviewRates.length
+    // The yarns waiting, most urgent first, as the review modal lists them.
+    const dueLine = dueCount
+        ? `${dueReviewRates.slice(0, 3).map(rate => rate.name).join(', ')}${dueCount > 3 ? ` ${fillCopy(copy.moreNames, { n: dueCount - 3 })}` : ''}`
+        : null
     const activeWarpCount = activeYarnRates.filter(rate => rate.category === 'yarn_warp').length
-    const monthMoves = priceMovesInMonth(activeYarnRates, todayDate.slice(0, 7))
-    const largestMove = Math.max(...monthMoves.moves.map(move => Math.abs(move.percent)), 0.0001)
-    const monthName = new Date(`${todayDate}T12:00:00+05:30`).toLocaleDateString(`${language}-IN`, { month: 'long', timeZone: 'Asia/Kolkata' })
     const reviewDates = upcomingReviews(activeYarnRates)
     const nextReviewLine = reviewDates.length
         ? [
@@ -1323,29 +1336,21 @@ export default function RatesClient({
         ].filter(Boolean).join(' · ')
         : copy.noneScheduled
 
-    /** One yarn as a card: its price and how it moved, who uses it and its actions. A due card asks to confirm the price. */
-    const renderYarnCard = (rate: CostRateRow, due: boolean) => {
+    /** One yarn as a card: its price and how it moved, who uses it and its actions. A due card says so in its status. */
+    const renderYarnCard = (rate: CostRateRow) => {
         const archived = rate.is_active === false
+        const due = isDue(rate)
         const sample = isSampleRecordId(rate.id)
         // Outside the tour the sample card says what it is instead of a review status, and offers only its removal.
         const quietSample = sample && tourStep === null
-        const reviewState = getRateReviewStatus(rate)
         const actionKind = pendingAction?.id === rate.id ? pendingAction.kind : null
-        const reviewLabel = reviewState === 'needs_review' ? 'Confirm current rate' : 'Confirm review'
+        // A price due for a check is confirmed before it re-costs saved costings.
         const propagateCount = !due && !archived ? propagationCounts[rate.id] ?? 0 : 0
         const { amount, suffix } = ratePriceParts(rate.current_value, rate.unit)
-        const trail = due || archived ? null : priceTrail(rate.price_points ?? [], Number(rate.current_value), todayDate)
-        const dueDate = reviewDueDate(rate)
-        const dueIn = daysUntil(dueDate, todayDate)
+        const trail = archived ? null : priceTrail(rate.price_points ?? [], Number(rate.current_value), todayDate)
         const status = archived
             ? copy.archived
-            : !due
-                ? fillCopy(copy.reviewOn, { date: rateDateLabel(dueDate, language) })
-                : reviewState === 'needs_review'
-                    ? rate.discovery_source ? copy.discovered : copy.newYarn
-                    : dueIn < 0
-                        ? dueIn === -1 ? copy.overdueOne : fillCopy(copy.overdueDays, { n: -dueIn })
-                        : dueIn === 0 ? copy.dueToday : dueIn === 1 ? copy.dueTomorrow : fillCopy(copy.dueInDays, { n: dueIn })
+            : due ? dueStatus(rate) : fillCopy(copy.reviewOn, { date: rateDateLabel(reviewDueDate(rate), language) })
         return (
             <article
                 key={rate.id}
@@ -1353,7 +1358,7 @@ export default function RatesClient({
                 data-ratebook-row-id={rate.id}
                 className={cn(
                     'flex flex-col gap-4 rounded-2xl border p-5 shadow-xs sm:px-6',
-                    due ? 'border-[var(--wv-ochre-200)] bg-[color-mix(in_oklab,var(--wv-ochre-50)_55%,var(--color-surface))]' : archived ? 'border-hairline bg-surface-soft' : 'border-hairline bg-surface',
+                    archived ? 'border-hairline bg-surface-soft' : 'border-hairline bg-surface',
                 )}
             >
                 <div className="flex items-baseline justify-between gap-3">
@@ -1370,19 +1375,11 @@ export default function RatesClient({
                         title={tx('View price history')}
                         className="-m-2 min-w-0 rounded-lg p-2 text-left transition-colors hover:bg-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/50"
                     >
-                        {due ? (
-                            <span className="block text-2xl font-semibold leading-tight tracking-[-0.01em] text-ink tabular-nums">
-                                {fillCopy(copy.stillPrice, { price: formatRateValue(rate.current_value, rate.unit) })}
-                            </span>
-                        ) : (
-                            <span className="block text-[2rem] font-semibold leading-none tracking-[-0.03em] text-ink tabular-nums">
-                                {amount}<span className="ml-1 text-base font-medium tracking-normal text-muted-foreground">{suffix}</span>
-                            </span>
-                        )}
+                        <span className="block text-[2rem] font-semibold leading-none tracking-[-0.03em] text-ink tabular-nums">
+                            {amount}<span className="ml-1 text-base font-medium tracking-normal text-muted-foreground">{suffix}</span>
+                        </span>
                         <span className="mt-2 block text-[13px] tabular-nums">
-                            {due
-                                ? <span className="text-muted-foreground">{rate.is_reviewed === false ? copy.notConfirmed : fillCopy(copy.confirmedOn, { date: rateDateLabel(rate.last_reviewed_at, language) })}</span>
-                                : <PriceChange rate={rate} copy={copy} language={language} />}
+                            <PriceChange rate={rate} copy={copy} language={language} />
                         </span>
                         <span className="sr-only">{`${tx('View price history')}: ${rate.name}`}</span>
                     </button>
@@ -1398,18 +1395,6 @@ export default function RatesClient({
                             <Trash2 className="h-4 w-4" aria-hidden="true" />{tx('Delete sample yarn')}
                         </Button>
                     ) : <>
-                        {due && (
-                            <Button
-                                data-ratebook-field="quickReviewAction"
-                                onClick={() => handleQuickReview(rate)}
-                                disabled={isPending}
-                                aria-label={tx(`${reviewLabel} for ${rate.name}`)}
-                                className={railPrimaryAction}
-                            >
-                                {actionKind === 'review' ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" aria-hidden="true" />}
-                                {tx(actionKind === 'review' ? 'Confirming…' : reviewLabel)}
-                            </Button>
-                        )}
                         {archived ? (
                             <Button
                                 variant="outline"
@@ -1445,12 +1430,10 @@ export default function RatesClient({
                                 {tx(`Propagate · ${propagateCount}`)}
                             </Button>
                         )}
-                        {/* Activity opens the price-history chart; its Full activity button switches to the audit list. A due card keeps to its two answers; its price still opens the chart. */}
-                        {!due && (
-                            <Button variant="ghost" onClick={() => openHistory(rate, 'trend')} className={cn('ml-auto', ghostAction)}>
-                                <History className="h-4 w-4" aria-hidden="true" />{tx('Activity')}
-                            </Button>
-                        )}
+                        {/* Activity opens the price-history chart; its Full activity button switches to the audit list. */}
+                        <Button variant="ghost" onClick={() => openHistory(rate, 'trend')} className={cn('ml-auto', ghostAction)}>
+                            <History className="h-4 w-4" aria-hidden="true" />{tx('Activity')}
+                        </Button>
                     </>}
                 </div>
             </article>
@@ -1505,7 +1488,7 @@ export default function RatesClient({
                     </>}
                 />
 
-                {/* Where the book stands: how many yarns, whether any price is due, and this month's price moves. */}
+                {/* Where the book stands: how many yarns, and either all clear or the prices due for a check, which open in the review modal. */}
                 {activeYarnRates.length > 0 && (
                     <section
                         data-ratebook-section={6}
@@ -1513,52 +1496,45 @@ export default function RatesClient({
                         aria-labelledby="ratebook-status"
                         data-i18n-skip="true"
                         lang={language}
-                        className="grid overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]"
+                        className="grid overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]"
                     >
-                        <div className="flex flex-col justify-between gap-5 p-5 sm:p-6">
-                            <div>
-                                <p id="ratebook-status" className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                                    <span aria-hidden="true" className={cn('size-1.5 rounded-full', dueCount ? 'bg-[var(--wv-ochre-400)]' : 'bg-success')} />
-                                    {dueCount ? fillCopy(dueCount === 1 ? copy.toConfirmOne : copy.toConfirm, { n: dueCount }) : copy.allCurrent}
-                                </p>
-                                <p className="mt-3 text-5xl font-semibold leading-none tracking-[-0.035em] text-ink tabular-nums">
-                                    {activeYarnRates.length}
-                                    <span className="ml-2 text-2xl font-medium tracking-normal text-muted-foreground">{activeYarnRates.length === 1 ? copy.yarnUnit : copy.yarnsUnit}</span>
-                                </p>
-                                <p className="mt-3 text-sm text-body tabular-nums">
-                                    {fillCopy(copy.split, { warp: activeWarpCount, weft: activeYarnRates.length - activeWarpCount })}
-                                    {mostRecentReview && <span className="text-muted-foreground"> · {fillCopy(copy.lastReviewed, { date: rateDateLabel(mostRecentReview, language) })}</span>}
-                                </p>
-                            </div>
-                            <p className="border-t border-hairline pt-4 text-[13px] text-body tabular-nums">{nextReviewLine}</p>
+                        <div className="flex flex-col justify-center p-5 sm:p-6">
+                            <p className="text-5xl font-semibold leading-none tracking-[-0.035em] text-ink tabular-nums">
+                                {activeYarnRates.length}
+                                <span className="ml-2 text-2xl font-medium tracking-normal text-muted-foreground">{activeYarnRates.length === 1 ? copy.yarnUnit : copy.yarnsUnit}</span>
+                            </p>
+                            <p className="mt-3 text-sm text-body tabular-nums">
+                                {fillCopy(copy.split, { warp: activeWarpCount, weft: activeYarnRates.length - activeWarpCount })}
+                                {mostRecentReview && <span className="text-muted-foreground"> · {fillCopy(copy.lastReviewed, { date: rateDateLabel(mostRecentReview, language) })}</span>}
+                            </p>
                         </div>
-                        <div className="border-t border-hairline p-5 sm:p-6 lg:border-l lg:border-t-0">
-                            <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                                <p className="text-sm font-medium text-muted-foreground">{fillCopy(copy.movesTitle, { month: monthName })}</p>
-                                <p className="text-[13px] tabular-nums text-muted-foreground">{fillCopy(copy.movesSummary, { up: monthMoves.up, down: monthMoves.down, same: monthMoves.unchanged })}</p>
+                        <div className="flex flex-col gap-4 border-t border-hairline p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6 lg:border-l lg:border-t-0">
+                            <div className="flex min-w-0 items-center gap-4">
+                                <span
+                                    aria-hidden="true"
+                                    className={cn(
+                                        'flex size-11 shrink-0 items-center justify-center rounded-full',
+                                        dueCount ? 'bg-[var(--wv-ochre-50)] text-[var(--wv-ochre-800)]' : 'bg-[var(--wv-moss-50)] text-[var(--wv-moss-700)]',
+                                    )}
+                                >
+                                    {dueCount ? <ClipboardCheck className="size-5" /> : <Check className="size-5" strokeWidth={2.5} />}
+                                </span>
+                                <div className="min-w-0">
+                                    <p id="ratebook-status" className="text-lg font-semibold leading-snug text-ink">
+                                        {dueCount ? fillCopy(dueCount === 1 ? copy.toConfirmOne : copy.toConfirm, { n: dueCount }) : copy.allCurrent}
+                                    </p>
+                                    <p className="mt-0.5 break-words text-[13px] text-body tabular-nums">{dueLine ?? nextReviewLine}</p>
+                                </div>
                             </div>
-                            {monthMoves.moves.length ? (
-                                <ul className="space-y-3">
-                                    {monthMoves.moves.slice(0, 5).map(move => {
-                                        const rose = move.difference > 0
-                                        return (
-                                            <li key={move.id} className="grid grid-cols-[minmax(0,1fr)_4.5rem] items-center gap-x-4 sm:grid-cols-[minmax(0,13rem)_minmax(0,1fr)_4.5rem]">
-                                                <span className="truncate text-sm font-semibold text-ink" title={move.name}>{move.name}</span>
-                                                <span aria-hidden="true" className="hidden h-2 rounded-full bg-surface-soft sm:block">
-                                                    <span
-                                                        className={cn('block h-full rounded-full', rose ? 'bg-[var(--wv-ochre-400)]' : 'bg-[var(--wv-moss-700)]')}
-                                                        style={{ width: `${Math.max((Math.abs(move.percent) / largestMove) * 100, 4)}%` }}
-                                                    />
-                                                </span>
-                                                <span className={cn('text-right text-sm font-semibold tabular-nums', rose ? 'text-[var(--wv-ochre-800)]' : 'text-[var(--wv-moss-700)]')}>
-                                                    {rose ? '+' : '−'}{Math.abs(move.percent).toFixed(1)}%
-                                                </span>
-                                            </li>
-                                        )
-                                    })}
-                                </ul>
-                            ) : (
-                                <p className="text-sm text-muted-foreground">{copy.noMoves}</p>
+                            {dueCount > 0 && (
+                                <Button
+                                    data-ratebook-field="reviewPricesAction"
+                                    onClick={() => setReviewSession(startRateReview(dueReviewRates))}
+                                    className={cn(railPrimaryAction, 'h-11 shrink-0 px-5 max-sm:w-full')}
+                                >
+                                    {copy.review}
+                                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                                </Button>
                             )}
                         </div>
                     </section>
@@ -1751,43 +1727,13 @@ export default function RatesClient({
                     />
                 ) : (
                     <div key={`board-${resultMotionKey}`} className="ui-content-swap space-y-8">
-                        {/* Prices due for a check: confirm each one, or record the new price. */}
-                        {queueRates.length > 0 && (
-                            <section aria-labelledby="ratebook-review-queue" className="space-y-4">
-                                <div className="flex flex-wrap items-end justify-between gap-3">
-                                    <div className="min-w-0">
-                                        <h2 id="ratebook-review-queue" className="flex items-center gap-2.5 text-lg font-semibold text-ink">
-                                            <span aria-hidden="true" className="size-2 rounded-full bg-[var(--wv-ochre-400)]" />
-                                            {tx('Needs Review')}
-                                            <span className="font-medium tabular-nums text-muted-foreground">{queueRates.length}</span>
-                                        </h2>
-                                        <p className="mt-1 max-w-2xl text-sm text-body">{fillCopy(copy.queueHint, { edit: `“${tx('Edit rate')}”` })}</p>
-                                    </div>
-                                    {queueRates.length > 1 && queueRates.length === dueCount && (
-                                        <Button
-                                            data-ratebook-field="confirmAll"
-                                            type="button"
-                                            variant="outline"
-                                            onClick={handleConfirmAll}
-                                            disabled={isPending}
-                                            className={secondaryAction}
-                                        >
-                                            {pendingAction?.id === 'all-review' ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" aria-hidden="true" />}
-                                            {pendingAction?.id === 'all-review' ? tx('Confirming…') : tx(`Confirm All (${dueCount}) as Current`)}
-                                        </Button>
-                                    )}
-                                </div>
-                                <div className={yarnCardGrid}>{queueRates.map(rate => renderYarnCard(rate, true))}</div>
-                            </section>
-                        )}
-
                         {boardSections.map(section => (
                             <section key={section.category} aria-labelledby={`ratebook-${section.category}`} className="space-y-4">
                                 <h2 id={`ratebook-${section.category}`} className="text-base font-semibold text-ink">
                                     {section.category === 'yarn_warp' ? copy.warp : copy.weft}
                                     <span className="ml-2 font-medium tabular-nums text-muted-foreground">{section.rates.length}</span>
                                 </h2>
-                                <div className={yarnCardGrid}>{section.rates.map(rate => renderYarnCard(rate, false))}</div>
+                                <div className={yarnCardGrid}>{section.rates.map(rate => renderYarnCard(rate))}</div>
                             </section>
                         ))}
                     </div>
@@ -1910,6 +1856,22 @@ export default function RatesClient({
                 isPending={quickEditPending}
                 onSave={handleQuickSave}
                 onOpenAdvanced={openAdvancedDraft}
+            />
+
+            {/* Edit rate opens the quick edit dialog over the review; the row then shows the new price as done. */}
+            <RateReviewDialog
+                session={reviewSession}
+                rates={rates}
+                dueCount={dueCount}
+                isDue={isDue}
+                dueStatus={dueStatus}
+                usage={rate => <YarnUsage rate={rate} loading={usageLoading} copy={copy} />}
+                pendingId={pendingAction?.kind === 'review' ? pendingAction.id : null}
+                busy={isPending}
+                onConfirm={handleQuickReview}
+                onEdit={openQuickEdit}
+                onConfirmAll={handleConfirmAll}
+                onClose={() => setReviewSession(null)}
             />
 
             <Dialog open={Boolean(reviewRate)} onOpenChange={open => { if (!open && !isPending) { setReviewRate(null); setReviewError(null) } }}>

@@ -32,8 +32,9 @@ describe('yarn review and selling-margin preferences', () => {
   it('surfaces due reviews in navigation and highlights affected yarns', () => {
     expect(sidebar).toContain('yarnReviewDueCount')
     expect(sidebar).toContain('BellRing')
-    // Overdue and soon-due yarns lead the Rate Book as warm review cards that say how late they are.
-    expect(rates).toContain("due ? 'border-[var(--wv-ochre-200)] bg-[color-mix(in_oklab,var(--wv-ochre-50)_55%,var(--color-surface))]'")
+    // Overdue and soon-due yarns lead their Rate Book sections, say how late they are, and open in the review modal.
+    expect(rates).toContain("due ? 'font-semibold text-[var(--wv-ochre-800)]' : 'text-muted-foreground'")
+    expect(rates).toContain('data-ratebook-field="reviewPricesAction"')
     expect(rates).toContain("dueIn === -1 ? copy.overdueOne : fillCopy(copy.overdueDays, { n: -dueIn })")
   })
 })

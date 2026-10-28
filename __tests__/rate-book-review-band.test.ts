@@ -12,21 +12,26 @@ const read = (path: string) => readFileSync(join(root, path), 'utf8')
 /**
  * The Rate Book has no side rails: the add action and the Guide (tour, principles, help, archive
  * and restore) sit in the page header, a summary band sits under it, and prices due for a check
- * lead the board as a review queue of cards.
+ * open from that band in a review modal instead of taking room on the page.
  */
-describe('Rate Book summary band, review queue and Guide', () => {
+describe('Rate Book summary band, review modal and Guide', () => {
     const rates = read('app/(dashboard)/owner/rates/RatesClient.tsx')
+    const dialog = read('components/rates/RateReviewDialog.tsx')
     const styles = read('app/globals.css')
 
-    it('shows where the book stands in one band in the page flow, not a fixed rail or a floating pill', () => {
+    it('shows where the book stands in one band: all clear with a check, or the prices due with a Review button', () => {
         const band = rates.slice(rates.indexOf('data-ratebook-field="reviewRailWidget"'), rates.indexOf('{showDeleteNudge'))
         expect(band).toContain('copy.allCurrent')
         expect(band).toContain('copy.toConfirm')
-        expect(band).toContain('{nextReviewLine}')
-        expect(band).toContain('copy.movesTitle')
-        expect(band).toContain('monthMoves.moves.slice(0, 5)')
-        expect(rates).toContain('priceMovesInMonth(activeYarnRates, todayDate.slice(0, 7))')
+        expect(band).toContain('{dueLine ?? nextReviewLine}')
+        expect(band).toContain('<Check className="size-5" strokeWidth={2.5} />')
+        expect(band).toContain('data-ratebook-field="reviewPricesAction"')
+        expect(band).toContain('onClick={() => setReviewSession(startRateReview(dueReviewRates))}')
+        expect(band.indexOf('data-ratebook-field="reviewPricesAction"')).toBeGreaterThan(band.indexOf('{dueCount > 0 && ('))
         expect(rates).toContain('upcomingReviews(activeYarnRates)')
+        // The month's price moves no longer share the band.
+        expect(rates).not.toContain('movesTitle')
+        expect(rates).not.toContain('priceMovesInMonth')
         expect(rates).not.toContain('RateReviewStrip')
         expect(rates).not.toContain('RateReviewFloatingButton')
         expect(rates).not.toContain('rates-review-rail-desktop')
@@ -88,22 +93,31 @@ describe('Rate Book summary band, review queue and Guide', () => {
         expect(rates).toContain("title: tx('Rate Book Principles'), lang: language, i18nSkip: true")
     })
 
-    it('leads with the prices due for a check as cards, instead of a dialog', () => {
-        const queue = rates.slice(rates.indexOf('aria-labelledby="ratebook-review-queue"'), rates.indexOf('{boardSections.map'))
-        expect(queue).toContain("{tx('Needs Review')}")
-        expect(queue).toContain('queueRates.map(rate => renderYarnCard(rate, true))')
-        // The queue and the board split the same filtered list, so a due yarn shows once.
-        expect(rates).toContain('const queueRates = showArchived && tourStep === null ? [] : visibleRates.filter(isDue)')
-        expect(rates).toContain('const boardRates = queueRates.length ? visibleRates.filter(rate => !isDue(rate)) : visibleRates')
-        expect(rates).not.toContain('DueForReviewDialog')
-        expect(rates).not.toContain('setShowDueReviews')
+    it('confirms due prices in the review modal, while every yarn stays on the board once', () => {
+        expect(rates).not.toContain('ratebook-review-queue')
+        expect(rates).not.toContain('queueRates')
+        expect(rates).toContain('rates: visibleRates.filter(rate => rate.category === category)')
+        expect(rates.match(/<RateReviewDialog/g)).toHaveLength(1)
+        expect(rates).toContain('onConfirm={handleQuickReview}')
+        expect(rates).toContain('onEdit={openQuickEdit}')
+        // A due card on the board says so in its status instead of carrying the confirm action.
+        const card = rates.slice(rates.indexOf('const renderYarnCard = '), rates.indexOf('<PlanAnalyticsBeacon'))
+        expect(card).toContain('due ? dueStatus(rate)')
+        expect(card).not.toContain('quickReviewAction')
+        // Each row asks whether the price still holds, and keeps its place once checked.
+        expect(dialog).toContain('fillCopy(copy.stillPrice')
+        expect(dialog).toContain('onClick={() => onConfirm(rate)}')
+        expect(dialog).toContain('onClick={() => onEdit(rate)}')
+        expect(dialog).toContain("outcome !== 'waiting'")
+        expect(dialog).toContain('fillCopy(copy.reviewProgress')
     })
 
-    it('offers Confirm All only while the queue shows every due rate', () => {
-        const queue = rates.slice(rates.indexOf('aria-labelledby="ratebook-review-queue"'), rates.indexOf('{boardSections.map'))
-        expect(queue).toContain('queueRates.length > 1 && queueRates.length === dueCount')
-        expect(queue).toContain('data-ratebook-field="confirmAll"')
-        expect(queue).toContain('onClick={handleConfirmAll}')
+    it('offers Confirm All only while the modal lists every due rate still waiting', () => {
+        const footer = dialog.slice(dialog.indexOf('<DialogFooter'))
+        expect(footer).toContain('waiting > 1 && waiting === dueCount')
+        expect(footer).toContain('data-ratebook-field="confirmAll"')
+        expect(footer).toContain('onClick={onConfirmAll}')
+        expect(rates).toContain('onConfirmAll={handleConfirmAll}')
     })
 
     it('shows rate review status, principles, and commercial memory rules', () => {

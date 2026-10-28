@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { CostRateRow } from '@/lib/cost-rates'
-import { daysUntil, priceMovesInMonth, priceTrail, priceTrailPath, reviewDueDate, upcomingReviews } from '@/lib/rate-book-board'
+import { compareReviewUrgency, daysUntil, priceTrail, priceTrailPath, reviewDueDate, reviewOutcome, startRateReview, upcomingReviews } from '@/lib/rate-book-board'
 
 const rate = (overrides: Partial<CostRateRow>): CostRateRow => ({
     id: overrides.name ?? 'rate',
@@ -21,26 +21,35 @@ const rate = (overrides: Partial<CostRateRow>): CostRateRow => ({
     ...overrides,
 })
 
-describe('priceMovesInMonth', () => {
-    it('ranks this month’s changes by size and counts up, down and unchanged', () => {
+describe('price review', () => {
+    const now = new Date('2026-10-28T06:00:00Z')
+
+    it('lists a never-confirmed yarn first, then the longest overdue, then the soonest due, then by name', () => {
         const rates = [
-            rate({ name: 'Demo Polyester Weft 150D', current_value: 140, previous_value: 128, effective_date: '2026-10-02' }),
-            rate({ name: '40 span', current_value: 115, previous_value: 107, effective_date: '2026-10-05' }),
-            rate({ name: 'cheaper', current_value: 95, previous_value: 100, effective_date: '2026-10-07' }),
-            rate({ name: 'mulati', current_value: 140, previous_value: null, effective_date: '2026-10-09' }),
-            rate({ name: 'test', current_value: 145, previous_value: 145, effective_date: '2026-10-05' }),
-            rate({ name: 'september', current_value: 150, previous_value: 120, effective_date: '2026-09-20' }),
+            rate({ name: 'due in 14', last_reviewed_at: '2026-10-12' }),
+            rate({ name: 'b due in 13', last_reviewed_at: '2026-10-11' }),
+            rate({ name: 'a due in 13', last_reviewed_at: '2026-10-11' }),
+            rate({ name: 'overdue 1 day', last_reviewed_at: '2026-09-27' }),
+            rate({ name: 'overdue 8 days', last_reviewed_at: '2026-09-20' }),
+            rate({ name: 'unconfirmed', is_reviewed: false }),
         ]
-        const { moves, up, down, unchanged } = priceMovesInMonth(rates, '2026-10')
-        expect(moves.map(move => move.name)).toEqual(['Demo Polyester Weft 150D', '40 span', 'cheaper'])
-        expect(moves[0].difference).toBe(12)
-        expect(moves[0].percent).toBeCloseTo(9.375)
-        expect(moves[2].percent).toBeCloseTo(-5)
-        expect({ up, down, unchanged }).toEqual({ up: 2, down: 1, unchanged: 3 })
+        expect([...rates].sort((left, right) => compareReviewUrgency(left, right, now)).map(entry => entry.name))
+            .toEqual(['unconfirmed', 'overdue 8 days', 'overdue 1 day', 'a due in 13', 'b due in 13', 'due in 14'])
     })
 
-    it('ignores a previous price of zero, which has no meaningful percentage', () => {
-        expect(priceMovesInMonth([rate({ previous_value: 0, current_value: 10 })], '2026-10').moves).toEqual([])
+    it('keeps the prices due when the review opened, with each price and save stamp then', () => {
+        const session = startRateReview([rate({ name: 'a', current_value: 115 }), rate({ name: 'b', current_value: 248, updated_at: '2026-10-12T00:00:00Z' })])
+        expect(session.ids).toEqual(['a', 'b'])
+        expect(session.before.b).toEqual({ value: 248, updatedAt: '2026-10-12T00:00:00Z' })
+    })
+
+    it('reads a price as waiting until it is saved again, then as confirmed or changed', () => {
+        const before = { value: 115, updatedAt: '2026-10-11T00:00:00Z' }
+        expect(reviewOutcome({ current_value: 115, updated_at: before.updatedAt }, before, true)).toBe('waiting')
+        expect(reviewOutcome({ current_value: 115, updated_at: '2026-10-28T09:00:00Z' }, before, false)).toBe('confirmed')
+        expect(reviewOutcome({ current_value: 120, updated_at: '2026-10-28T09:00:00Z' }, before, false)).toBe('changed')
+        // A short review interval can leave a confirmed price due again at once; the new save stamp still marks it checked.
+        expect(reviewOutcome({ current_value: 115, updated_at: '2026-10-28T09:00:00Z' }, before, true)).toBe('confirmed')
     })
 })
 
