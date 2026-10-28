@@ -276,3 +276,28 @@ No app change: the prefetches do not compete with the landing page, and they mak
 
 The landing page is unaffected (prefetches start after it is usable; the blocking-time difference is noise and points the other way), and every sidebar click is about 130 ms faster with them, so prefetching stays as it is. Its cost is server-side: roughly 25 extra Supabase reads and a few extra function invocations per owner landing, which only matters if Vercel invocations or Supabase load become a constraint. Not explored: where the remaining 440 ms between click and commit goes at 4× CPU (the estimator unmounting and the destination's JavaScript loading are the likely parts).
 Checks: `npx tsc --noEmit` clean, `npx vitest run` 419 files / 4,212 passed / 1 skipped, `npm run lint` clean.
+
+### Task J: row-level-security checks per row (HANDOFF next task 5)
+
+**Proposed migration, not applied:** `supabase/migrations/20261028120000_rls_checks_once_per_query.sql`. Raj applies migrations.
+
+**What the handoff expected, and what was measured.** The handoff counted 43 policies calling `auth.uid()` per row. After every migration (`scripts/performance/rls-initplan.mjs` on the disposable PostgreSQL that `npm run test:db` uses, Supabase's own `auth.uid()`/`auth.jwt()` definitions installed), 92 of 304 policies call `auth.jwt()`/`auth.uid()` outside a sub-select, on 39 tables. A call inside an uncorrelated sub-select (`org_id = (SELECT profiles.org_id … WHERE id = auth.uid())`) already runs once per query and is not counted. All 39 are Base or retired tables, and the app reads none of them through row-level security in a way where this matters: Base pages read through `SECURITY DEFINER` RPCs or the service role, and those tables also carry a restrictive `requires_premium_subscription` policy that asks for the retired `'premium'` tier, which `org_has_subscription_tier` no longer grants, so a direct read as an owner returns nothing anyway. These were left as they are.
+
+**The per-row cost that does reach Lite.** Saved Costings reads `estimator_quotes` (and the estimator reads `estimator_templates`) with the owner's client, so row-level security applies. Their `auth.jwt()` calls are already wrapped, but two `SECURITY DEFINER` functions, which Postgres cannot inline, ran for every one of the org's rows before the sort and the 500-row page: `org_has_subscription_tier(org_id, 'base')` in the read policy, and `weavly_private.free_business_restricted(org_id)` in the restrictive `free_business_boundary` policy that sits on every org-scoped table (for an account that came from Free it calls `org_has_subscription_tier` again). The migration evaluates both once per query:
+
+- `free_business_restricted(org)` can only be true for the caller's own org, so a new `weavly_private.free_business_restricted_org()` returns that org (or NULL) once, and every `free_business_boundary` policy becomes `NOT coalesce(org_id = (SELECT …), false)`. The `coalesce` keeps rows whose org is NULL allowed, as before (`IS DISTINCT FROM` would not).
+- The costing tables' policies already require `org_id` to equal the caller's org from the JWT, so their plan check takes that org inside a sub-select. The migration refuses to rewrite a policy that does not pin `org_id` that way.
+
+Saved Costings' library read as a signed-in Lite owner (EXPLAIN ANALYZE, median of 7; another org holds as many costings; `rls-initplan-before.json` → `rls-initplan-after.json`):
+
+| Costings per org | Account | Before | After |
+| ---: | --- | ---: | ---: |
+| 200 | Lite | 16.4 ms | 1.8 ms |
+| 200 | came from Free | 164 ms | 2.6 ms |
+| 3,000 | Lite | 224 ms | 6.6 ms |
+| 3,000 | came from Free | 2,606 ms | 7.4 ms |
+
+The after run was taken with the laptop's CPU limited to about 40%, so it understates the gain. These are local PostgreSQL 17 timings, not Supabase's; the ratio is what carries over. Every page of Saved Costings (and every other owner read of a table with `free_business_boundary`) pays the per-row cost on the server before the first byte, so it scales with the size of the owner's library.
+
+**Behaviour.** `__tests__/db/rls-once-per-query.dbtest.ts`: for each caller (Free account, Lite account that came from Free, Lite account, no session) and each row org (each of theirs and NULL), the new boundary expression equals the per-row one; a Free account still sees none of its business rows and cannot write them; paid owners see only their own costings and saved qualities; and the plan shows the checks as initplans. The three behaviour tests pass on the policies before the migration too. `npm run test:db`: 46 files / 419 tests pass with the migration.
+Checks: `npx tsc --noEmit` clean, `npx vitest run` 419 files / 4,212 passed / 1 skipped, `npm run lint` clean, `npm run test:db` 46 files / 419 passed.

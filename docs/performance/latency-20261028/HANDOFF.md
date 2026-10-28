@@ -8,7 +8,7 @@ Written 2026-10-28 for the next session (another Claude account on Raj's laptop)
 
 ## Where things stand
 
-**Pass 2 (2026-10-28):** PR #287 was merged, so work continues on `claude/perf-latency-pass-2` (draft PR #288, worktree `.claude/worktrees/performance-optimization-03b955-cfb26c`). Task 1 is done (README Task F); task 2 is measured with no app change (README Task G: the candidate fix is a Sentry decision, below); task 3 is done (README Task H: the retired offline queue no longer loads Dexie; estimator panels not split, with the evidence why); task 4 is measured with no app change (README Task I: sidebar prefetches start after the landing page is usable and make clicks ~130 ms faster, so they stay). Next: task 5.
+**Pass 2 (2026-10-28):** PR #287 was merged, so work continues on `claude/perf-latency-pass-2` (draft PR #288, worktree `.claude/worktrees/performance-optimization-03b955-cfb26c`). Task 1 is done (README Task F); task 2 is measured with no app change (README Task G: the candidate fix is a Sentry decision, below); task 3 is done (README Task H: the retired offline queue no longer loads Dexie; estimator panels not split, with the evidence why); task 4 is measured with no app change (README Task I: sidebar prefetches start after the landing page is usable and make clicks ~130 ms faster, so they stay); task 5 is done as a proposed migration (README Task J: `20261028120000_rls_checks_once_per_query.sql`, not applied; Saved Costings' read 224 ms -> 7 ms at 3,000 costings, 2.6 s -> 7 ms for accounts that came from Free). All five tasks are done.
 
 
 - Branch `claude/performance-optimization-03b955`, 8 commits on `main@8a1dee0f`, pushed, PR open. Worktree used so far: `.claude/worktrees/performance-optimization-03b955`. If you work elsewhere, check out this branch; check `gh pr view` first: if Raj merged it, later commits on this branch never reach `main`, so branch again from `main` and open a new PR.
@@ -52,6 +52,8 @@ node scripts/performance/signed-in-latency/compare.mjs docs/performance/latency-
 5. Lower priority: 43 live RLS policies call `auth.uid()` per row instead of `(select auth.uid())` (mostly Base/legacy and billing tables; the main Lite costing tables are not among them). Measure on the disposable Postgres used by `npm run test:db` with EXPLAIN ANALYZE before proposing a migration file. Never apply migrations; Raj does.
 
 ## Needs Raj's decision (do not change without asking)
+
+- **Apply migration `20261028120000_rls_checks_once_per_query.sql`** (pass 2, README Task J). It rewrites `free_business_boundary` on every org-scoped table and the costing tables' plan checks to run once per query; behaviour pinned by `__tests__/db/rls-once-per-query.dbtest.ts`. Apply before or with the deploy that carries it; the app code does not depend on it.
 
 - **Sentry's automatic server wrappers** (added 2026-10-28, pass 2, README Task G): `webpack.autoInstrument*: false` in `withSentryConfig` cut every Free/Lite route's cold first request by 18–24% (~170–200 ms), mostly Proxy's bundle. Errors still reach Sentry through `onRequestError`; Sentry's per-page/route spans and Proxy transactions would stop.
 
