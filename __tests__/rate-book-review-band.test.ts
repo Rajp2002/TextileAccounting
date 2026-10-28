@@ -23,7 +23,7 @@ describe('Rate Book summary band, review modal and Guide', () => {
         const band = rates.slice(rates.indexOf('data-ratebook-field="reviewRailWidget"'), rates.indexOf('{showDeleteNudge'))
         expect(band).toContain('copy.allCurrent')
         expect(band).toContain('copy.toConfirm')
-        expect(band).toContain('{dueLine ?? nextReviewLine}')
+        expect(band).toContain('{dueLine ?? statusReviewLine}')
         expect(band).toContain('<Check className="size-5" strokeWidth={2.5} />')
         expect(band).toContain('data-ratebook-field="reviewPricesAction"')
         expect(band).toContain('onClick={() => setReviewSession(startRateReview(dueReviewRates))}')

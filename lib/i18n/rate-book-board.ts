@@ -2,7 +2,7 @@
 export const rateBookBoardText = {
     en: {
         allCurrent: 'All prices current', toConfirm: '{n} prices to confirm', toConfirmOne: '1 price to confirm',
-        yarnsUnit: 'yarns', yarnUnit: 'yarn', lastReviewed: 'Last reviewed {date}',
+        yarns: 'Yarns', lastReviewed: 'Last reviewed {date}',
         nextReview: 'Next review {date} for {n} yarns', nextReviewOne: 'Next review {date} for 1 yarn', then: 'then {dates}',
         noneScheduled: 'Every price is due for a check.',
         review: 'Review prices', confirm: 'Confirm', update: 'Update', newPriceFor: 'New price for {name}', done: 'Done', reviewProgress: '{done} of {n} checked',
@@ -22,7 +22,7 @@ export const rateBookBoardText = {
     },
     hi: {
         allCurrent: 'सभी रेट अपडेट हैं', toConfirm: '{n} रेट की पुष्टि बाकी', toConfirmOne: '1 रेट की पुष्टि बाकी',
-        yarnsUnit: 'धागे', yarnUnit: 'धागा', lastReviewed: 'आखिरी जाँच {date}',
+        yarns: 'धागे', lastReviewed: 'आखिरी जाँच {date}',
         nextReview: 'अगली जाँच {date} को, {n} धागे', nextReviewOne: 'अगली जाँच {date} को, 1 धागा', then: 'फिर {dates}',
         noneScheduled: 'हर रेट की जाँच बाकी है।',
         review: 'रेट जाँचें', confirm: 'पुष्टि करें', update: 'अपडेट करें', newPriceFor: '{name} का नया रेट', done: 'हो गया', reviewProgress: '{n} में से {done} जाँचे',
@@ -42,7 +42,7 @@ export const rateBookBoardText = {
     },
     gu: {
         allCurrent: 'બધા ભાવ અપડેટ છે', toConfirm: '{n} ભાવની પુષ્ટિ બાકી', toConfirmOne: '1 ભાવની પુષ્ટિ બાકી',
-        yarnsUnit: 'યાર્ન', yarnUnit: 'યાર્ન', lastReviewed: 'છેલ્લી તપાસ {date}',
+        yarns: 'યાર્ન', lastReviewed: 'છેલ્લી તપાસ {date}',
         nextReview: 'આગલી તપાસ {date}એ, {n} યાર્ન', nextReviewOne: 'આગલી તપાસ {date}એ, 1 યાર્ન', then: 'પછી {dates}',
         noneScheduled: 'દરેક ભાવની તપાસ બાકી છે.',
         review: 'ભાવ તપાસો', confirm: 'પુષ્ટિ કરો', update: 'અપડેટ કરો', newPriceFor: '{name}નો નવો ભાવ', done: 'થઈ ગયું', reviewProgress: '{n}માંથી {done} તપાસ્યા',
