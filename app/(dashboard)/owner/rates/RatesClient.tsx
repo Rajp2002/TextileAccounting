@@ -1486,7 +1486,6 @@ export default function RatesClient({
                 <PageHeader
                     className={isLite ? mobileStyles.header : undefined}
                     title={t('common.yarn_rate_book')}
-                    description={<span data-i18n-skip="true" lang={language}>{copy.intro}</span>}
                     actions={<>
                         <RateBookTutorial
                             enabled={!isPending}
