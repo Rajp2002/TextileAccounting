@@ -86,6 +86,43 @@ Signed-in owner and Free pages now send their first byte after one backend wait 
 
 Not changed by this task, found while reading the timelines: `/owner/assignments` reads its go-live state and pay-cycle rule before its workers, machines and jobs (two waits inside the page).
 
+### Task B: page reads in parallel (findings 4, 6, and three pages found in the Task A timelines)
+
+- `getFactoryCostProfile` (the estimator, the post-sign-in landing page) reads the cost profile and the fixed-salary staff together.
+- Proxy starts the signed-in `/login` routing read (installed-app launch) alongside the revocation check; a failure still falls back to the optimistic route.
+- `/owner/assignments` reads its go-live date with the board's rows (it only shapes them).
+- `/owner/quotes` reads the Free grant (prior Free history) with the page's other reads.
+- `/owner/billing` runs its two batches of independent reads as one.
+
+Measured from `after-task-a.json` to `after-task-b.json` (built after Tasks C and D, which change no server reads):
+
+| Account | Route | TTFB ms | Full page ms | Waits | Calls |
+| --- | --- | --- | --- | --- | --- |
+| public | `/` | 10.5 → 9.9 (-6%) | 12.5 → 11.9 (-5%) | 0 → 0 | 0 → 0 |
+| public | `/login` | 11.6 → 11.6 (0%) | 14.1 → 14.2 (+1%) | 0 → 0 | 0 → 0 |
+| lite | `/login` (redirect) | 52.9 → 39.4 (-26%) | 53 → 39.5 (-25%) | 2 → 1 | 2 → 2 |
+| lite | `/owner/estimator` | 64.3 → 65.1 (+1%) | 138 → 106.5 (-23%) | 4 → 3 | 8 → 8 |
+| lite | `/owner/quotes` | 64.7 → 66.7 (+3%) | 133 → 106.6 (-20%) | 4 → 3 | 9 → 9 |
+| lite | `/owner/rates` | 64.5 → 67.3 (+4%) | 102 → 104.8 (+3%) | 3 → 3 | 9 → 9 |
+| lite | `/owner/settings` | 68.3 → 66.3 (-3%) | 99.3 → 95.6 (-4%) | 3 → 3 | 6 → 6 |
+| lite | `/owner/billing` | 64.9 → 66.1 (+2%) | 137.3 → 107.3 (-22%) | 4 → 3 | 10 → 10 |
+| base | `/owner/estimator` | 65.1 → 63.2 (-3%) | 136.4 → 103.8 (-24%) | 4 → 3 | 8 → 8 |
+| base | `/owner/production` | 70 → 69.4 (-1%) | 106.5 → 106.1 (0%) | 3 → 3 | 21 → 21 |
+| base | `/owner/production/daily-sheet` | 69 → 66.8 (-3%) | 105.7 → 105.7 (0%) | 3 → 3 | 21 → 21 |
+| base | `/owner/stock` | 67.4 → 64.9 (-4%) | 102.5 → 100.7 (-2%) | 3 → 3 | 11 → 11 |
+| base | `/owner/dispatches` | 66.7 → 65.7 (-1%) | 101.2 → 101.8 (+1%) | 3 → 3 | 11 → 11 |
+| base | `/owner/payroll` | 68.3 → 66.3 (-3%) | 106.4 → 105.8 (-1%) | 3 → 3 | 19 → 19 |
+| base | `/owner/machines` | 64.8 → 65.9 (+2%) | 98.2 → 102.1 (+4%) | 3 → 3 | 11 → 11 |
+| base | `/owner/workers` | 62.2 → 65.5 (+5%) | 99.8 → 101.7 (+2%) | 3 → 3 | 9 → 9 |
+| base | `/owner/assignments` | 63 → 64.7 (+3%) | 132.3 → 102 (-23%) | 4 → 3 | 13 → 13 |
+| free | `/login` (redirect) | 51.4 → 39.4 (-23%) | 51.5 → 39.5 (-23%) | 2 → 1 | 2 → 2 |
+| free | `/free` | 67.6 → 68.2 (+1%) | 72.4 → 72.5 (+0%) | 2 → 2 | 6 → 6 |
+| free | `/free/costings` | 66.7 → 65.4 (-2%) | 69.4 → 69.2 (0%) | 2 → 2 | 6 → 6 |
+| free | `/free/account` | 62.8 → 64.9 (+3%) | 65.7 → 67.7 (+3%) | 2 → 2 | 6 → 6 |
+| free | `/free/billing` | 63.5 → 63.3 (0%) | 93.8 → 96.5 (+3%) | 3 → 3 | 8 → 8 |
+
+Every owner page now waits three times before its HTML is complete: Proxy's Redis check, the identity/plan/organization reads, and the page's own reads. The redirect hop an installed app makes on launch is one wait.
+
 ### Task C: smaller estimator, Saved Costings and Free first loads (findings 7, 8)
 
 - `EstimatorClient` loads `lib/free-estimator-draft.ts` (and with it the Free input schema and zod) only when Free mode mounts. Writes still wait until the stored draft has been checked; once loaded, writes and clears are synchronous as before.

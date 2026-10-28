@@ -274,12 +274,11 @@ export default async function BillingPage() {
     if (!profile.org_id) redirect('/owner/estimator')
 
     const supabase = await createClient()
-    const [subscriptionDetail, planAccess, organizationResult] = await Promise.all([
+    // None of these reads depends on another, so they run together.
+    const [subscriptionDetail, planAccess, organizationResult, paymentsResult, subscriptionsResult, attemptsResult] = await Promise.all([
         getSubscriptionDetail(profile.org_id),
         getCachedOrgPlanAccess(profile.org_id),
         getCachedOwnerOrganization(user.id, profile.org_id),
-    ])
-    const [paymentsResult, subscriptionsResult, attemptsResult] = await Promise.all([
         supabase
             .from('subscription_payments')
             .select('id, status, created_at, razorpay_payment_id, amount_paise, method, subscription_id, razorpay_order_id, captured_at, billing_attempt_id')

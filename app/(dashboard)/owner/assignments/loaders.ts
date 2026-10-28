@@ -45,10 +45,10 @@ export async function loadBaseAssignmentsInitialData(today?: string): Promise<{
     const access = await getCachedOrgPlanAccess(profile.org_id)
     if (!hasCapability(access.effectiveTier, 'production_management')) return null
     const orgId = profile.org_id
-    // Setup changes take effect from go-live, so the board shows and edits the arrangement on that day.
-    const effectiveDate = effectiveDateFor(today ?? getSuratTodayString(), (await getBaseGoLiveState(orgId)).goLive)
     const db = await createClient()
-    const [workersResult, machinesResult, jobsResult, assignmentsResult, contextsResult] = await Promise.all([
+    // The go-live date only shapes the rows below, so it is read with them.
+    const [goLive, workersResult, machinesResult, jobsResult, assignmentsResult, contextsResult] = await Promise.all([
+        getBaseGoLiveState(orgId),
         readCompleteBaseRows((from, to) => db.from('base_production_workers')
             .select('id, name, rate_per_meter, shift_availability, is_active, pay_type, role, operator_eligible, operator_effective_from, operator_approved_by, operator_approved_at, monthly_salary, salary_effective_from, salary_history, start_date, end_date, updated_at', from === 0 ? { count: 'exact' } : {})
             .eq('org_id', orgId).order('is_active', { ascending: false }).order('name').order('id').range(from, to)),
@@ -65,6 +65,8 @@ export async function loadBaseAssignmentsInitialData(today?: string): Promise<{
             .select('id, machine_id, job_id, active, effective_from, effective_to', from === 0 ? { count: 'exact' } : {})
             .eq('org_id', orgId).order('active', { ascending: false }).order('effective_from', { ascending: false }).order('id').range(from, to)),
     ])
+    // Setup changes take effect from go-live, so the board shows and edits the arrangement on that day.
+    const effectiveDate = effectiveDateFor(today ?? getSuratTodayString(), goLive.goLive)
 
     // Retain effective history and the full loader's normalizers. Planned and
     // active jobs are equally eligible here; assignments do not need production

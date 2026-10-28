@@ -15,14 +15,18 @@ export default async function QuotesPage(props: { searchParams: Promise<{ status
     const organizationPromise = authPromise.then(({ user, profile }) => (
         getCachedOwnerOrganization(user.id, profile.org_id)
     ))
+    // A Lite owner who started on Free also sees their Free costings; the
+    // grant read needs only the org id, so it runs with the page's reads.
+    const freeGrantPromise = authPromise.then(({ profile }) => getFreeGrant(profile.org_id))
 
-    const [searchParams, { data: quotes, error: quotesError }, { data: templates, error: templatesError }, auth, planAccess, organizationRes] = await Promise.all([
+    const [searchParams, { data: quotes, error: quotesError }, { data: templates, error: templatesError }, auth, planAccess, organizationRes, freeGrant] = await Promise.all([
         searchParamsPromise,
         getEstimatorQuotes(),
         getEstimatorTemplates({ includeArchived: true, summary: true }),
         authPromise,
         planAccessPromise,
         organizationPromise,
+        freeGrantPromise,
     ])
     // The prior getEstimatorTemplates({ includeArchived: true }) full read is
     // intentionally represented by summary=true here. The summary carries the
@@ -36,7 +40,6 @@ export default async function QuotesPage(props: { searchParams: Promise<{ status
     const { user, profile } = auth
     const canUseProductionPipeline = hasCapability(planAccess.effectiveTier, 'production')
 
-    const freeGrant = await getFreeGrant(profile.org_id)
     // Only real Free records earn the history block; a trial's dormant grant
     // would otherwise render an empty Free list with its demo example.
     const previousFreeGrant = freeGrant && await hasSavedFreeCostings(profile.org_id, freeGrant.subjectId)
