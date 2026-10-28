@@ -254,3 +254,25 @@ Measured on one build, alternating every sample between a browser with a non-emp
 The cleanup runs in an idle callback after hydration, so the gain is mostly the download, the parse and an IndexedDB open after the page is usable; timing differences under ~100 ms are within run-to-run noise. `phone-after.json` (a separate run after the rebuild) differs from `phone-before.json` by up to 200 ms in both directions on every sample, which is why the comparison above alternates within one run instead.
 
 Checks: `npx tsc --noEmit` clean; `npm run lint` clean; `npx vitest run` 418 of 419 files passed (4,211 tests, 1 skipped), the one failure was the Lite copy audit reading the database name `TextileDB` as screen text, fixed by listing `lib/client-storage-cleanup.ts` with `lib/db.ts` in `scripts/i18n/lite-copy-audit.ts`, after which that file passes. Full rerun after the fix (CPU recovered): 419 files / 4,212 passed / 1 skipped.
+
+### Task I: clicking between Lite pages, and the sidebar's prefetches (HANDOFF next task 4)
+
+No app change: the prefetches do not compete with the landing page, and they make clicks faster.
+
+**Harness.** `scripts/performance/signed-in-latency/nav.mjs` (Playwright Chromium, 1366×768, CPU slowed 4×, fresh context per sample) lands a Lite owner on `/owner/estimator`, records every RSC request and the backend calls made meanwhile, waits until the page is quiet, then clicks Saved Costings in the sidebar and times the click to the first frame showing `/owner/quotes` (the route committed, to its prefetched loading skeleton when there is one) and to that page's own `route_primary_usable` mark. Samples alternate between normal prefetching and prefetches blocked (requests carrying `Next-Router-Prefetch` aborted), so both run under the same conditions.
+
+**What prefetches.** About 3.4 s after the estimator opens, after it is usable, the sidebar prefetches `/owner/quotes`, `/owner/rates`, `/owner/settings`, `/owner/billing`, `/owner/estimator` and `/support`. Next 16 fetches each route's segments separately, so that is 16 small requests (2–8 KB in all), and they cost the server about 25 backend calls (the owner layout's identity, plan and organization reads per prefetched route).
+
+`nav-prefetch-ab.json`, 5 alternating pairs, medians:
+
+| | Prefetching (today) | Prefetches blocked |
+| --- | ---: | ---: |
+| Estimator usable after landing | 2,891 ms | 2,900 ms |
+| Estimator total blocking time | 1,592 ms | 1,778 ms |
+| Click → Saved Costings committed | 440 ms | 573 ms |
+| Click → Saved Costings usable | 746 ms | 880 ms |
+| Backend calls during landing | 57 | 32 |
+| Backend calls for the click | 18 | 14 |
+
+The landing page is unaffected (prefetches start after it is usable; the blocking-time difference is noise and points the other way), and every sidebar click is about 130 ms faster with them, so prefetching stays as it is. Its cost is server-side: roughly 25 extra Supabase reads and a few extra function invocations per owner landing, which only matters if Vercel invocations or Supabase load become a constraint. Not explored: where the remaining 440 ms between click and commit goes at 4× CPU (the estimator unmounting and the destination's JavaScript loading are the likely parts).
+Checks: `npx tsc --noEmit` clean, `npx vitest run` 419 files / 4,212 passed / 1 skipped, `npm run lint` clean.
