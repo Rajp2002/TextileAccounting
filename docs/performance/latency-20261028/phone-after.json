@@ -1,0 +1,787 @@
+{
+  "generatedAt": "2026-10-28T08:08:21.872Z",
+  "buildId": "caNuMzQDq39N0sSWJj84t",
+  "method": "Playwright Chromium (headless), 390x844 at 3x, touch, CPU slowed 4x via CDP, no network throttling, fresh context (empty cache) per sample, 5 samples per route, medians. next start against the fake backend (30 ms per Supabase call), server warmed first. Long tasks are counted until no long task for 3 s; total blocking time counts tasks after FCP. JS bytes are uncompressed /_next/static scripts; \"ran\" is V8 block coverage during load.",
+  "cpuSlowdown": 4,
+  "samples": 5,
+  "results": [
+    {
+      "account": "lite",
+      "path": "/owner/estimator",
+      "note": "the post-sign-in landing page",
+      "status": 200,
+      "fcpMs": 256,
+      "lcpMs": 1768,
+      "primaryUsableMs": 2424.1,
+      "loadMs": 1327.5,
+      "longTaskCount": 6,
+      "longestTaskMs": 698,
+      "totalBlockingTimeMs": 1470,
+      "mainThreadInLongTasksMs": 1820,
+      "heapUsedMB": 13.6,
+      "jsKB": 2144,
+      "usedJsKB": 663,
+      "marks": [
+        {
+          "name": "route_navigation_start",
+          "at": 186.20000000018626
+        },
+        {
+          "name": "route_shell_visible",
+          "at": 2447.4000000003725
+        },
+        {
+          "name": "route_shell_visible:/owner/estimator",
+          "at": 2447.4000000003725
+        },
+        {
+          "name": "route_primary_usable",
+          "at": 2447.4000000003725
+        },
+        {
+          "name": "route_primary_usable:/owner/estimator",
+          "at": 2447.9000000003725
+        },
+        {
+          "name": "route_secondary_ready",
+          "at": 2951
+        },
+        {
+          "name": "route_secondary_ready:/owner/estimator",
+          "at": 2951
+        }
+      ],
+      "scripts": [
+        {
+          "url": "7569-5ebcda0cd87fe0b5.js",
+          "bytes": 486374,
+          "usedBytes": 160584
+        },
+        {
+          "url": "3886-0535ada7f189e3f2.js",
+          "bytes": 341019,
+          "usedBytes": 109429
+        },
+        {
+          "url": "3886-0535ada7f189e3f2.js",
+          "bytes": 341019,
+          "usedBytes": 502
+        },
+        {
+          "url": "4bd1b696-36241c79b2a4fb73.js",
+          "bytes": 200218,
+          "usedBytes": 82973
+        },
+        {
+          "url": "3310-2580075fe4e120b5.js",
+          "bytes": 72819,
+          "usedBytes": 66532
+        },
+        {
+          "url": "app/layout-58cd0160ccd784bf.js",
+          "bytes": 35519,
+          "usedBytes": 11716
+        },
+        {
+          "url": "8250-6886d51b7b03cb53.js",
+          "bytes": 34836,
+          "usedBytes": 34276
+        },
+        {
+          "url": "8250-6886d51b7b03cb53.js",
+          "bytes": 34836,
+          "usedBytes": 335
+        },
+        {
+          "url": "6609-cdd7829b3b445dd1.js",
+          "bytes": 33939,
+          "usedBytes": 19263
+        },
+        {
+          "url": "3512-0cf18563d813b269.js",
+          "bytes": 32555,
+          "usedBytes": 9825
+        },
+        {
+          "url": "3512-0cf18563d813b269.js",
+          "bytes": 32555,
+          "usedBytes": 335
+        },
+        {
+          "url": "9646-f9728098c3b0df51.js",
+          "bytes": 30560,
+          "usedBytes": 15278
+        },
+        {
+          "url": "7706-f4904afa4b71e738.js",
+          "bytes": 30317,
+          "usedBytes": 7402
+        },
+        {
+          "url": "1402-996d724ad81b7bfc.js",
+          "bytes": 28610,
+          "usedBytes": 9772
+        },
+        {
+          "url": "1402-996d724ad81b7bfc.js",
+          "bytes": 28610,
+          "usedBytes": 342
+        }
+      ],
+      "samples": [
+        {
+          "status": 200,
+          "fcp": 264,
+          "lcp": 1768,
+          "domContentLoaded": 1297.7999999998137,
+          "load": 1327.5,
+          "primaryUsable": 2397.7000000001863,
+          "longTaskCount": 6,
+          "longestTask": 698,
+          "totalBlockingTime": 1565,
+          "mainThreadInLongTasks": 1865,
+          "heapUsedMB": 13.637542724609375,
+          "jsBytes": 2163330,
+          "usedBytes": 675865
+        },
+        {
+          "status": 200,
+          "fcp": 256,
+          "lcp": 1776,
+          "domContentLoaded": 1293.2000000001863,
+          "load": 1318.5999999996275,
+          "primaryUsable": 2424.0999999996275,
+          "longTaskCount": 6,
+          "longestTask": 686,
+          "totalBlockingTime": 1555,
+          "mainThreadInLongTasks": 1855,
+          "heapUsedMB": 13.637542724609375,
+          "jsBytes": 2195311,
+          "usedBytes": 678720
+        },
+        {
+          "status": 200,
+          "fcp": 252,
+          "lcp": 1732,
+          "domContentLoaded": 1273.5999999996275,
+          "load": 1302.0999999996275,
+          "primaryUsable": 2387.7999999998137,
+          "longTaskCount": 6,
+          "longestTask": 675,
+          "totalBlockingTime": 1464,
+          "mainThreadInLongTasks": 1764,
+          "heapUsedMB": 13.637542724609375,
+          "jsBytes": 2256447,
+          "usedBytes": 679811
+        },
+        {
+          "status": 200,
+          "fcp": 276,
+          "lcp": 1700,
+          "domContentLoaded": 1339.7999999998137,
+          "load": 1703.7000000001863,
+          "primaryUsable": 2508.9000000003725,
+          "longTaskCount": 8,
+          "longestTask": 823,
+          "totalBlockingTime": 1347,
+          "mainThreadInLongTasks": 1747,
+          "heapUsedMB": 13.637542724609375,
+          "jsBytes": 2057893,
+          "usedBytes": 677546
+        },
+        {
+          "status": 200,
+          "fcp": 256,
+          "lcp": 1776,
+          "domContentLoaded": 1347,
+          "load": 1410.7000000001863,
+          "primaryUsable": 2447.4000000003725,
+          "longTaskCount": 7,
+          "longestTask": 704,
+          "totalBlockingTime": 1470,
+          "mainThreadInLongTasks": 1820,
+          "heapUsedMB": 13.637542724609375,
+          "jsBytes": 2256447,
+          "usedBytes": 679863
+        }
+      ]
+    },
+    {
+      "account": "free",
+      "path": "/free",
+      "note": "the same estimator in Free mode",
+      "status": 200,
+      "fcpMs": 288,
+      "lcpMs": 1456,
+      "primaryUsableMs": 2252,
+      "loadMs": 1534.8,
+      "longTaskCount": 9,
+      "longestTaskMs": 502,
+      "totalBlockingTimeMs": 1189,
+      "mainThreadInLongTasksMs": 1640,
+      "heapUsedMB": 14.5,
+      "jsKB": 1899,
+      "usedJsKB": 689,
+      "marks": [
+        {
+          "name": "route_navigation_start",
+          "at": 196.09999999962747
+        },
+        {
+          "name": "route_shell_visible",
+          "at": 2166.7000000001863
+        },
+        {
+          "name": "route_shell_visible:/free",
+          "at": 2166.7000000001863
+        },
+        {
+          "name": "route_primary_usable",
+          "at": 2166.7000000001863
+        },
+        {
+          "name": "route_primary_usable:/free",
+          "at": 2166.7000000001863
+        },
+        {
+          "name": "route_secondary_ready",
+          "at": 2166.7000000001863
+        },
+        {
+          "name": "route_secondary_ready:/free",
+          "at": 2166.7000000001863
+        }
+      ],
+      "scripts": [
+        {
+          "url": "7569-5ebcda0cd87fe0b5.js",
+          "bytes": 486374,
+          "usedBytes": 150460
+        },
+        {
+          "url": "3886-0535ada7f189e3f2.js",
+          "bytes": 341019,
+          "usedBytes": 115705
+        },
+        {
+          "url": "7716-0f6c2a7f64e425b8.js",
+          "bytes": 202477,
+          "usedBytes": 27374
+        },
+        {
+          "url": "4bd1b696-36241c79b2a4fb73.js",
+          "bytes": 200218,
+          "usedBytes": 76027
+        },
+        {
+          "url": "7173-1320e6a0924ac52e.js",
+          "bytes": 99007,
+          "usedBytes": 20680
+        },
+        {
+          "url": "3310-2580075fe4e120b5.js",
+          "bytes": 72819,
+          "usedBytes": 66609
+        },
+        {
+          "url": "app/layout-58cd0160ccd784bf.js",
+          "bytes": 35519,
+          "usedBytes": 12870
+        },
+        {
+          "url": "8250-6886d51b7b03cb53.js",
+          "bytes": 34836,
+          "usedBytes": 34295
+        },
+        {
+          "url": "6609-cdd7829b3b445dd1.js",
+          "bytes": 33939,
+          "usedBytes": 19216
+        },
+        {
+          "url": "3512-0cf18563d813b269.js",
+          "bytes": 32555,
+          "usedBytes": 8845
+        },
+        {
+          "url": "9646-f9728098c3b0df51.js",
+          "bytes": 30560,
+          "usedBytes": 15383
+        },
+        {
+          "url": "7706-f4904afa4b71e738.js",
+          "bytes": 30317,
+          "usedBytes": 7402
+        },
+        {
+          "url": "1402-996d724ad81b7bfc.js",
+          "bytes": 28610,
+          "usedBytes": 9209
+        },
+        {
+          "url": "2234-9f024851648fa6d5.js",
+          "bytes": 27333,
+          "usedBytes": 13479
+        },
+        {
+          "url": "8163-50734f944964d823.js",
+          "bytes": 26835,
+          "usedBytes": 2021
+        }
+      ],
+      "samples": [
+        {
+          "status": 200,
+          "fcp": 288,
+          "lcp": 1480,
+          "domContentLoaded": 1469.7000000001863,
+          "load": 1477.4000000003725,
+          "primaryUsable": 2603.5,
+          "longTaskCount": 9,
+          "longestTask": 841,
+          "totalBlockingTime": 1498,
+          "mainThreadInLongTasks": 1949,
+          "heapUsedMB": 14.495849609375,
+          "jsBytes": 1944152,
+          "usedBytes": 704932
+        },
+        {
+          "status": 200,
+          "fcp": 288,
+          "lcp": 1444,
+          "domContentLoaded": 1525.9000000003725,
+          "load": 1534.7999999998137,
+          "primaryUsable": 2230.5,
+          "longTaskCount": 8,
+          "longestTask": 502,
+          "totalBlockingTime": 1106,
+          "mainThreadInLongTasks": 1506,
+          "heapUsedMB": 14.495849609375,
+          "jsBytes": 1944152,
+          "usedBytes": 705088
+        },
+        {
+          "status": 200,
+          "fcp": 284,
+          "lcp": 1456,
+          "domContentLoaded": 1546.5,
+          "load": 1550.7000000001863,
+          "primaryUsable": 2252,
+          "longTaskCount": 9,
+          "longestTask": 519,
+          "totalBlockingTime": 1197,
+          "mainThreadInLongTasks": 1649,
+          "heapUsedMB": 14.495849609375,
+          "jsBytes": 1944152,
+          "usedBytes": 705127
+        },
+        {
+          "status": 200,
+          "fcp": 292,
+          "lcp": 1528,
+          "domContentLoaded": 1614.7000000001863,
+          "load": 1619.2000000001863,
+          "primaryUsable": 2336.2999999998137,
+          "longTaskCount": 9,
+          "longestTask": 489,
+          "totalBlockingTime": 1189,
+          "mainThreadInLongTasks": 1640,
+          "heapUsedMB": 14.495849609375,
+          "jsBytes": 1944152,
+          "usedBytes": 705127
+        },
+        {
+          "status": 200,
+          "fcp": 292,
+          "lcp": 1412,
+          "domContentLoaded": 1419.7000000001863,
+          "load": 1426.2000000001863,
+          "primaryUsable": 2166.7000000001863,
+          "longTaskCount": 9,
+          "longestTask": 477,
+          "totalBlockingTime": 1012,
+          "mainThreadInLongTasks": 1473,
+          "heapUsedMB": 14.495849609375,
+          "jsBytes": 1944152,
+          "usedBytes": 705127
+        }
+      ]
+    },
+    {
+      "account": "lite",
+      "path": "/owner/quotes",
+      "status": 200,
+      "fcpMs": 260,
+      "lcpMs": 2048,
+      "primaryUsableMs": 1910.7,
+      "loadMs": 1122.4,
+      "longTaskCount": 3,
+      "longestTaskMs": 424,
+      "totalBlockingTimeMs": 820,
+      "mainThreadInLongTasksMs": 970,
+      "heapUsedMB": 10.1,
+      "jsKB": 1658,
+      "usedJsKB": 577,
+      "marks": [
+        {
+          "name": "route_navigation_start",
+          "at": 187.5
+        },
+        {
+          "name": "route_shell_visible",
+          "at": 1926.2000000001863
+        },
+        {
+          "name": "route_shell_visible:/owner/quotes",
+          "at": 1926.2000000001863
+        },
+        {
+          "name": "route_primary_usable",
+          "at": 1926.2000000001863
+        },
+        {
+          "name": "route_primary_usable:/owner/quotes",
+          "at": 1926.2000000001863
+        },
+        {
+          "name": "route_secondary_ready",
+          "at": 1926.2000000001863
+        },
+        {
+          "name": "route_secondary_ready:/owner/quotes",
+          "at": 1926.2000000001863
+        }
+      ],
+      "scripts": [
+        {
+          "url": "7569-5ebcda0cd87fe0b5.js",
+          "bytes": 486374,
+          "usedBytes": 150395
+        },
+        {
+          "url": "4bd1b696-36241c79b2a4fb73.js",
+          "bytes": 200218,
+          "usedBytes": 74986
+        },
+        {
+          "url": "app/(dashboard)/owner/quotes/page-a1f84ca118f9fc40.js",
+          "bytes": 74807,
+          "usedBytes": 35057
+        },
+        {
+          "url": "app/(dashboard)/owner/quotes/page-a1f84ca118f9fc40.js",
+          "bytes": 74807,
+          "usedBytes": 445
+        },
+        {
+          "url": "3310-2580075fe4e120b5.js",
+          "bytes": 72819,
+          "usedBytes": 66486
+        },
+        {
+          "url": "6917-9a616bf164dd1161.js",
+          "bytes": 47835,
+          "usedBytes": 14458
+        },
+        {
+          "url": "6917-9a616bf164dd1161.js",
+          "bytes": 47835,
+          "usedBytes": 479
+        },
+        {
+          "url": "9281-6ac91b8848e77865.js",
+          "bytes": 37164,
+          "usedBytes": 17347
+        },
+        {
+          "url": "9281-6ac91b8848e77865.js",
+          "bytes": 37164,
+          "usedBytes": 392
+        },
+        {
+          "url": "app/layout-58cd0160ccd784bf.js",
+          "bytes": 35519,
+          "usedBytes": 9750
+        },
+        {
+          "url": "8250-6886d51b7b03cb53.js",
+          "bytes": 34836,
+          "usedBytes": 34192
+        },
+        {
+          "url": "8250-6886d51b7b03cb53.js",
+          "bytes": 34836,
+          "usedBytes": 335
+        },
+        {
+          "url": "6609-cdd7829b3b445dd1.js",
+          "bytes": 33939,
+          "usedBytes": 19216
+        },
+        {
+          "url": "3512-0cf18563d813b269.js",
+          "bytes": 32555,
+          "usedBytes": 11414
+        },
+        {
+          "url": "3512-0cf18563d813b269.js",
+          "bytes": 32555,
+          "usedBytes": 335
+        }
+      ],
+      "samples": [
+        {
+          "status": 200,
+          "fcp": 260,
+          "lcp": 1996,
+          "domContentLoaded": 1054.0999999996275,
+          "load": 1077.0999999996275,
+          "primaryUsable": 1864.2000000001863,
+          "longTaskCount": 3,
+          "longestTask": 426,
+          "totalBlockingTime": 820,
+          "mainThreadInLongTasks": 970,
+          "heapUsedMB": 10.10894775390625,
+          "jsBytes": 1487928,
+          "usedBytes": 588367
+        },
+        {
+          "status": 200,
+          "fcp": 244,
+          "lcp": 2024,
+          "domContentLoaded": 1062.800000000745,
+          "load": 1073,
+          "primaryUsable": 1888.2000000001863,
+          "longTaskCount": 4,
+          "longestTask": 392,
+          "totalBlockingTime": 745,
+          "mainThreadInLongTasks": 945,
+          "heapUsedMB": 10.10894775390625,
+          "jsBytes": 1655752,
+          "usedBytes": 590216
+        },
+        {
+          "status": 200,
+          "fcp": 256,
+          "lcp": 2048,
+          "domContentLoaded": 815.6000000005588,
+          "load": 1131.6000000005588,
+          "primaryUsable": 1910.7000000001863,
+          "longTaskCount": 3,
+          "longestTask": 420,
+          "totalBlockingTime": 803,
+          "mainThreadInLongTasks": 953,
+          "heapUsedMB": 10.10894775390625,
+          "jsBytes": 1776856,
+          "usedBytes": 592635
+        },
+        {
+          "status": 200,
+          "fcp": 264,
+          "lcp": 2056,
+          "domContentLoaded": 842.2999999998137,
+          "load": 1135.7999999998137,
+          "primaryUsable": 1911.1000000005588,
+          "longTaskCount": 3,
+          "longestTask": 424,
+          "totalBlockingTime": 823,
+          "mainThreadInLongTasks": 973,
+          "heapUsedMB": 10.10894775390625,
+          "jsBytes": 1697743,
+          "usedBytes": 590900
+        },
+        {
+          "status": 200,
+          "fcp": 260,
+          "lcp": 2060,
+          "domContentLoaded": 812.7999999998137,
+          "load": 1122.3999999994412,
+          "primaryUsable": 1926.2000000001863,
+          "longTaskCount": 3,
+          "longestTask": 436,
+          "totalBlockingTime": 836,
+          "mainThreadInLongTasks": 986,
+          "heapUsedMB": 10.10894775390625,
+          "jsBytes": 1776856,
+          "usedBytes": 592635
+        }
+      ]
+    },
+    {
+      "account": "free",
+      "path": "/free/costings",
+      "status": 200,
+      "fcpMs": 276,
+      "lcpMs": 1372,
+      "primaryUsableMs": null,
+      "loadMs": 934.5,
+      "longTaskCount": 5,
+      "longestTaskMs": 358,
+      "totalBlockingTimeMs": 547,
+      "mainThreadInLongTasksMs": 961,
+      "heapUsedMB": 9.5,
+      "jsKB": 1293,
+      "usedJsKB": 581,
+      "marks": [
+        {
+          "name": "route_navigation_start",
+          "at": 185.29999999981374
+        }
+      ],
+      "scripts": [
+        {
+          "url": "7569-5ebcda0cd87fe0b5.js",
+          "bytes": 486374,
+          "usedBytes": 149920
+        },
+        {
+          "url": "4bd1b696-36241c79b2a4fb73.js",
+          "bytes": 200218,
+          "usedBytes": 81222
+        },
+        {
+          "url": "1588.9c3a3e9d006d952a.js",
+          "bytes": 73741,
+          "usedBytes": 44717
+        },
+        {
+          "url": "3310-2580075fe4e120b5.js",
+          "bytes": 72819,
+          "usedBytes": 66563
+        },
+        {
+          "url": "6917-9a616bf164dd1161.js",
+          "bytes": 47835,
+          "usedBytes": 25172
+        },
+        {
+          "url": "app/layout-58cd0160ccd784bf.js",
+          "bytes": 35519,
+          "usedBytes": 9135
+        },
+        {
+          "url": "8250-6886d51b7b03cb53.js",
+          "bytes": 34836,
+          "usedBytes": 34276
+        },
+        {
+          "url": "6609-cdd7829b3b445dd1.js",
+          "bytes": 33939,
+          "usedBytes": 19216
+        },
+        {
+          "url": "3512-0cf18563d813b269.js",
+          "bytes": 32555,
+          "usedBytes": 11414
+        },
+        {
+          "url": "9646-f9728098c3b0df51.js",
+          "bytes": 30560,
+          "usedBytes": 17222
+        },
+        {
+          "url": "7706-f4904afa4b71e738.js",
+          "bytes": 30317,
+          "usedBytes": 8599
+        },
+        {
+          "url": "1402-996d724ad81b7bfc.js",
+          "bytes": 28610,
+          "usedBytes": 2030
+        },
+        {
+          "url": "2234-9f024851648fa6d5.js",
+          "bytes": 27333,
+          "usedBytes": 13702
+        },
+        {
+          "url": "8409-c971f1b66ffe1d23.js",
+          "bytes": 25739,
+          "usedBytes": 24490
+        },
+        {
+          "url": "1798-ced0ec606b5fb7e2.js",
+          "bytes": 23661,
+          "usedBytes": 4016
+        }
+      ],
+      "samples": [
+        {
+          "status": 200,
+          "fcp": 272,
+          "lcp": 1372,
+          "domContentLoaded": 290.59999999962747,
+          "load": 906,
+          "primaryUsable": null,
+          "longTaskCount": 5,
+          "longestTask": 358,
+          "totalBlockingTime": 547,
+          "mainThreadInLongTasks": 797,
+          "heapUsedMB": 9.5367431640625,
+          "jsBytes": 1324367,
+          "usedBytes": 594500
+        },
+        {
+          "status": 200,
+          "fcp": 600,
+          "lcp": 1124,
+          "domContentLoaded": 231.20000000018626,
+          "load": 1096.5999999996275,
+          "primaryUsable": null,
+          "longTaskCount": 4,
+          "longestTask": 442,
+          "totalBlockingTime": 540,
+          "mainThreadInLongTasks": 961,
+          "heapUsedMB": 9.5367431640625,
+          "jsBytes": 1324367,
+          "usedBytes": 594571
+        },
+        {
+          "status": 200,
+          "fcp": 276,
+          "lcp": 1376,
+          "domContentLoaded": 295,
+          "load": 912,
+          "primaryUsable": null,
+          "longTaskCount": 6,
+          "longestTask": 321,
+          "totalBlockingTime": 682,
+          "mainThreadInLongTasks": 984,
+          "heapUsedMB": 9.5367431640625,
+          "jsBytes": 1324367,
+          "usedBytes": 594500
+        },
+        {
+          "status": 200,
+          "fcp": 264,
+          "lcp": 1400,
+          "domContentLoaded": 280.80000000074506,
+          "load": 934.5,
+          "primaryUsable": null,
+          "longTaskCount": 6,
+          "longestTask": 314,
+          "totalBlockingTime": 540,
+          "mainThreadInLongTasks": 843,
+          "heapUsedMB": 9.5367431640625,
+          "jsBytes": 1324367,
+          "usedBytes": 594500
+        },
+        {
+          "status": 200,
+          "fcp": 584,
+          "lcp": 1100,
+          "domContentLoaded": 1069.7999999998137,
+          "load": 1077.1000000005588,
+          "primaryUsable": null,
+          "longTaskCount": 5,
+          "longestTask": 440,
+          "totalBlockingTime": 555,
+          "mainThreadInLongTasks": 997,
+          "heapUsedMB": 9.5367431640625,
+          "jsBytes": 1324367,
+          "usedBytes": 594634
+        }
+      ]
+    }
+  ]
+}

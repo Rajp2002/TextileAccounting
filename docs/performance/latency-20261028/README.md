@@ -223,3 +223,34 @@ No app change: the one candidate that measured well changes Sentry's monitoring 
 Most of it is Proxy: its bundle drops to 563 KB and its own time from 128 to 38 ms (`autoInstrumentMiddleware` alone may give most of the gain; not measured separately). Pages keep one 1.9 MB Sentry chunk because `app/global-error.tsx` imports `@sentry/nextjs` and is part of every page's server tree. `main`'s absolute numbers differ between the two A/B runs (the charger negotiated 65 W, not 100 W, during the second), so only the paired before/after within one file is meaningful.
 
 Checks: `npx tsc --noEmit` clean, `npx vitest run` 418 files / 4,208 passed / 1 skipped, `npm run lint` clean. Not verified on Vercel: real cold starts there also include function boot and network.
+
+### Task H: the estimator on phones (HANDOFF next task 3)
+
+**Harness.** `scripts/performance/signed-in-latency/phone.mjs` loads signed-in pages in Playwright Chromium as a phone: 390×844 at 3×, touch, CPU slowed 4× through CDP, an empty cache per sample, `next start` and the fake backend (server warmed first). It reports FCP, LCP, the app's own `route_primary_usable` mark (set once React has hydrated the page's main view), long tasks (count, longest, total blocking time after FCP) and JavaScript fetched versus run (V8 coverage). `--modules` splits large chunks into their webpack modules and top-level declarations with their coverage (client builds here have no source maps); `--profile` records a V8 CPU profile and totals main-thread time by script; `--compare-legacy-queue` alternates every sample between the two cleanup cases below.
+
+**Where the time goes** (`phone-before.json`, 5 samples, CPU limit 100):
+
+| Route | FCP | LCP | Usable | Total blocking | Longest task | JS fetched / ran |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| lite `/owner/estimator` | 252 | 1,588 | 2,229 | 1,363 | 692 | 2,088 / 689 KB |
+| free `/free` | 432 | 1,396 | 2,157 | 1,058 | 477 | 1,898 / 688 KB |
+| lite `/owner/quotes` | 256 | 2,060 | 1,930 | 816 | 424 | 1,799 / 610 KB |
+| free `/free/costings` | 268 | 1,372 | (no mark) | 583 | 325 | 1,293 / 581 KB |
+
+(ms; KB uncompressed.) The estimator's shell and main view become usable together: React hydrates the page in one pass, with one ~690 ms task. A CPU profile of one load (about 2.9 s of main-thread work at 4×) puts React DOM at ~410 ms, webpack module evaluation ~300 ms, the estimator's own chunk ~250 ms, the Sentry browser SDK ~200 ms, and parsing, compiling and layout ~1.3 s. Per-function attribution is unreliable under CDP's throttling, so only script totals are quoted.
+
+**Why panels were not split.** `--modules` shows the estimator chunk is a single scope-hoisted 311 KB module. Of that, 164 KB is `EstimatorClient` itself (45 KB runs on load). The separate components inside it that do not run on load (Free usage card, saved-yarn dropdown, Free transaction recovery, the live-cost action hub, the save review and a few smaller ones) total about 40 KB uncompressed, roughly 10 KB gzip: about 2% of the JavaScript the page fetches. Moving them behind `next/dynamic` would not change these numbers measurably, and several carry guided-tour anchors. The large levers are the Sentry browser SDK (475 KB fetched, 157 KB run; already under "Needs Raj's decision") and hydrating the 7,700-line `EstimatorClient` in parts, which is a refactor rather than a split and is left as a follow-up.
+
+**Changed: the retired offline queue no longer loads Dexie on every page.** `AuthBoundaryCleanup` deletes rows from the offline-write queue older app versions left in IndexedDB. It ran on every signed-in owner page load and imported Dexie (93 KB, 30.6 KB gzip) to do it, and because opening the database with Dexie creates it, every browser that had visited kept an empty `TextileDB` and paid for this on every load. `lib/client-storage-cleanup.ts` now checks `indexedDB.databases()` first and skips Dexie when the database is absent (browsers without that API keep the old behaviour), and after the cleanup deletes the database once it holds no rows. Rows are never dropped by this. An existing user's first load after the deploy still loads Dexie once, empties and removes the database; later loads skip it. `__tests__/legacy-queue-cleanup.test.ts` covers the four cases.
+
+Measured on one build, alternating every sample between a browser with a non-empty legacy database (today's behaviour) and one without (`phone-legacy-queue-ab.json`, 5 pairs):
+
+| Route | Usable ms | Total blocking ms | JS fetched |
+| --- | --- | --- | --- |
+| lite `/owner/estimator` | 2,212 → 2,126 | 1,185 → 1,149 | 93 KB less |
+| lite `/owner/quotes` | 1,922 → 1,919 | 796 → 816 | 1,799 → 1,706 KB |
+| free `/free` (control: no cleanup there) | 2,163 → 2,168 | 1,057 → 1,112 | unchanged |
+
+The cleanup runs in an idle callback after hydration, so the gain is mostly the download, the parse and an IndexedDB open after the page is usable; timing differences under ~100 ms are within run-to-run noise. `phone-after.json` (a separate run after the rebuild) differs from `phone-before.json` by up to 200 ms in both directions on every sample, which is why the comparison above alternates within one run instead.
+
+Checks: `npx tsc --noEmit` clean; `npm run lint` clean; `npx vitest run` 418 of 419 files passed (4,211 tests, 1 skipped), the one failure was the Lite copy audit reading the database name `TextileDB` as screen text, fixed by listing `lib/client-storage-cleanup.ts` with `lib/db.ts` in `scripts/i18n/lite-copy-audit.ts`, after which that file passes. A full rerun after the fix timed out with the CPU latched at 20%.
