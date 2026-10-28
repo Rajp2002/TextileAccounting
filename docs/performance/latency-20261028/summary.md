@@ -70,3 +70,19 @@ Checks at the last code commit: `npx tsc --noEmit` clean, `npx vitest run` 418 f
 1. **Sentry browser tracing** is about half of the 146 KB gzip chunk every page loads, landing and login included. Turning it off (`bundleSizeOptimizations.excludeTracing`, client `tracesSampleRate: 0`) would save roughly 30–40 KB per page, but ends Sentry browser performance traces. Your own web-vitals reporting keeps working.
 2. **`getUser()` on every request** is an Auth network call. Tokens are ES256, so `getClaims()` could verify locally and save one more wait per page, but a signed-out or deleted session would stay valid until its access token expires (up to an hour). Security trade-off.
 3. **The English dictionary on every page** (24.5 KB gzip). Splitting it by surface is a large i18n refactor.
+
+## Pass 2 (branch `claude/perf-latency-pass-2`, PR #288)
+
+Detail in `README.md`, Tasks F–J.
+
+| What | Before | After |
+| --- | ---: | ---: |
+| Free usage meter request (`/api/free/status`), harness | 254 ms, 8 waits | 92 ms, 3 waits |
+| Free Calculate (`/api/free/calculate`), harness | 202 ms, 7 waits | 107 ms, 4 waits |
+| `/free/billing` complete HTML, harness | 94 ms, 3 waits | 67 ms, 2 waits |
+| JS on every owner page for the retired offline queue | 93 KB (Dexie) | none after the first visit |
+| Saved Costings database read, 3,000 costings (proposed migration, not applied) | 224 ms (2.6 s if the account came from Free) | 7 ms |
+
+Measured, no change: cold first requests (~0.8–1.0 s for Free/Lite pages; turning off Sentry's server wrappers would cut 18–24%, which is Raj's call), the estimator on a 4×-slowed phone (usable ~2.2 s; its unused panels are only ~10 KB gzip), and sidebar prefetching (it starts after the landing page is usable and makes clicks ~130 ms faster, so it stays).
+
+Needs Raj: apply `20261028120000_rls_checks_once_per_query.sql`; decide on Sentry's server wrappers; the earlier three decisions stand.
