@@ -8,7 +8,7 @@ Written 2026-10-28 for the next session (another Claude account on Raj's laptop)
 
 ## Where things stand
 
-**Pass 2 (2026-10-28):** PR #287 was merged, so work continues on `claude/perf-latency-pass-2` (draft PR #288, worktree `.claude/worktrees/performance-optimization-03b955-cfb26c`). Task 1 is done (README Task F); task 2 is measured with no app change (README Task G: the candidate fix is a Sentry decision, below). Next: task 3.
+**Pass 2 (2026-10-28):** PR #287 was merged, so work continues on `claude/perf-latency-pass-2` (draft PR #288, worktree `.claude/worktrees/performance-optimization-03b955-cfb26c`). Task 1 is done (README Task F); task 2 is measured with no app change (README Task G: the candidate fix is a Sentry decision, below); task 3 is done (README Task H: the retired offline queue no longer loads Dexie; estimator panels not split, with the evidence why). Next: task 4. Before committing, rerun the full `npx vitest run` (the last full rerun timed out with the CPU latched at 20%).
 
 
 - Branch `claude/performance-optimization-03b955`, 8 commits on `main@8a1dee0f`, pushed, PR open. Worktree used so far: `.claude/worktrees/performance-optimization-03b955`. If you work elsewhere, check out this branch; check `gh pr view` first: if Raj merged it, later commits on this branch never reach `main`, so branch again from `main` and open a new PR.
