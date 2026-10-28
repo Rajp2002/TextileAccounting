@@ -1360,10 +1360,6 @@ export default function RatesClient({
         .map(category => ({ category, rates: visibleRates.filter(rate => rate.category === category) }))
         .filter(section => section.rates.length > 0)
     const dueCount = dueReviewRates.length
-    // The yarns waiting, most urgent first, as the review modal lists them.
-    const dueLine = dueCount
-        ? `${dueReviewRates.slice(0, 3).map(rate => rate.name).join(', ')}${dueCount > 3 ? ` ${fillCopy(copy.moreNames, { n: dueCount - 3 })}` : ''}`
-        : null
     const activeWarpCount = activeYarnRates.filter(rate => rate.category === 'yarn_warp').length
     const reviewDates = upcomingReviews(activeYarnRates)
     const nextReviewLine = reviewDates.length
@@ -1574,8 +1570,8 @@ export default function RatesClient({
                                 { label: copy.warp, value: activeWarpCount },
                                 { label: copy.weft, value: activeYarnRates.length - activeWarpCount },
                             ].map(stat => (
-                                <div key={stat.label} className="flex min-w-0 flex-col justify-center px-4 py-5 sm:px-6">
-                                    <dt className="truncate text-[13px] font-medium text-muted-foreground">{stat.label}</dt>
+                                <div key={stat.label} className="flex min-w-0 flex-col items-center justify-center px-4 py-5 text-center sm:px-6">
+                                    <dt className="max-w-full truncate text-[13px] font-medium text-muted-foreground">{stat.label}</dt>
                                     <dd className="mt-1 text-[28px] font-semibold leading-none tracking-[-0.02em] text-ink tabular-nums">{stat.value}</dd>
                                 </div>
                             ))}
@@ -1595,7 +1591,8 @@ export default function RatesClient({
                                     <p id="ratebook-status" className="text-lg font-semibold leading-snug text-ink">
                                         {dueCount ? fillCopy(dueCount === 1 ? copy.toConfirmOne : copy.toConfirm, { n: dueCount }) : copy.allCurrent}
                                     </p>
-                                    <p className="mt-0.5 break-words text-[13px] text-body tabular-nums">{dueLine ?? statusReviewLine}</p>
+                                    {/* Which yarns are due is the review modal's job; the band only counts them. */}
+                                    {!dueCount && <p className="mt-0.5 break-words text-[13px] text-body tabular-nums">{statusReviewLine}</p>}
                                 </div>
                             </div>
                             {dueCount > 0 && (
