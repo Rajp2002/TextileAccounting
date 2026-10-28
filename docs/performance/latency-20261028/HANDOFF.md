@@ -53,13 +53,10 @@ node scripts/performance/signed-in-latency/compare.mjs docs/performance/latency-
 
 ## Needs Raj's decision (do not change without asking)
 
-- **Apply migration `20261028120000_rls_checks_once_per_query.sql`** (pass 2, README Task J). It rewrites `free_business_boundary` on every org-scoped table and the costing tables' plan checks to run once per query; behaviour pinned by `__tests__/db/rls-once-per-query.dbtest.ts`. Apply before or with the deploy that carries it; the app code does not depend on it.
+Settled on 2026-10-28 (README Task K): Sentry server wrappers off, Sentry browser tracing off, `getUser()` kept, English dictionary split deferred.
 
-- **Sentry's automatic server wrappers** (added 2026-10-28, pass 2, README Task G): `webpack.autoInstrument*: false` in `withSentryConfig` cut every Free/Lite route's cold first request by 18–24% (~170–200 ms), mostly Proxy's bundle. Errors still reach Sentry through `onRequestError`; Sentry's per-page/route spans and Proxy transactions would stop.
-
-- **Sentry browser tracing**: about half of the 146 KB gzip shared chunk on every page, landing and login included. `bundleSizeOptimizations.excludeTracing` + client `tracesSampleRate: 0` would save ~30–40 KB per page but end Sentry browser performance traces.
-- **`getUser()` → `getClaims()`** on the server: one more wait per page saved, but a signed-out or deleted session stays valid until its access token expires (up to an hour).
-- **Splitting the English dictionary** (24.5 KB gzip on every page): large i18n refactor.
+Still to do by Raj: **apply migration `20261028120000_rls_checks_once_per_query.sql` to production** (checked read-only against production first: its policies match; the session's write to production was refused by the permission guard). The app code does not depend on it. Run the file's SQL in the Supabase SQL editor, then record it so `supabase db push` treats it as applied:
+`INSERT INTO supabase_migrations.schema_migrations(version, name, statements) VALUES ('20261028120000', 'rls_checks_once_per_query', ARRAY[]::text[]);`
 
 ## Gotchas met in this pass
 

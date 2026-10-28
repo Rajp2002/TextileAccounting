@@ -301,3 +301,37 @@ The after run was taken with the laptop's CPU limited to about 40%, so it unders
 
 **Behaviour.** `__tests__/db/rls-once-per-query.dbtest.ts`: for each caller (Free account, Lite account that came from Free, Lite account, no session) and each row org (each of theirs and NULL), the new boundary expression equals the per-row one; a Free account still sees none of its business rows and cannot write them; paid owners see only their own costings and saved qualities; and the plan shows the checks as initplans. The three behaviour tests pass on the policies before the migration too. `npm run test:db`: 46 files / 419 tests pass with the migration.
 Checks: `npx tsc --noEmit` clean, `npx vitest run` 419 files / 4,212 passed / 1 skipped, `npm run lint` clean, `npm run test:db` 46 files / 419 passed.
+
+### Task K: the open decisions, settled (2026-10-28)
+
+Raj asked for the recommendations to be applied.
+
+| Decision | Outcome |
+| --- | --- |
+| Sentry's automatic server wrappers | **Off** (`webpack.autoInstrumentServerFunctions/Middleware/AppDirectory: false`). Cold first requests 18–24% faster (Task G). |
+| Sentry browser tracing | **Off**: `next.config.ts` defines `__SENTRY_TRACING__: false` for browser builds only, and `instrumentation-client.ts` no longer sets `tracesSampleRate`. Server builds keep tracing. |
+| `getUser()` → `getClaims()` on the server | **Kept `getUser()`**. One wait per page is not worth a signed-out or deleted session staying valid for up to an hour. |
+| Splitting the English dictionary | **Not now**. A large i18n refactor for 24.5 KB; better as its own project. |
+
+The browser-tracing switch is a webpack define rather than `bundleSizeOptimizations.excludeTracing`, because that option is applied by Sentry's upload plugin (which only runs with an auth token, so local builds never showed it) and its alternative, `webpack.treeshake.removeTracing`, removes tracing from the server too.
+
+First-load JS, gzip KB (`after-task-b.json` → `after-sentry-decisions.json`; nothing else in between changes first-load scripts):
+
+| Account | Route | First-load JS |
+| --- | --- | --- |
+| public | `/` | 289.2 → 241.3 (−47.9) |
+| public | `/login` | 301.1 → 253.2 (−47.9) |
+| lite | `/owner/estimator` | 513.5 → 465.7 (−47.9) |
+| lite | `/owner/quotes` | 445.0 → 397.1 (−47.9) |
+| lite | `/owner/rates` | 390.4 → 342.6 (−47.8) |
+| lite | `/owner/settings` | 485.9 → 438.1 (−47.8) |
+| lite | `/owner/billing` | 341.8 → 294.0 (−47.9) |
+| free | `/free` | 505.1 → 457.3 (−47.9) |
+| free | `/free/costings` | 385.5 → 337.6 (−47.9) |
+| free | `/free/account` | 406.5 → 358.7 (−47.7) |
+| free | `/free/billing` | 343.2 → 295.3 (−47.8) |
+
+Sentry still reports, checked on this build (made with the loopback harness DSN): `sentry-check.mjs` caused a server error and received 1 error event and 12 sampled server transactions; the new `sentry-browser-check.mjs` threw an error on `/login` and the browser SDK sent 1 error event and no transactions. (That check bypasses the app's CSP: the harness DSN is not a sentry.io host, so the SDK posts to it directly instead of through `/monitoring`, and the CSP would block it; production DSNs use the tunnel.) Lost by design: Sentry's browser performance data (page loads, navigations, web vitals inside Sentry), its per-route server spans and Proxy transactions. The app's own web-vitals reporting (`lib/web-vitals.ts`) is unchanged.
+
+**Migration `20261028120000_rls_checks_once_per_query.sql`.** Production was checked read-only before applying: latest applied migration `20261018120000`, all 81 `free_business_boundary` policies and the eight costing-table policies have exactly the form the migration expects, and the new function did not exist. Applying it from this session was refused by the environment's permission guard for production writes, so Raj applies it (see HANDOFF).
+Checks: `npx tsc --noEmit` clean, `npx vitest run` 419 files / 4,212 passed / 1 skipped, `npm run lint` clean.

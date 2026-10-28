@@ -85,4 +85,6 @@ Detail in `README.md`, Tasks F–J.
 
 Measured, no change: cold first requests (~0.8–1.0 s for Free/Lite pages; turning off Sentry's server wrappers would cut 18–24%, which is Raj's call), the estimator on a 4×-slowed phone (usable ~2.2 s; its unused panels are only ~10 KB gzip), and sidebar prefetching (it starts after the landing page is usable and makes clicks ~130 ms faster, so it stays).
 
-Needs Raj: apply `20261028120000_rls_checks_once_per_query.sql`; decide on Sentry's server wrappers; the earlier three decisions stand.
+Decisions settled (README Task K): Sentry server wrappers off (cold first requests 18–24% faster) and browser tracing off (−47.9 KB gzip on every page, `/login` 301 → 253 KB); `getUser()` kept; dictionary split deferred. Sentry still reports server and browser errors (checked).
+
+Needs Raj: apply `20261028120000_rls_checks_once_per_query.sql` to production.
