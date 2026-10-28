@@ -1201,7 +1201,6 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
             <RouteMilestones route="/owner/quotes" shellVisible primaryUsable secondaryReady />
             <PageHeader
                 title={t('common.saved_costings_title')}
-                description={<span data-i18n-skip="true" lang={language}>{catalogue.intro}</span>}
                 actions={<>
                     <SavedCostingsTutorial step={tourStep} onStepChange={setTourStep} onComplete={() => setShowCostingDeleteNudge(true)} production={canUseProductionPipeline} ending={savedCostingTourEnding(quotes.filter(quote => isStandaloneCosting(quote.record_kind)).length, tourUnavailable)} topics={[archivePolicyTopic]} userId={userId} orgId={orgId} userMetadata={userMetadata} />
                     {quotes.length > 0 && !tourStep && (
