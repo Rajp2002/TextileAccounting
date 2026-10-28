@@ -1,8 +1,43 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync, statSync } from 'node:fs'
+import { dirname, join, relative } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 function source(path: string) {
     return readFileSync(path, 'utf8')
+}
+
+/**
+ * Every module and package an entry file reaches through static imports (the
+ * code webpack must put in its first-load bundle). Dynamic import() and
+ * type-only imports are skipped, as are 'use server' modules, which the client
+ * reaches only as action references.
+ */
+function staticImportGraph(entry: string) {
+    const root = process.cwd()
+    const resolveLocal = (from: string, specifier: string) => {
+        const base = specifier.startsWith('@/') ? join(root, specifier.slice(2)) : join(dirname(from), specifier)
+        if (existsSync(base) && statSync(base).isFile()) return base
+        return ['.ts', '.tsx', '.js', '.mjs', '/index.ts', '/index.tsx'].map(ext => base + ext).find(existsSync)
+    }
+    const files = new Set<string>()
+    const packages = new Set<string>()
+    const queue = [join(root, entry)]
+    while (queue.length) {
+        const file = queue.pop()!
+        if (files.has(file)) continue
+        files.add(file)
+        const text = readFileSync(file, 'utf8')
+        if (file !== join(root, entry) && /^\s*['"]use server['"]/.test(text)) continue
+        for (const [, specifier] of text.matchAll(/^\s*(?:import|export)\s+(?!type\b)(?:[^'";]*?\sfrom\s+)?['"]([^'"]+)['"]/gm)) {
+            if (specifier.startsWith('.') || specifier.startsWith('@/')) {
+                const resolved = resolveLocal(file, specifier)
+                if (resolved) queue.push(resolved)
+            } else {
+                packages.add(specifier.startsWith('@') ? specifier.split('/').slice(0, 2).join('/') : specifier.split('/')[0])
+            }
+        }
+    }
+    return { files: [...files].map(file => relative(root, file)), packages }
 }
 
 describe('performance-sensitive bundle boundaries', () => {
@@ -51,6 +86,23 @@ describe('performance-sensitive bundle boundaries', () => {
         // cross-tab sign-out redirect.
         expect(freeMeter).toContain("window.addEventListener('focus',subscribe);window.addEventListener('online',subscribe)")
         expect(freeMeter).toContain('if(cancelled||loading||unsubscribe)return')
+    })
+
+    it('keeps zod, the document renderer and its embedded logo out of the estimator and Free first loads', () => {
+        for (const entry of ['app/(dashboard)/owner/estimator/EstimatorClient.tsx', 'app/free/FreeClient.tsx', 'app/free/costings/SavedFreeCostings.tsx', 'app/(dashboard)/owner/quotes/QuotesClient.tsx']) {
+            const graph = staticImportGraph(entry)
+            expect(graph.packages.has('zod'), `${entry} reaches zod`).toBe(false)
+            expect(graph.files, entry).not.toContain('lib/estimator-export.ts')
+            expect(graph.files, entry).not.toContain('lib/estimator-export-logo.ts')
+            expect(graph.files, entry).not.toContain('lib/i18n/document-labels.ts')
+        }
+        const estimator = source('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
+        // The Free draft helpers carry the Free input schema; Free mode loads them on mount.
+        expect(estimator).not.toContain("from '@/lib/free-estimator-draft'")
+        expect(estimator).toContain("import('@/lib/free-estimator-draft')")
+        const model = source('lib/costing-export-model.ts')
+        expect(model).not.toContain('estimator-export-logo')
+        expect(model).not.toContain('document-labels')
     })
 
     it('loads Sentry Session Replay after the page is idle instead of in every first-load bundle', () => {

@@ -303,17 +303,20 @@ export async function getFactoryCostProfile(options?: { createIfMissing?: boolea
     const { user, profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
-    const { data, error } = await supabase
-        .from('factory_cost_profile')
-        .select('*')
-        .eq('factory_id', profile.org_id)
-        .maybeSingle()
+    // The fixed-salary staff feed the overhead; they do not depend on the
+    // profile row, so both are read at once.
+    const [{ data, error }, staffResult] = await Promise.all([
+        supabase
+            .from('factory_cost_profile')
+            .select('*')
+            .eq('factory_id', profile.org_id)
+            .maybeSingle(),
+        readCompleteBaseRows((from, to) => supabase.from('base_production_workers')
+            .select('id, name, role, pay_type, is_active, monthly_salary, start_date, end_date, salary_history', from === 0 ? { count: 'exact' } : {})
+            .eq('org_id', profile.org_id).eq('pay_type', 'fixed_monthly').order('id').range(from, to)),
+    ])
 
     if (error) return { error: error.message }
-
-    const staffResult = await readCompleteBaseRows((from, to) => supabase.from('base_production_workers')
-        .select('id, name, role, pay_type, is_active, monthly_salary, start_date, end_date, salary_history', from === 0 ? { count: 'exact' } : {})
-        .eq('org_id', profile.org_id).eq('pay_type', 'fixed_monthly').order('id').range(from, to))
     if (staffResult.error) return { error: 'Staff salary overhead could not be loaded. Please refresh and try again.' }
     const staff: BaseProductionWorker[] = (staffResult.data ?? []).map(row => ({ ...row,
         pay_type: 'fixed_monthly', rate_per_meter: 0, shift_availability: 'both', salary_history: readBaseSalaryHistory(row.salary_history),

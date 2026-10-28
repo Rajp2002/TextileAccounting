@@ -1,0 +1,37 @@
+{
+  "entries": 367,
+  "rawBytes": 11991270,
+  "transferBytes": 5894644,
+  "groups": {
+    "shared and lazy chunks": {
+      "entries": 135,
+      "rawBytes": 6850451,
+      "transferBytes": 2000282
+    },
+    "route page chunks": {
+      "entries": 172,
+      "rawBytes": 1458809,
+      "transferBytes": 518557
+    },
+    "css": {
+      "entries": 10,
+      "rawBytes": 354256,
+      "transferBytes": 58218
+    },
+    "fonts": {
+      "entries": 22,
+      "rawBytes": 1008716,
+      "transferBytes": 1008716
+    },
+    "other public files": {
+      "entries": 12,
+      "rawBytes": 87060,
+      "transferBytes": 79074
+    },
+    "images": {
+      "entries": 15,
+      "rawBytes": 2231978,
+      "transferBytes": 2229797
+    }
+  }
+}

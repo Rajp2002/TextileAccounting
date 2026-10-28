@@ -14,8 +14,9 @@ import { OwnerPlanProvider } from '@/components/providers/owner-plan-provider'
 import { TrialNudge } from '@/components/billing/TrialNudge'
 import { createSignInServerTimerFromCookie } from '@/lib/sign-in-telemetry.server'
 import { getRateReviewStatus } from '@/lib/cost-rates'
-import { getCachedOwnerOrganization } from '@/lib/owner-organization'
+import { getCachedOwnerOrganization, startOwnerShellReads } from '@/lib/owner-organization'
 import { createPrincipalCacheScope } from '@/lib/auth-cache-scope'
+import { startEarly } from '@/lib/start-early'
 import { AuthBoundaryCleanup } from '@/components/auth/auth-boundary-cleanup'
 import { WorkspaceHintSync } from '@/components/auth/workspace-hint-sync'
 import { hasFreeWorkspaceHint, WORKSPACE_HINT_COOKIE } from '@/lib/workspace-hint'
@@ -28,7 +29,11 @@ import { parseSidebarPreference, SIDEBAR_PREFERENCE_COOKIE } from '@/lib/sidebar
  * retain the existing server-side role, entitlement, RLS, and lockdown checks.
  */
 export default async function OwnerLayout({ children }: { children: React.ReactNode }) {
+    await startOwnerShellReads()
     const { profile, user } = await requireRole(['owner'], { allowFreeAccount: true })
+    // The organization row is read alongside the plan (or was already started
+    // from the session hint); both boundaries and the Base check reuse it.
+    const organizationRead = startEarly(getCachedOwnerOrganization(user.id, profile.org_id))
     const access = await getCachedOrgPlanAccess(profile.org_id)
     const requestHeaders = await headers()
     const pathname = requestHeaders.get('x-pathname') || ''
@@ -46,8 +51,13 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
     }
     if (access.effectiveTier === 'base') {
         if (!pathname.startsWith('/owner/billing')) {
-            const { isBaseOnboardingComplete } = await import('@/lib/base-onboarding.server')
-            const isComplete = await isBaseOnboardingComplete(profile.org_id)
+            const { isBaseOnboardingComplete, isBaseOnboardingCompleteRow } = await import('@/lib/base-onboarding.server')
+            const { data: organization } = await organizationRead
+            // Without the owner's row (error or mismatch), keep the original
+            // standalone check; the route boundary still fails closed.
+            const isComplete = organization
+                ? isBaseOnboardingCompleteRow(organization)
+                : await isBaseOnboardingComplete(profile.org_id)
             if (!isComplete) {
                 redirect('/onboarding/base')
             }

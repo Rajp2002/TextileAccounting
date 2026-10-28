@@ -1,0 +1,4402 @@
+{
+  "generatedAt": "2026-10-27T23:54:12.625Z",
+  "buildId": "UTwOMz2XGM-hnxWVy6EeL",
+  "method": "next start (production build, isolated env) against a fake Supabase/Upstash backend; each Supabase call waits 30 ms, each Redis call 10 ms; 5 measured requests per route after two warm-up passes; medians reported. JS sizes are the gzip-9 total of the <script src> chunks in the returned HTML (polyfills excluded).",
+  "supabaseDelayMs": 30,
+  "iterations": 5,
+  "results": [
+    {
+      "account": "public",
+      "path": "/",
+      "status": 200,
+      "location": null,
+      "ttfbMs": 10.5,
+      "totalMs": 12.5,
+      "backendCalls": 0,
+      "sequentialWaits": 0,
+      "callTimeline": [],
+      "html": {
+        "bytes": 172870,
+        "gzipBytes": 295882,
+        "scripts": 13,
+        "rawBytes": 928852,
+        "cssFiles": 4,
+        "cssGzipBytes": 54170,
+        "chunks": [
+          {
+            "src": "5d015edf-919221869929b925.js",
+            "gzipBytes": 388
+          },
+          {
+            "src": "4bd1b696-36241c79b2a4fb73.js",
+            "gzipBytes": 62874
+          },
+          {
+            "src": "7569-5ebcda0cd87fe0b5.js",
+            "gzipBytes": 149316
+          },
+          {
+            "src": "main-app-51ecd6d8519925e8.js",
+            "gzipBytes": 2262
+          },
+          {
+            "src": "app/global-error-d4ce8654b210b086.js",
+            "gzipBytes": 2965
+          },
+          {
+            "src": "8500-1dbb77aa8d8980ea.js",
+            "gzipBytes": 2026
+          },
+          {
+            "src": "6609-cdd7829b3b445dd1.js",
+            "gzipBytes": 9414
+          },
+          {
+            "src": "5885-f4a8d6a12457c1d9.js",
+            "gzipBytes": 25442
+          },
+          {
+            "src": "app/layout-aaf477f098b263ce.js",
+            "gzipBytes": 12805
+          },
+          {
+            "src": "8409-c971f1b66ffe1d23.js",
+            "gzipBytes": 8239
+          },
+          {
+            "src": "3677-93438951ad4b8add.js",
+            "gzipBytes": 6052
+          },
+          {
+            "src": "app/page-36fdd0041e4d5034.js",
+            "gzipBytes": 10897
+          },
+          {
+            "src": "webpack-4983e0a0c5ff30d6.js",
+            "gzipBytes": 3202
+          }
+        ]
+      },
+      "errorDigest": null
+    },
+    {
+      "account": "public",
+      "path": "/login",
+      "status": 200,
+      "location": null,
+      "ttfbMs": 11.6,
+      "totalMs": 14.1,
+      "backendCalls": 0,
+      "sequentialWaits": 0,
+      "callTimeline": [],
+      "html": {
+        "bytes": 40469,
+        "gzipBytes": 308075,
+        "scripts": 15,
+        "rawBytes": 963248,
+        "cssFiles": 2,
+        "cssGzipBytes": 49577,
+        "chunks": [
+          {
+            "src": "5d015edf-919221869929b925.js",
+            "gzipBytes": 388
+          },
+          {
+            "src": "4bd1b696-36241c79b2a4fb73.js",
+            "gzipBytes": 62874
+          },
+          {
+            "src": "7569-5ebcda0cd87fe0b5.js",
+            "gzipBytes": 149316
+          },
+          {
+            "src": "main-app-51ecd6d8519925e8.js",
+            "gzipBytes": 2262
+          },
+          {
+            "src": "app/global-error-d4ce8654b210b086.js",
+            "gzipBytes": 2965
+          },
+          {
+            "src": "8500-1dbb77aa8d8980ea.js",
+            "gzipBytes": 2026
+          },
+          {
+            "src": "6609-cdd7829b3b445dd1.js",
+            "gzipBytes": 9414
+          },
+          {
+            "src": "5885-f4a8d6a12457c1d9.js",
+            "gzipBytes": 25442
+          },
+          {
+            "src": "app/layout-aaf477f098b263ce.js",
+            "gzipBytes": 12805
+          },
+          {
+            "src": "8409-c971f1b66ffe1d23.js",
+            "gzipBytes": 8239
+          },
+          {
+            "src": "3677-93438951ad4b8add.js",
+            "gzipBytes": 6052
+          },
+          {
+            "src": "7706-f4904afa4b71e738.js",
+            "gzipBytes": 9503
+          },
+          {
+            "src": "3665-8ee116dc23036d2d.js",
+            "gzipBytes": 4431
+          },
+          {
+            "src": "app/(auth)/login/page-7a80680c8b360276.js",
+            "gzipBytes": 9156
+          },
+          {
+            "src": "webpack-4983e0a0c5ff30d6.js",
+            "gzipBytes": 3202
+          }
+        ]
+      },
+      "errorDigest": null
+    },
+    {
+      "account": "lite",
+      "path": "/login",
+      "note": "installed-app launch: signed-in /login redirect hop",
+      "status": 307,
+      "location": "/owner/estimator",
+      "ttfbMs": 52.9,
+      "totalMs": 53,
+      "backendCalls": 2,
+      "sequentialWaits": 2,
+      "callTimeline": [
+        {
+          "kind": "redis",
+          "method": "POST",
+          "target": "redis [[\"get\",\"revoked:11111111-1111-4111-8111",
+          "startMs": 0,
+          "endMs": 12.6
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "profiles?select=role,access_revoked_at",
+          "startMs": 14.7,
+          "endMs": 46.7
+        }
+      ],
+      "html": null,
+      "errorDigest": null
+    },
+    {
+      "account": "lite",
+      "path": "/owner/estimator",
+      "status": 200,
+      "location": null,
+      "ttfbMs": 64.3,
+      "totalMs": 138,
+      "backendCalls": 8,
+      "sequentialWaits": 4,
+      "callTimeline": [
+        {
+          "kind": "redis",
+          "method": "POST",
+          "target": "redis [[\"get\",\"revoked:11111111-1111-4111-8111",
+          "startMs": 0,
+          "endMs": 12.4
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=base_plan_visible,lite_trial_eligible,org_subscriptions(stat",
+          "startMs": 21.8,
+          "endMs": 54
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=id,name,production_mode,onboarding_complete,is_locked_down,b",
+          "startMs": 22,
+          "endMs": 54.2
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "profiles?select=role,org_id,full_name,phone,whatsapp_number,whatsapp_opted_i",
+          "startMs": 22.4,
+          "endMs": 54.4
+        },
+        {
+          "kind": "auth",
+          "method": "GET",
+          "target": "/auth/v1/user",
+          "startMs": 22.8,
+          "endMs": 54.6
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "factory_cost_profile?select=*",
+          "startMs": 57.8,
+          "endMs": 89.5
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "cost_rate_book?select=last_reviewed_at,review_interval_days",
+          "startMs": 59.3,
+          "endMs": 89.7
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_production_workers?select=id,name,role,pay_type,is_active,monthly_salary,start_date,en",
+          "startMs": 91.2,
+          "endMs": 123
+        }
+      ],
+      "html": {
+        "bytes": 139803,
+        "gzipBytes": 575737,
+        "scripts": 39,
+        "rawBytes": 1860950,
+        "cssFiles": 2,
+        "cssGzipBytes": 49577,
+        "chunks": [
+          {
+            "src": "5d015edf-919221869929b925.js",
+            "gzipBytes": 388
+          },
+          {
+            "src": "4bd1b696-36241c79b2a4fb73.js",
+            "gzipBytes": 62874
+          },
+          {
+            "src": "7569-5ebcda0cd87fe0b5.js",
+            "gzipBytes": 149316
+          },
+          {
+            "src": "main-app-51ecd6d8519925e8.js",
+            "gzipBytes": 2262
+          },
+          {
+            "src": "app/global-error-d4ce8654b210b086.js",
+            "gzipBytes": 2965
+          },
+          {
+            "src": "8500-1dbb77aa8d8980ea.js",
+            "gzipBytes": 2026
+          },
+          {
+            "src": "6609-cdd7829b3b445dd1.js",
+            "gzipBytes": 9414
+          },
+          {
+            "src": "5885-f4a8d6a12457c1d9.js",
+            "gzipBytes": 25442
+          },
+          {
+            "src": "app/layout-aaf477f098b263ce.js",
+            "gzipBytes": 12805
+          },
+          {
+            "src": "8409-c971f1b66ffe1d23.js",
+            "gzipBytes": 8239
+          },
+          {
+            "src": "6513-73b9b0e6d13a6e11.js",
+            "gzipBytes": 2720
+          },
+          {
+            "src": "app/(dashboard)/owner/estimator/loading-b7264b3fb21f750d.js",
+            "gzipBytes": 3578
+          },
+          {
+            "src": "1798-ced0ec606b5fb7e2.js",
+            "gzipBytes": 8475
+          },
+          {
+            "src": "8495-044ce28213f56ef4.js",
+            "gzipBytes": 3061
+          },
+          {
+            "src": "3677-93438951ad4b8add.js",
+            "gzipBytes": 6052
+          },
+          {
+            "src": "2762-fe9ab01ef9e5f38c.js",
+            "gzipBytes": 2969
+          },
+          {
+            "src": "3665-8ee116dc23036d2d.js",
+            "gzipBytes": 4431
+          },
+          {
+            "src": "7101-1b6dc3c6f21f5f84.js",
+            "gzipBytes": 3158
+          },
+          {
+            "src": "9646-0ed9fd68d31a792a.js",
+            "gzipBytes": 9700
+          },
+          {
+            "src": "app/(dashboard)/owner/layout-5d17c15afdc866ab.js",
+            "gzipBytes": 6918
+          },
+          {
+            "src": "webpack-4983e0a0c5ff30d6.js",
+            "gzipBytes": 3202
+          },
+          {
+            "src": "7706-f4904afa4b71e738.js",
+            "gzipBytes": 9503
+          },
+          {
+            "src": "7173-1320e6a0924ac52e.js",
+            "gzipBytes": 25696
+          },
+          {
+            "src": "8163-50734f944964d823.js",
+            "gzipBytes": 10614
+          },
+          {
+            "src": "4647-38b0fbbfe9ec744b.js",
+            "gzipBytes": 2085
+          },
+          {
+            "src": "3512-0cf18563d813b269.js",
+            "gzipBytes": 12934
+          },
+          {
+            "src": "918-16184ad84cf4c002.js",
+            "gzipBytes": 7094
+          },
+          {
+            "src": "4729-e899aee5f48be64a.js",
+            "gzipBytes": 2505
+          },
+          {
+            "src": "419-485d1f22cbe0563f.js",
+            "gzipBytes": 5764
+          },
+          {
+            "src": "3411-c54fde356dd6b69a.js",
+            "gzipBytes": 4904
+          },
+          {
+            "src": "406-ebbf7d42f0f50255.js",
+            "gzipBytes": 5275
+          },
+          {
+            "src": "2234-9f024851648fa6d5.js",
+            "gzipBytes": 7578
+          },
+          {
+            "src": "8250-6886d51b7b03cb53.js",
+            "gzipBytes": 16209
+          },
+          {
+            "src": "9862-d56f32f884121429.js",
+            "gzipBytes": 7492
+          },
+          {
+            "src": "4340-fc749e416af14a70.js",
+            "gzipBytes": 5397
+          },
+          {
+            "src": "220-cdd787f46997b453.js",
+            "gzipBytes": 25543
+          },
+          {
+            "src": "6216-727a887c9adad1ae.js",
+            "gzipBytes": 5556
+          },
+          {
+            "src": "8389-4d582b5bceff38ca.js",
+            "gzipBytes": 87448
+          },
+          {
+            "src": "app/(dashboard)/owner/estimator/page-21ce20578b9161ec.js",
+            "gzipBytes": 4145
+          }
+        ]
+      },
+      "errorDigest": null
+    },
+    {
+      "account": "lite",
+      "path": "/owner/quotes",
+      "status": 200,
+      "location": null,
+      "ttfbMs": 64.7,
+      "totalMs": 133,
+      "backendCalls": 9,
+      "sequentialWaits": 4,
+      "callTimeline": [
+        {
+          "kind": "redis",
+          "method": "POST",
+          "target": "redis [[\"get\",\"revoked:11111111-1111-4111-8111",
+          "startMs": 0,
+          "endMs": 11.9
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=base_plan_visible,lite_trial_eligible,org_subscriptions(stat",
+          "startMs": 19,
+          "endMs": 50.2
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=id,name,production_mode,onboarding_complete,is_locked_down,b",
+          "startMs": 19.2,
+          "endMs": 50.3
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "profiles?select=role,org_id,full_name,phone,whatsapp_number,whatsapp_opted_i",
+          "startMs": 19.6,
+          "endMs": 50.4
+        },
+        {
+          "kind": "auth",
+          "method": "GET",
+          "target": "/auth/v1/user",
+          "startMs": 20,
+          "endMs": 51.8
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "estimator_quotes?select=id,status,party_name,quality_label,quote_price_per_meter,lan",
+          "startMs": 54.4,
+          "endMs": 86.2
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "estimator_templates?select=id,name,updated_at,is_active,warp_rows,weft_rows",
+          "startMs": 54.6,
+          "endMs": 86.3
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "cost_rate_book?select=last_reviewed_at,review_interval_days",
+          "startMs": 56,
+          "endMs": 87.7
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "free_account_grants?select=subject_id,revoked_at,free_account_subjects(active,verified_",
+          "startMs": 87.8,
+          "endMs": 120.2
+        }
+      ],
+      "html": {
+        "bytes": 82657,
+        "gzipBytes": 494411,
+        "scripts": 36,
+        "rawBytes": 1537938,
+        "cssFiles": 3,
+        "cssGzipBytes": 53324,
+        "chunks": [
+          {
+            "src": "5d015edf-919221869929b925.js",
+            "gzipBytes": 388
+          },
+          {
+            "src": "4bd1b696-36241c79b2a4fb73.js",
+            "gzipBytes": 62874
+          },
+          {
+            "src": "7569-5ebcda0cd87fe0b5.js",
+            "gzipBytes": 149316
+          },
+          {
+            "src": "main-app-51ecd6d8519925e8.js",
+            "gzipBytes": 2262
+          },
+          {
+            "src": "app/global-error-d4ce8654b210b086.js",
+            "gzipBytes": 2965
+          },
+          {
+            "src": "8500-1dbb77aa8d8980ea.js",
+            "gzipBytes": 2026
+          },
+          {
+            "src": "6609-cdd7829b3b445dd1.js",
+            "gzipBytes": 9414
+          },
+          {
+            "src": "5885-f4a8d6a12457c1d9.js",
+            "gzipBytes": 25442
+          },
+          {
+            "src": "app/layout-aaf477f098b263ce.js",
+            "gzipBytes": 12805
+          },
+          {
+            "src": "app/(dashboard)/owner/quotes/loading-013fb02ba8fe833f.js",
+            "gzipBytes": 1054
+          },
+          {
+            "src": "8409-c971f1b66ffe1d23.js",
+            "gzipBytes": 8239
+          },
+          {
+            "src": "1798-ced0ec606b5fb7e2.js",
+            "gzipBytes": 8475
+          },
+          {
+            "src": "8495-044ce28213f56ef4.js",
+            "gzipBytes": 3061
+          },
+          {
+            "src": "3677-93438951ad4b8add.js",
+            "gzipBytes": 6052
+          },
+          {
+            "src": "2762-fe9ab01ef9e5f38c.js",
+            "gzipBytes": 2969
+          },
+          {
+            "src": "3665-8ee116dc23036d2d.js",
+            "gzipBytes": 4431
+          },
+          {
+            "src": "7101-1b6dc3c6f21f5f84.js",
+            "gzipBytes": 3158
+          },
+          {
+            "src": "9646-0ed9fd68d31a792a.js",
+            "gzipBytes": 9700
+          },
+          {
+            "src": "app/(dashboard)/owner/layout-5d17c15afdc866ab.js",
+            "gzipBytes": 6918
+          },
+          {
+            "src": "webpack-4983e0a0c5ff30d6.js",
+            "gzipBytes": 3202
+          },
+          {
+            "src": "7706-f4904afa4b71e738.js",
+            "gzipBytes": 9503
+          },
+          {
+            "src": "3512-0cf18563d813b269.js",
+            "gzipBytes": 12934
+          },
+          {
+            "src": "2826-55480b108487acd5.js",
+            "gzipBytes": 2528
+          },
+          {
+            "src": "8951-ecb98030416cdb1e.js",
+            "gzipBytes": 4045
+          },
+          {
+            "src": "406-ebbf7d42f0f50255.js",
+            "gzipBytes": 5275
+          },
+          {
+            "src": "2234-9f024851648fa6d5.js",
+            "gzipBytes": 7578
+          },
+          {
+            "src": "8250-6886d51b7b03cb53.js",
+            "gzipBytes": 16209
+          },
+          {
+            "src": "9862-d56f32f884121429.js",
+            "gzipBytes": 7492
+          },
+          {
+            "src": "220-cdd787f46997b453.js",
+            "gzipBytes": 25543
+          },
+          {
+            "src": "6216-727a887c9adad1ae.js",
+            "gzipBytes": 5556
+          },
+          {
+            "src": "4022-151974b69408758d.js",
+            "gzipBytes": 7512
+          },
+          {
+            "src": "4313-2efc7618a37c88bf.js",
+            "gzipBytes": 7489
+          },
+          {
+            "src": "6215-6e5cf09eb1143bf0.js",
+            "gzipBytes": 14642
+          },
+          {
+            "src": "6908-68efcf741cac0330.js",
+            "gzipBytes": 14551
+          },
+          {
+            "src": "567-5d0a7f89de3034ad.js",
+            "gzipBytes": 4890
+          },
+          {
+            "src": "app/(dashboard)/owner/quotes/page-1edd0709d1b18525.js",
+            "gzipBytes": 23913
+          }
+        ]
+      },
+      "errorDigest": null
+    },
+    {
+      "account": "lite",
+      "path": "/owner/rates",
+      "status": 200,
+      "location": null,
+      "ttfbMs": 64.5,
+      "totalMs": 102,
+      "backendCalls": 9,
+      "sequentialWaits": 3,
+      "callTimeline": [
+        {
+          "kind": "redis",
+          "method": "POST",
+          "target": "redis [[\"get\",\"revoked:11111111-1111-4111-8111",
+          "startMs": 0,
+          "endMs": 12
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=base_plan_visible,lite_trial_eligible,org_subscriptions(stat",
+          "startMs": 19.2,
+          "endMs": 50.4
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=id,name,production_mode,onboarding_complete,is_locked_down,b",
+          "startMs": 19.4,
+          "endMs": 50.5
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "profiles?select=role,org_id,full_name,phone,whatsapp_number,whatsapp_opted_i",
+          "startMs": 19.7,
+          "endMs": 50.6
+        },
+        {
+          "kind": "auth",
+          "method": "GET",
+          "target": "/auth/v1/user",
+          "startMs": 20.2,
+          "endMs": 50.8
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "cost_rate_book?select=id,name,category,unit,current_value,previous_value,effective",
+          "startMs": 53.7,
+          "endMs": 84.1
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "factory_cost_profile?select=yarn_review_interval_days",
+          "startMs": 53.9,
+          "endMs": 84.3
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "cost_rate_history?select=rate_id,value,effective_date",
+          "startMs": 54.3,
+          "endMs": 84.4
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "cost_rate_book?select=last_reviewed_at,review_interval_days",
+          "startMs": 55.8,
+          "endMs": 87.2
+        }
+      ],
+      "html": {
+        "bytes": 76506,
+        "gzipBytes": 398810,
+        "scripts": 27,
+        "rawBytes": 1239172,
+        "cssFiles": 3,
+        "cssGzipBytes": 53324,
+        "chunks": [
+          {
+            "src": "5d015edf-919221869929b925.js",
+            "gzipBytes": 388
+          },
+          {
+            "src": "4bd1b696-36241c79b2a4fb73.js",
+            "gzipBytes": 62874
+          },
+          {
+            "src": "7569-5ebcda0cd87fe0b5.js",
+            "gzipBytes": 149316
+          },
+          {
+            "src": "main-app-51ecd6d8519925e8.js",
+            "gzipBytes": 2262
+          },
+          {
+            "src": "app/global-error-d4ce8654b210b086.js",
+            "gzipBytes": 2965
+          },
+          {
+            "src": "8500-1dbb77aa8d8980ea.js",
+            "gzipBytes": 2026
+          },
+          {
+            "src": "6609-cdd7829b3b445dd1.js",
+            "gzipBytes": 9414
+          },
+          {
+            "src": "5885-f4a8d6a12457c1d9.js",
+            "gzipBytes": 25442
+          },
+          {
+            "src": "app/layout-aaf477f098b263ce.js",
+            "gzipBytes": 12805
+          },
+          {
+            "src": "app/(dashboard)/owner/rates/loading-058acfc7a139d5f5.js",
+            "gzipBytes": 1057
+          },
+          {
+            "src": "8409-c971f1b66ffe1d23.js",
+            "gzipBytes": 8239
+          },
+          {
+            "src": "1798-ced0ec606b5fb7e2.js",
+            "gzipBytes": 8475
+          },
+          {
+            "src": "8495-044ce28213f56ef4.js",
+            "gzipBytes": 3061
+          },
+          {
+            "src": "3677-93438951ad4b8add.js",
+            "gzipBytes": 6052
+          },
+          {
+            "src": "2762-fe9ab01ef9e5f38c.js",
+            "gzipBytes": 2969
+          },
+          {
+            "src": "3665-8ee116dc23036d2d.js",
+            "gzipBytes": 4431
+          },
+          {
+            "src": "7101-1b6dc3c6f21f5f84.js",
+            "gzipBytes": 3158
+          },
+          {
+            "src": "9646-0ed9fd68d31a792a.js",
+            "gzipBytes": 9700
+          },
+          {
+            "src": "app/(dashboard)/owner/layout-5d17c15afdc866ab.js",
+            "gzipBytes": 6918
+          },
+          {
+            "src": "webpack-4983e0a0c5ff30d6.js",
+            "gzipBytes": 3202
+          },
+          {
+            "src": "7706-f4904afa4b71e738.js",
+            "gzipBytes": 9503
+          },
+          {
+            "src": "8163-50734f944964d823.js",
+            "gzipBytes": 10614
+          },
+          {
+            "src": "2826-55480b108487acd5.js",
+            "gzipBytes": 2528
+          },
+          {
+            "src": "3182-d08fcab1a2ecbb75.js",
+            "gzipBytes": 5261
+          },
+          {
+            "src": "406-ebbf7d42f0f50255.js",
+            "gzipBytes": 5275
+          },
+          {
+            "src": "567-5d0a7f89de3034ad.js",
+            "gzipBytes": 4890
+          },
+          {
+            "src": "app/(dashboard)/owner/rates/page-69ac952e460025eb.js",
+            "gzipBytes": 35985
+          }
+        ]
+      },
+      "errorDigest": null
+    },
+    {
+      "account": "lite",
+      "path": "/owner/settings",
+      "status": 200,
+      "location": null,
+      "ttfbMs": 68.3,
+      "totalMs": 99.3,
+      "backendCalls": 6,
+      "sequentialWaits": 3,
+      "callTimeline": [
+        {
+          "kind": "redis",
+          "method": "POST",
+          "target": "redis [[\"get\",\"revoked:11111111-1111-4111-8111",
+          "startMs": 0,
+          "endMs": 11.9
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=base_plan_visible,lite_trial_eligible,org_subscriptions(stat",
+          "startMs": 19.1,
+          "endMs": 51.6
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=id,name,production_mode,onboarding_complete,is_locked_down,b",
+          "startMs": 19.2,
+          "endMs": 51.8
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "profiles?select=role,org_id,full_name,phone,whatsapp_number,whatsapp_opted_i",
+          "startMs": 19.6,
+          "endMs": 51.9
+        },
+        {
+          "kind": "auth",
+          "method": "GET",
+          "target": "/auth/v1/user",
+          "startMs": 20.1,
+          "endMs": 52.1
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "cost_rate_book?select=last_reviewed_at,review_interval_days",
+          "startMs": 55.8,
+          "endMs": 86.8
+        }
+      ],
+      "html": {
+        "bytes": 106388,
+        "gzipBytes": 497446,
+        "scripts": 39,
+        "rawBytes": 1586900,
+        "cssFiles": 3,
+        "cssGzipBytes": 50505,
+        "chunks": [
+          {
+            "src": "5d015edf-919221869929b925.js",
+            "gzipBytes": 388
+          },
+          {
+            "src": "4bd1b696-36241c79b2a4fb73.js",
+            "gzipBytes": 62874
+          },
+          {
+            "src": "7569-5ebcda0cd87fe0b5.js",
+            "gzipBytes": 149316
+          },
+          {
+            "src": "main-app-51ecd6d8519925e8.js",
+            "gzipBytes": 2262
+          },
+          {
+            "src": "app/global-error-d4ce8654b210b086.js",
+            "gzipBytes": 2965
+          },
+          {
+            "src": "8500-1dbb77aa8d8980ea.js",
+            "gzipBytes": 2026
+          },
+          {
+            "src": "6609-cdd7829b3b445dd1.js",
+            "gzipBytes": 9414
+          },
+          {
+            "src": "5885-f4a8d6a12457c1d9.js",
+            "gzipBytes": 25442
+          },
+          {
+            "src": "app/layout-aaf477f098b263ce.js",
+            "gzipBytes": 12805
+          },
+          {
+            "src": "app/(dashboard)/owner/settings/loading-ed59f9c2be01b924.js",
+            "gzipBytes": 1056
+          },
+          {
+            "src": "8409-c971f1b66ffe1d23.js",
+            "gzipBytes": 8239
+          },
+          {
+            "src": "1798-ced0ec606b5fb7e2.js",
+            "gzipBytes": 8475
+          },
+          {
+            "src": "8495-044ce28213f56ef4.js",
+            "gzipBytes": 3061
+          },
+          {
+            "src": "7706-f4904afa4b71e738.js",
+            "gzipBytes": 9503
+          },
+          {
+            "src": "8163-50734f944964d823.js",
+            "gzipBytes": 10614
+          },
+          {
+            "src": "4647-38b0fbbfe9ec744b.js",
+            "gzipBytes": 2085
+          },
+          {
+            "src": "7716-0f6c2a7f64e425b8.js",
+            "gzipBytes": 53869
+          },
+          {
+            "src": "2484-77b1b430adde4ef3.js",
+            "gzipBytes": 7374
+          },
+          {
+            "src": "2385-5e4b6fd58d32b608.js",
+            "gzipBytes": 5178
+          },
+          {
+            "src": "8145-048cbf6e4001e5e3.js",
+            "gzipBytes": 3793
+          },
+          {
+            "src": "5196-bf95955608d6921a.js",
+            "gzipBytes": 2962
+          },
+          {
+            "src": "744-6e602637827bc9e9.js",
+            "gzipBytes": 8630
+          },
+          {
+            "src": "2783-da4ecf3f59f2cf91.js",
+            "gzipBytes": 3703
+          },
+          {
+            "src": "2390-3bf09a4e8ab87a6a.js",
+            "gzipBytes": 5777
+          },
+          {
+            "src": "4022-151974b69408758d.js",
+            "gzipBytes": 7512
+          },
+          {
+            "src": "2295-8c0f60802b5a8bb7.js",
+            "gzipBytes": 3621
+          },
+          {
+            "src": "6335-86f0a9058511a2bf.js",
+            "gzipBytes": 22502
+          },
+          {
+            "src": "app/(dashboard)/owner/settings/page-f0caec673846c7e4.js",
+            "gzipBytes": 5688
+          },
+          {
+            "src": "3677-93438951ad4b8add.js",
+            "gzipBytes": 6052
+          },
+          {
+            "src": "2762-fe9ab01ef9e5f38c.js",
+            "gzipBytes": 2969
+          },
+          {
+            "src": "3665-8ee116dc23036d2d.js",
+            "gzipBytes": 4431
+          },
+          {
+            "src": "7101-1b6dc3c6f21f5f84.js",
+            "gzipBytes": 3158
+          },
+          {
+            "src": "9646-0ed9fd68d31a792a.js",
+            "gzipBytes": 9700
+          },
+          {
+            "src": "app/(dashboard)/owner/layout-5d17c15afdc866ab.js",
+            "gzipBytes": 6918
+          },
+          {
+            "src": "7080-5234d4956bcf2656.js",
+            "gzipBytes": 5106
+          },
+          {
+            "src": "419-485d1f22cbe0563f.js",
+            "gzipBytes": 5764
+          },
+          {
+            "src": "3411-c54fde356dd6b69a.js",
+            "gzipBytes": 4904
+          },
+          {
+            "src": "app/(dashboard)/owner/settings/layout-a882719b69ab39ce.js",
+            "gzipBytes": 4108
+          },
+          {
+            "src": "webpack-4983e0a0c5ff30d6.js",
+            "gzipBytes": 3202
+          }
+        ]
+      },
+      "errorDigest": null
+    },
+    {
+      "account": "lite",
+      "path": "/owner/billing",
+      "status": 200,
+      "location": null,
+      "ttfbMs": 64.9,
+      "totalMs": 137.3,
+      "backendCalls": 10,
+      "sequentialWaits": 4,
+      "callTimeline": [
+        {
+          "kind": "redis",
+          "method": "POST",
+          "target": "redis [[\"get\",\"revoked:11111111-1111-4111-8111",
+          "startMs": 0,
+          "endMs": 12.4
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=base_plan_visible,lite_trial_eligible,org_subscriptions(stat",
+          "startMs": 20.5,
+          "endMs": 52.1
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=id,name,production_mode,onboarding_complete,is_locked_down,b",
+          "startMs": 20.6,
+          "endMs": 52.3
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "profiles?select=role,org_id,full_name,phone,whatsapp_number,whatsapp_opted_i",
+          "startMs": 21,
+          "endMs": 52.4
+        },
+        {
+          "kind": "auth",
+          "method": "GET",
+          "target": "/auth/v1/user",
+          "startMs": 21.4,
+          "endMs": 52.6
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "org_subscriptions?select=status,plan_tier,plan_id,current_start,current_end,paid_coun",
+          "startMs": 56.1,
+          "endMs": 87
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "cost_rate_book?select=last_reviewed_at,review_interval_days",
+          "startMs": 57.6,
+          "endMs": 87.1
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "org_subscriptions?select=id,plan_tier,status,current_start,current_end,razorpay_payme",
+          "startMs": 88.6,
+          "endMs": 119
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "billing_checkout_attempts?select=id,org_id,client_request_id,plan_tier,purchase_type,status,p",
+          "startMs": 88.9,
+          "endMs": 119.2
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "subscription_payments?select=id,status,created_at,razorpay_payment_id,amount_paise,method",
+          "startMs": 89.1,
+          "endMs": 119.3
+        }
+      ],
+      "html": {
+        "bytes": 111258,
+        "gzipBytes": 349783,
+        "scripts": 23,
+        "rawBytes": 1081831,
+        "cssFiles": 3,
+        "cssGzipBytes": 50351,
+        "chunks": [
+          {
+            "src": "5d015edf-919221869929b925.js",
+            "gzipBytes": 388
+          },
+          {
+            "src": "4bd1b696-36241c79b2a4fb73.js",
+            "gzipBytes": 62874
+          },
+          {
+            "src": "7569-5ebcda0cd87fe0b5.js",
+            "gzipBytes": 149316
+          },
+          {
+            "src": "main-app-51ecd6d8519925e8.js",
+            "gzipBytes": 2262
+          },
+          {
+            "src": "app/global-error-d4ce8654b210b086.js",
+            "gzipBytes": 2965
+          },
+          {
+            "src": "8500-1dbb77aa8d8980ea.js",
+            "gzipBytes": 2026
+          },
+          {
+            "src": "6609-cdd7829b3b445dd1.js",
+            "gzipBytes": 9414
+          },
+          {
+            "src": "5885-f4a8d6a12457c1d9.js",
+            "gzipBytes": 25442
+          },
+          {
+            "src": "app/layout-aaf477f098b263ce.js",
+            "gzipBytes": 12805
+          },
+          {
+            "src": "8409-c971f1b66ffe1d23.js",
+            "gzipBytes": 8239
+          },
+          {
+            "src": "1798-ced0ec606b5fb7e2.js",
+            "gzipBytes": 8475
+          },
+          {
+            "src": "8495-044ce28213f56ef4.js",
+            "gzipBytes": 3061
+          },
+          {
+            "src": "3705-19a4b8a9299dc0eb.js",
+            "gzipBytes": 2993
+          },
+          {
+            "src": "406-ebbf7d42f0f50255.js",
+            "gzipBytes": 5275
+          },
+          {
+            "src": "8599-c9770b38bd00d5e3.js",
+            "gzipBytes": 7177
+          },
+          {
+            "src": "app/(dashboard)/owner/billing/page-7f3dc99d8acc93b8.js",
+            "gzipBytes": 10641
+          },
+          {
+            "src": "3677-93438951ad4b8add.js",
+            "gzipBytes": 6052
+          },
+          {
+            "src": "2762-fe9ab01ef9e5f38c.js",
+            "gzipBytes": 2969
+          },
+          {
+            "src": "3665-8ee116dc23036d2d.js",
+            "gzipBytes": 4431
+          },
+          {
+            "src": "7101-1b6dc3c6f21f5f84.js",
+            "gzipBytes": 3158
+          },
+          {
+            "src": "9646-0ed9fd68d31a792a.js",
+            "gzipBytes": 9700
+          },
+          {
+            "src": "app/(dashboard)/owner/layout-5d17c15afdc866ab.js",
+            "gzipBytes": 6918
+          },
+          {
+            "src": "webpack-4983e0a0c5ff30d6.js",
+            "gzipBytes": 3202
+          }
+        ]
+      },
+      "errorDigest": null
+    },
+    {
+      "account": "base",
+      "path": "/owner/estimator",
+      "status": 200,
+      "location": null,
+      "ttfbMs": 65.1,
+      "totalMs": 136.4,
+      "backendCalls": 8,
+      "sequentialWaits": 4,
+      "callTimeline": [
+        {
+          "kind": "redis",
+          "method": "POST",
+          "target": "redis [[\"get\",\"revoked:22222222-2222-4222-8222",
+          "startMs": 0,
+          "endMs": 12.5
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=base_plan_visible,lite_trial_eligible,org_subscriptions(stat",
+          "startMs": 21.1,
+          "endMs": 53.4
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=id,name,production_mode,onboarding_complete,is_locked_down,b",
+          "startMs": 21.3,
+          "endMs": 53.5
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "profiles?select=role,org_id,full_name,phone,whatsapp_number,whatsapp_opted_i",
+          "startMs": 21.6,
+          "endMs": 53.7
+        },
+        {
+          "kind": "auth",
+          "method": "GET",
+          "target": "/auth/v1/user",
+          "startMs": 22,
+          "endMs": 53.8
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "factory_cost_profile?select=*",
+          "startMs": 57,
+          "endMs": 89.2
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "cost_rate_book?select=last_reviewed_at,review_interval_days",
+          "startMs": 58.4,
+          "endMs": 89.4
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_production_workers?select=id,name,role,pay_type,is_active,monthly_salary,start_date,en",
+          "startMs": 90.8,
+          "endMs": 122.5
+        }
+      ],
+      "html": {
+        "bytes": 149968,
+        "gzipBytes": 575737,
+        "scripts": 39,
+        "rawBytes": 1860950,
+        "cssFiles": 2,
+        "cssGzipBytes": 49577,
+        "chunks": [
+          {
+            "src": "5d015edf-919221869929b925.js",
+            "gzipBytes": 388
+          },
+          {
+            "src": "4bd1b696-36241c79b2a4fb73.js",
+            "gzipBytes": 62874
+          },
+          {
+            "src": "7569-5ebcda0cd87fe0b5.js",
+            "gzipBytes": 149316
+          },
+          {
+            "src": "main-app-51ecd6d8519925e8.js",
+            "gzipBytes": 2262
+          },
+          {
+            "src": "app/global-error-d4ce8654b210b086.js",
+            "gzipBytes": 2965
+          },
+          {
+            "src": "8500-1dbb77aa8d8980ea.js",
+            "gzipBytes": 2026
+          },
+          {
+            "src": "6609-cdd7829b3b445dd1.js",
+            "gzipBytes": 9414
+          },
+          {
+            "src": "5885-f4a8d6a12457c1d9.js",
+            "gzipBytes": 25442
+          },
+          {
+            "src": "app/layout-aaf477f098b263ce.js",
+            "gzipBytes": 12805
+          },
+          {
+            "src": "8409-c971f1b66ffe1d23.js",
+            "gzipBytes": 8239
+          },
+          {
+            "src": "6513-73b9b0e6d13a6e11.js",
+            "gzipBytes": 2720
+          },
+          {
+            "src": "app/(dashboard)/owner/estimator/loading-b7264b3fb21f750d.js",
+            "gzipBytes": 3578
+          },
+          {
+            "src": "1798-ced0ec606b5fb7e2.js",
+            "gzipBytes": 8475
+          },
+          {
+            "src": "8495-044ce28213f56ef4.js",
+            "gzipBytes": 3061
+          },
+          {
+            "src": "3677-93438951ad4b8add.js",
+            "gzipBytes": 6052
+          },
+          {
+            "src": "2762-fe9ab01ef9e5f38c.js",
+            "gzipBytes": 2969
+          },
+          {
+            "src": "3665-8ee116dc23036d2d.js",
+            "gzipBytes": 4431
+          },
+          {
+            "src": "7101-1b6dc3c6f21f5f84.js",
+            "gzipBytes": 3158
+          },
+          {
+            "src": "9646-0ed9fd68d31a792a.js",
+            "gzipBytes": 9700
+          },
+          {
+            "src": "app/(dashboard)/owner/layout-5d17c15afdc866ab.js",
+            "gzipBytes": 6918
+          },
+          {
+            "src": "webpack-4983e0a0c5ff30d6.js",
+            "gzipBytes": 3202
+          },
+          {
+            "src": "7706-f4904afa4b71e738.js",
+            "gzipBytes": 9503
+          },
+          {
+            "src": "7173-1320e6a0924ac52e.js",
+            "gzipBytes": 25696
+          },
+          {
+            "src": "8163-50734f944964d823.js",
+            "gzipBytes": 10614
+          },
+          {
+            "src": "4647-38b0fbbfe9ec744b.js",
+            "gzipBytes": 2085
+          },
+          {
+            "src": "3512-0cf18563d813b269.js",
+            "gzipBytes": 12934
+          },
+          {
+            "src": "918-16184ad84cf4c002.js",
+            "gzipBytes": 7094
+          },
+          {
+            "src": "4729-e899aee5f48be64a.js",
+            "gzipBytes": 2505
+          },
+          {
+            "src": "419-485d1f22cbe0563f.js",
+            "gzipBytes": 5764
+          },
+          {
+            "src": "3411-c54fde356dd6b69a.js",
+            "gzipBytes": 4904
+          },
+          {
+            "src": "406-ebbf7d42f0f50255.js",
+            "gzipBytes": 5275
+          },
+          {
+            "src": "2234-9f024851648fa6d5.js",
+            "gzipBytes": 7578
+          },
+          {
+            "src": "8250-6886d51b7b03cb53.js",
+            "gzipBytes": 16209
+          },
+          {
+            "src": "9862-d56f32f884121429.js",
+            "gzipBytes": 7492
+          },
+          {
+            "src": "4340-fc749e416af14a70.js",
+            "gzipBytes": 5397
+          },
+          {
+            "src": "220-cdd787f46997b453.js",
+            "gzipBytes": 25543
+          },
+          {
+            "src": "6216-727a887c9adad1ae.js",
+            "gzipBytes": 5556
+          },
+          {
+            "src": "8389-4d582b5bceff38ca.js",
+            "gzipBytes": 87448
+          },
+          {
+            "src": "app/(dashboard)/owner/estimator/page-21ce20578b9161ec.js",
+            "gzipBytes": 4145
+          }
+        ]
+      },
+      "errorDigest": null
+    },
+    {
+      "account": "base",
+      "path": "/owner/production",
+      "status": 200,
+      "location": null,
+      "ttfbMs": 70,
+      "totalMs": 106.5,
+      "backendCalls": 21,
+      "sequentialWaits": 3,
+      "callTimeline": [
+        {
+          "kind": "redis",
+          "method": "POST",
+          "target": "redis [[\"get\",\"revoked:22222222-2222-4222-8222",
+          "startMs": 0,
+          "endMs": 12.1
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=base_plan_visible,lite_trial_eligible,org_subscriptions(stat",
+          "startMs": 20.2,
+          "endMs": 51.9
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=id,name,production_mode,onboarding_complete,is_locked_down,b",
+          "startMs": 20.4,
+          "endMs": 52.1
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "profiles?select=role,org_id,full_name,phone,whatsapp_number,whatsapp_opted_i",
+          "startMs": 20.7,
+          "endMs": 52.2
+        },
+        {
+          "kind": "auth",
+          "method": "GET",
+          "target": "/auth/v1/user",
+          "startMs": 21.2,
+          "endMs": 52.4
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "estimator_quotes?select=id,quality_label,costing_group_id,version_number,order_quant",
+          "startMs": 57.4,
+          "endMs": 88.6
+        },
+        {
+          "kind": "rest",
+          "method": "POST",
+          "target": "rpc/get_supervisor_display_names",
+          "startMs": 57.9,
+          "endMs": 88.8
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_production_jobs?select=id,costing_id,costing_group_id,costing_version,quality_label",
+          "startMs": 58,
+          "endMs": 88.9
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_production_entries?select=id,job_id,worker_id,production_date,meters,worker_rate_snaps",
+          "startMs": 58.5,
+          "endMs": 89
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_production_workers?select=id,name,rate_per_meter,shift_availability,is_active,pay_type",
+          "startMs": 58.7,
+          "endMs": 90
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_payroll_settlements?select=id,worker_id,period_start,period_end,gross_pay,incentive_pay",
+          "startMs": 59.1,
+          "endMs": 90.1
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_production_machines?select=id,name,machine_type,custom_label,is_active",
+          "startMs": 59.4,
+          "endMs": 90.1
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_worker_machine_assignments?select=id,worker_id,machine_id,shift,active,effective_from,effectiv",
+          "startMs": 59.7,
+          "endMs": 90.2
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_machine_job_contexts?select=id,machine_id,job_id,active,effective_from,effective_to",
+          "startMs": 60,
+          "endMs": 90.3
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_production_batches?select=id,production_date,shift,status,client_request_id,created_at",
+          "startMs": 60.3,
+          "endMs": 90.4
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_production_batch_revisions?select=id,batch_id,revision_number,change_kind,correction_reason,be",
+          "startMs": 60.6,
+          "endMs": 90.5
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_daily_production_entries?select=id,batch_id,worker_id,entry_status,meters,worker_rate_snapsh",
+          "startMs": 60.9,
+          "endMs": 91.4
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_daily_production_allocations?select=id,entry_id,worker_id,assignment_id,machine_id,job_id,meters",
+          "startMs": 61.1,
+          "endMs": 91.4
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=name,base_go_live_date",
+          "startMs": 61.4,
+          "endMs": 91.5
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_payroll_cycle_configs?select=id,org_id,cycle_type,rule,effective_from,effective_until,cre",
+          "startMs": 61.7,
+          "endMs": 91.8
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "cost_rate_book?select=last_reviewed_at,review_interval_days",
+          "startMs": 63.2,
+          "endMs": 92.8
+        }
+      ],
+      "html": {
+        "bytes": 80890,
+        "gzipBytes": 526401,
+        "scripts": 39,
+        "rawBytes": 1683292,
+        "cssFiles": 2,
+        "cssGzipBytes": 49577,
+        "chunks": [
+          {
+            "src": "5d015edf-919221869929b925.js",
+            "gzipBytes": 388
+          },
+          {
+            "src": "4bd1b696-36241c79b2a4fb73.js",
+            "gzipBytes": 62874
+          },
+          {
+            "src": "7569-5ebcda0cd87fe0b5.js",
+            "gzipBytes": 149316
+          },
+          {
+            "src": "main-app-51ecd6d8519925e8.js",
+            "gzipBytes": 2262
+          },
+          {
+            "src": "app/global-error-d4ce8654b210b086.js",
+            "gzipBytes": 2965
+          },
+          {
+            "src": "8500-1dbb77aa8d8980ea.js",
+            "gzipBytes": 2026
+          },
+          {
+            "src": "6609-cdd7829b3b445dd1.js",
+            "gzipBytes": 9414
+          },
+          {
+            "src": "5885-f4a8d6a12457c1d9.js",
+            "gzipBytes": 25442
+          },
+          {
+            "src": "app/layout-aaf477f098b263ce.js",
+            "gzipBytes": 12805
+          },
+          {
+            "src": "8409-c971f1b66ffe1d23.js",
+            "gzipBytes": 8239
+          },
+          {
+            "src": "6513-73b9b0e6d13a6e11.js",
+            "gzipBytes": 2720
+          },
+          {
+            "src": "app/(dashboard)/owner/production/loading-199dd3aff9704480.js",
+            "gzipBytes": 3707
+          },
+          {
+            "src": "1798-ced0ec606b5fb7e2.js",
+            "gzipBytes": 8475
+          },
+          {
+            "src": "8495-044ce28213f56ef4.js",
+            "gzipBytes": 3061
+          },
+          {
+            "src": "3677-93438951ad4b8add.js",
+            "gzipBytes": 6052
+          },
+          {
+            "src": "2762-fe9ab01ef9e5f38c.js",
+            "gzipBytes": 2969
+          },
+          {
+            "src": "3665-8ee116dc23036d2d.js",
+            "gzipBytes": 4431
+          },
+          {
+            "src": "7101-1b6dc3c6f21f5f84.js",
+            "gzipBytes": 3158
+          },
+          {
+            "src": "9646-0ed9fd68d31a792a.js",
+            "gzipBytes": 9700
+          },
+          {
+            "src": "app/(dashboard)/owner/layout-5d17c15afdc866ab.js",
+            "gzipBytes": 6918
+          },
+          {
+            "src": "webpack-4983e0a0c5ff30d6.js",
+            "gzipBytes": 3202
+          },
+          {
+            "src": "7706-f4904afa4b71e738.js",
+            "gzipBytes": 9503
+          },
+          {
+            "src": "7173-1320e6a0924ac52e.js",
+            "gzipBytes": 25696
+          },
+          {
+            "src": "8163-50734f944964d823.js",
+            "gzipBytes": 10614
+          },
+          {
+            "src": "4647-38b0fbbfe9ec744b.js",
+            "gzipBytes": 2085
+          },
+          {
+            "src": "2484-77b1b430adde4ef3.js",
+            "gzipBytes": 7374
+          },
+          {
+            "src": "3512-0cf18563d813b269.js",
+            "gzipBytes": 12934
+          },
+          {
+            "src": "2826-55480b108487acd5.js",
+            "gzipBytes": 2528
+          },
+          {
+            "src": "918-16184ad84cf4c002.js",
+            "gzipBytes": 7094
+          },
+          {
+            "src": "8539-9b2ac7c65aeaf75b.js",
+            "gzipBytes": 3161
+          },
+          {
+            "src": "406-ebbf7d42f0f50255.js",
+            "gzipBytes": 5275
+          },
+          {
+            "src": "2234-9f024851648fa6d5.js",
+            "gzipBytes": 7578
+          },
+          {
+            "src": "744-6e602637827bc9e9.js",
+            "gzipBytes": 8630
+          },
+          {
+            "src": "2783-da4ecf3f59f2cf91.js",
+            "gzipBytes": 3703
+          },
+          {
+            "src": "4340-fc749e416af14a70.js",
+            "gzipBytes": 5397
+          },
+          {
+            "src": "5214-7c36b872c28eaba6.js",
+            "gzipBytes": 27150
+          },
+          {
+            "src": "8218-28aa575271c0ae15.js",
+            "gzipBytes": 5781
+          },
+          {
+            "src": "7135-c9c9aba350731367.js",
+            "gzipBytes": 50699
+          },
+          {
+            "src": "app/(dashboard)/owner/production/page-800aea75b6e0c3d1.js",
+            "gzipBytes": 1075
+          }
+        ]
+      },
+      "errorDigest": null
+    },
+    {
+      "account": "base",
+      "path": "/owner/production/daily-sheet",
+      "status": 200,
+      "location": null,
+      "ttfbMs": 69,
+      "totalMs": 105.7,
+      "backendCalls": 21,
+      "sequentialWaits": 3,
+      "callTimeline": [
+        {
+          "kind": "redis",
+          "method": "POST",
+          "target": "redis [[\"get\",\"revoked:22222222-2222-4222-8222",
+          "startMs": 0,
+          "endMs": 11.7
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=base_plan_visible,lite_trial_eligible,org_subscriptions(stat",
+          "startMs": 19.8,
+          "endMs": 52.3
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=id,name,production_mode,onboarding_complete,is_locked_down,b",
+          "startMs": 19.9,
+          "endMs": 52.4
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "profiles?select=role,org_id,full_name,phone,whatsapp_number,whatsapp_opted_i",
+          "startMs": 20.4,
+          "endMs": 52.6
+        },
+        {
+          "kind": "auth",
+          "method": "GET",
+          "target": "/auth/v1/user",
+          "startMs": 20.8,
+          "endMs": 52.8
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "estimator_quotes?select=id,quality_label,costing_group_id,version_number,order_quant",
+          "startMs": 56.8,
+          "endMs": 86.9
+        },
+        {
+          "kind": "rest",
+          "method": "POST",
+          "target": "rpc/get_supervisor_display_names",
+          "startMs": 57.3,
+          "endMs": 88.3
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_production_jobs?select=id,costing_id,costing_group_id,costing_version,quality_label",
+          "startMs": 57.5,
+          "endMs": 88.4
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_production_entries?select=id,job_id,worker_id,production_date,meters,worker_rate_snaps",
+          "startMs": 57.8,
+          "endMs": 88.5
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_production_workers?select=id,name,rate_per_meter,shift_availability,is_active,pay_type",
+          "startMs": 58.1,
+          "endMs": 88.6
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_payroll_settlements?select=id,worker_id,period_start,period_end,gross_pay,incentive_pay",
+          "startMs": 58.4,
+          "endMs": 90.1
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_production_machines?select=id,name,machine_type,custom_label,is_active",
+          "startMs": 58.7,
+          "endMs": 90.2
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_worker_machine_assignments?select=id,worker_id,machine_id,shift,active,effective_from,effectiv",
+          "startMs": 59,
+          "endMs": 90.3
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_machine_job_contexts?select=id,machine_id,job_id,active,effective_from,effective_to",
+          "startMs": 59.3,
+          "endMs": 90.3
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_production_batches?select=id,production_date,shift,status,client_request_id,created_at",
+          "startMs": 59.5,
+          "endMs": 90.4
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_production_batch_revisions?select=id,batch_id,revision_number,change_kind,correction_reason,be",
+          "startMs": 59.9,
+          "endMs": 90.4
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_daily_production_entries?select=id,batch_id,worker_id,entry_status,meters,worker_rate_snapsh",
+          "startMs": 60.1,
+          "endMs": 90.5
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_daily_production_allocations?select=id,entry_id,worker_id,assignment_id,machine_id,job_id,meters",
+          "startMs": 60.4,
+          "endMs": 91.7
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=name,base_go_live_date",
+          "startMs": 60.7,
+          "endMs": 91.8
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_payroll_cycle_configs?select=id,org_id,cycle_type,rule,effective_from,effective_until,cre",
+          "startMs": 60.9,
+          "endMs": 91.8
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "cost_rate_book?select=last_reviewed_at,review_interval_days",
+          "startMs": 63,
+          "endMs": 93.3
+        }
+      ],
+      "html": {
+        "bytes": 87042,
+        "gzipBytes": 526401,
+        "scripts": 39,
+        "rawBytes": 1683292,
+        "cssFiles": 2,
+        "cssGzipBytes": 49577,
+        "chunks": [
+          {
+            "src": "5d015edf-919221869929b925.js",
+            "gzipBytes": 388
+          },
+          {
+            "src": "4bd1b696-36241c79b2a4fb73.js",
+            "gzipBytes": 62874
+          },
+          {
+            "src": "7569-5ebcda0cd87fe0b5.js",
+            "gzipBytes": 149316
+          },
+          {
+            "src": "main-app-51ecd6d8519925e8.js",
+            "gzipBytes": 2262
+          },
+          {
+            "src": "app/global-error-d4ce8654b210b086.js",
+            "gzipBytes": 2965
+          },
+          {
+            "src": "8500-1dbb77aa8d8980ea.js",
+            "gzipBytes": 2026
+          },
+          {
+            "src": "6609-cdd7829b3b445dd1.js",
+            "gzipBytes": 9414
+          },
+          {
+            "src": "5885-f4a8d6a12457c1d9.js",
+            "gzipBytes": 25442
+          },
+          {
+            "src": "app/layout-aaf477f098b263ce.js",
+            "gzipBytes": 12805
+          },
+          {
+            "src": "8409-c971f1b66ffe1d23.js",
+            "gzipBytes": 8239
+          },
+          {
+            "src": "6513-73b9b0e6d13a6e11.js",
+            "gzipBytes": 2720
+          },
+          {
+            "src": "app/(dashboard)/owner/production/loading-199dd3aff9704480.js",
+            "gzipBytes": 3707
+          },
+          {
+            "src": "1798-ced0ec606b5fb7e2.js",
+            "gzipBytes": 8475
+          },
+          {
+            "src": "8495-044ce28213f56ef4.js",
+            "gzipBytes": 3061
+          },
+          {
+            "src": "3677-93438951ad4b8add.js",
+            "gzipBytes": 6052
+          },
+          {
+            "src": "2762-fe9ab01ef9e5f38c.js",
+            "gzipBytes": 2969
+          },
+          {
+            "src": "3665-8ee116dc23036d2d.js",
+            "gzipBytes": 4431
+          },
+          {
+            "src": "7101-1b6dc3c6f21f5f84.js",
+            "gzipBytes": 3158
+          },
+          {
+            "src": "9646-0ed9fd68d31a792a.js",
+            "gzipBytes": 9700
+          },
+          {
+            "src": "app/(dashboard)/owner/layout-5d17c15afdc866ab.js",
+            "gzipBytes": 6918
+          },
+          {
+            "src": "webpack-4983e0a0c5ff30d6.js",
+            "gzipBytes": 3202
+          },
+          {
+            "src": "7706-f4904afa4b71e738.js",
+            "gzipBytes": 9503
+          },
+          {
+            "src": "7173-1320e6a0924ac52e.js",
+            "gzipBytes": 25696
+          },
+          {
+            "src": "8163-50734f944964d823.js",
+            "gzipBytes": 10614
+          },
+          {
+            "src": "4647-38b0fbbfe9ec744b.js",
+            "gzipBytes": 2085
+          },
+          {
+            "src": "2484-77b1b430adde4ef3.js",
+            "gzipBytes": 7374
+          },
+          {
+            "src": "3512-0cf18563d813b269.js",
+            "gzipBytes": 12934
+          },
+          {
+            "src": "2826-55480b108487acd5.js",
+            "gzipBytes": 2528
+          },
+          {
+            "src": "918-16184ad84cf4c002.js",
+            "gzipBytes": 7094
+          },
+          {
+            "src": "8539-9b2ac7c65aeaf75b.js",
+            "gzipBytes": 3161
+          },
+          {
+            "src": "406-ebbf7d42f0f50255.js",
+            "gzipBytes": 5275
+          },
+          {
+            "src": "2234-9f024851648fa6d5.js",
+            "gzipBytes": 7578
+          },
+          {
+            "src": "744-6e602637827bc9e9.js",
+            "gzipBytes": 8630
+          },
+          {
+            "src": "2783-da4ecf3f59f2cf91.js",
+            "gzipBytes": 3703
+          },
+          {
+            "src": "4340-fc749e416af14a70.js",
+            "gzipBytes": 5397
+          },
+          {
+            "src": "5214-7c36b872c28eaba6.js",
+            "gzipBytes": 27150
+          },
+          {
+            "src": "8218-28aa575271c0ae15.js",
+            "gzipBytes": 5781
+          },
+          {
+            "src": "7135-c9c9aba350731367.js",
+            "gzipBytes": 50699
+          },
+          {
+            "src": "app/(dashboard)/owner/production/daily-sheet/page-6ef3d46262fad1ca.js",
+            "gzipBytes": 1075
+          }
+        ]
+      },
+      "errorDigest": null
+    },
+    {
+      "account": "base",
+      "path": "/owner/stock",
+      "status": 200,
+      "location": null,
+      "ttfbMs": 67.4,
+      "totalMs": 102.5,
+      "backendCalls": 11,
+      "sequentialWaits": 3,
+      "callTimeline": [
+        {
+          "kind": "redis",
+          "method": "POST",
+          "target": "redis [[\"get\",\"revoked:22222222-2222-4222-8222",
+          "startMs": 0,
+          "endMs": 11.7
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=base_plan_visible,lite_trial_eligible,org_subscriptions(stat",
+          "startMs": 19.8,
+          "endMs": 51.4
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=id,name,production_mode,onboarding_complete,is_locked_down,b",
+          "startMs": 20,
+          "endMs": 51.6
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "profiles?select=role,org_id,full_name,phone,whatsapp_number,whatsapp_opted_i",
+          "startMs": 20.3,
+          "endMs": 51.6
+        },
+        {
+          "kind": "auth",
+          "method": "GET",
+          "target": "/auth/v1/user",
+          "startMs": 20.7,
+          "endMs": 51.9
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=base_go_live_date",
+          "startMs": 54.8,
+          "endMs": 86.8
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_payroll_cycle_configs?select=rule",
+          "startMs": 55.2,
+          "endMs": 86.9
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "quality_stock_movements?select=id,quality_id,kind,meters_delta,balance_after,reason,source_",
+          "startMs": 57.6,
+          "endMs": 88.5
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "legacy_stock?select=id,quality_id,basis,balance_meters,basis_meters,basis_at,dis",
+          "startMs": 57.9,
+          "endMs": 88.6
+        },
+        {
+          "kind": "rest",
+          "method": "POST",
+          "target": "rpc/get_quality_stock_board",
+          "startMs": 58.4,
+          "endMs": 88.6
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "cost_rate_book?select=last_reviewed_at,review_interval_days",
+          "startMs": 59.9,
+          "endMs": 90.1
+        }
+      ],
+      "html": {
+        "bytes": 81224,
+        "gzipBytes": 414618,
+        "scripts": 30,
+        "rawBytes": 1294084,
+        "cssFiles": 2,
+        "cssGzipBytes": 49577,
+        "chunks": [
+          {
+            "src": "5d015edf-919221869929b925.js",
+            "gzipBytes": 388
+          },
+          {
+            "src": "4bd1b696-36241c79b2a4fb73.js",
+            "gzipBytes": 62874
+          },
+          {
+            "src": "7569-5ebcda0cd87fe0b5.js",
+            "gzipBytes": 149316
+          },
+          {
+            "src": "main-app-51ecd6d8519925e8.js",
+            "gzipBytes": 2262
+          },
+          {
+            "src": "app/global-error-d4ce8654b210b086.js",
+            "gzipBytes": 2965
+          },
+          {
+            "src": "8500-1dbb77aa8d8980ea.js",
+            "gzipBytes": 2026
+          },
+          {
+            "src": "6609-cdd7829b3b445dd1.js",
+            "gzipBytes": 9414
+          },
+          {
+            "src": "5885-f4a8d6a12457c1d9.js",
+            "gzipBytes": 25442
+          },
+          {
+            "src": "app/layout-aaf477f098b263ce.js",
+            "gzipBytes": 12805
+          },
+          {
+            "src": "app/(dashboard)/owner/stock/loading-5476b429b2e7ee2d.js",
+            "gzipBytes": 952
+          },
+          {
+            "src": "8409-c971f1b66ffe1d23.js",
+            "gzipBytes": 8239
+          },
+          {
+            "src": "1798-ced0ec606b5fb7e2.js",
+            "gzipBytes": 8475
+          },
+          {
+            "src": "8495-044ce28213f56ef4.js",
+            "gzipBytes": 3061
+          },
+          {
+            "src": "3677-93438951ad4b8add.js",
+            "gzipBytes": 6052
+          },
+          {
+            "src": "419-485d1f22cbe0563f.js",
+            "gzipBytes": 5764
+          },
+          {
+            "src": "3411-c54fde356dd6b69a.js",
+            "gzipBytes": 4904
+          },
+          {
+            "src": "app/(dashboard)/owner/stock/layout-9fe82abf1d670b53.js",
+            "gzipBytes": 3599
+          },
+          {
+            "src": "app/(dashboard)/owner/stock/error-3b35a00f86829004.js",
+            "gzipBytes": 2499
+          },
+          {
+            "src": "2762-fe9ab01ef9e5f38c.js",
+            "gzipBytes": 2969
+          },
+          {
+            "src": "3665-8ee116dc23036d2d.js",
+            "gzipBytes": 4431
+          },
+          {
+            "src": "7101-1b6dc3c6f21f5f84.js",
+            "gzipBytes": 3158
+          },
+          {
+            "src": "9646-0ed9fd68d31a792a.js",
+            "gzipBytes": 9700
+          },
+          {
+            "src": "app/(dashboard)/owner/layout-5d17c15afdc866ab.js",
+            "gzipBytes": 6918
+          },
+          {
+            "src": "webpack-4983e0a0c5ff30d6.js",
+            "gzipBytes": 3202
+          },
+          {
+            "src": "7173-1320e6a0924ac52e.js",
+            "gzipBytes": 25696
+          },
+          {
+            "src": "3512-0cf18563d813b269.js",
+            "gzipBytes": 12934
+          },
+          {
+            "src": "895-cb787e7020237ff9.js",
+            "gzipBytes": 5293
+          },
+          {
+            "src": "406-ebbf7d42f0f50255.js",
+            "gzipBytes": 5275
+          },
+          {
+            "src": "9805-849234ad520c4d96.js",
+            "gzipBytes": 6644
+          },
+          {
+            "src": "app/(dashboard)/owner/stock/page-c2e7b1b19b6c2295.js",
+            "gzipBytes": 17361
+          }
+        ]
+      },
+      "errorDigest": null
+    },
+    {
+      "account": "base",
+      "path": "/owner/dispatches",
+      "status": 200,
+      "location": null,
+      "ttfbMs": 66.7,
+      "totalMs": 101.2,
+      "backendCalls": 11,
+      "sequentialWaits": 3,
+      "callTimeline": [
+        {
+          "kind": "redis",
+          "method": "POST",
+          "target": "redis [[\"get\",\"revoked:22222222-2222-4222-8222",
+          "startMs": 0,
+          "endMs": 12.4
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=base_plan_visible,lite_trial_eligible,org_subscriptions(stat",
+          "startMs": 19.5,
+          "endMs": 51.7
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=id,name,production_mode,onboarding_complete,is_locked_down,b",
+          "startMs": 19.7,
+          "endMs": 51.8
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "profiles?select=role,org_id,full_name,phone,whatsapp_number,whatsapp_opted_i",
+          "startMs": 19.9,
+          "endMs": 51.8
+        },
+        {
+          "kind": "auth",
+          "method": "GET",
+          "target": "/auth/v1/user",
+          "startMs": 20.3,
+          "endMs": 51.9
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=base_go_live_date",
+          "startMs": 54.1,
+          "endMs": 86.5
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_payroll_cycle_configs?select=rule",
+          "startMs": 54.5,
+          "endMs": 86.6
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "delivery_challans?select=*",
+          "startMs": 56.7,
+          "endMs": 86.6
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "legacy_stock?select=id,quality_id,basis,balance_meters,basis_meters,basis_at,dis",
+          "startMs": 56.8,
+          "endMs": 86.7
+        },
+        {
+          "kind": "rest",
+          "method": "POST",
+          "target": "rpc/get_quality_stock_board",
+          "startMs": 57.3,
+          "endMs": 88.1
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "cost_rate_book?select=last_reviewed_at,review_interval_days",
+          "startMs": 58.8,
+          "endMs": 88.2
+        }
+      ],
+      "html": {
+        "bytes": 82810,
+        "gzipBytes": 425314,
+        "scripts": 28,
+        "rawBytes": 1311554,
+        "cssFiles": 2,
+        "cssGzipBytes": 49577,
+        "chunks": [
+          {
+            "src": "5d015edf-919221869929b925.js",
+            "gzipBytes": 388
+          },
+          {
+            "src": "4bd1b696-36241c79b2a4fb73.js",
+            "gzipBytes": 62874
+          },
+          {
+            "src": "7569-5ebcda0cd87fe0b5.js",
+            "gzipBytes": 149316
+          },
+          {
+            "src": "main-app-51ecd6d8519925e8.js",
+            "gzipBytes": 2262
+          },
+          {
+            "src": "app/global-error-d4ce8654b210b086.js",
+            "gzipBytes": 2965
+          },
+          {
+            "src": "8500-1dbb77aa8d8980ea.js",
+            "gzipBytes": 2026
+          },
+          {
+            "src": "6609-cdd7829b3b445dd1.js",
+            "gzipBytes": 9414
+          },
+          {
+            "src": "5885-f4a8d6a12457c1d9.js",
+            "gzipBytes": 25442
+          },
+          {
+            "src": "app/layout-aaf477f098b263ce.js",
+            "gzipBytes": 12805
+          },
+          {
+            "src": "8409-c971f1b66ffe1d23.js",
+            "gzipBytes": 8239
+          },
+          {
+            "src": "1798-ced0ec606b5fb7e2.js",
+            "gzipBytes": 8475
+          },
+          {
+            "src": "8495-044ce28213f56ef4.js",
+            "gzipBytes": 3061
+          },
+          {
+            "src": "3677-93438951ad4b8add.js",
+            "gzipBytes": 6052
+          },
+          {
+            "src": "2762-fe9ab01ef9e5f38c.js",
+            "gzipBytes": 2969
+          },
+          {
+            "src": "3665-8ee116dc23036d2d.js",
+            "gzipBytes": 4431
+          },
+          {
+            "src": "7101-1b6dc3c6f21f5f84.js",
+            "gzipBytes": 3158
+          },
+          {
+            "src": "9646-0ed9fd68d31a792a.js",
+            "gzipBytes": 9700
+          },
+          {
+            "src": "app/(dashboard)/owner/layout-5d17c15afdc866ab.js",
+            "gzipBytes": 6918
+          },
+          {
+            "src": "webpack-4983e0a0c5ff30d6.js",
+            "gzipBytes": 3202
+          },
+          {
+            "src": "7706-f4904afa4b71e738.js",
+            "gzipBytes": 9503
+          },
+          {
+            "src": "7173-1320e6a0924ac52e.js",
+            "gzipBytes": 25696
+          },
+          {
+            "src": "3512-0cf18563d813b269.js",
+            "gzipBytes": 12934
+          },
+          {
+            "src": "4729-e899aee5f48be64a.js",
+            "gzipBytes": 2505
+          },
+          {
+            "src": "7226-79d661820aed7f1f.js",
+            "gzipBytes": 3496
+          },
+          {
+            "src": "406-ebbf7d42f0f50255.js",
+            "gzipBytes": 5275
+          },
+          {
+            "src": "2783-da4ecf3f59f2cf91.js",
+            "gzipBytes": 3703
+          },
+          {
+            "src": "9805-849234ad520c4d96.js",
+            "gzipBytes": 6644
+          },
+          {
+            "src": "app/(dashboard)/owner/dispatches/page-35f7fbe1ddc89f46.js",
+            "gzipBytes": 31861
+          }
+        ]
+      },
+      "errorDigest": null
+    },
+    {
+      "account": "base",
+      "path": "/owner/payroll",
+      "status": 200,
+      "location": null,
+      "ttfbMs": 68.3,
+      "totalMs": 106.4,
+      "backendCalls": 19,
+      "sequentialWaits": 3,
+      "callTimeline": [
+        {
+          "kind": "redis",
+          "method": "POST",
+          "target": "redis [[\"get\",\"revoked:22222222-2222-4222-8222",
+          "startMs": 0,
+          "endMs": 12.5
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=base_plan_visible,lite_trial_eligible,org_subscriptions(stat",
+          "startMs": 20.2,
+          "endMs": 52.5
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=id,name,production_mode,onboarding_complete,is_locked_down,b",
+          "startMs": 20.4,
+          "endMs": 52.6
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "profiles?select=role,org_id,full_name,phone,whatsapp_number,whatsapp_opted_i",
+          "startMs": 20.7,
+          "endMs": 52.8
+        },
+        {
+          "kind": "auth",
+          "method": "GET",
+          "target": "/auth/v1/user",
+          "startMs": 21.1,
+          "endMs": 53
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_production_entries?select=id,job_id,worker_id,production_date,meters,worker_rate_snaps",
+          "startMs": 56.5,
+          "endMs": 89.5
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_production_workers?select=id,name,rate_per_meter,shift_availability,is_active,pay_type",
+          "startMs": 56.8,
+          "endMs": 89.7
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_worker_advances?select=id,worker_id,amount,recovered_amount,description,status,crea",
+          "startMs": 57.1,
+          "endMs": 89.8
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_payroll_settlements?select=id,worker_id,period_start,period_end,gross_pay,incentive_pay",
+          "startMs": 57.4,
+          "endMs": 89.9
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_payroll_settlement_lines?select=id,settlement_id,worker_id,production_date,shift,machine_id,",
+          "startMs": 57.7,
+          "endMs": 90
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_worker_incentives?select=id,worker_id,service_start,service_end,amount,evidence_refer",
+          "startMs": 58,
+          "endMs": 90.1
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_staff_days_off?select=id,worker_id,off_date",
+          "startMs": 58.2,
+          "endMs": 90.2
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_production_batches?select=id,production_date,shift,status,client_request_id,created_at",
+          "startMs": 58.6,
+          "endMs": 90.3
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_daily_production_entries?select=id,batch_id,worker_id,entry_status,meters,worker_rate_snapsh",
+          "startMs": 58.9,
+          "endMs": 90.3
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_daily_production_allocations?select=id,entry_id,worker_id,assignment_id,machine_id,job_id,meters",
+          "startMs": 59.1,
+          "endMs": 90.4
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_payroll_periods?select=id,period_start,period_end,status,total_gross,total_recovery",
+          "startMs": 59.4,
+          "endMs": 90.5
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=name,base_go_live_date",
+          "startMs": 59.7,
+          "endMs": 90.6
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_payroll_cycle_configs?select=id,org_id,cycle_type,rule,effective_from,effective_until,cre",
+          "startMs": 59.9,
+          "endMs": 90.7
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "cost_rate_book?select=last_reviewed_at,review_interval_days",
+          "startMs": 61.5,
+          "endMs": 91.9
+        }
+      ],
+      "html": {
+        "bytes": 99289,
+        "gzipBytes": 546750,
+        "scripts": 44,
+        "rawBytes": 1741614,
+        "cssFiles": 2,
+        "cssGzipBytes": 49577,
+        "chunks": [
+          {
+            "src": "5d015edf-919221869929b925.js",
+            "gzipBytes": 388
+          },
+          {
+            "src": "4bd1b696-36241c79b2a4fb73.js",
+            "gzipBytes": 62874
+          },
+          {
+            "src": "7569-5ebcda0cd87fe0b5.js",
+            "gzipBytes": 149316
+          },
+          {
+            "src": "main-app-51ecd6d8519925e8.js",
+            "gzipBytes": 2262
+          },
+          {
+            "src": "app/global-error-d4ce8654b210b086.js",
+            "gzipBytes": 2965
+          },
+          {
+            "src": "8500-1dbb77aa8d8980ea.js",
+            "gzipBytes": 2026
+          },
+          {
+            "src": "6609-cdd7829b3b445dd1.js",
+            "gzipBytes": 9414
+          },
+          {
+            "src": "5885-f4a8d6a12457c1d9.js",
+            "gzipBytes": 25442
+          },
+          {
+            "src": "app/layout-aaf477f098b263ce.js",
+            "gzipBytes": 12805
+          },
+          {
+            "src": "app/(dashboard)/owner/payroll/loading-3f590c28901b7b8f.js",
+            "gzipBytes": 1055
+          },
+          {
+            "src": "8409-c971f1b66ffe1d23.js",
+            "gzipBytes": 8239
+          },
+          {
+            "src": "1798-ced0ec606b5fb7e2.js",
+            "gzipBytes": 8475
+          },
+          {
+            "src": "8495-044ce28213f56ef4.js",
+            "gzipBytes": 3061
+          },
+          {
+            "src": "3677-93438951ad4b8add.js",
+            "gzipBytes": 6052
+          },
+          {
+            "src": "2385-5e4b6fd58d32b608.js",
+            "gzipBytes": 5178
+          },
+          {
+            "src": "7080-5234d4956bcf2656.js",
+            "gzipBytes": 5106
+          },
+          {
+            "src": "419-485d1f22cbe0563f.js",
+            "gzipBytes": 5764
+          },
+          {
+            "src": "3411-c54fde356dd6b69a.js",
+            "gzipBytes": 4904
+          },
+          {
+            "src": "6886-e7d408637ea7f4de.js",
+            "gzipBytes": 3925
+          },
+          {
+            "src": "app/(dashboard)/owner/payroll/layout-f619475ffac78a29.js",
+            "gzipBytes": 337
+          },
+          {
+            "src": "2762-fe9ab01ef9e5f38c.js",
+            "gzipBytes": 2969
+          },
+          {
+            "src": "3665-8ee116dc23036d2d.js",
+            "gzipBytes": 4431
+          },
+          {
+            "src": "7101-1b6dc3c6f21f5f84.js",
+            "gzipBytes": 3158
+          },
+          {
+            "src": "9646-0ed9fd68d31a792a.js",
+            "gzipBytes": 9700
+          },
+          {
+            "src": "app/(dashboard)/owner/layout-5d17c15afdc866ab.js",
+            "gzipBytes": 6918
+          },
+          {
+            "src": "webpack-4983e0a0c5ff30d6.js",
+            "gzipBytes": 3202
+          },
+          {
+            "src": "7706-f4904afa4b71e738.js",
+            "gzipBytes": 9503
+          },
+          {
+            "src": "7173-1320e6a0924ac52e.js",
+            "gzipBytes": 25696
+          },
+          {
+            "src": "8163-50734f944964d823.js",
+            "gzipBytes": 10614
+          },
+          {
+            "src": "4647-38b0fbbfe9ec744b.js",
+            "gzipBytes": 2085
+          },
+          {
+            "src": "2484-77b1b430adde4ef3.js",
+            "gzipBytes": 7374
+          },
+          {
+            "src": "3512-0cf18563d813b269.js",
+            "gzipBytes": 12934
+          },
+          {
+            "src": "2826-55480b108487acd5.js",
+            "gzipBytes": 2528
+          },
+          {
+            "src": "918-16184ad84cf4c002.js",
+            "gzipBytes": 7094
+          },
+          {
+            "src": "8539-9b2ac7c65aeaf75b.js",
+            "gzipBytes": 3161
+          },
+          {
+            "src": "406-ebbf7d42f0f50255.js",
+            "gzipBytes": 5275
+          },
+          {
+            "src": "2234-9f024851648fa6d5.js",
+            "gzipBytes": 7578
+          },
+          {
+            "src": "744-6e602637827bc9e9.js",
+            "gzipBytes": 8630
+          },
+          {
+            "src": "2783-da4ecf3f59f2cf91.js",
+            "gzipBytes": 3703
+          },
+          {
+            "src": "4340-fc749e416af14a70.js",
+            "gzipBytes": 5397
+          },
+          {
+            "src": "5214-7c36b872c28eaba6.js",
+            "gzipBytes": 27150
+          },
+          {
+            "src": "8218-28aa575271c0ae15.js",
+            "gzipBytes": 5781
+          },
+          {
+            "src": "7135-c9c9aba350731367.js",
+            "gzipBytes": 50699
+          },
+          {
+            "src": "app/(dashboard)/owner/payroll/page-fbbb1936c9d4a0d2.js",
+            "gzipBytes": 1582
+          }
+        ]
+      },
+      "errorDigest": null
+    },
+    {
+      "account": "base",
+      "path": "/owner/machines",
+      "status": 200,
+      "location": null,
+      "ttfbMs": 64.8,
+      "totalMs": 98.2,
+      "backendCalls": 11,
+      "sequentialWaits": 3,
+      "callTimeline": [
+        {
+          "kind": "redis",
+          "method": "POST",
+          "target": "redis [[\"get\",\"revoked:22222222-2222-4222-8222",
+          "startMs": 0,
+          "endMs": 12.5
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=base_plan_visible,lite_trial_eligible,org_subscriptions(stat",
+          "startMs": 20,
+          "endMs": 50.7
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=id,name,production_mode,onboarding_complete,is_locked_down,b",
+          "startMs": 20.2,
+          "endMs": 50.8
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "profiles?select=role,org_id,full_name,phone,whatsapp_number,whatsapp_opted_i",
+          "startMs": 20.6,
+          "endMs": 50.9
+        },
+        {
+          "kind": "auth",
+          "method": "GET",
+          "target": "/auth/v1/user",
+          "startMs": 21,
+          "endMs": 51
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_production_machines?select=id,name,machine_type,custom_label,is_active,inactive_reason",
+          "startMs": 53.7,
+          "endMs": 84.3
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_worker_machine_assignments?select=id,worker_id,machine_id,shift,active,effective_from,effectiv",
+          "startMs": 54,
+          "endMs": 84.4
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_machine_job_contexts?select=id,machine_id,job_id,active,effective_from,effective_to",
+          "startMs": 54.3,
+          "endMs": 84.5
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_production_workers?select=id,name,is_active",
+          "startMs": 54.7,
+          "endMs": 84.5
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_production_jobs?select=id,quality_label,status",
+          "startMs": 55,
+          "endMs": 84.6
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "cost_rate_book?select=last_reviewed_at,review_interval_days",
+          "startMs": 56.4,
+          "endMs": 87
+        }
+      ],
+      "html": {
+        "bytes": 93566,
+        "gzipBytes": 407165,
+        "scripts": 35,
+        "rawBytes": 1242674,
+        "cssFiles": 2,
+        "cssGzipBytes": 49577,
+        "chunks": [
+          {
+            "src": "5d015edf-919221869929b925.js",
+            "gzipBytes": 388
+          },
+          {
+            "src": "4bd1b696-36241c79b2a4fb73.js",
+            "gzipBytes": 62874
+          },
+          {
+            "src": "7569-5ebcda0cd87fe0b5.js",
+            "gzipBytes": 149316
+          },
+          {
+            "src": "main-app-51ecd6d8519925e8.js",
+            "gzipBytes": 2262
+          },
+          {
+            "src": "app/global-error-d4ce8654b210b086.js",
+            "gzipBytes": 2965
+          },
+          {
+            "src": "8500-1dbb77aa8d8980ea.js",
+            "gzipBytes": 2026
+          },
+          {
+            "src": "6609-cdd7829b3b445dd1.js",
+            "gzipBytes": 9414
+          },
+          {
+            "src": "5885-f4a8d6a12457c1d9.js",
+            "gzipBytes": 25442
+          },
+          {
+            "src": "app/layout-aaf477f098b263ce.js",
+            "gzipBytes": 12805
+          },
+          {
+            "src": "app/(dashboard)/owner/machines/loading-2ed9b78fca814545.js",
+            "gzipBytes": 1056
+          },
+          {
+            "src": "8409-c971f1b66ffe1d23.js",
+            "gzipBytes": 8239
+          },
+          {
+            "src": "1798-ced0ec606b5fb7e2.js",
+            "gzipBytes": 8475
+          },
+          {
+            "src": "8495-044ce28213f56ef4.js",
+            "gzipBytes": 3061
+          },
+          {
+            "src": "3677-93438951ad4b8add.js",
+            "gzipBytes": 6052
+          },
+          {
+            "src": "2385-5e4b6fd58d32b608.js",
+            "gzipBytes": 5178
+          },
+          {
+            "src": "7080-5234d4956bcf2656.js",
+            "gzipBytes": 5106
+          },
+          {
+            "src": "419-485d1f22cbe0563f.js",
+            "gzipBytes": 5764
+          },
+          {
+            "src": "3411-c54fde356dd6b69a.js",
+            "gzipBytes": 4904
+          },
+          {
+            "src": "6886-e7d408637ea7f4de.js",
+            "gzipBytes": 3925
+          },
+          {
+            "src": "app/(dashboard)/owner/machines/layout-e4527af1667eefc9.js",
+            "gzipBytes": 336
+          },
+          {
+            "src": "app/(dashboard)/owner/machines/error-dd054142a4537b45.js",
+            "gzipBytes": 3435
+          },
+          {
+            "src": "2762-fe9ab01ef9e5f38c.js",
+            "gzipBytes": 2969
+          },
+          {
+            "src": "3665-8ee116dc23036d2d.js",
+            "gzipBytes": 4431
+          },
+          {
+            "src": "7101-1b6dc3c6f21f5f84.js",
+            "gzipBytes": 3158
+          },
+          {
+            "src": "9646-0ed9fd68d31a792a.js",
+            "gzipBytes": 9700
+          },
+          {
+            "src": "app/(dashboard)/owner/layout-5d17c15afdc866ab.js",
+            "gzipBytes": 6918
+          },
+          {
+            "src": "webpack-4983e0a0c5ff30d6.js",
+            "gzipBytes": 3202
+          },
+          {
+            "src": "8163-50734f944964d823.js",
+            "gzipBytes": 10614
+          },
+          {
+            "src": "4647-38b0fbbfe9ec744b.js",
+            "gzipBytes": 2085
+          },
+          {
+            "src": "2484-77b1b430adde4ef3.js",
+            "gzipBytes": 7374
+          },
+          {
+            "src": "2826-55480b108487acd5.js",
+            "gzipBytes": 2528
+          },
+          {
+            "src": "406-ebbf7d42f0f50255.js",
+            "gzipBytes": 5275
+          },
+          {
+            "src": "2295-8c0f60802b5a8bb7.js",
+            "gzipBytes": 3621
+          },
+          {
+            "src": "8931-aeb37cbb1e12b67b.js",
+            "gzipBytes": 7099
+          },
+          {
+            "src": "app/(dashboard)/owner/machines/page-b4804ad170022867.js",
+            "gzipBytes": 15168
+          }
+        ]
+      },
+      "errorDigest": null
+    },
+    {
+      "account": "base",
+      "path": "/owner/workers",
+      "status": 200,
+      "location": null,
+      "ttfbMs": 62.2,
+      "totalMs": 99.8,
+      "backendCalls": 9,
+      "sequentialWaits": 3,
+      "callTimeline": [
+        {
+          "kind": "redis",
+          "method": "POST",
+          "target": "redis [[\"get\",\"revoked:22222222-2222-4222-8222",
+          "startMs": 0,
+          "endMs": 10.5
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=base_plan_visible,lite_trial_eligible,org_subscriptions(stat",
+          "startMs": 18.2,
+          "endMs": 49.8
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=id,name,production_mode,onboarding_complete,is_locked_down,b",
+          "startMs": 18.3,
+          "endMs": 50
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "profiles?select=role,org_id,full_name,phone,whatsapp_number,whatsapp_opted_i",
+          "startMs": 18.7,
+          "endMs": 50.2
+        },
+        {
+          "kind": "auth",
+          "method": "GET",
+          "target": "/auth/v1/user",
+          "startMs": 19.1,
+          "endMs": 50.4
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_production_workers?select=id,name,rate_per_meter,shift_availability,is_active,pay_type",
+          "startMs": 53.2,
+          "endMs": 85.1
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_worker_machine_assignments?select=id,worker_id,machine_id,shift,active,effective_from,effectiv",
+          "startMs": 53.6,
+          "endMs": 85.3
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_production_machines?select=id,name",
+          "startMs": 53.8,
+          "endMs": 85.5
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "cost_rate_book?select=last_reviewed_at,review_interval_days",
+          "startMs": 55.2,
+          "endMs": 86.8
+        }
+      ],
+      "html": {
+        "bytes": 93296,
+        "gzipBytes": 388101,
+        "scripts": 30,
+        "rawBytes": 1192471,
+        "cssFiles": 2,
+        "cssGzipBytes": 49577,
+        "chunks": [
+          {
+            "src": "5d015edf-919221869929b925.js",
+            "gzipBytes": 388
+          },
+          {
+            "src": "4bd1b696-36241c79b2a4fb73.js",
+            "gzipBytes": 62874
+          },
+          {
+            "src": "7569-5ebcda0cd87fe0b5.js",
+            "gzipBytes": 149316
+          },
+          {
+            "src": "main-app-51ecd6d8519925e8.js",
+            "gzipBytes": 2262
+          },
+          {
+            "src": "app/global-error-d4ce8654b210b086.js",
+            "gzipBytes": 2965
+          },
+          {
+            "src": "8500-1dbb77aa8d8980ea.js",
+            "gzipBytes": 2026
+          },
+          {
+            "src": "6609-cdd7829b3b445dd1.js",
+            "gzipBytes": 9414
+          },
+          {
+            "src": "5885-f4a8d6a12457c1d9.js",
+            "gzipBytes": 25442
+          },
+          {
+            "src": "app/layout-aaf477f098b263ce.js",
+            "gzipBytes": 12805
+          },
+          {
+            "src": "app/(dashboard)/owner/workers/loading-8aa0fb93883a9922.js",
+            "gzipBytes": 1056
+          },
+          {
+            "src": "8409-c971f1b66ffe1d23.js",
+            "gzipBytes": 8239
+          },
+          {
+            "src": "app/(dashboard)/owner/workers/error-558705da88382237.js",
+            "gzipBytes": 3442
+          },
+          {
+            "src": "1798-ced0ec606b5fb7e2.js",
+            "gzipBytes": 8475
+          },
+          {
+            "src": "8495-044ce28213f56ef4.js",
+            "gzipBytes": 3061
+          },
+          {
+            "src": "3677-93438951ad4b8add.js",
+            "gzipBytes": 6052
+          },
+          {
+            "src": "2762-fe9ab01ef9e5f38c.js",
+            "gzipBytes": 2969
+          },
+          {
+            "src": "3665-8ee116dc23036d2d.js",
+            "gzipBytes": 4431
+          },
+          {
+            "src": "7101-1b6dc3c6f21f5f84.js",
+            "gzipBytes": 3158
+          },
+          {
+            "src": "9646-0ed9fd68d31a792a.js",
+            "gzipBytes": 9700
+          },
+          {
+            "src": "app/(dashboard)/owner/layout-5d17c15afdc866ab.js",
+            "gzipBytes": 6918
+          },
+          {
+            "src": "webpack-4983e0a0c5ff30d6.js",
+            "gzipBytes": 3202
+          },
+          {
+            "src": "8163-50734f944964d823.js",
+            "gzipBytes": 10614
+          },
+          {
+            "src": "4647-38b0fbbfe9ec744b.js",
+            "gzipBytes": 2085
+          },
+          {
+            "src": "2484-77b1b430adde4ef3.js",
+            "gzipBytes": 7374
+          },
+          {
+            "src": "2826-55480b108487acd5.js",
+            "gzipBytes": 2528
+          },
+          {
+            "src": "4007-100dbecc3898b809.js",
+            "gzipBytes": 3149
+          },
+          {
+            "src": "406-ebbf7d42f0f50255.js",
+            "gzipBytes": 5275
+          },
+          {
+            "src": "2295-8c0f60802b5a8bb7.js",
+            "gzipBytes": 3621
+          },
+          {
+            "src": "8931-aeb37cbb1e12b67b.js",
+            "gzipBytes": 7099
+          },
+          {
+            "src": "app/(dashboard)/owner/workers/page-4b007ce79fdaa3ea.js",
+            "gzipBytes": 18161
+          }
+        ]
+      },
+      "errorDigest": null
+    },
+    {
+      "account": "base",
+      "path": "/owner/assignments",
+      "status": 200,
+      "location": null,
+      "ttfbMs": 63,
+      "totalMs": 132.3,
+      "backendCalls": 13,
+      "sequentialWaits": 4,
+      "callTimeline": [
+        {
+          "kind": "redis",
+          "method": "POST",
+          "target": "redis [[\"get\",\"revoked:22222222-2222-4222-8222",
+          "startMs": 0,
+          "endMs": 12.4
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=base_plan_visible,lite_trial_eligible,org_subscriptions(stat",
+          "startMs": 19.9,
+          "endMs": 52.1
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=id,name,production_mode,onboarding_complete,is_locked_down,b",
+          "startMs": 20.1,
+          "endMs": 52.3
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "profiles?select=role,org_id,full_name,phone,whatsapp_number,whatsapp_opted_i",
+          "startMs": 20.4,
+          "endMs": 52.4
+        },
+        {
+          "kind": "auth",
+          "method": "GET",
+          "target": "/auth/v1/user",
+          "startMs": 20.8,
+          "endMs": 52.6
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=base_go_live_date",
+          "startMs": 54.9,
+          "endMs": 86.8
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_payroll_cycle_configs?select=rule",
+          "startMs": 55.1,
+          "endMs": 86.9
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "cost_rate_book?select=last_reviewed_at,review_interval_days",
+          "startMs": 56.6,
+          "endMs": 87.1
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_production_workers?select=id,name,rate_per_meter,shift_availability,is_active,pay_type",
+          "startMs": 89.7,
+          "endMs": 122.1
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_production_machines?select=id,name,machine_type,custom_label,is_active",
+          "startMs": 90,
+          "endMs": 122.2
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_production_jobs?select=id,costing_id,costing_group_id,costing_version,quality_label",
+          "startMs": 90.4,
+          "endMs": 122.3
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_worker_machine_assignments?select=id,worker_id,machine_id,shift,active,effective_from,effectiv",
+          "startMs": 90.7,
+          "endMs": 122.4
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_machine_job_contexts?select=id,machine_id,job_id,active,effective_from,effective_to",
+          "startMs": 91,
+          "endMs": 122.6
+        }
+      ],
+      "html": {
+        "bytes": 90380,
+        "gzipBytes": 396546,
+        "scripts": 27,
+        "rawBytes": 1249980,
+        "cssFiles": 2,
+        "cssGzipBytes": 49577,
+        "chunks": [
+          {
+            "src": "5d015edf-919221869929b925.js",
+            "gzipBytes": 388
+          },
+          {
+            "src": "4bd1b696-36241c79b2a4fb73.js",
+            "gzipBytes": 62874
+          },
+          {
+            "src": "7569-5ebcda0cd87fe0b5.js",
+            "gzipBytes": 149316
+          },
+          {
+            "src": "main-app-51ecd6d8519925e8.js",
+            "gzipBytes": 2262
+          },
+          {
+            "src": "app/global-error-d4ce8654b210b086.js",
+            "gzipBytes": 2965
+          },
+          {
+            "src": "8500-1dbb77aa8d8980ea.js",
+            "gzipBytes": 2026
+          },
+          {
+            "src": "6609-cdd7829b3b445dd1.js",
+            "gzipBytes": 9414
+          },
+          {
+            "src": "5885-f4a8d6a12457c1d9.js",
+            "gzipBytes": 25442
+          },
+          {
+            "src": "app/layout-aaf477f098b263ce.js",
+            "gzipBytes": 12805
+          },
+          {
+            "src": "app/(dashboard)/owner/assignments/loading-ef80af3c9c386fff.js",
+            "gzipBytes": 1056
+          },
+          {
+            "src": "8409-c971f1b66ffe1d23.js",
+            "gzipBytes": 8239
+          },
+          {
+            "src": "app/(dashboard)/owner/assignments/error-8dd4e13ea5080e9f.js",
+            "gzipBytes": 2529
+          },
+          {
+            "src": "1798-ced0ec606b5fb7e2.js",
+            "gzipBytes": 8475
+          },
+          {
+            "src": "8495-044ce28213f56ef4.js",
+            "gzipBytes": 3061
+          },
+          {
+            "src": "3677-93438951ad4b8add.js",
+            "gzipBytes": 6052
+          },
+          {
+            "src": "2762-fe9ab01ef9e5f38c.js",
+            "gzipBytes": 2969
+          },
+          {
+            "src": "3665-8ee116dc23036d2d.js",
+            "gzipBytes": 4431
+          },
+          {
+            "src": "7101-1b6dc3c6f21f5f84.js",
+            "gzipBytes": 3158
+          },
+          {
+            "src": "9646-0ed9fd68d31a792a.js",
+            "gzipBytes": 9700
+          },
+          {
+            "src": "app/(dashboard)/owner/layout-5d17c15afdc866ab.js",
+            "gzipBytes": 6918
+          },
+          {
+            "src": "webpack-4983e0a0c5ff30d6.js",
+            "gzipBytes": 3202
+          },
+          {
+            "src": "7173-1320e6a0924ac52e.js",
+            "gzipBytes": 25696
+          },
+          {
+            "src": "2826-55480b108487acd5.js",
+            "gzipBytes": 2528
+          },
+          {
+            "src": "7636-ba5b003c44e6ba14.js",
+            "gzipBytes": 3212
+          },
+          {
+            "src": "406-ebbf7d42f0f50255.js",
+            "gzipBytes": 5275
+          },
+          {
+            "src": "5214-7c36b872c28eaba6.js",
+            "gzipBytes": 27150
+          },
+          {
+            "src": "app/(dashboard)/owner/assignments/page-acf0bc986738501f.js",
+            "gzipBytes": 5403
+          }
+        ]
+      },
+      "errorDigest": null
+    },
+    {
+      "account": "free",
+      "path": "/login",
+      "note": "installed-app launch: signed-in /login redirect hop",
+      "status": 307,
+      "location": "/owner/estimator",
+      "ttfbMs": 51.4,
+      "totalMs": 51.5,
+      "backendCalls": 2,
+      "sequentialWaits": 2,
+      "callTimeline": [
+        {
+          "kind": "redis",
+          "method": "POST",
+          "target": "redis [[\"get\",\"revoked:33333333-3333-4333-8333",
+          "startMs": 0,
+          "endMs": 12.5
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "profiles?select=role,access_revoked_at",
+          "startMs": 14.2,
+          "endMs": 45.8
+        }
+      ],
+      "html": null,
+      "errorDigest": null
+    },
+    {
+      "account": "free",
+      "path": "/free",
+      "status": 200,
+      "location": null,
+      "ttfbMs": 67.6,
+      "totalMs": 72.4,
+      "backendCalls": 6,
+      "sequentialWaits": 2,
+      "callTimeline": [
+        {
+          "kind": "redis",
+          "method": "POST",
+          "target": "redis [[\"get\",\"revoked:33333333-3333-4333-8333",
+          "startMs": 0,
+          "endMs": 12.6
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=base_plan_visible,lite_trial_eligible,org_subscriptions(stat",
+          "startMs": 19.1,
+          "endMs": 51.5
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "free_account_grants?select=subject_id,revoked_at,free_account_subjects(active,verified_",
+          "startMs": 19.2,
+          "endMs": 51.7
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=owner_id,is_locked_down,name",
+          "startMs": 19.3,
+          "endMs": 51.8
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "profiles?select=role,org_id,full_name,phone,whatsapp_number,whatsapp_opted_i",
+          "startMs": 19.8,
+          "endMs": 51.9
+        },
+        {
+          "kind": "auth",
+          "method": "GET",
+          "target": "/auth/v1/user",
+          "startMs": 20.1,
+          "endMs": 52
+        }
+      ],
+      "html": {
+        "bytes": 122676,
+        "gzipBytes": 567126,
+        "scripts": 38,
+        "rawBytes": 1836050,
+        "cssFiles": 2,
+        "cssGzipBytes": 49577,
+        "chunks": [
+          {
+            "src": "5d015edf-919221869929b925.js",
+            "gzipBytes": 388
+          },
+          {
+            "src": "4bd1b696-36241c79b2a4fb73.js",
+            "gzipBytes": 62874
+          },
+          {
+            "src": "7569-5ebcda0cd87fe0b5.js",
+            "gzipBytes": 149316
+          },
+          {
+            "src": "main-app-51ecd6d8519925e8.js",
+            "gzipBytes": 2262
+          },
+          {
+            "src": "app/global-error-d4ce8654b210b086.js",
+            "gzipBytes": 2965
+          },
+          {
+            "src": "8500-1dbb77aa8d8980ea.js",
+            "gzipBytes": 2026
+          },
+          {
+            "src": "6609-cdd7829b3b445dd1.js",
+            "gzipBytes": 9414
+          },
+          {
+            "src": "5885-f4a8d6a12457c1d9.js",
+            "gzipBytes": 25442
+          },
+          {
+            "src": "app/layout-aaf477f098b263ce.js",
+            "gzipBytes": 12805
+          },
+          {
+            "src": "app/free/loading-32e85105fa3be1bf.js",
+            "gzipBytes": 1868
+          },
+          {
+            "src": "8409-c971f1b66ffe1d23.js",
+            "gzipBytes": 8239
+          },
+          {
+            "src": "1798-ced0ec606b5fb7e2.js",
+            "gzipBytes": 8475
+          },
+          {
+            "src": "8495-044ce28213f56ef4.js",
+            "gzipBytes": 3061
+          },
+          {
+            "src": "3677-93438951ad4b8add.js",
+            "gzipBytes": 6052
+          },
+          {
+            "src": "7706-f4904afa4b71e738.js",
+            "gzipBytes": 9503
+          },
+          {
+            "src": "7173-1320e6a0924ac52e.js",
+            "gzipBytes": 25696
+          },
+          {
+            "src": "8163-50734f944964d823.js",
+            "gzipBytes": 10614
+          },
+          {
+            "src": "4647-38b0fbbfe9ec744b.js",
+            "gzipBytes": 2085
+          },
+          {
+            "src": "3512-0cf18563d813b269.js",
+            "gzipBytes": 12934
+          },
+          {
+            "src": "918-16184ad84cf4c002.js",
+            "gzipBytes": 7094
+          },
+          {
+            "src": "4729-e899aee5f48be64a.js",
+            "gzipBytes": 2505
+          },
+          {
+            "src": "2762-fe9ab01ef9e5f38c.js",
+            "gzipBytes": 2969
+          },
+          {
+            "src": "419-485d1f22cbe0563f.js",
+            "gzipBytes": 5764
+          },
+          {
+            "src": "3411-c54fde356dd6b69a.js",
+            "gzipBytes": 4904
+          },
+          {
+            "src": "406-ebbf7d42f0f50255.js",
+            "gzipBytes": 5275
+          },
+          {
+            "src": "2234-9f024851648fa6d5.js",
+            "gzipBytes": 7578
+          },
+          {
+            "src": "3665-8ee116dc23036d2d.js",
+            "gzipBytes": 4431
+          },
+          {
+            "src": "8250-6886d51b7b03cb53.js",
+            "gzipBytes": 16209
+          },
+          {
+            "src": "9862-d56f32f884121429.js",
+            "gzipBytes": 7492
+          },
+          {
+            "src": "4340-fc749e416af14a70.js",
+            "gzipBytes": 5397
+          },
+          {
+            "src": "7101-1b6dc3c6f21f5f84.js",
+            "gzipBytes": 3158
+          },
+          {
+            "src": "220-cdd787f46997b453.js",
+            "gzipBytes": 25543
+          },
+          {
+            "src": "6216-727a887c9adad1ae.js",
+            "gzipBytes": 5556
+          },
+          {
+            "src": "9646-0ed9fd68d31a792a.js",
+            "gzipBytes": 9700
+          },
+          {
+            "src": "8389-4d582b5bceff38ca.js",
+            "gzipBytes": 87448
+          },
+          {
+            "src": "app/free/page-a567e5bf87f8a946.js",
+            "gzipBytes": 3330
+          },
+          {
+            "src": "app/free/layout-ed3f2a04b1cb621f.js",
+            "gzipBytes": 3552
+          },
+          {
+            "src": "webpack-4983e0a0c5ff30d6.js",
+            "gzipBytes": 3202
+          }
+        ]
+      },
+      "errorDigest": null
+    },
+    {
+      "account": "free",
+      "path": "/free/costings",
+      "status": 200,
+      "location": null,
+      "ttfbMs": 66.7,
+      "totalMs": 69.4,
+      "backendCalls": 6,
+      "sequentialWaits": 2,
+      "callTimeline": [
+        {
+          "kind": "redis",
+          "method": "POST",
+          "target": "redis [[\"get\",\"revoked:33333333-3333-4333-8333",
+          "startMs": 0,
+          "endMs": 12.2
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=base_plan_visible,lite_trial_eligible,org_subscriptions(stat",
+          "startMs": 18.8,
+          "endMs": 50.1
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "free_account_grants?select=subject_id,revoked_at,free_account_subjects(active,verified_",
+          "startMs": 18.9,
+          "endMs": 50.3
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=owner_id,is_locked_down,name",
+          "startMs": 19,
+          "endMs": 50.4
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "profiles?select=role,org_id,full_name,phone,whatsapp_number,whatsapp_opted_i",
+          "startMs": 19.4,
+          "endMs": 50.5
+        },
+        {
+          "kind": "auth",
+          "method": "GET",
+          "target": "/auth/v1/user",
+          "startMs": 19.8,
+          "endMs": 50.7
+        }
+      ],
+      "html": {
+        "bytes": 57244,
+        "gzipBytes": 443348,
+        "scripts": 33,
+        "rawBytes": 1375179,
+        "cssFiles": 2,
+        "cssGzipBytes": 49577,
+        "chunks": [
+          {
+            "src": "5d015edf-919221869929b925.js",
+            "gzipBytes": 388
+          },
+          {
+            "src": "4bd1b696-36241c79b2a4fb73.js",
+            "gzipBytes": 62874
+          },
+          {
+            "src": "7569-5ebcda0cd87fe0b5.js",
+            "gzipBytes": 149316
+          },
+          {
+            "src": "main-app-51ecd6d8519925e8.js",
+            "gzipBytes": 2262
+          },
+          {
+            "src": "app/global-error-d4ce8654b210b086.js",
+            "gzipBytes": 2965
+          },
+          {
+            "src": "8500-1dbb77aa8d8980ea.js",
+            "gzipBytes": 2026
+          },
+          {
+            "src": "6609-cdd7829b3b445dd1.js",
+            "gzipBytes": 9414
+          },
+          {
+            "src": "5885-f4a8d6a12457c1d9.js",
+            "gzipBytes": 25442
+          },
+          {
+            "src": "app/layout-aaf477f098b263ce.js",
+            "gzipBytes": 12805
+          },
+          {
+            "src": "app/free/costings/loading-c0c9a66f3271c314.js",
+            "gzipBytes": 1868
+          },
+          {
+            "src": "8409-c971f1b66ffe1d23.js",
+            "gzipBytes": 8239
+          },
+          {
+            "src": "1798-ced0ec606b5fb7e2.js",
+            "gzipBytes": 8475
+          },
+          {
+            "src": "8495-044ce28213f56ef4.js",
+            "gzipBytes": 3061
+          },
+          {
+            "src": "7706-f4904afa4b71e738.js",
+            "gzipBytes": 9503
+          },
+          {
+            "src": "3512-0cf18563d813b269.js",
+            "gzipBytes": 12934
+          },
+          {
+            "src": "2826-55480b108487acd5.js",
+            "gzipBytes": 2528
+          },
+          {
+            "src": "8951-ecb98030416cdb1e.js",
+            "gzipBytes": 4045
+          },
+          {
+            "src": "406-ebbf7d42f0f50255.js",
+            "gzipBytes": 5275
+          },
+          {
+            "src": "2234-9f024851648fa6d5.js",
+            "gzipBytes": 7578
+          },
+          {
+            "src": "8250-6886d51b7b03cb53.js",
+            "gzipBytes": 16209
+          },
+          {
+            "src": "9862-d56f32f884121429.js",
+            "gzipBytes": 7492
+          },
+          {
+            "src": "220-cdd787f46997b453.js",
+            "gzipBytes": 25543
+          },
+          {
+            "src": "4022-151974b69408758d.js",
+            "gzipBytes": 7512
+          },
+          {
+            "src": "4313-2efc7618a37c88bf.js",
+            "gzipBytes": 7489
+          },
+          {
+            "src": "6215-6e5cf09eb1143bf0.js",
+            "gzipBytes": 14642
+          },
+          {
+            "src": "app/free/costings/page-8dfc5e6af0a71e25.js",
+            "gzipBytes": 399
+          },
+          {
+            "src": "3677-93438951ad4b8add.js",
+            "gzipBytes": 6052
+          },
+          {
+            "src": "2762-fe9ab01ef9e5f38c.js",
+            "gzipBytes": 2969
+          },
+          {
+            "src": "3665-8ee116dc23036d2d.js",
+            "gzipBytes": 4431
+          },
+          {
+            "src": "7101-1b6dc3c6f21f5f84.js",
+            "gzipBytes": 3158
+          },
+          {
+            "src": "9646-0ed9fd68d31a792a.js",
+            "gzipBytes": 9700
+          },
+          {
+            "src": "app/free/layout-ed3f2a04b1cb621f.js",
+            "gzipBytes": 3552
+          },
+          {
+            "src": "webpack-4983e0a0c5ff30d6.js",
+            "gzipBytes": 3202
+          }
+        ]
+      },
+      "errorDigest": null
+    },
+    {
+      "account": "free",
+      "path": "/free/account",
+      "status": 200,
+      "location": null,
+      "ttfbMs": 62.8,
+      "totalMs": 65.7,
+      "backendCalls": 6,
+      "sequentialWaits": 2,
+      "callTimeline": [
+        {
+          "kind": "redis",
+          "method": "POST",
+          "target": "redis [[\"get\",\"revoked:33333333-3333-4333-8333",
+          "startMs": 0,
+          "endMs": 10.7
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=base_plan_visible,lite_trial_eligible,org_subscriptions(stat",
+          "startMs": 17.3,
+          "endMs": 49.1
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "free_account_grants?select=subject_id,revoked_at,free_account_subjects(active,verified_",
+          "startMs": 17.5,
+          "endMs": 49.2
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=owner_id,is_locked_down,name",
+          "startMs": 17.7,
+          "endMs": 49.2
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "profiles?select=role,org_id,full_name,phone,whatsapp_number,whatsapp_opted_i",
+          "startMs": 18,
+          "endMs": 49.3
+        },
+        {
+          "kind": "auth",
+          "method": "GET",
+          "target": "/auth/v1/user",
+          "startMs": 18.4,
+          "endMs": 49.4
+        }
+      ],
+      "html": {
+        "bytes": 67942,
+        "gzipBytes": 416125,
+        "scripts": 34,
+        "rawBytes": 1305091,
+        "cssFiles": 3,
+        "cssGzipBytes": 50505,
+        "chunks": [
+          {
+            "src": "5d015edf-919221869929b925.js",
+            "gzipBytes": 388
+          },
+          {
+            "src": "4bd1b696-36241c79b2a4fb73.js",
+            "gzipBytes": 62874
+          },
+          {
+            "src": "7569-5ebcda0cd87fe0b5.js",
+            "gzipBytes": 149316
+          },
+          {
+            "src": "main-app-51ecd6d8519925e8.js",
+            "gzipBytes": 2262
+          },
+          {
+            "src": "app/global-error-d4ce8654b210b086.js",
+            "gzipBytes": 2965
+          },
+          {
+            "src": "8500-1dbb77aa8d8980ea.js",
+            "gzipBytes": 2026
+          },
+          {
+            "src": "6609-cdd7829b3b445dd1.js",
+            "gzipBytes": 9414
+          },
+          {
+            "src": "5885-f4a8d6a12457c1d9.js",
+            "gzipBytes": 25442
+          },
+          {
+            "src": "app/layout-aaf477f098b263ce.js",
+            "gzipBytes": 12805
+          },
+          {
+            "src": "app/free/account/loading-b8a3631e53d4f274.js",
+            "gzipBytes": 1869
+          },
+          {
+            "src": "8409-c971f1b66ffe1d23.js",
+            "gzipBytes": 8239
+          },
+          {
+            "src": "1798-ced0ec606b5fb7e2.js",
+            "gzipBytes": 8475
+          },
+          {
+            "src": "8495-044ce28213f56ef4.js",
+            "gzipBytes": 3061
+          },
+          {
+            "src": "7706-f4904afa4b71e738.js",
+            "gzipBytes": 9503
+          },
+          {
+            "src": "8163-50734f944964d823.js",
+            "gzipBytes": 10614
+          },
+          {
+            "src": "4647-38b0fbbfe9ec744b.js",
+            "gzipBytes": 2085
+          },
+          {
+            "src": "2484-77b1b430adde4ef3.js",
+            "gzipBytes": 7374
+          },
+          {
+            "src": "2385-5e4b6fd58d32b608.js",
+            "gzipBytes": 5178
+          },
+          {
+            "src": "8145-048cbf6e4001e5e3.js",
+            "gzipBytes": 3793
+          },
+          {
+            "src": "5196-bf95955608d6921a.js",
+            "gzipBytes": 2962
+          },
+          {
+            "src": "744-6e602637827bc9e9.js",
+            "gzipBytes": 8630
+          },
+          {
+            "src": "2783-da4ecf3f59f2cf91.js",
+            "gzipBytes": 3703
+          },
+          {
+            "src": "2390-3bf09a4e8ab87a6a.js",
+            "gzipBytes": 5777
+          },
+          {
+            "src": "4022-151974b69408758d.js",
+            "gzipBytes": 7512
+          },
+          {
+            "src": "2295-8c0f60802b5a8bb7.js",
+            "gzipBytes": 3621
+          },
+          {
+            "src": "6335-86f0a9058511a2bf.js",
+            "gzipBytes": 22502
+          },
+          {
+            "src": "app/free/account/page-5437f95e7546cca6.js",
+            "gzipBytes": 671
+          },
+          {
+            "src": "3677-93438951ad4b8add.js",
+            "gzipBytes": 6052
+          },
+          {
+            "src": "2762-fe9ab01ef9e5f38c.js",
+            "gzipBytes": 2969
+          },
+          {
+            "src": "3665-8ee116dc23036d2d.js",
+            "gzipBytes": 4431
+          },
+          {
+            "src": "7101-1b6dc3c6f21f5f84.js",
+            "gzipBytes": 3158
+          },
+          {
+            "src": "9646-0ed9fd68d31a792a.js",
+            "gzipBytes": 9700
+          },
+          {
+            "src": "app/free/layout-ed3f2a04b1cb621f.js",
+            "gzipBytes": 3552
+          },
+          {
+            "src": "webpack-4983e0a0c5ff30d6.js",
+            "gzipBytes": 3202
+          }
+        ]
+      },
+      "errorDigest": null
+    },
+    {
+      "account": "free",
+      "path": "/free/billing",
+      "status": 200,
+      "location": null,
+      "ttfbMs": 63.5,
+      "totalMs": 93.8,
+      "backendCalls": 8,
+      "sequentialWaits": 3,
+      "callTimeline": [
+        {
+          "kind": "redis",
+          "method": "POST",
+          "target": "redis [[\"get\",\"revoked:33333333-3333-4333-8333",
+          "startMs": 0,
+          "endMs": 12.4
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=base_plan_visible,lite_trial_eligible,org_subscriptions(stat",
+          "startMs": 19.4,
+          "endMs": 51.3
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "free_account_grants?select=subject_id,revoked_at,free_account_subjects(active,verified_",
+          "startMs": 19.5,
+          "endMs": 51.4
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=owner_id,is_locked_down,name",
+          "startMs": 19.7,
+          "endMs": 51.5
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "profiles?select=role,org_id,full_name,phone,whatsapp_number,whatsapp_opted_i",
+          "startMs": 20.6,
+          "endMs": 51.5
+        },
+        {
+          "kind": "auth",
+          "method": "GET",
+          "target": "/auth/v1/user",
+          "startMs": 20.8,
+          "endMs": 51.7
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "subscription_payments?select=id,status,created_at,razorpay_payment_id,amount_paise,method",
+          "startMs": 55,
+          "endMs": 88.3
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=name",
+          "startMs": 55.3,
+          "endMs": 88.5
+        }
+      ],
+      "html": {
+        "bytes": 53490,
+        "gzipBytes": 351167,
+        "scripts": 25,
+        "rawBytes": 1090210,
+        "cssFiles": 3,
+        "cssGzipBytes": 50058,
+        "chunks": [
+          {
+            "src": "5d015edf-919221869929b925.js",
+            "gzipBytes": 388
+          },
+          {
+            "src": "4bd1b696-36241c79b2a4fb73.js",
+            "gzipBytes": 62874
+          },
+          {
+            "src": "7569-5ebcda0cd87fe0b5.js",
+            "gzipBytes": 149316
+          },
+          {
+            "src": "main-app-51ecd6d8519925e8.js",
+            "gzipBytes": 2262
+          },
+          {
+            "src": "app/global-error-d4ce8654b210b086.js",
+            "gzipBytes": 2965
+          },
+          {
+            "src": "8500-1dbb77aa8d8980ea.js",
+            "gzipBytes": 2026
+          },
+          {
+            "src": "6609-cdd7829b3b445dd1.js",
+            "gzipBytes": 9414
+          },
+          {
+            "src": "5885-f4a8d6a12457c1d9.js",
+            "gzipBytes": 25442
+          },
+          {
+            "src": "app/layout-aaf477f098b263ce.js",
+            "gzipBytes": 12805
+          },
+          {
+            "src": "app/free/billing/loading-05d71b49fac41381.js",
+            "gzipBytes": 1869
+          },
+          {
+            "src": "8409-c971f1b66ffe1d23.js",
+            "gzipBytes": 8239
+          },
+          {
+            "src": "1798-ced0ec606b5fb7e2.js",
+            "gzipBytes": 8475
+          },
+          {
+            "src": "8495-044ce28213f56ef4.js",
+            "gzipBytes": 3061
+          },
+          {
+            "src": "3677-93438951ad4b8add.js",
+            "gzipBytes": 6052
+          },
+          {
+            "src": "2762-fe9ab01ef9e5f38c.js",
+            "gzipBytes": 2969
+          },
+          {
+            "src": "3665-8ee116dc23036d2d.js",
+            "gzipBytes": 4431
+          },
+          {
+            "src": "7101-1b6dc3c6f21f5f84.js",
+            "gzipBytes": 3158
+          },
+          {
+            "src": "9646-0ed9fd68d31a792a.js",
+            "gzipBytes": 9700
+          },
+          {
+            "src": "app/free/layout-ed3f2a04b1cb621f.js",
+            "gzipBytes": 3552
+          },
+          {
+            "src": "webpack-4983e0a0c5ff30d6.js",
+            "gzipBytes": 3202
+          },
+          {
+            "src": "3705-19a4b8a9299dc0eb.js",
+            "gzipBytes": 2993
+          },
+          {
+            "src": "419-485d1f22cbe0563f.js",
+            "gzipBytes": 5764
+          },
+          {
+            "src": "2390-3bf09a4e8ab87a6a.js",
+            "gzipBytes": 5777
+          },
+          {
+            "src": "8599-c9770b38bd00d5e3.js",
+            "gzipBytes": 7177
+          },
+          {
+            "src": "app/free/billing/page-e5c01ed8b0867ff2.js",
+            "gzipBytes": 7256
+          }
+        ]
+      },
+      "errorDigest": null
+    }
+  ],
+  "serverErrors": []
+}

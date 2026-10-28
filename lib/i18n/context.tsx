@@ -5,6 +5,7 @@ import { en } from "./locales/en"
 import { isBasePlanSurfacePath } from "./base-plan-surface"
 import { isLiteCompleteSurfacePath } from "./lite-surface"
 import { isPublicPagePath, loadPublicPageTranslator, type PublicPageTranslator } from "./public-pages"
+import { translateKnownFragments } from "./known-fragments"
 
 type TranslationRuntime = typeof import("./runtime")
 
@@ -179,34 +180,6 @@ function translateCompletePhrase(source: string, phraseMap: Map<string, string>)
     templatePhraseMatchers.set(phraseMap, matcher)
   }
   return matcher(source)
-}
-
-function phraseBoundaryPattern(source: string) {
-  const escaped = source.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s+")
-  const startsWithWord = /^[A-Za-z0-9]/.test(source)
-  const endsWithWord = /[A-Za-z0-9]$/.test(source)
-  return {
-    pattern: new RegExp(`${startsWithWord ? "(^|[^A-Za-z0-9])" : ""}${escaped}${endsWithWord ? "(?=$|[^A-Za-z0-9])" : ""}`, "g"),
-    startsWithWord,
-  }
-}
-
-function translateKnownFragments(source: string, phraseMap: Map<string, string>) {
-  let translated = source
-
-  const entries = Array.from(phraseMap.entries())
-    .filter(([phrase, replacement]) => phrase.length >= 8 && phrase !== replacement && source.includes(phrase))
-    .sort((a, b) => b[0].length - a[0].length)
-
-  for (const [phrase, replacement] of entries) {
-    const { pattern, startsWithWord } = phraseBoundaryPattern(phrase)
-    translated = translated.replace(pattern, (match, prefix = "") => {
-      if (!startsWithWord) return replacement
-      return `${prefix}${replacement}`
-    })
-  }
-
-  return translated === source ? undefined : translated
 }
 
 function translateSourceText(source: string, language: Language, phraseMap: Map<string, string>, surface: TranslationSurface = "legacy") {

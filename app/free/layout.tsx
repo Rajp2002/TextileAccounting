@@ -1,5 +1,8 @@
-import {getCachedSession} from '@/lib/auth'
+import {getCachedSession,getSessionHint} from '@/lib/auth'
 import {redirect} from 'next/navigation'
+import {getFreeGrant} from '@/lib/free-account'
+import {getFreeOrganization} from '@/lib/free-service'
+import {startEarly} from '@/lib/start-early'
 import {cookies} from 'next/headers'
 import FreeWorkspace from './FreeWorkspace'
 import {getOrgPlanAccess} from '@/lib/subscription'
@@ -7,6 +10,9 @@ import {WorkspaceHintSync} from '@/components/auth/workspace-hint-sync'
 import {hasFreeWorkspaceHint,isFreeWorkspaceAccess,WORKSPACE_HINT_COOKIE} from '@/lib/workspace-hint'
 import {parseSidebarPreference,SIDEBAR_PREFERENCE_COOKIE} from '@/lib/sidebar-preference'
 export default async function FreeLayout({children}:{children:React.ReactNode}){
+ // Start the plan, grant and organization reads with Proxy's session hint while the identity is verified; reads for another org are discarded.
+ const hint=await getSessionHint()
+ if(hint?.orgId){startEarly(getOrgPlanAccess(hint.orgId));startEarly(getFreeGrant(hint.orgId));startEarly(getFreeOrganization(hint.orgId))}
  const session=await getCachedSession();if(!session)redirect('/login')
  const access=await getOrgPlanAccess(session.profile.org_id)
  const freeWorkspace=isFreeWorkspaceAccess(access)

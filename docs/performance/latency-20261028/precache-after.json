@@ -1,0 +1,27 @@
+{
+  "entries": 330,
+  "rawBytes": 8750576,
+  "transferBytes": 2656137,
+  "groups": {
+    "other public files": {
+      "entries": 12,
+      "rawBytes": 87060,
+      "transferBytes": 79077
+    },
+    "shared and lazy chunks": {
+      "entries": 135,
+      "rawBytes": 6850451,
+      "transferBytes": 2000285
+    },
+    "route page chunks": {
+      "entries": 172,
+      "rawBytes": 1458809,
+      "transferBytes": 518557
+    },
+    "css": {
+      "entries": 10,
+      "rawBytes": 354256,
+      "transferBytes": 58218
+    }
+  }
+}

@@ -20,6 +20,8 @@ import {
 import { isDedicatedSupportRoute, isFounderAuthRoute, isFounderLoginRoute, isFounderRoute, safeFounderReturnPath } from '@/lib/admin/routes'
 import { founderOnlyIdentity, FOUNDER_ONLY_LOGIN_MESSAGE } from '@/lib/admin/founder-email'
 import { SUPERVISOR_HOME_PATH, SUPERVISOR_JOIN_PATH } from '@/lib/supervisor-access'
+import { formatSessionHintHeader, SESSION_HINT_HEADER } from '@/lib/session-hint'
+import { startEarly } from '@/lib/start-early'
 
 function getRoleHomePath(role?: string, freeWorkspaceHint = false): string {
     if (role === 'owner') return freeWorkspaceHint ? FREE_WORKSPACE_PATH : '/owner/estimator'
@@ -128,6 +130,7 @@ export async function updateSession(request: NextRequest) {
     forwardedHeaders.delete('x-weavly-revocation-checked')
     forwardedHeaders.delete('x-pathname')
     forwardedHeaders.delete(PWA_LOGIN_RECOVERY_HEADER)
+    forwardedHeaders.delete(SESSION_HINT_HEADER)
     const applySessionCookies: Array<(target: NextResponse) => void> = []
     let response = NextResponse.next({
         request: { headers: forwardedHeaders },
@@ -331,6 +334,17 @@ export async function updateSession(request: NextRequest) {
         }
     }
 
+    // An installed app opens on /login; its routing read below needs only the
+    // verified user id, so it runs alongside the revocation check. Any failure,
+    // even building the query, surfaces in that read's try/catch.
+    const loginRoutingProfileRead = userId && pathname === '/login'
+        ? startEarly((async () => supabase
+            .from('profiles')
+            .select('role, access_revoked_at')
+            .eq('id', userId)
+            .maybeSingle())())
+        : null
+
     // ── Check Instant Session Revocation ──────────────────────────────────
     if (userId) {
         const { isUserRevoked } = await import('@/lib/rate-limit')
@@ -349,6 +363,10 @@ export async function updateSession(request: NextRequest) {
         // The cached server auth helper skips its normal-request fallback
         // check only when this marker was set by this Proxy invocation.
         forwardedHeaders.set('x-weavly-revocation-checked', '1')
+        // Lets the server start the profile/plan/org reads alongside its own
+        // Auth check. A hint only; see lib/session-hint.ts.
+        const sessionHint = formatSessionHintHeader(userId, optimisticClaims.org_id)
+        if (sessionHint) forwardedHeaders.set(SESSION_HINT_HEADER, sessionHint)
         forwardedHeaders.set('cookie', request.cookies.toString())
         forwardedHeaders.set('x-pathname', pathname)
         response = NextResponse.next({ request: { headers: forwardedHeaders } })
@@ -376,17 +394,13 @@ export async function updateSession(request: NextRequest) {
     if (founderRoute && (user || isFounderLoginRoute(pathname))) return response
 
     let role = typeof optimisticClaims.user_role === 'string' ? optimisticClaims.user_role : undefined
-    if (userId && pathname === '/login') {
+    if (loginRoutingProfileRead) {
         // A profile can become the approved platform identity while this
         // browser still has old tenant routing claims. Read only the caller's
         // own current routing fields via RLS; an admin may have no tenant org.
         // This changes a destination, never authorizes founder data.
         try {
-            const { data: routingProfile, error: routingError } = await supabase
-                .from('profiles')
-                .select('role, access_revoked_at')
-                .eq('id', userId)
-                .maybeSingle()
+            const { data: routingProfile, error: routingError } = await loginRoutingProfileRead
             if (!routingError && routingProfile && !routingProfile.access_revoked_at
                 && ['owner', 'supervisor', 'admin'].includes(routingProfile.role)) role = routingProfile.role
             // A removed or declined supervisor's token can outlive the account.
