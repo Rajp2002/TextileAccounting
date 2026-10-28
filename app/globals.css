@@ -16,6 +16,22 @@
   box-shadow: none;
 }
 
+/* Estimator section numbers: a soft pastel tile per section, its number in a deeper shade of the
+   same hue. */
+.estimator-step-tile {
+  background: var(--step-tile-bg);
+  color: var(--step-tile-fg);
+}
+.estimator-step-tile[data-tone="1"] { --step-tile-bg: #ECE7FF; --step-tile-fg: #5B45B0; } /* lavender: quality basics */
+.estimator-step-tile[data-tone="2"] { --step-tile-bg: #DDEBFF; --step-tile-fg: #2C5FAE; } /* baby blue: warp */
+.estimator-step-tile[data-tone="3"] { --step-tile-bg: #D9F3E5; --step-tile-fg: #23764C; } /* mint: weft */
+.estimator-step-tile[data-tone="4"] { --step-tile-bg: #FFF1C7; --step-tile-fg: #8A6100; } /* butter: weaving */
+.estimator-step-tile[data-tone="5"] { --step-tile-bg: #D7F1F2; --step-tile-fg: #1F6F72; } /* aqua: warping and sizing */
+.estimator-step-tile[data-tone="6"] { --step-tile-bg: #FFE1EC; --step-tile-fg: #AE3566; } /* baby pink: overhead */
+.estimator-step-tile[data-tone="7"] { --step-tile-bg: #FFE6D6; --step-tile-fg: #B0501C; } /* peach: selling price */
+.estimator-step-tile[data-tone="8"] { --step-tile-bg: #F4E3F8; --step-tile-fg: #873A9B; } /* lilac: cost breakdown */
+.estimator-step-tile[data-tone="9"] { --step-tile-bg: #F1E9DD; --step-tile-fg: #7A5A36; } /* sand: post-processing */
+
 @custom-variant dark (&:is(.dark *));
 
 /* orientation:landscape media query variant — used by the bottom nav bar

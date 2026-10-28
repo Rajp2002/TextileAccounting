@@ -675,7 +675,6 @@ type EstimatorAccent = 'warp' | 'weft' | 'weave' | 'overhead' | 'post' | 'neutra
 // hairline borders, no per-section colour. The accent names stay so call sites keep reading.
 const NEUTRAL_ACCENT_STYLES = {
     icon: 'bg-[var(--color-canvas-white)] text-[var(--color-muted)] border-[var(--color-hairline)]',
-    marker: 'bg-[var(--color-surface-soft)] text-[var(--color-ink)] border-[var(--color-hairline)]',
     text: 'text-[var(--color-muted)]',
     panel: 'border-[var(--color-hairline)] bg-[var(--color-canvas)]',
     ring: 'focus:border-[var(--color-yarn-orange)] focus:ring-[var(--color-yarn-orange)]/15',
@@ -829,33 +828,45 @@ function YarnComponentCountFields({
     )
 }
 
-function SectionHeader({ title, icon: Icon, accent = 'warp', badgeContent, detail, step, tutorialSection }: {
+// Each section's number sits on a soft pastel tile (colours in app/globals.css, .estimator-step-tile),
+// one per section so they are easy to tell apart while the cards stay plain. The colour follows
+// the section, so warp is baby blue and weft mint in both Quick and Detailed modes.
+
+function SectionHeader({ title, icon: Icon, accent = 'warp', badgeContent, detail, step, tone = step, tutorialSection }: {
     title:    string
     icon:     React.ElementType
     accent?:  EstimatorAccent
     badgeContent?: React.ReactNode
     detail?: React.ReactNode
     step?: number
+    /** The tile colour's step, when a section's number differs between Quick and Detailed. */
+    tone?: number
     tutorialSection?: number
 }) {
     const colorClass = getAccentStyles(accent)
     return (
-        <div data-tutorial-section={tutorialSection} className="flex flex-col gap-3 border-b border-[var(--color-hairline)] bg-[var(--color-canvas-white)] px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-            <div className="flex min-w-0 items-center gap-2.5">
-                {step != null && (
-                    <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-[8px] border text-[12px] font-semibold ${colorClass.marker}`}>
-                        {step}
-                    </span>
-                )}
-                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] border ${colorClass.icon}`}>
-                    <Icon className="h-4 w-4" />
+        <div data-tutorial-section={tutorialSection} className="flex items-stretch border-b border-[var(--color-hairline)] bg-[var(--color-canvas-white)]">
+            {/* Flush with the card's top, bottom and left edges (the card's own corner rounds it there); only the free right side curves. */}
+            {step != null && (
+                <span
+                    data-tone={tone ?? step}
+                    className="estimator-step-tile flex w-14 shrink-0 items-center justify-center rounded-r-2xl text-xl font-semibold tabular-nums sm:w-16 sm:text-2xl"
+                >
+                    {step}
+                </span>
+            )}
+            <div className={`flex min-w-0 flex-1 flex-col gap-3 py-3.5 pr-4 sm:flex-row sm:items-center sm:justify-between sm:pr-5 ${step != null ? 'pl-3 sm:pl-4' : 'pl-4 sm:pl-5'}`}>
+                <div className="flex min-w-0 items-center gap-2.5">
+                    <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] border ${colorClass.icon}`}>
+                        <Icon className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0">
+                        <span className="text-[17px] font-semibold leading-snug text-[var(--color-ink)]">{title}</span>
+                        {detail}
+                    </div>
                 </div>
-                <div className="min-w-0">
-                    <span className="text-[17px] font-semibold leading-snug text-[var(--color-ink)]">{title}</span>
-                    {detail}
-                </div>
+                {badgeContent && <div className="shrink-0 self-start sm:self-center">{badgeContent}</div>}
             </div>
-            {badgeContent && <div className="shrink-0 self-start sm:self-center">{badgeContent}</div>}
         </div>
     )
 }
@@ -875,7 +886,7 @@ function EstimatorCard({ children, audit = false, 'data-tour-anchor': tourAnchor
                     if (document.activeElement === field) scrollInputIntoComfortableView(field)
                 })
             }}
-            className="relative mb-3 overflow-hidden rounded-2xl border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] shadow-xs">
+            className="relative mb-3 overflow-hidden rounded-2xl border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] pt-0 shadow-xs">
             {children}
         </Card>
     )
@@ -6991,7 +7002,7 @@ export default function EstimatorClient({
 
                 {/* 6. Optional Sections */}
                 <EstimatorCard accent="post">
-                    <SectionHeader title={t('estimator.post_processing.title')} icon={Palette} accent="post" step={7} />
+                    <SectionHeader title={t('estimator.post_processing.title')} icon={Palette} accent="post" step={7} tone={9} />
                     <CardContent className="p-5 sm:p-6 space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {state.enabledSections.winding ? (
@@ -7164,6 +7175,7 @@ export default function EstimatorClient({
                         icon={Coins}
                         accent="weft"
                         step={9}
+                        tone={7}
                         tutorialSection={8}
                     />
                     <CardContent className="p-5 sm:p-6 space-y-5">
