@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import {
   Plus,
   Search,
@@ -17,8 +18,7 @@ import {
   SlidersHorizontal,
 } from 'lucide-react'
 import type { EstimateState, EstimatorV3Totals, CostingResultSnapshot } from '@/lib/estimator'
-import { createCostingExportModel, shortDocumentReference } from '@/lib/estimator-export'
-import { CostingExportDialog } from '@/components/estimator/CostingExportDialog'
+import { createCostingExportModel, shortDocumentReference } from '@/lib/costing-export-model'
 import { SavedCostingsTutorial } from '@/components/estimator/SavedCostingsTutorial'
 import { savedCostingTourEnding, isSavedCostingHandoff, costingTourSurface, makeSavedCostingTourExport, makeSavedCostingTourExamples, type SavedCostingStep } from '@/lib/saved-costings-tour'
 import { Button } from '@/components/ui/button'
@@ -58,6 +58,13 @@ type Saved = {
 
 type CostingSort = 'recent' | 'oldest' | 'cost_asc' | 'margin_desc'
 type MarginFilter = 'all' | 'negative' | 'under_10' | '10_to_20' | 'over_20'
+
+// The document renderer (print/PDF HTML, embedded logo, every language's
+// labels) loads when an export opens, as on the estimator and Saved Costings.
+const CostingExportDialog = dynamic(
+  () => import('@/components/estimator/CostingExportDialog').then(module => module.CostingExportDialog),
+  { ssr: false, loading: () => null },
+)
 
 const DEMO_STORAGE_KEY = 'weavly:free-demo-costing-deleted'
 

@@ -116,7 +116,6 @@ import { FreeLeaveDialog } from '@/components/estimator/FreeLeaveDialog'
 import { UpgradeBenefitsPreview } from '@/components/estimator/UpgradeBenefitsPreview'
 import { FreeCalculateBlockedNote } from '@/components/estimator/FreeCalculateBlockedNote'
 import { getFreeCalculateBlock } from '@/lib/free-calculate-block'
-import { clearFreeEstimatorDraft, readFreeEstimatorDraft, writeFreeEstimatorDraft } from '@/lib/free-estimator-draft'
 import { useFreeLeaveGuard, type FreeLeaveReason } from '@/hooks/use-free-leave-guard'
 import { freeLeaveReason as decideFreeLeaveReason, freePageSnapshot } from '@/lib/free-leave-guard'
 import { freePreflight } from '@/lib/free-transaction'
@@ -158,6 +157,11 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 import { safeBaseReturnPath } from '@/lib/base-production-navigation'
+// Free mode's device-draft helpers carry the Free input schema (zod). The
+// paid estimator never needs them, so they load only when Free mode mounts.
+type FreeDraftHelpers = typeof import('@/lib/free-estimator-draft')
+const loadFreeDraftHelpers = () => import('@/lib/free-estimator-draft')
+
 const FactoryCostWizard = dynamic(() => import('./FactoryCostWizard'), {
     ssr: false,
     loading: () => null,
@@ -180,7 +184,7 @@ import { useFactoryGlossaryTopic } from '@/components/estimator/BasePlanFactoryG
 import { useArchivePolicyTopic } from '@/components/records/ArchivePolicyNotice'
 import { RouteMilestones } from '@/components/performance/route-milestones'
 import { PageHeader } from '@/components/ui/page-header'
-import { createCostingExportModel } from '@/lib/estimator-export'
+import { createCostingExportModel } from '@/lib/costing-export-model'
 import type { CostingRecordKind } from '@/lib/costing-workspace'
 import { parseNonNegativeInput, parseNumericInput } from '@/lib/numeric-input'
 import { initWebVitals } from '@/lib/web-vitals'
@@ -3863,40 +3867,56 @@ export default function EstimatorClient({
     // saved in this page is revised in page memory only.
     const [freeDraftPage, setFreeDraftPage] = useState<string | null>(null)
     const [freeDraftRestored, setFreeDraftRestored] = useState(false)
+    // Writes wait until the stored draft has been checked, so an early edit
+    // cannot overwrite a draft before it is offered.
     const freeDraftCheckedRef = useRef(false)
+    const freeDraftStartedRef = useRef(false)
+    const freeDraftHelpersRef = useRef<FreeDraftHelpers | null>(null)
     useEffect(() => {
-        if (!freeMode || freeDraftCheckedRef.current) return
-        freeDraftCheckedRef.current = true
-        if (initialFreeCosting) return
-        let restored: ReturnType<typeof readFreeEstimatorDraft> = null
-        try {
-            restored = readFreeEstimatorDraft(localStorage, orgId, userId)
-        } catch {
-            restored = null
-        }
-        if (!restored) return
-        rawDispatch({ type: 'RESTORE_DRAFT', draftState: { ...restored.state, isConfigured: true } })
-        setQualityLabel(restored.qualityLabel)
-        setDirectWeavingRateInput(getDirectWeavingRateInput(restored.state.perPickCostPaisa, restored.state.weftRows))
-        setHasUnsavedEdits(true)
-        setFreeDraftRestored(true)
+        if (!freeMode || freeDraftStartedRef.current) return
+        freeDraftStartedRef.current = true
+        void loadFreeDraftHelpers().then(helpers => {
+            freeDraftHelpersRef.current = helpers
+            freeDraftCheckedRef.current = true
+            if (initialFreeCosting) return
+            let restored: ReturnType<FreeDraftHelpers['readFreeEstimatorDraft']> = null
+            try {
+                restored = helpers.readFreeEstimatorDraft(localStorage, orgId, userId)
+            } catch {
+                restored = null
+            }
+            if (!restored) return
+            rawDispatch({ type: 'RESTORE_DRAFT', draftState: { ...restored.state, isConfigured: true } })
+            setQualityLabel(restored.qualityLabel)
+            setDirectWeavingRateInput(getDirectWeavingRateInput(restored.state.perPickCostPaisa, restored.state.weftRows))
+            setHasUnsavedEdits(true)
+            setFreeDraftRestored(true)
+        }, () => {
+            // Without the helpers the page keeps no device draft, and the leave
+            // guard keeps treating typed inputs as unsaved.
+        })
     }, [freeMode, initialFreeCosting, orgId, userId])
     useEffect(() => {
-        if (!freeMode || !freeDraftCheckedRef.current || freeMeter.completed || !hasUnsavedEdits) return
+        const helpers = freeDraftHelpersRef.current
+        if (!freeMode || !helpers || !freeDraftCheckedRef.current || freeMeter.completed || !hasUnsavedEdits) return
         let written = false
         try {
-            written = writeFreeEstimatorDraft(localStorage, orgId, userId, { state, qualityLabel, warpInstruction, weftInstruction })
+            written = helpers.writeFreeEstimatorDraft(localStorage, orgId, userId, { state, qualityLabel, warpInstruction, weftInstruction })
         } catch {
             written = false
         }
         setFreeDraftPage(written ? freePage : null)
     }, [freeMode, freeMeter.completed, freePage, hasUnsavedEdits, orgId, qualityLabel, state, userId, warpInstruction, weftInstruction])
     const discardFreeDraft = useCallback(() => {
-        try {
-            clearFreeEstimatorDraft(localStorage, orgId, userId)
-        } catch {
-            // Storage that cannot be reached holds nothing to clear.
+        const clear = (helpers: FreeDraftHelpers) => {
+            try {
+                helpers.clearFreeEstimatorDraft(localStorage, orgId, userId)
+            } catch {
+                // Storage that cannot be reached holds nothing to clear.
+            }
         }
+        if (freeDraftHelpersRef.current) clear(freeDraftHelpersRef.current)
+        else void loadFreeDraftHelpers().then(clear, () => {})
         setFreeDraftPage(null)
         setFreeDraftRestored(false)
     }, [orgId, userId])

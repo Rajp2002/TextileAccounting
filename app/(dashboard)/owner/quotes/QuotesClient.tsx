@@ -74,7 +74,7 @@ import {
 } from '@/lib/saved-costings'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 import { useArchivePolicyTopic } from '@/components/records/ArchivePolicyNotice'
-import { createCostingExportModel } from '@/lib/estimator-export'
+import { createCostingExportModel } from '@/lib/costing-export-model'
 import { isStandaloneCosting, type CostingRecordKind } from '@/lib/costing-workspace'
 import { useTranslation } from '@/lib/i18n/context'
 import { trackPlanEvent } from '@/lib/plan-analytics'
