@@ -270,6 +270,12 @@ function getHistoricalCostingResult(quote: QuoteRow): CostingResultSnapshot | nu
     return parseCostingResultSnapshot(quote.costing_result_snapshot)
 }
 
+/** marginTone's warnings in tints that stay readable on the navy selected version. */
+function selectedMarginTone(margin: number) {
+    if (margin < 0) return 'text-[var(--wv-madder-200)]'
+    return margin < 10 ? 'text-[var(--wv-ochre-200)]' : 'text-white'
+}
+
 function formatCostingPercent(value: number | null) {
     return value == null ? 'Not available' : `${value.toFixed(1)}%`
 }
@@ -652,24 +658,24 @@ function SavedQualityLibraryView({
                                                                         aria-current={isInspected ? 'true' : undefined}
                                                                         className={cn(
                                                                             'w-full rounded-lg border px-3 py-2.5 text-left transition-colors duration-150 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/50',
-                                                                            isInspected ? 'border-[var(--wv-neel-200)] bg-[var(--wv-bg-selected)]' : 'border-transparent hover:border-hairline hover:bg-surface',
+                                                                            isInspected ? 'border-loom bg-loom shadow-xs' : 'border-transparent hover:border-hairline hover:bg-surface',
                                                                         )}
                                                                     >
                                                                         <span className="flex items-baseline justify-between gap-2">
-                                                                            <span className="text-sm font-semibold text-ink">{fillCopy(formulaCopy.version, { n: versionNumber })}</span>
+                                                                            <span className={cn('text-sm font-semibold', isInspected ? 'text-white' : 'text-ink')}>{fillCopy(formulaCopy.version, { n: versionNumber })}</span>
                                                                             {detailLoadingId === record.id
-                                                                                ? <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" aria-hidden="true" />
-                                                                                : versionNumber === latestVersionNumber && <span className="text-xs text-muted-foreground">{formulaCopy.latest}</span>}
+                                                                                ? <Loader2 className={cn('h-3.5 w-3.5 animate-spin', isInspected ? 'text-white/70' : 'text-muted-foreground')} aria-hidden="true" />
+                                                                                : versionNumber === latestVersionNumber && <span className={cn('text-xs', isInspected ? 'text-white/70' : 'text-muted-foreground')}>{formulaCopy.latest}</span>}
                                                                         </span>
-                                                                        <span className="mt-0.5 block text-[13px] tabular-nums text-muted-foreground">{fillCopy(formulaCopy.savedOn, { date: formatTimestampDate(record.created_at, { day: 'numeric', month: 'short', year: 'numeric' }) })}</span>
-                                                                        <span className="mt-2 block text-sm font-semibold tabular-nums text-ink">{cost == null ? formulaCopy.noCost : `₹${cost.toFixed(2)}/m`}</span>
+                                                                        <span className={cn('mt-0.5 block text-[13px] tabular-nums', isInspected ? 'text-white/75' : 'text-muted-foreground')}>{fillCopy(formulaCopy.savedOn, { date: formatTimestampDate(record.created_at, { day: 'numeric', month: 'short', year: 'numeric' }) })}</span>
+                                                                        <span className={cn('mt-2 block text-sm font-semibold tabular-nums', isInspected ? 'text-white' : 'text-ink')}>{cost == null ? formulaCopy.noCost : `₹${cost.toFixed(2)}/m`}</span>
                                                                         {price != null && (
-                                                                            <span className="block text-[13px] tabular-nums text-muted-foreground">
+                                                                            <span className={cn('block text-[13px] tabular-nums', isInspected ? 'text-white/75' : 'text-muted-foreground')}>
                                                                                 {fillCopy(formulaCopy.sellsAt, { price: price.toFixed(2) })}
-                                                                                {margin != null && <> · <span className={marginTone(margin)}>{fillCopy(formulaCopy.marginPct, { pct: margin.toFixed(1) })}</span></>}
+                                                                                {margin != null && <> · <span className={isInspected ? selectedMarginTone(margin) : marginTone(margin)}>{fillCopy(formulaCopy.marginPct, { pct: margin.toFixed(1) })}</span></>}
                                                                             </span>
                                                                         )}
-                                                                        {costingStatus !== 'verified' && <span className="mt-1 block text-[13px] font-medium text-[var(--wv-ochre-800)]">{tx(getCostingBadge(costingStatus))}</span>}
+                                                                        {costingStatus !== 'verified' && <span className={cn('mt-1 block text-[13px] font-medium', isInspected ? 'text-[var(--wv-ochre-200)]' : 'text-[var(--wv-ochre-800)]')}>{tx(getCostingBadge(costingStatus))}</span>}
                                                                     </button>
                                                                 </li>
                                                             )

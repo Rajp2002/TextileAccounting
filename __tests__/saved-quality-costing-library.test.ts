@@ -137,7 +137,7 @@ describe('saved quality costing library', () => {
     expect(client).toContain('onEnsureDetail={ensureQuoteDetail}')
     // The version shown is the highlighted row of the version list beside the breakdown.
     expect(client).toContain("aria-current={isInspected ? 'true' : undefined}")
-    expect(client).toContain("isInspected ? 'border-[var(--wv-neel-200)] bg-[var(--wv-bg-selected)]'")
+    expect(client).toContain("isInspected ? 'border-loom bg-loom shadow-xs'")
     expect(client).toContain('selectedRecordIdByGroup')
   })
 
