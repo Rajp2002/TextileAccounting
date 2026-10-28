@@ -1582,7 +1582,8 @@ export default function RatesClient({
                             ))}
                         </dl>
                         <div className="flex flex-col gap-4 border-t border-hairline px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:border-l lg:border-t-0">
-                            <div className="flex min-w-0 items-center gap-4">
+                            {/* Centred in the room beside Review, like the counts beside it. */}
+                            <div className="flex min-w-0 flex-1 items-center justify-center gap-4">
                                 <span
                                     aria-hidden="true"
                                     className={cn(
