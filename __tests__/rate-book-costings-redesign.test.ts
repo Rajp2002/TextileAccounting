@@ -97,9 +97,15 @@ describe('Saved Costings catalogue', () => {
 
     it('summarises the whole active library in a band, whatever the search or view', () => {
         expect(client).toContain('const showLibraryBand = !tourSampleActive && !loadError && !showArchived && libraryLatest.length > 0')
-        expect(client).toContain('const marginBars = marginRanking(bandMargins)')
-        expect(client).toContain('averageMargin(bandMargins.map(entry => entry.margin))')
+        expect(client).toContain('const libraryAverageMargin = averageMargin(')
         expect(client).toContain('if (isSavedCostingArchived(record, template)) continue')
+    })
+
+    it('shows the costings behind today\'s yarn rates in the band, reviewed in one modal', () => {
+        expect(client).toContain('getCostingsBehindRateBook()')
+        expect(client).toContain('<RateBookUpdateDialog')
+        expect(client).toContain('data-costing-field="rateBookReviewAction"')
+        expect(client).not.toContain('catalogue.marginTitle')
     })
 
     it('switches All, Favourites and Archived from one segmented control', () => {

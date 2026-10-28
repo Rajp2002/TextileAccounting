@@ -1,6 +1,6 @@
 /**
  * Figures for the Saved Costings catalogue: where a costing's money goes, the yarns behind a quality and the
- * margin ranking in the page's band. Pure so the page and its tests read the same numbers.
+ * margins in the page's band. Pure so the page and its tests read the same numbers.
  */
 
 export type CostMixKey = 'yarn' | 'weaving' | 'processing' | 'factory'
@@ -33,11 +33,6 @@ export function costMix(breakdown: unknown): CostMix | null {
     return total > 0 ? { parts, total } : null
 }
 
-/** Yarn's share of cost across the costings that have a breakdown, as a whole percent; null when none do. */
-export function averageYarnShare(mixes: readonly (CostMix | null)[]) {
-    const shares = mixes.flatMap(mix => mix ? [mix.parts[0].value / mix.total] : [])
-    return shares.length ? Math.round((shares.reduce((sum, share) => sum + share, 0) / shares.length) * 100) : null
-}
 
 type YarnRow = { label?: string | null }
 
@@ -59,19 +54,18 @@ export function qualityYarns(recipe: { warp_rows?: unknown; weft_rows?: unknown 
     return { warp: distinctLabels(recipe?.warp_rows), weft: distinctLabels(recipe?.weft_rows) }
 }
 
-export type MarginEntry = { key: string; name: string; margin: number }
-
-/**
- * The band's margin bars: every quality, highest margin first, while they fit; beyond `limit` only the lowest
- * margins, lowest first, because those are the ones to look at.
- */
-export function marginRanking(entries: readonly MarginEntry[], limit = 6) {
-    const ranked = [...entries].sort((left, right) => right.margin - left.margin || left.name.localeCompare(right.name, 'en-IN'))
-    if (ranked.length <= limit) return { entries: ranked, lowestOnly: false }
-    return { entries: ranked.slice(-limit).reverse(), lowestOnly: true }
-}
 
 /** Average of the margins, to one decimal; null for none. */
 export function averageMargin(margins: readonly number[]) {
     return margins.length ? Math.round((margins.reduce((sum, margin) => sum + margin, 0) / margins.length) * 10) / 10 : null
+}
+
+/**
+ * The margin a costing keeps at its saved selling price once its cost moves, to one decimal. Commission and
+ * transport do not move with the cost, so the margin falls by exactly the cost rise over the price. Null when
+ * the saved margin or price is unknown.
+ */
+export function marginAtSavedPrice(savedMarginPct: number | null | undefined, sellingPricePerM: number, costBefore: number, costAfter: number) {
+    if (savedMarginPct == null || !Number.isFinite(savedMarginPct) || !(sellingPricePerM > 0)) return null
+    return Math.round((savedMarginPct - ((costAfter - costBefore) / sellingPricePerM) * 100) * 10) / 10
 }

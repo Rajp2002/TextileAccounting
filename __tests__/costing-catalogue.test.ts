@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { averageMargin, averageYarnShare, costMix, marginRanking, qualityYarns } from '@/lib/costing-catalogue'
+import { averageMargin, costMix, marginAtSavedPrice, qualityYarns } from '@/lib/costing-catalogue'
 
 const breakdown = {
     warpCostPerM: 13.4,
@@ -30,10 +30,6 @@ describe('costMix', () => {
         expect(costMix({ warpCostPerM: 0, weftCostPerM: 0, weaveCostPerM: 0 })).toBeNull()
     })
 
-    it('averages the yarn share across the costings that have a breakdown', () => {
-        expect(averageYarnShare([costMix(breakdown), null, costMix({ warpCostPerM: 6, weftCostPerM: 6, weaveCostPerM: 4, overheadPerM: 0 })])).toBe(75)
-        expect(averageYarnShare([null])).toBeNull()
-    })
 })
 
 describe('qualityYarns', () => {
@@ -50,24 +46,17 @@ describe('qualityYarns', () => {
     })
 })
 
-describe('marginRanking', () => {
-    const entries = [
-        { key: 'a', name: 'Test', margin: 10.7 },
-        { key: 'b', name: 'D2.456', margin: 13 },
-        { key: 'c', name: 'Demo - Signature Polyester', margin: 15.3 },
-        { key: 'd', name: 'D.345', margin: 9.1 },
-    ]
-
-    it('shows every quality, highest margin first, while they fit', () => {
-        expect(marginRanking(entries)).toEqual({ entries: [entries[2], entries[1], entries[0], entries[3]], lowestOnly: false })
-    })
-
-    it('keeps only the lowest margins, lowest first, beyond the limit', () => {
-        expect(marginRanking(entries, 2)).toEqual({ entries: [entries[3], entries[0]], lowestOnly: true })
-    })
-
+describe('band margins', () => {
     it('averages margins to one decimal', () => {
-        expect(averageMargin(entries.map(entry => entry.margin))).toBe(12)
+        expect(averageMargin([10.7, 13, 15.3, 9.1])).toBe(12)
         expect(averageMargin([])).toBeNull()
+    })
+
+    it('takes the cost rise off the margin at the saved selling price', () => {
+        // Saved at ₹50/m with a 10% margin; cost rises ₹1.40/m, so the margin falls 2.8 points.
+        expect(marginAtSavedPrice(10, 50, 40, 41.4)).toBe(7.2)
+        expect(marginAtSavedPrice(10, 50, 40, 39)).toBe(12)
+        expect(marginAtSavedPrice(null, 50, 40, 41)).toBeNull()
+        expect(marginAtSavedPrice(10, 0, 40, 41)).toBeNull()
     })
 })

@@ -92,8 +92,8 @@ describe('PropagateYarnRateDialog', () => {
 
 describe('propagation actions and migrations', () => {
     it('checks the owner role and the Rate Book plan in every action', () => {
-        expect(actions.match(/requireRole\(\['owner'\]\)/g)?.length).toBe(3)
-        expect(actions.match(/await requireBaseTier\(profile\.org_id\)/g)?.length).toBe(3)
+        expect(actions.match(/requireRole\(\['owner'\]\)/g)?.length).toBe(5)
+        expect(actions.match(/await requireBaseTier\(profile\.org_id\)/g)?.length).toBe(5)
     })
 
     it('adds no migration', () => {

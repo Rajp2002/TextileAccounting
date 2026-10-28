@@ -101,6 +101,45 @@ export function applyYarnRate(estimate: EstimateState, category: YarnCategory, n
         : { ...estimate, weftRows: replace(estimate.weftRows) }
 }
 
+export type RateBookYarn = { name: string; category: YarnCategory; current_value: number }
+
+/** One yarn layer whose saved rate differs from the Rate Book's rate today. */
+export type YarnRateChange = { layer: 'warp' | 'weft'; index: number; name: string; from: number; to: number }
+
+/** A saved costing whose yarns cost something else in the Rate Book today. */
+export type RateBookDriftItem = Omit<PropagationCandidate, 'layers'> & {
+    changes: YarnRateChange[]
+    before: PropagationPrice
+    after: PropagationPrice
+}
+
+/**
+ * A copy of the estimate with every yarn row that the Rate Book prices moved to
+ * today's rate, and the layers that moved. Rows the Rate Book has no yarn for
+ * keep their own rate. Duplicate names in a category use the first one listed.
+ */
+export function applyRateBookYarns(estimate: EstimateState, yarns: readonly RateBookYarn[]): { estimate: EstimateState; changes: YarnRateChange[] } {
+    const changes: YarnRateChange[] = []
+    const priced = (category: YarnCategory) => {
+        const byName = new Map<string, number>()
+        for (const yarn of yarns) {
+            const key = normalizeYarnName(yarn.name)
+            if (yarn.category === category && key && !byName.has(key) && Number.isFinite(yarn.current_value)) byName.set(key, yarn.current_value)
+        }
+        return byName
+    }
+    const move = <Row extends { label?: string; yarnRate: number }>(rows: Row[], layer: 'warp' | 'weft', byName: Map<string, number>) =>
+        rows.map((row, index) => {
+            const today = byName.get(normalizeYarnName(row.label))
+            if (today == null || today === row.yarnRate) return row
+            changes.push({ layer, index, name: row.label?.trim() || '', from: row.yarnRate, to: today })
+            return { ...row, yarnRate: today }
+        })
+    const warpRows = move(estimate.warpRows, 'warp', priced('yarn_warp'))
+    const weftRows = move(estimate.weftRows, 'weft', priced('yarn_weft'))
+    return { estimate: changes.length ? { ...estimate, warpRows, weftRows } : estimate, changes }
+}
+
 /**
  * Production cost and selling price per metre for an estimate, from the same
  * engine and validation a costing save uses. `null` when it cannot be priced.

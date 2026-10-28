@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 vi.mock('server-only', () => ({}))
 import { makeDefaultEstimateState, type EstimateState, type WarpRow, type WeftRow } from '../lib/estimator'
 import {
+    applyRateBookYarns,
     applyYarnRate,
     chunkIds,
     findAffectedLayers,
@@ -13,7 +14,7 @@ import {
     tickedAfterReload,
     type CostingLineageKey,
 } from '../lib/yarn-rate-propagation'
-import { buildPropagationRequestId } from '../lib/yarn-rate-propagation-request.server'
+import { buildPropagationRequestId, buildRateBookUpdateRequestId } from '../lib/yarn-rate-propagation-request.server'
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
@@ -184,5 +185,44 @@ describe('tickedAfterReload', () => {
 
     it('ticks a costing that was not in the previous review', () => {
         expect([...tickedAfterReload(['a', 'new'], new Set(['gone']))]).toEqual(['a', 'new'])
+    })
+})
+
+describe('applyRateBookYarns', () => {
+    const yarns = [
+        { name: '75D Poly', category: 'yarn_warp' as const, current_value: 120 },
+        { name: ' 75d  poly ', category: 'yarn_warp' as const, current_value: 999 },
+        { name: '75D Poly', category: 'yarn_weft' as const, current_value: 110 },
+        { name: 'Viscose 30s', category: 'yarn_weft' as const, current_value: 300 },
+    ]
+
+    it('moves every row the Rate Book prices to today\'s rate, matched by name within its category', () => {
+        const estimate = estimateWith([warp('w1', '75D Poly', 100), warp('w2', 'Unknown', 80)], [weft('f1', '75d poly', 100), weft('f2', 'Viscose 30s', 300)])
+        const { estimate: next, changes } = applyRateBookYarns(estimate, yarns)
+        expect(next.warpRows.map(row => row.yarnRate)).toEqual([120, 80])
+        expect(next.weftRows.map(row => row.yarnRate)).toEqual([110, 300])
+        expect(changes).toEqual([
+            { layer: 'warp', index: 0, name: '75D Poly', from: 100, to: 120 },
+            { layer: 'weft', index: 0, name: '75d poly', from: 100, to: 110 },
+        ])
+        expect(estimate.warpRows[0].yarnRate).toBe(100)
+    })
+
+    it('returns the same estimate and no changes when everything already matches', () => {
+        const estimate = estimateWith([warp('w1', '75D Poly', 120)], [weft('f1', 'Viscose 30s', 300)])
+        const result = applyRateBookYarns(estimate, yarns)
+        expect(result.changes).toEqual([])
+        expect(result.estimate).toBe(estimate)
+    })
+})
+
+describe('buildRateBookUpdateRequestId', () => {
+    it('is UUID-shaped and stable for the same source and new rates, different otherwise', () => {
+        const changes = [{ layer: 'warp', index: 0, to: 120 }]
+        const id = buildRateBookUpdateRequestId('quote-1', changes)
+        expect(id).toMatch(UUID_PATTERN)
+        expect(buildRateBookUpdateRequestId('quote-1', changes)).toBe(id)
+        expect(buildRateBookUpdateRequestId('quote-1', [{ layer: 'warp', index: 0, to: 121 }])).not.toBe(id)
+        expect(buildRateBookUpdateRequestId('quote-2', changes)).not.toBe(id)
     })
 })

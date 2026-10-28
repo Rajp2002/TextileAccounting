@@ -10,6 +10,7 @@ import { createdAtDescendingAfter, readAllPages } from '@/lib/paged-read'
 import { buildDraftStateFromQuote, type SavedCostingStateRow } from '@/lib/saved-costings'
 import type { EstimateState } from '@/lib/estimator'
 import {
+    applyRateBookYarns,
     applyYarnRate,
     findAffectedLayers,
     isCostingEligible,
@@ -20,9 +21,11 @@ import {
     type PropagationOutcome,
     type PropagationPreviewItem,
     type PropagationSkipped,
+    type RateBookDriftItem,
+    type RateBookYarn,
     type YarnCategory,
 } from '@/lib/yarn-rate-propagation'
-import { buildPropagationRequestId } from '@/lib/yarn-rate-propagation-request.server'
+import { buildPropagationRequestId, buildRateBookUpdateRequestId } from '@/lib/yarn-rate-propagation-request.server'
 
 // "Propagate a new yarn rate": count, preview and apply. The counts and the
 // preview are read-only; apply saves new costing versions through the same
@@ -318,6 +321,71 @@ function endsTheBatch(message: string) {
 }
 
 /**
+ * Saves one costing's new version through saveEstimatorQuoteV3, the estimator's
+ * own save, and records the outcome. Returns the batch's response when a save
+ * error ends the whole batch (a locked org or a lapsed plan).
+ */
+async function saveNewVersion({ loaded, expectedUpdatedAt, nextEstimate, price, clientRequestId, templateUpdatedAt, outcomes }: {
+    loaded: LoadedCosting
+    expectedUpdatedAt: string
+    nextEstimate: EstimateState
+    price: { productionCostPerM: number; sellingPricePerM: number }
+    clientRequestId: string
+    templateUpdatedAt: Map<string, string>
+    outcomes: PropagationOutcome[]
+}): Promise<{ data: { outcomes: PropagationOutcome[] }; error: string } | null> {
+    const { row } = loaded
+    let result: Awaited<ReturnType<typeof saveEstimatorQuoteV3>>
+    try {
+        result = await saveEstimatorQuoteV3({
+            clientRequestId,
+            partyName: row.party_name,
+            qualityLabel: row.quality_label?.trim() || 'Costing',
+            warpInstruction: row.warp_instruction ?? undefined,
+            weftInstruction: row.weft_instruction ?? undefined,
+            estimate: nextEstimate,
+            totalProductionCostPerM: price.productionCostPerM,
+            quotePricePerM: price.sellingPricePerM,
+            status: 'draft',
+            recordKind: 'costing',
+            sourceQuoteId: row.id,
+            expectedSourceUpdatedAt: expectedUpdatedAt,
+            templateId: row.template_id ?? undefined,
+            expectedTemplateUpdatedAt: row.template_id ? templateUpdatedAt.get(row.template_id) : undefined,
+            // Only yarn rates changed: the factory inputs are still the ones this version was costed with.
+            factoryProfileUpdatedAt: row.factory_profile_updated_at ?? undefined,
+        })
+    } catch {
+        outcomes.push({ id: row.id, status: 'failed', message: 'The new version could not be saved.' })
+        return null
+    }
+    if (!result.success) {
+        const message = result.error ?? 'The new version could not be saved.'
+        if (endsTheBatch(message)) {
+            if (outcomes.some(outcome => outcome.status === 'created')) {
+                revalidatePath('/owner/quotes')
+                revalidatePath('/owner/rates')
+            }
+            return { error: message, data: { outcomes } }
+        }
+        outcomes.push({ id: row.id, status: 'failed', message })
+    } else if (result.noChange) {
+        outcomes.push({ id: row.id, status: 'unchanged' })
+    } else {
+        outcomes.push({ id: row.id, status: 'created', versionNumber: result.versionNumber, quoteId: result.quoteId })
+        // Every new version starts un-starred; keep the owner's favourites.
+        if (row.is_favorite && result.quoteId && result.updatedAt && !result.idempotentReplay) {
+            try {
+                await updateSavedCostingLibraryState({ id: result.quoteId, expectedUpdatedAt: result.updatedAt, isFavorite: true })
+            } catch {
+                // The version is saved; a missing star is not worth failing it.
+            }
+        }
+    }
+    return null
+}
+
+/**
  * Saves a new version of up to PROPAGATION_BATCH_SIZE costings at the Rate
  * Book's current value for the yarn. The value is read here, never taken from
  * the caller, and the call is refused if the rate changed since the review.
@@ -376,53 +444,144 @@ export async function applyYarnRatePropagation(input: {
             continue
         }
 
-        let result: Awaited<ReturnType<typeof saveEstimatorQuoteV3>>
-        try {
-            result = await saveEstimatorQuoteV3({
-                clientRequestId: buildPropagationRequestId(row.id, rate.id, rate.current_value),
-                partyName: row.party_name,
-                qualityLabel: row.quality_label?.trim() || 'Costing',
-                warpInstruction: row.warp_instruction ?? undefined,
-                weftInstruction: row.weft_instruction ?? undefined,
-                estimate: nextEstimate,
-                totalProductionCostPerM: price.productionCostPerM,
-                quotePricePerM: price.sellingPricePerM,
-                status: 'draft',
-                recordKind: 'costing',
-                sourceQuoteId: row.id,
-                expectedSourceUpdatedAt: request.expectedUpdatedAt,
-                templateId: row.template_id ?? undefined,
-                expectedTemplateUpdatedAt: row.template_id ? current.templateUpdatedAt.get(row.template_id) : undefined,
-                // Only the yarn rate changed: the factory inputs are still the ones this version was costed with.
-                factoryProfileUpdatedAt: row.factory_profile_updated_at ?? undefined,
-            })
-        } catch {
-            outcomes.push({ id: request.id, status: 'failed', message: 'The new version could not be saved.' })
+        const ended = await saveNewVersion({
+            loaded,
+            expectedUpdatedAt: request.expectedUpdatedAt,
+            nextEstimate,
+            price,
+            clientRequestId: buildPropagationRequestId(row.id, rate.id, rate.current_value),
+            templateUpdatedAt: current.templateUpdatedAt,
+            outcomes,
+        })
+        if (ended) return ended
+    }
+
+    revalidatePath('/owner/quotes')
+    revalidatePath('/owner/rates')
+    return { data: { outcomes } }
+}
+
+/** The active warp and weft yarns of the Rate Book, and a key that changes whenever one of them does. */
+async function readRateBookYarns(supabase: Supabase, orgId: string): Promise<{ yarns: (RateBookYarn & { id: string })[]; ratesKey: string; error?: string }> {
+    const { data, error } = await supabase
+        .from('cost_rate_book')
+        .select('id, name, category, current_value, updated_at')
+        .eq('org_id', orgId)
+        .eq('is_active', true)
+        .in('category', ['yarn_warp', 'yarn_weft'])
+    if (error) return { yarns: [], ratesKey: '', error: error.message }
+    const rows = [...(data ?? [])].sort((left, right) => String(left.id).localeCompare(String(right.id)))
+    return {
+        yarns: rows.map(rate => ({ id: rate.id, name: rate.name, category: rate.category as YarnCategory, current_value: Number(rate.current_value) })),
+        ratesKey: rows.map(rate => `${rate.id}@${Date.parse(rate.updated_at)}:${Number(rate.current_value)}`).join('|'),
+    }
+}
+
+/**
+ * Saved costings whose yarns cost something else in the Rate Book today: the
+ * latest active version of each, with its cost as saved and at today's rates.
+ * Read-only; the Saved Costings page shows it and its review saves from it.
+ */
+export async function getCostingsBehindRateBook(): Promise<{
+    data?: { ratesKey: string; yarnCount: number; items: RateBookDriftItem[]; skipped: PropagationSkipped[] }
+    error?: string
+}> {
+    const { profile } = await requireRole(['owner'])
+    const tierError = await requireBaseTier(profile.org_id)
+    if (tierError) return { error: tierError }
+    const supabase = await createServerClient()
+
+    const [rateBook, costings] = await Promise.all([
+        readRateBookYarns(supabase, profile.org_id),
+        readEligibleCostings(supabase, profile.org_id),
+    ])
+    if (rateBook.error) return { error: rateBook.error }
+    if (costings.error) return { error: costings.error }
+
+    const items: RateBookDriftItem[] = []
+    const skipped: PropagationSkipped[] = []
+    for (const { row, estimate } of costings.data) {
+        const next = applyRateBookYarns(estimate, rateBook.yarns)
+        if (next.changes.length === 0) continue
+        const before = savedPrice(row) ?? priceEstimate(estimate)
+        const after = priceEstimate(next.estimate)
+        const qualityLabel = row.quality_label?.trim() || 'Costing'
+        if (!before || !after) {
+            skipped.push({ id: row.id, qualityLabel, reason: CANT_PRICE_REASON })
             continue
         }
-        if (!result.success) {
-            const message = result.error ?? 'The new version could not be saved.'
-            if (endsTheBatch(message)) {
-                if (outcomes.some(outcome => outcome.status === 'created')) {
-                    revalidatePath('/owner/quotes')
-                    revalidatePath('/owner/rates')
-                }
-                return { error: message, data: { outcomes } }
-            }
-            outcomes.push({ id: request.id, status: 'failed', message })
-        } else if (result.noChange) {
-            outcomes.push({ id: request.id, status: 'unchanged' })
-        } else {
-            outcomes.push({ id: request.id, status: 'created', versionNumber: result.versionNumber, quoteId: result.quoteId })
-            // Every new version starts un-starred; keep the owner's favourites.
-            if (row.is_favorite && result.quoteId && result.updatedAt && !result.idempotentReplay) {
-                try {
-                    await updateSavedCostingLibraryState({ id: result.quoteId, expectedUpdatedAt: result.updatedAt, isFavorite: true })
-                } catch {
-                    // The version is saved; a missing star is not worth failing it.
-                }
-            }
+        items.push({
+            id: row.id,
+            qualityLabel,
+            partyName: row.party_name,
+            versionNumber: Number(row.version_number ?? 1),
+            updatedAt: row.updated_at,
+            templateId: row.template_id,
+            changes: next.changes,
+            before,
+            after,
+        })
+    }
+    // The costings that lose the most first.
+    items.sort((left, right) => (right.after.productionCostPerM - right.before.productionCostPerM) - (left.after.productionCostPerM - left.before.productionCostPerM))
+    return { data: { ratesKey: rateBook.ratesKey, yarnCount: rateBook.yarns.length, items, skipped } }
+}
+
+/**
+ * Saves a new version of up to PROPAGATION_BATCH_SIZE costings with every yarn
+ * at the Rate Book's rate today. The rates are read here, never taken from the
+ * caller, and the call is refused if any yarn rate changed since the review.
+ */
+export async function updateCostingsToRateBook(input: {
+    ratesKey: string
+    costings: { id: string; expectedUpdatedAt: string }[]
+}): Promise<{ data?: { outcomes: PropagationOutcome[] }; error?: string }> {
+    const requests = Array.isArray(input?.costings) ? input.costings : []
+    if (requests.length === 0) return { error: 'Choose at least one costing to save.' }
+    if (requests.length > PROPAGATION_BATCH_SIZE) return { error: 'Save fewer costings at a time.' }
+    if (requests.some(request => !request?.id || !Number.isFinite(Date.parse(request.expectedUpdatedAt)))) {
+        return { error: 'These costings could not be read. Reopen the review and try again.' }
+    }
+
+    const { profile } = await requireRole(['owner'])
+    const tierError = await requireBaseTier(profile.org_id)
+    if (tierError) return { error: tierError }
+    const supabase = await createServerClient()
+
+    const rateBook = await readRateBookYarns(supabase, profile.org_id)
+    if (rateBook.error) return { error: rateBook.error }
+    if (rateBook.ratesKey !== input.ratesKey) return { error: 'Yarn rates changed since you opened the review. Reopen it.' }
+
+    const current = await readStillEligibleCostings(supabase, profile.org_id, requests.map(request => request.id))
+    if ('error' in current) return { error: current.error }
+
+    const outcomes: PropagationOutcome[] = []
+    for (const request of requests) {
+        const loaded = current.costings.get(request.id)
+        if (!loaded || Date.parse(loaded.row.updated_at) !== Date.parse(request.expectedUpdatedAt)) {
+            outcomes.push({ id: request.id, status: 'stale', message: 'This costing changed since the review. Reopen the review.' })
+            continue
         }
+        const next = applyRateBookYarns(loaded.estimate, rateBook.yarns)
+        if (next.changes.length === 0) {
+            outcomes.push({ id: request.id, status: 'unchanged' })
+            continue
+        }
+        const price = priceEstimate(next.estimate)
+        if (!price) {
+            outcomes.push({ id: request.id, status: 'failed', message: CANT_PRICE_REASON })
+            continue
+        }
+        const ended = await saveNewVersion({
+            loaded,
+            expectedUpdatedAt: request.expectedUpdatedAt,
+            nextEstimate: next.estimate,
+            price,
+            clientRequestId: buildRateBookUpdateRequestId(loaded.row.id, next.changes),
+            templateUpdatedAt: current.templateUpdatedAt,
+            outcomes,
+        })
+        if (ended) return ended
     }
 
     revalidatePath('/owner/quotes')

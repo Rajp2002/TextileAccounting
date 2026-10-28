@@ -46,11 +46,13 @@ vi.mock('@/lib/supabase/server', () => ({
 
 import {
     applyYarnRatePropagation,
+    getCostingsBehindRateBook,
     getYarnRatePropagationCounts,
     previewYarnRatePropagation,
+    updateCostingsToRateBook,
 } from '@/app/(dashboard)/owner/rates/propagation-actions'
 import { PROPAGATION_BATCH_SIZE } from '@/lib/yarn-rate-propagation'
-import { buildPropagationRequestId } from '@/lib/yarn-rate-propagation-request.server'
+import { buildPropagationRequestId, buildRateBookUpdateRequestId } from '@/lib/yarn-rate-propagation-request.server'
 
 const RATE_ID = '5b1e0c4a-1111-4111-8111-aaaaaaaaaaaa'
 const WEFT_RATE_ID = '5b1e0c4a-2222-4222-8222-bbbbbbbbbbbb'
@@ -376,5 +378,68 @@ describe('applyYarnRatePropagation', () => {
         })
         expect(result.error).toMatch(/locked/)
         expect(state.saveEstimatorQuoteV3).toHaveBeenCalledTimes(1)
+    })
+})
+
+describe('getCostingsBehindRateBook', () => {
+    it('lists the latest active costings whose yarns cost something else today, biggest rise first', async () => {
+        seed([
+            costing('a1', 'g1', 1),
+            costing('a2', 'g1', 2, { warp_rows: [yarnRow('warp', '75D Poly', 110)] }),
+            costing('b1', 'g2', 1),
+            costing('c1', 'g3', 1, { is_archived: true }),
+            costing('d1', 'g4', 1, { warp_rows: [yarnRow('warp', '75D Poly', 120)] }),
+        ])
+        const result = await getCostingsBehindRateBook()
+        expect(result.error).toBeUndefined()
+        expect(result.data?.yarnCount).toBe(2)
+        expect(result.data?.items.map(item => item.id)).toEqual(['b1', 'a2'])
+        expect(result.data?.items[0].changes).toEqual([{ layer: 'warp', index: 0, name: '75D Poly', from: 100, to: 120 }])
+        expect(result.data?.items[0].after.productionCostPerM).toBeGreaterThan(result.data!.items[0].before.productionCostPerM)
+        expect(result.data?.ratesKey).toContain(RATE_ID)
+    })
+
+    it('returns the plan error and reads nothing when the plan lacks the rate book', async () => {
+        seed([costing('a1', 'g1', 1)])
+        state.tier = 'free'
+        expect((await getCostingsBehindRateBook()).error).toMatch(/Lite or Weavly Base/)
+        expect(state.reads).toEqual([])
+    })
+})
+
+describe('updateCostingsToRateBook', () => {
+    it('refuses when a yarn rate changed since the review, and saves nothing', async () => {
+        seed([costing('a1', 'g1', 1)])
+        const result = await updateCostingsToRateBook({ ratesKey: 'stale', costings: [{ id: 'a1', expectedUpdatedAt: '2026-10-01T01:00:00Z' }] })
+        expect(result.error).toBe('Yarn rates changed since you opened the review. Reopen it.')
+        expect(state.saveEstimatorQuoteV3).not.toHaveBeenCalled()
+    })
+
+    it('saves a new draft version with every yarn at today\'s rate and a deterministic request id', async () => {
+        seed([costing('a1', 'g1', 1)])
+        const { data } = await getCostingsBehindRateBook()
+        state.saveEstimatorQuoteV3.mockResolvedValue({ success: true, quoteId: 'new-a1', versionNumber: 2 })
+        const result = await updateCostingsToRateBook({ ratesKey: data!.ratesKey, costings: [{ id: 'a1', expectedUpdatedAt: '2026-10-01T01:00:00Z' }] })
+        expect(result.data?.outcomes).toEqual([{ id: 'a1', status: 'created', versionNumber: 2, quoteId: 'new-a1' }])
+        const params = state.saveEstimatorQuoteV3.mock.calls[0][0]
+        expect(params.estimate.warpRows[0].yarnRate).toBe(120)
+        expect(params.estimate.weftRows[0].yarnRate).toBe(100)
+        expect(params).toMatchObject({
+            clientRequestId: buildRateBookUpdateRequestId('a1', [{ layer: 'warp', index: 0, to: 120 }]),
+            sourceQuoteId: 'a1',
+            status: 'draft',
+            recordKind: 'costing',
+        })
+    })
+
+    it('marks a costing that changed since the review stale and one already at today\'s rates unchanged', async () => {
+        seed([costing('a1', 'g1', 1), costing('b1', 'g2', 1, { warp_rows: [yarnRow('warp', '75D Poly', 120)] })])
+        const { data } = await getCostingsBehindRateBook()
+        const result = await updateCostingsToRateBook({
+            ratesKey: data!.ratesKey,
+            costings: [{ id: 'a1', expectedUpdatedAt: '2026-09-01T00:00:00Z' }, { id: 'b1', expectedUpdatedAt: '2026-10-01T01:00:00Z' }],
+        })
+        expect(result.data?.outcomes.map(outcome => outcome.status)).toEqual(['stale', 'unchanged'])
+        expect(state.saveEstimatorQuoteV3).not.toHaveBeenCalled()
     })
 })

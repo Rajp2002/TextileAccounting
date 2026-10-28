@@ -32,13 +32,15 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog'
-import { auditHistoricalCostingSnapshot, getEstimatorQuoteDetail, saveEstimatorQuoteV3, updateSavedCostingLibraryState } from '../estimator/actions'
+import { auditHistoricalCostingSnapshot, getEstimatorQuoteDetail, getEstimatorQuotes, saveEstimatorQuoteV3, updateSavedCostingLibraryState } from '../estimator/actions'
 import { toast, userFacingError } from '@/lib/app-notifications'
 import { formatTimestampDate } from '@/lib/format'
 import { formatSuratDateTime } from '@/lib/time'
 import {
     FileText,
     ArrowRight,
+    Check,
+    ClipboardCheck,
     Loader2,
     AlertTriangle,
     Copy,
@@ -86,7 +88,10 @@ import { liteRecordsCopy } from '@/lib/i18n/lite-records'
 import { MOBILE_WORKSPACE_QUERY } from '@/lib/mobile-workflow-navigation'
 import mobileStyles from '@/components/estimator/lite-records.module.css'
 import { CompositionBar, Swatch } from '@/components/stock/stock-presentation'
-import { averageMargin, averageYarnShare, costMix, marginRanking, qualityYarns, type CostMixKey } from '@/lib/costing-catalogue'
+import { averageMargin, costMix, marginAtSavedPrice, qualityYarns, type CostMixKey } from '@/lib/costing-catalogue'
+import { getCostingsBehindRateBook } from '../rates/propagation-actions'
+import { RateBookUpdateDialog } from '@/components/estimator/RateBookUpdateDialog'
+import type { RateBookDriftItem } from '@/lib/yarn-rate-propagation'
 import { costingCatalogueText } from '@/lib/i18n/costing-catalogue'
 import { fillCopy } from '@/lib/i18n/fill'
 import { costingMarginText } from '@/lib/i18n/costing-margin'
@@ -1180,14 +1185,37 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
         }
         return [...byQuality.entries()].map(([key, entry]) => ({ key, ...entry, metrics: getSavedCostingMetrics(entry.record) }))
     }, [initialTemplates, quotes])
-    const bandMargins = libraryLatest.flatMap(entry => entry.metrics.actualMarginPct == null ? [] : [{ key: entry.key, name: entry.name, margin: entry.metrics.actualMarginPct }])
-    const marginBars = marginRanking(bandMargins)
-    const marginScale = Math.max(20, ...bandMargins.map(entry => entry.margin))
-    const libraryAverageMargin = averageMargin(bandMargins.map(entry => entry.margin))
-    const libraryYarnShare = averageYarnShare(libraryLatest.map(entry => costMix(entry.record.cost_breakdown ?? getHistoricalCostingResult(entry.record)?.breakdown)))
+    const libraryAverageMargin = averageMargin(libraryLatest.flatMap(entry => entry.metrics.actualMarginPct == null ? [] : [entry.metrics.actualMarginPct]))
     const savedCostingCount = libraryLatest.reduce((sum, entry) => sum + entry.count, 0)
     const lastSavedAt = libraryLatest.reduce<string | null>((latest, entry) => !latest || Date.parse(entry.record.created_at) > Date.parse(latest) ? entry.record.created_at : latest, null)
     const showLibraryBand = !tourSampleActive && !loadError && !showArchived && libraryLatest.length > 0
+    // Costings behind today's Rate Book yarn rates. A secondary read: without it the band shows the saved count instead.
+    const [rateBookDrift, setRateBookDrift] = useState<'loading' | 'unavailable' | { yarnCount: number; items: RateBookDriftItem[] }>('loading')
+    const [rateBookReviewOpen, setRateBookReviewOpen] = useState(false)
+    const refreshRateBookDrift = useCallback(() => {
+        void getCostingsBehindRateBook()
+            .then(result => setRateBookDrift(result.data ? { yarnCount: result.data.yarnCount, items: result.data.items } : 'unavailable'))
+            .catch(() => setRateBookDrift('unavailable'))
+    }, [])
+    useEffect(() => { if (showLibraryBand) refreshRateBookDrift() }, [showLibraryBand, refreshRateBookDrift])
+    const savedMarginById = useMemo(() => new Map(quotes.map(quote => [quote.id, getSavedCostingMetrics(quote).actualMarginPct])), [quotes])
+    const bandStatusLine = (() => {
+        if (rateBookDrift === 'loading') return null
+        if (rateBookDrift === 'unavailable') return lastSavedAt ? fillCopy(catalogue.lastSaved, { date: formatTimestampDate(lastSavedAt, { day: 'numeric', month: 'short' }) }) : null
+        const worst = rateBookDrift.items[0]
+        if (!worst) return fillCopy(rateBookDrift.yarnCount === 1 ? catalogue.checkedYarnsOne : catalogue.checkedYarns, { n: rateBookDrift.yarnCount })
+        const savedMargin = savedMarginById.get(worst.id) ?? null
+        const marginToday = marginAtSavedPrice(savedMargin, worst.before.sellingPricePerM, worst.before.productionCostPerM, worst.after.productionCostPerM)
+        return savedMargin == null || marginToday == null
+            ? null
+            : fillCopy(catalogue.behindLine, { name: worst.qualityLabel, from: `${savedMargin.toFixed(1)}%`, to: `${marginToday.toFixed(1)}%` })
+    })()
+    const reloadAfterRateBookUpdate = useCallback(() => {
+        refreshRateBookDrift()
+        void getEstimatorQuotes()
+            .then(result => { if (result.data) setQuotes(result.data as QuoteRow[]) })
+            .catch(() => router.refresh())
+    }, [refreshRateBookDrift, router])
     const libraryView = showArchived ? 'archived' : showFavoritesOnly ? 'favourites' : 'all'
     const setLibraryView = (view: 'all' | 'favourites' | 'archived') => {
         setOpenQualityKey(null)
@@ -1252,62 +1280,74 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     </div>
                 </div>
             )}
-            {/* The library at a glance: how many qualities are costed, their average margin, and margin by quality. */}
+            {/* The library at a glance, like the Rate Book's band: the counts, then whether any costing is behind today's yarn rates, which open in the review. */}
             {showLibraryBand && (
                 <section
                     aria-labelledby="costing-library-status"
                     data-i18n-skip="true"
                     lang={language}
-                    className="grid overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]"
+                    className="grid overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]"
                 >
-                    <div className="flex flex-col justify-between gap-5 p-5 sm:p-6">
-                        <div>
-                            <p id="costing-library-status" className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                                <span aria-hidden="true" className="size-1.5 rounded-full bg-saffron" />
-                                {catalogue.costed}
-                            </p>
-                            <p className="mt-3 text-5xl font-semibold leading-none tracking-[-0.035em] text-ink tabular-nums">
-                                {libraryLatest.length}
-                                <span className="ml-2 text-2xl font-medium tracking-normal text-muted-foreground">{libraryLatest.length === 1 ? catalogue.qualityUnit : catalogue.qualitiesUnit}</span>
-                            </p>
-                            <p className="mt-3 text-sm text-body tabular-nums">
-                                {fillCopy(savedCostingCount === 1 ? catalogue.savedCostingsOne : catalogue.savedCostings, { n: savedCostingCount })}
-                                {lastSavedAt && <span className="text-muted-foreground"> · {fillCopy(catalogue.lastSaved, { date: formatTimestampDate(lastSavedAt, { day: 'numeric', month: 'short' }) })}</span>}
-                            </p>
+                    <dl className="grid grid-cols-3 divide-x divide-hairline">
+                        {[
+                            { label: catalogue.qualitiesStat, value: String(libraryLatest.length) },
+                            { label: catalogue.costingsStat, value: String(savedCostingCount) },
+                            { label: catalogue.marginStat, value: libraryAverageMargin == null ? '—' : `${libraryAverageMargin.toFixed(1)}%` },
+                        ].map(stat => (
+                            <div key={stat.label} className="flex min-w-0 flex-col items-center justify-center px-4 py-5 text-center sm:px-6">
+                                <dt className="max-w-full truncate text-[13px] font-medium text-muted-foreground" title={stat.label}>{stat.label}</dt>
+                                <dd className="mt-1 text-[28px] font-semibold leading-none tracking-[-0.02em] text-ink tabular-nums">{stat.value}</dd>
+                            </div>
+                        ))}
+                    </dl>
+                    <div className="flex flex-col gap-4 border-t border-hairline px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:border-l lg:border-t-0">
+                        {/* Centred in the room beside Review, like the counts beside it. */}
+                        <div className="flex min-w-0 flex-1 items-center justify-center gap-4">
+                            {rateBookDrift !== 'unavailable' && (
+                                <span
+                                    aria-hidden="true"
+                                    className={cn(
+                                        'flex size-11 shrink-0 items-center justify-center rounded-full',
+                                        rateBookDrift === 'loading' ? 'bg-surface-soft text-muted-foreground'
+                                            : rateBookDrift.items.length ? 'bg-[var(--wv-ochre-50)] text-[var(--wv-ochre-800)]' : 'bg-[var(--wv-moss-50)] text-[var(--wv-moss-700)]',
+                                    )}
+                                >
+                                    {rateBookDrift === 'loading' ? <Loader2 className="size-5 animate-spin" />
+                                        : rateBookDrift.items.length ? <ClipboardCheck className="size-5" /> : <Check className="size-5" strokeWidth={2.5} />}
+                                </span>
+                            )}
+                            <div className="min-w-0">
+                                <p id="costing-library-status" className="text-lg font-semibold leading-snug text-ink">
+                                    {rateBookDrift === 'loading' ? catalogue.checking
+                                        : rateBookDrift === 'unavailable' ? fillCopy(savedCostingCount === 1 ? catalogue.savedCostingsOne : catalogue.savedCostings, { n: savedCostingCount })
+                                        : rateBookDrift.items.length ? fillCopy(rateBookDrift.items.length === 1 ? catalogue.behindOne : catalogue.behind, { n: rateBookDrift.items.length })
+                                        : catalogue.current}
+                                </p>
+                                {bandStatusLine && <p className="mt-0.5 break-words text-[13px] text-body tabular-nums">{bandStatusLine}</p>}
+                            </div>
                         </div>
-                        {libraryAverageMargin != null && (
-                            <p className="border-t border-hairline pt-4 text-[13px] text-body tabular-nums">
-                                {fillCopy(catalogue.avgMargin, { pct: `${libraryAverageMargin.toFixed(1)}%` })}
-                                {libraryYarnShare != null && <span className="text-muted-foreground"> · {fillCopy(catalogue.yarnShare, { pct: `${libraryYarnShare}%` })}</span>}
-                            </p>
-                        )}
-                    </div>
-                    <div className="border-t border-hairline p-5 sm:p-6 lg:border-l lg:border-t-0">
-                        <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                            <p className="text-sm font-medium text-muted-foreground">{catalogue.marginTitle}</p>
-                            <p className="text-[13px] text-muted-foreground">{marginBars.lowestOnly ? fillCopy(catalogue.lowestNote, { n: marginBars.entries.length }) : catalogue.marginNote}</p>
-                        </div>
-                        {marginBars.entries.length ? (
-                            <ul className="space-y-3">
-                                {marginBars.entries.map(entry => (
-                                    <li key={entry.key} className="grid grid-cols-[minmax(0,1fr)_4.5rem] items-center gap-x-4 sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)_4.5rem]">
-                                        <span className="truncate text-sm font-semibold text-ink" title={entry.name}>{entry.name}</span>
-                                        <span aria-hidden="true" className="hidden h-2 rounded-full bg-surface-soft sm:block">
-                                            <span
-                                                className={cn('block h-full rounded-full', entry.margin < 10 ? 'bg-[var(--wv-ochre-400)]' : 'bg-[var(--wv-viz-1)]')}
-                                                style={{ width: `${Math.max((Math.max(entry.margin, 0) / marginScale) * 100, 2)}%` }}
-                                            />
-                                        </span>
-                                        <span className={cn('text-right text-sm font-semibold tabular-nums', marginTone(entry.margin))}>{entry.margin.toFixed(1)}%</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p className="text-sm text-muted-foreground">{catalogue.noMargins}</p>
+                        {rateBookDrift !== 'loading' && rateBookDrift !== 'unavailable' && rateBookDrift.items.length > 0 && (
+                            <Button
+                                data-costing-field="rateBookReviewAction"
+                                onClick={() => setRateBookReviewOpen(true)}
+                                className={cn(railPrimaryAction, 'h-11 shrink-0 px-5 max-sm:w-full')}
+                            >
+                                {catalogue.review}
+                                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                            </Button>
                         )}
                     </div>
                 </section>
             )}
+            <RateBookUpdateDialog
+                open={rateBookReviewOpen}
+                copy={catalogue}
+                warpLabel={catalogue.warp}
+                weftLabel={catalogue.weft}
+                savedMarginById={savedMarginById}
+                onOpenChange={setRateBookReviewOpen}
+                onSaved={reloadAfterRateBookUpdate}
+            />
             <div data-costing-tour="filters" className="space-y-3">
                 {/* One wrapping row: search, the view, and filters. */}
                 <div className="flex flex-wrap items-center gap-3">
