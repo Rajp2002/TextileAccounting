@@ -6,6 +6,7 @@ import {
     SCOPED_QUERY_PERSISTENCE_PREFIX,
 } from './auth-cache-scope'
 import { getActiveQueryScope } from './query-client-registry'
+import type { TextileDatabase } from './db'
 
 export { REACT_QUERY_PERSISTENCE_KEY }
 
@@ -84,10 +85,35 @@ export function clearUserCacheFromStorage(
     return keysToRemove
 }
 
+// The retired offline queue's IndexedDB database (lib/db.ts). Opening it with
+// Dexie creates it, and this cleanup runs on every signed-in page load, so it
+// checks for the database first: once it is gone, no page downloads Dexie
+// (~93 KB) or opens IndexedDB for it.
+const LEGACY_QUEUE_DATABASE = 'TextileDB'
+
+async function legacyQueueDatabaseMayExist() {
+    if (!('indexedDB' in window)) return false
+    const factory = window.indexedDB as IDBFactory & { databases?: () => Promise<IDBDatabaseInfo[]> }
+    // Browsers without databases() keep the previous behaviour.
+    if (typeof factory.databases !== 'function') return true
+    try {
+        return (await factory.databases()).some((database) => database.name === LEGACY_QUEUE_DATABASE)
+    } catch {
+        return true
+    }
+}
+
+// Nothing writes to the queue any more, so an empty database is only left
+// over; remove it so later page loads skip it. Rows are never dropped here.
+async function deleteLegacyQueueDatabaseIfEmpty(db: TextileDatabase) {
+    if (await db.mutations.count() === 0) await db.delete()
+}
+
 export async function clearOfflineMutationQueue(scope?: string | null) {
     if (typeof window === 'undefined' || !isPrincipalCacheScope(scope)) return false
 
     try {
+        if (!await legacyQueueDatabaseMayExist()) return true
         const { db } = await import('./db')
         await db.mutations
             .toCollection()
@@ -108,11 +134,13 @@ export async function clearLegacyOfflineMutationQueue() {
         // helper can be missing from the Turbopack dynamic module shape in
         // development, which made every auth boundary emit a warning during
         // login and logout.
+        if (!await legacyQueueDatabaseMayExist()) return true
         const { db } = await import('./db')
         await db.mutations
             .toCollection()
             .filter((mutation) => mutation.scope === LEGACY_MUTATION_SCOPE)
             .delete()
+        await deleteLegacyQueueDatabaseIfEmpty(db)
         return true
     } catch (error) {
         console.warn('Unable to clear legacy offline mutation scope', error)

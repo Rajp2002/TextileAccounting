@@ -167,3 +167,171 @@ Measured on Raj's laptop (Intel i9, Node 24). A mid-range phone is several times
 
 Not verified on a device: an installed iPhone/Android app picking up the new worker. Nothing in the update flow depends on these files.
 
+
+### Task F: Free usage meter, Calculate, and Free billing (HANDOFF next task 1)
+
+Branch `claude/perf-latency-pass-2` from `main@91a12427` (PR #287 was merged before this work started).
+
+- `freeContext` (every Free API route and page) starts the grant, organization and plan reads from Proxy's session hint while Auth verifies the session, and holds the promises itself: route handlers have no React request cache or fetch memoisation, so before this the API routes waited for the session and then for these reads. Reads started for a different user or org are discarded and the verified org is read instead.
+- `getOrgPlanAccess` takes an optional, already started Free-grant read. For a Free org it used to read the grant again after the plan row (a second, sequential grant read in every Free API request).
+- `freeStatus` (`/api/free/status`, fetched right after a Free page opens) starts the rollout and the database clock with the account reads, and reads monthly usage and tour state together. `calculateFreeSubmission` starts the rollout with the account reads. Error order is unchanged: authorization errors first, then throttling, then `FREE_PAUSED`; the production `FREE_TEMPORARY_ERROR` on a failed clock is unchanged.
+- `/free/billing` takes the organization name from the organization read the Free layout already starts (it read the organization twice), and starts its payment-history read (RLS client) from the session hint.
+- Harness: `/api/free/status` and `/api/free/calculate` added to `ROUTES`. Calculate posts `free-estimate.json` (written by `make-free-estimate.ts`, the estimate the Free service tests submit) with a fresh request token fetched outside the timed request. The fixture policy gained `version` and `receipt_retention_days`, and `complete_free_saved_costing` answers with a receipt. The fake Upstash answers `evalsha` in a shape the rate limiter rejects, so it uses its local fallback after the call; the call and its wait are still counted.
+
+`before-task-f.json` (main) → `after-task-f.json`:
+
+| Account | Route | TTFB ms | Full page ms | Waits | Calls |
+| --- | --- | --- | --- | --- | --- |
+| free | `/free` | 70.1 → 70.6 | 74.5 → 75 | 2 → 2 | 6 → 6 |
+| free | `/free/costings` | 65.4 → 68.1 | 68.4 → 71.1 | 2 → 2 | 6 → 6 |
+| free | `/free/account` | 65 → 67.5 | 69 → 70.8 | 2 → 2 | 6 → 6 |
+| free | `/free/billing` | 63.4 → 63.8 | 94.1 → 66.6 (−29%) | 3 → 2 | 8 → 7 |
+| free | `/api/free/status` | 254 → 91.7 (−64%) | 254.3 → 92 (−64%) | 8 → 3 | 11 → 10 |
+| free | `/api/free/calculate` | 202.3 → 107.2 (−47%) | 202.6 → 107.5 (−47%) | 7 → 4 | 10 → 9 |
+
+Checks: `npx tsc --noEmit` clean, `npx vitest run` 418 files / 4,208 passed / 1 skipped, `npm run lint` clean.
+
+The usage meter's request now waits for Proxy's Redis check, one batch of account/rollout/clock reads, and the usage and tour-state reads. Calculate waits for Redis, the account batch, the rate limiter and the save RPC. The Free pages themselves were already at two waits; their ±3 ms differences are run-to-run noise.
+
+### Task G: cold starts, the first request a Vercel function serves (HANDOFF next task 2)
+
+No app change: the one candidate that measured well changes Sentry's monitoring and is left for Raj (below); the other lost once measured fairly. Committed: the cold-start harness and its measurements.
+
+**Harness.** `run.mjs --cold N` starts a fresh `next start` per sample and times its first request. `cold-modules.cjs` (preloaded) turns off `next start`'s boot-time loading of every route (`experimental.preloadEntriesOnStart`), which Vercel's minimal mode doesn't do, and records each CommonJS file evaluated with its own time, grouped by the file that pulled it in (Proxy's `middleware.js`, `instrumentation.js`, the route's `page.js`, `next.config`). `next start` also evaluates `next.config.ts` (with Sentry's build plugin, webpack, rollup and babel: about 1,600 files, 0.8–1.5 s) on its first request, which Vercel never does, so it is subtracted. `cold-ab.mjs` alternates two builds round by round and takes medians, so the laptop's CPU limit drifting during a run affects both builds alike; it records the limit per round. `NEXT_PUBLIC_SENTRY_DSN` is compiled in, so builds take a loopback harness DSN (`WEAVLY_HARNESS_SENTRY_DSN`, accepted only for `127.0.0.1` by `isolated-command.mjs`) and Sentry initialises as in production; `sentry-check.mjs` makes one page fail and confirms the error event (and sampled transactions) reach the fake backend.
+
+**Where a cold request's time goes** (`main`, `/owner/rates`, own evaluation time): Proxy's `middleware.js` 128–160 ms (a 2.1 MB bundle), `instrumentation.js` 92 ms (1.5 MB, the Sentry SDK and OpenTelemetry), the page's own code 150 ms, of which 70 ms is chunks `1317`/`5009` (3.4 MB: another bundled copy of Sentry and OpenTelemetry). Sentry's build plugin wraps Proxy and every page and route in Sentry, so each bundle carries its own copy. The rest of a ~1 s first request is React's first render and V8 warming up.
+
+**Rejected: Sentry as a server external** (`serverExternalPackages: ['@sentry/nextjs']`). Bundles shrink (instrumentation 1.5 MB → 3 KB, Proxy 2.1 MB → 578 KB, the page copies gone) and `cold-ab-sentry-external.json` shows −20% to −42% per route, but that run is unfair: `next start` had already loaded `@sentry/nextjs` from `node_modules` while evaluating `next.config.ts`, so the externalized build found it cached. On Vercel each function would load it cold, and `sentry-require-cost.mjs` measures that at a median 433 ms (9 fresh Node processes), more than the bundled copies cost. Net on Vercel: about even or slower. Sentry did keep reporting (1 error event, 11 transactions in `sentry-check.mjs`).
+
+**Measured, needs Raj's decision: Sentry's automatic wrappers off** (`webpack.autoInstrumentServerFunctions`, `autoInstrumentMiddleware`, `autoInstrumentAppDirectory` set to `false` in `withSentryConfig`). Sentry stays bundled as on `main`; only the wrappers go. Request errors are still reported through `onRequestError` in `instrumentation.ts`: `sentry-check.mjs` received the error event and 5 transactions. Lost: Sentry's per-page and per-route spans and its Proxy transactions. `cold-ab-sentry-no-wrappers.json`, 3 rounds, CPU limit 100 in every round, first request without `next.config`:
+
+| Route | `main` → no wrappers, ms | Own evaluation ms |
+| --- | --- | --- |
+| `/` | 558 → 430 (−23%) | 383 → 264 |
+| `/login` | 732 → 570 (−22%) | 391 → 298 |
+| lite `/owner/estimator` | 1,012 → 811 (−20%) | 445 → 315 |
+| lite `/owner/quotes` | 997 → 811 (−19%) | 431 → 319 |
+| lite `/owner/rates` | 985 → 793 (−19%) | 427 → 319 |
+| lite `/owner/settings` | 989 → 800 (−19%) | 444 → 333 |
+| lite `/owner/billing` | 959 → 784 (−18%) | 414 → 303 |
+| free `/free` | 986 → 812 (−18%) | 454 → 326 |
+| free `/free/costings` | 960 → 782 (−19%) | 440 → 323 |
+| free `/free/account` | 943 → 769 (−18%) | 432 → 320 |
+| free `/free/billing` | 921 → 739 (−20%) | 417 → 290 |
+| free `/api/free/status` | 748 → 569 (−24%) | 429 → 254 |
+
+Most of it is Proxy: its bundle drops to 563 KB and its own time from 128 to 38 ms (`autoInstrumentMiddleware` alone may give most of the gain; not measured separately). Pages keep one 1.9 MB Sentry chunk because `app/global-error.tsx` imports `@sentry/nextjs` and is part of every page's server tree. `main`'s absolute numbers differ between the two A/B runs (the charger negotiated 65 W, not 100 W, during the second), so only the paired before/after within one file is meaningful.
+
+Checks: `npx tsc --noEmit` clean, `npx vitest run` 418 files / 4,208 passed / 1 skipped, `npm run lint` clean. Not verified on Vercel: real cold starts there also include function boot and network.
+
+### Task H: the estimator on phones (HANDOFF next task 3)
+
+**Harness.** `scripts/performance/signed-in-latency/phone.mjs` loads signed-in pages in Playwright Chromium as a phone: 390×844 at 3×, touch, CPU slowed 4× through CDP, an empty cache per sample, `next start` and the fake backend (server warmed first). It reports FCP, LCP, the app's own `route_primary_usable` mark (set once React has hydrated the page's main view), long tasks (count, longest, total blocking time after FCP) and JavaScript fetched versus run (V8 coverage). `--modules` splits large chunks into their webpack modules and top-level declarations with their coverage (client builds here have no source maps); `--profile` records a V8 CPU profile and totals main-thread time by script; `--compare-legacy-queue` alternates every sample between the two cleanup cases below.
+
+**Where the time goes** (`phone-before.json`, 5 samples, CPU limit 100):
+
+| Route | FCP | LCP | Usable | Total blocking | Longest task | JS fetched / ran |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| lite `/owner/estimator` | 252 | 1,588 | 2,229 | 1,363 | 692 | 2,088 / 689 KB |
+| free `/free` | 432 | 1,396 | 2,157 | 1,058 | 477 | 1,898 / 688 KB |
+| lite `/owner/quotes` | 256 | 2,060 | 1,930 | 816 | 424 | 1,799 / 610 KB |
+| free `/free/costings` | 268 | 1,372 | (no mark) | 583 | 325 | 1,293 / 581 KB |
+
+(ms; KB uncompressed.) The estimator's shell and main view become usable together: React hydrates the page in one pass, with one ~690 ms task. A CPU profile of one load (about 2.9 s of main-thread work at 4×) puts React DOM at ~410 ms, webpack module evaluation ~300 ms, the estimator's own chunk ~250 ms, the Sentry browser SDK ~200 ms, and parsing, compiling and layout ~1.3 s. Per-function attribution is unreliable under CDP's throttling, so only script totals are quoted.
+
+**Why panels were not split.** `--modules` shows the estimator chunk is a single scope-hoisted 311 KB module. Of that, 164 KB is `EstimatorClient` itself (45 KB runs on load). The separate components inside it that do not run on load (Free usage card, saved-yarn dropdown, Free transaction recovery, the live-cost action hub, the save review and a few smaller ones) total about 40 KB uncompressed, roughly 10 KB gzip: about 2% of the JavaScript the page fetches. Moving them behind `next/dynamic` would not change these numbers measurably, and several carry guided-tour anchors. The large levers are the Sentry browser SDK (475 KB fetched, 157 KB run; already under "Needs Raj's decision") and hydrating the 7,700-line `EstimatorClient` in parts, which is a refactor rather than a split and is left as a follow-up.
+
+**Changed: the retired offline queue no longer loads Dexie on every page.** `AuthBoundaryCleanup` deletes rows from the offline-write queue older app versions left in IndexedDB. It ran on every signed-in owner page load and imported Dexie (93 KB, 30.6 KB gzip) to do it, and because opening the database with Dexie creates it, every browser that had visited kept an empty `TextileDB` and paid for this on every load. `lib/client-storage-cleanup.ts` now checks `indexedDB.databases()` first and skips Dexie when the database is absent (browsers without that API keep the old behaviour), and after the cleanup deletes the database once it holds no rows. Rows are never dropped by this. An existing user's first load after the deploy still loads Dexie once, empties and removes the database; later loads skip it. `__tests__/legacy-queue-cleanup.test.ts` covers the four cases.
+
+Measured on one build, alternating every sample between a browser with a non-empty legacy database (today's behaviour) and one without (`phone-legacy-queue-ab.json`, 5 pairs):
+
+| Route | Usable ms | Total blocking ms | JS fetched |
+| --- | --- | --- | --- |
+| lite `/owner/estimator` | 2,212 → 2,126 | 1,185 → 1,149 | 93 KB less |
+| lite `/owner/quotes` | 1,922 → 1,919 | 796 → 816 | 1,799 → 1,706 KB |
+| free `/free` (control: no cleanup there) | 2,163 → 2,168 | 1,057 → 1,112 | unchanged |
+
+The cleanup runs in an idle callback after hydration, so the gain is mostly the download, the parse and an IndexedDB open after the page is usable; timing differences under ~100 ms are within run-to-run noise. `phone-after.json` (a separate run after the rebuild) differs from `phone-before.json` by up to 200 ms in both directions on every sample, which is why the comparison above alternates within one run instead.
+
+Checks: `npx tsc --noEmit` clean; `npm run lint` clean; `npx vitest run` 418 of 419 files passed (4,211 tests, 1 skipped), the one failure was the Lite copy audit reading the database name `TextileDB` as screen text, fixed by listing `lib/client-storage-cleanup.ts` with `lib/db.ts` in `scripts/i18n/lite-copy-audit.ts`, after which that file passes. Full rerun after the fix (CPU recovered): 419 files / 4,212 passed / 1 skipped.
+
+### Task I: clicking between Lite pages, and the sidebar's prefetches (HANDOFF next task 4)
+
+No app change: the prefetches do not compete with the landing page, and they make clicks faster.
+
+**Harness.** `scripts/performance/signed-in-latency/nav.mjs` (Playwright Chromium, 1366×768, CPU slowed 4×, fresh context per sample) lands a Lite owner on `/owner/estimator`, records every RSC request and the backend calls made meanwhile, waits until the page is quiet, then clicks Saved Costings in the sidebar and times the click to the first frame showing `/owner/quotes` (the route committed, to its prefetched loading skeleton when there is one) and to that page's own `route_primary_usable` mark. Samples alternate between normal prefetching and prefetches blocked (requests carrying `Next-Router-Prefetch` aborted), so both run under the same conditions.
+
+**What prefetches.** About 3.4 s after the estimator opens, after it is usable, the sidebar prefetches `/owner/quotes`, `/owner/rates`, `/owner/settings`, `/owner/billing`, `/owner/estimator` and `/support`. Next 16 fetches each route's segments separately, so that is 16 small requests (2–8 KB in all), and they cost the server about 25 backend calls (the owner layout's identity, plan and organization reads per prefetched route).
+
+`nav-prefetch-ab.json`, 5 alternating pairs, medians:
+
+| | Prefetching (today) | Prefetches blocked |
+| --- | ---: | ---: |
+| Estimator usable after landing | 2,891 ms | 2,900 ms |
+| Estimator total blocking time | 1,592 ms | 1,778 ms |
+| Click → Saved Costings committed | 440 ms | 573 ms |
+| Click → Saved Costings usable | 746 ms | 880 ms |
+| Backend calls during landing | 57 | 32 |
+| Backend calls for the click | 18 | 14 |
+
+The landing page is unaffected (prefetches start after it is usable; the blocking-time difference is noise and points the other way), and every sidebar click is about 130 ms faster with them, so prefetching stays as it is. Its cost is server-side: roughly 25 extra Supabase reads and a few extra function invocations per owner landing, which only matters if Vercel invocations or Supabase load become a constraint. Not explored: where the remaining 440 ms between click and commit goes at 4× CPU (the estimator unmounting and the destination's JavaScript loading are the likely parts).
+Checks: `npx tsc --noEmit` clean, `npx vitest run` 419 files / 4,212 passed / 1 skipped, `npm run lint` clean.
+
+### Task J: row-level-security checks per row (HANDOFF next task 5)
+
+**Proposed migration, not applied:** `supabase/migrations/20261028120000_rls_checks_once_per_query.sql`. Raj applies migrations.
+
+**What the handoff expected, and what was measured.** The handoff counted 43 policies calling `auth.uid()` per row. After every migration (`scripts/performance/rls-initplan.mjs` on the disposable PostgreSQL that `npm run test:db` uses, Supabase's own `auth.uid()`/`auth.jwt()` definitions installed), 92 of 304 policies call `auth.jwt()`/`auth.uid()` outside a sub-select, on 39 tables. A call inside an uncorrelated sub-select (`org_id = (SELECT profiles.org_id … WHERE id = auth.uid())`) already runs once per query and is not counted. All 39 are Base or retired tables, and the app reads none of them through row-level security in a way where this matters: Base pages read through `SECURITY DEFINER` RPCs or the service role, and those tables also carry a restrictive `requires_premium_subscription` policy that asks for the retired `'premium'` tier, which `org_has_subscription_tier` no longer grants, so a direct read as an owner returns nothing anyway. These were left as they are.
+
+**The per-row cost that does reach Lite.** Saved Costings reads `estimator_quotes` (and the estimator reads `estimator_templates`) with the owner's client, so row-level security applies. Their `auth.jwt()` calls are already wrapped, but two `SECURITY DEFINER` functions, which Postgres cannot inline, ran for every one of the org's rows before the sort and the 500-row page: `org_has_subscription_tier(org_id, 'base')` in the read policy, and `weavly_private.free_business_restricted(org_id)` in the restrictive `free_business_boundary` policy that sits on every org-scoped table (for an account that came from Free it calls `org_has_subscription_tier` again). The migration evaluates both once per query:
+
+- `free_business_restricted(org)` can only be true for the caller's own org, so a new `weavly_private.free_business_restricted_org()` returns that org (or NULL) once, and every `free_business_boundary` policy becomes `NOT coalesce(org_id = (SELECT …), false)`. The `coalesce` keeps rows whose org is NULL allowed, as before (`IS DISTINCT FROM` would not).
+- The costing tables' policies already require `org_id` to equal the caller's org from the JWT, so their plan check takes that org inside a sub-select. The migration refuses to rewrite a policy that does not pin `org_id` that way.
+
+Saved Costings' library read as a signed-in Lite owner (EXPLAIN ANALYZE, median of 7; another org holds as many costings; `rls-initplan-before.json` → `rls-initplan-after.json`):
+
+| Costings per org | Account | Before | After |
+| ---: | --- | ---: | ---: |
+| 200 | Lite | 16.4 ms | 1.8 ms |
+| 200 | came from Free | 164 ms | 2.6 ms |
+| 3,000 | Lite | 224 ms | 6.6 ms |
+| 3,000 | came from Free | 2,606 ms | 7.4 ms |
+
+The after run was taken with the laptop's CPU limited to about 40%, so it understates the gain. These are local PostgreSQL 17 timings, not Supabase's; the ratio is what carries over. Every page of Saved Costings (and every other owner read of a table with `free_business_boundary`) pays the per-row cost on the server before the first byte, so it scales with the size of the owner's library.
+
+**Behaviour.** `__tests__/db/rls-once-per-query.dbtest.ts`: for each caller (Free account, Lite account that came from Free, Lite account, no session) and each row org (each of theirs and NULL), the new boundary expression equals the per-row one; a Free account still sees none of its business rows and cannot write them; paid owners see only their own costings and saved qualities; and the plan shows the checks as initplans. The three behaviour tests pass on the policies before the migration too. `npm run test:db`: 46 files / 419 tests pass with the migration.
+Checks: `npx tsc --noEmit` clean, `npx vitest run` 419 files / 4,212 passed / 1 skipped, `npm run lint` clean, `npm run test:db` 46 files / 419 passed.
+
+### Task K: the open decisions, settled (2026-10-28)
+
+Raj asked for the recommendations to be applied.
+
+| Decision | Outcome |
+| --- | --- |
+| Sentry's automatic server wrappers | **Off** (`webpack.autoInstrumentServerFunctions/Middleware/AppDirectory: false`). Cold first requests 18–24% faster (Task G). |
+| Sentry browser tracing | **Off**: `next.config.ts` defines `__SENTRY_TRACING__: false` for browser builds only, and `instrumentation-client.ts` no longer sets `tracesSampleRate`. Server builds keep tracing. |
+| `getUser()` → `getClaims()` on the server | **Kept `getUser()`**. One wait per page is not worth a signed-out or deleted session staying valid for up to an hour. |
+| Splitting the English dictionary | **Not now**. A large i18n refactor for 24.5 KB; better as its own project. |
+
+The browser-tracing switch is a webpack define rather than `bundleSizeOptimizations.excludeTracing`, because that option is applied by Sentry's upload plugin (which only runs with an auth token, so local builds never showed it) and its alternative, `webpack.treeshake.removeTracing`, removes tracing from the server too.
+
+First-load JS, gzip KB (`after-task-b.json` → `after-sentry-decisions.json`; nothing else in between changes first-load scripts):
+
+| Account | Route | First-load JS |
+| --- | --- | --- |
+| public | `/` | 289.2 → 241.3 (−47.9) |
+| public | `/login` | 301.1 → 253.2 (−47.9) |
+| lite | `/owner/estimator` | 513.5 → 465.7 (−47.9) |
+| lite | `/owner/quotes` | 445.0 → 397.1 (−47.9) |
+| lite | `/owner/rates` | 390.4 → 342.6 (−47.8) |
+| lite | `/owner/settings` | 485.9 → 438.1 (−47.8) |
+| lite | `/owner/billing` | 341.8 → 294.0 (−47.9) |
+| free | `/free` | 505.1 → 457.3 (−47.9) |
+| free | `/free/costings` | 385.5 → 337.6 (−47.9) |
+| free | `/free/account` | 406.5 → 358.7 (−47.7) |
+| free | `/free/billing` | 343.2 → 295.3 (−47.8) |
+
+Sentry still reports, checked on this build (made with the loopback harness DSN): `sentry-check.mjs` caused a server error and received 1 error event and 12 sampled server transactions; the new `sentry-browser-check.mjs` threw an error on `/login` and the browser SDK sent 1 error event and no transactions. (That check bypasses the app's CSP: the harness DSN is not a sentry.io host, so the SDK posts to it directly instead of through `/monitoring`, and the CSP would block it; production DSNs use the tunnel.) Lost by design: Sentry's browser performance data (page loads, navigations, web vitals inside Sentry), its per-route server spans and Proxy transactions. The app's own web-vitals reporting (`lib/web-vitals.ts`) is unchanged.
+
+**Migration `20261028120000_rls_checks_once_per_query.sql`.** Production was checked read-only before applying: latest applied migration `20261018120000`, all 81 `free_business_boundary` policies and the eight costing-table policies have exactly the form the migration expects, and the new function did not exist. Applying it from this session was refused by the environment's permission guard for production writes, so Raj applies it (see HANDOFF).
+Checks: `npx tsc --noEmit` clean, `npx vitest run` 419 files / 4,212 passed / 1 skipped, `npm run lint` clean.

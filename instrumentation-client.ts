@@ -14,7 +14,8 @@ Sentry.init({
     dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
     // Read from the page, not compiled in, so this chunk survives deploys.
     release: readRuntimeSentryRelease(),
-    tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
+    // No browser performance tracing: next.config.ts compiles it out of the
+    // client bundle. Errors, logs and web vitals are unaffected.
     replaysSessionSampleRate: 0,
     replaysOnErrorSampleRate,
     enableLogs: true,

@@ -34,7 +34,12 @@ export {
  * Resolves every current subscription row so a later failed/cancelled payment
  * attempt cannot hide an older paid entitlement that has not expired.
  */
-export async function getOrgPlanAccess(orgId: string): Promise<OrgPlanAccess> {
+export async function getOrgPlanAccess(
+    orgId: string,
+    // A caller that has already started this org's Free-grant read passes it,
+    // so a Free org does not read the grant a second time after its plan row.
+    freeGrantRead?: Promise<unknown>,
+): Promise<OrgPlanAccess> {
     // Every caller derives orgId from a verified profile or freshly validated
     // sign-in claims. Use the server-only client so a transient RLS auth-context
     // miss cannot turn a paid owner into tier "none" during route selection.
@@ -56,7 +61,7 @@ export async function getOrgPlanAccess(orgId: string): Promise<OrgPlanAccess> {
     })
     // Paid and trial organizations return here without the Free-grant query.
     if (access.effectiveTier !== 'none') return access
-    const grant = await getFreeGrant(orgId)
+    const grant = await (freeGrantRead ?? getFreeGrant(orgId))
     return applyFreeGrantToAccess(access, subscriptionRows, Boolean(grant))
 }
 

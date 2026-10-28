@@ -8,6 +8,9 @@ Written 2026-10-28 for the next session (another Claude account on Raj's laptop)
 
 ## Where things stand
 
+**Pass 2 (2026-10-28):** PR #287 was merged, so work continues on `claude/perf-latency-pass-2` (draft PR #288, worktree `.claude/worktrees/performance-optimization-03b955-cfb26c`). Task 1 is done (README Task F); task 2 is measured with no app change (README Task G: the candidate fix is a Sentry decision, below); task 3 is done (README Task H: the retired offline queue no longer loads Dexie; estimator panels not split, with the evidence why); task 4 is measured with no app change (README Task I: sidebar prefetches start after the landing page is usable and make clicks ~130 ms faster, so they stay); task 5 is done as a proposed migration (README Task J: `20261028120000_rls_checks_once_per_query.sql`, not applied; Saved Costings' read 224 ms -> 7 ms at 3,000 costings, 2.6 s -> 7 ms for accounts that came from Free). All five tasks are done.
+
+
 - Branch `claude/performance-optimization-03b955`, 8 commits on `main@8a1dee0f`, pushed, PR open. Worktree used so far: `.claude/worktrees/performance-optimization-03b955`. If you work elsewhere, check out this branch; check `gh pr view` first: if Raj merged it, later commits on this branch never reach `main`, so branch again from `main` and open a new PR.
 - Done and measured (detail in `README.md`, headline in `summary.md`):
   - **A** `41d2aff4`: Proxy forwards `x-weavly-session-hint` (user:org of the verified token, browser values stripped; `lib/session-hint.ts`). `getVerifiedIdentity`, `requireRole`, the owner layout (`startOwnerShellReads` in `lib/owner-organization.ts`) and the Free layout start the profile/plan/org/grant reads from it; each is used only for the same verified ids. Base's onboarding check reuses the owner org row. `freeContext` reads grant/org/plan together.
@@ -50,9 +53,10 @@ node scripts/performance/signed-in-latency/compare.mjs docs/performance/latency-
 
 ## Needs Raj's decision (do not change without asking)
 
-- **Sentry browser tracing**: about half of the 146 KB gzip shared chunk on every page, landing and login included. `bundleSizeOptimizations.excludeTracing` + client `tracesSampleRate: 0` would save ~30–40 KB per page but end Sentry browser performance traces.
-- **`getUser()` → `getClaims()`** on the server: one more wait per page saved, but a signed-out or deleted session stays valid until its access token expires (up to an hour).
-- **Splitting the English dictionary** (24.5 KB gzip on every page): large i18n refactor.
+Settled on 2026-10-28 (README Task K): Sentry server wrappers off, Sentry browser tracing off, `getUser()` kept, English dictionary split deferred.
+
+Still to do by Raj: **apply migration `20261028120000_rls_checks_once_per_query.sql` to production** (checked read-only against production first: its policies match; the session's write to production was refused by the permission guard). The app code does not depend on it. Run the file's SQL in the Supabase SQL editor, then record it so `supabase db push` treats it as applied:
+`INSERT INTO supabase_migrations.schema_migrations(version, name, statements) VALUES ('20261028120000', 'rls_checks_once_per_query', ARRAY[]::text[]);`
 
 ## Gotchas met in this pass
 

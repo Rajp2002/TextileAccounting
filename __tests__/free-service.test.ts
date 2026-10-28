@@ -1,7 +1,7 @@
 import { beforeEach,describe,it,expect,vi } from 'vitest'
 vi.mock('server-only',()=>({}))
-const mocks=vi.hoisted(()=>({session:vi.fn(),grant:vi.fn(),rollout:vi.fn(),access:vi.fn(),rpc:vi.fn(),rate:vi.fn()}))
-vi.mock('../lib/auth',()=>({getCachedSession:mocks.session}))
+const mocks=vi.hoisted(()=>({session:vi.fn(),hint:vi.fn(),grant:vi.fn(),rollout:vi.fn(),access:vi.fn(),rpc:vi.fn(),rate:vi.fn()}))
+vi.mock('../lib/auth',()=>({getCachedSession:mocks.session,getSessionHint:mocks.hint}))
 vi.mock('../lib/free-account',()=>({getFreeGrant:mocks.grant,getFreeRollout:mocks.rollout,finishFreeProvisioning:vi.fn()}))
 vi.mock('../lib/subscription',()=>({getOrgPlanAccess:mocks.access}))
 vi.mock('../lib/rate-limit',()=>({checkAuthRateLimit:mocks.rate}))
@@ -15,7 +15,7 @@ function valid(){const state=makeFreeEstimate();state.warpRows[0]={...state.warp
 function token(subjectId=user){return issueFreeRequest({subjectId,engineVersion:COSTING_CALCULATION_VERSION,keyId:'test',keys:{test:'a'.repeat(32)},serverTime:new Date(),lifetimeMs:86400000})}
 beforeEach(()=>{
  vi.clearAllMocks();process.env.WEAVLY_FREE_SIGNING_KEY_ID='test';process.env.WEAVLY_FREE_SIGNING_KEYS=JSON.stringify({test:'a'.repeat(32)})
- mocks.session.mockResolvedValue({user:{id:user,app_metadata:{}},profile:{role:'owner',org_id:org}})
+ mocks.session.mockResolvedValue({user:{id:user,app_metadata:{}},profile:{role:'owner',org_id:org}});mocks.hint.mockResolvedValue(null)
  mocks.grant.mockResolvedValue({subjectId:user,state:'active'});mocks.access.mockResolvedValue({effectiveTier:'free'});mocks.rollout.mockResolvedValue({estimation_enabled:true});mocks.rate.mockResolvedValue(null);mocks.rpc.mockResolvedValue({data:{used:1,remaining:1}})
 })
 describe('Free service response and authorization boundary',()=>{
@@ -89,5 +89,28 @@ describe('Free recalculation service boundary',()=>{
  it('requires both the costing identity and revision',async()=>{
   await expect(calculateFreeSubmission({estimate:valid(),requestToken:token(),costingId:org})).rejects.toThrow('FREE_INVALID_INPUT')
   expect(mocks.rpc).not.toHaveBeenCalled()
+ })
+})
+describe('Free context reads started from the session hint',()=>{
+ it('reads the grant once and hands it to the plan read when the hint names the verified account',async()=>{
+  mocks.hint.mockResolvedValue({userId:user,orgId:org})
+  const saved=await calculateFreeSubmission({estimate:valid(),requestToken:token()})
+  expect(saved.outcome).toBe('saved')
+  expect(mocks.grant).toHaveBeenCalledOnce();expect(mocks.grant).toHaveBeenCalledWith(org)
+  expect(mocks.access).toHaveBeenCalledOnce();expect(mocks.access.mock.calls[0][0]).toBe(org);expect(mocks.access.mock.calls[0][1]).toBeInstanceOf(Promise)
+ })
+ it('discards reads started for another org and reads the verified org instead',async()=>{
+  const other='33333333-3333-4333-8333-333333333333'
+  mocks.hint.mockResolvedValue({userId:user,orgId:other})
+  mocks.grant.mockImplementation(async(orgId:string)=>orgId===org?{subjectId:user,state:'active'}:{subjectId:other,state:'active'})
+  const saved=await calculateFreeSubmission({estimate:valid(),requestToken:token()})
+  expect(saved.outcome).toBe('saved')
+  expect(mocks.grant.mock.calls.map(call=>call[0])).toEqual([other,org])
+  expect(mocks.access.mock.calls.map(call=>call[0])).toEqual([other,org])
+  expect(mocks.rpc.mock.calls[0][1].p_org_id).toBe(org)
+ })
+ it('keeps the authorization error first when the rollout read also fails',async()=>{
+  mocks.session.mockResolvedValue(null);mocks.rollout.mockRejectedValue(new Error('FREE_PAUSED'))
+  await expect(calculateFreeSubmission({estimate:valid(),requestToken:token()})).rejects.toThrow('FREE_AUTH_REQUIRED')
  })
 })

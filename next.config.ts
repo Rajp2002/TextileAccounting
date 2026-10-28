@@ -148,9 +148,14 @@ const withPWA = withPWAInit({
 const nextConfig: NextConfig = {
   // VTracer loads its WASM file from node_modules at runtime; keep it unbundled so the file is traced.
   serverExternalPackages: ['@visioncortex/vtracer'],
-  webpack(config, { buildId, webpack }) {
+  webpack(config, { buildId, webpack, isServer }) {
     config.plugins.push(new webpack.DefinePlugin({
       __WEAVLY_BUILD_ID__: JSON.stringify(buildId),
+      // No Sentry performance tracing in the browser: its code was about half
+      // of the Sentry chunk every page loads, landing and login included.
+      // Errors are still reported, and lib/web-vitals keeps the page timings.
+      // Server builds keep tracing.
+      ...(isServer ? {} : { __SENTRY_TRACING__: false }),
     }))
     return config
   },
@@ -218,6 +223,14 @@ export default withSentryConfig(withPWA(nextConfig), {
   // browser reads the release from the page (lib/sentry-release.ts).
   release: { create: false },
   webpack: {
+    // Sentry wrapped Proxy and every page and route, which put another copy of
+    // its SDK in each bundle; turning that off made a cold first request
+    // 18-24% faster (docs/performance/latency-20261028/README.md, Task G).
+    // Request errors still reach Sentry through onRequestError in
+    // instrumentation.ts; Sentry's per-route spans and Proxy transactions stop.
+    autoInstrumentServerFunctions: false,
+    autoInstrumentMiddleware: false,
+    autoInstrumentAppDirectory: false,
     unstable_sentryWebpackPluginOptions: {
       release: {
         name: process.env.SENTRY_RELEASE ?? process.env.VERCEL_GIT_COMMIT_SHA,

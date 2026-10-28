@@ -27,6 +27,7 @@ vi.mock('@/lib/auth', () => ({
     assertOrgWritable: mocks.assertOrgWritable,
     requireWritableOrg: mocks.requireWritableOrg,
     getCachedSession: mocks.getCachedSession,
+    getSessionHint: async () => null,
 }))
 
 vi.mock('@/lib/subscription-access', () => vi.importActual('../lib/subscription-access'))

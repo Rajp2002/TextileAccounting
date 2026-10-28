@@ -1,0 +1,74 @@
+{
+  "estimate": {
+    "warpRows": [
+      {
+        "id": "PPfpSc0Sk4VdxdERmeMB9",
+        "label": "Warp 1",
+        "calculationMode": "formula",
+        "manualKgPer100m": null,
+        "linearDensityUnit": "denier",
+        "cottonCountNe": null,
+        "calcDenier": 100,
+        "beamEnds": 4000,
+        "yarnRate": 200,
+        "gstPct": 0,
+        "shortagePct": null
+      }
+    ],
+    "weftRows": [
+      {
+        "id": "Z1Aj_NIylMMWGEDaQJKea",
+        "label": "Weft 1",
+        "calculationMode": "formula",
+        "manualKgPer100m": null,
+        "linearDensityUnit": "denier",
+        "cottonCountNe": null,
+        "picks": 60,
+        "reedSpace": 150,
+        "effectiveCostingWidthCm": null,
+        "calcDenier": 150,
+        "yarnRate": 230,
+        "gstPct": 0,
+        "shortagePct": null
+      }
+    ],
+    "tapeLengthM": 0,
+    "perPickCostPaisa": 0.16,
+    "warpingRatePerKg": 0,
+    "sizingRatePerKg": 0,
+    "windingRatePerKg": 0,
+    "processingRatePerM": 0,
+    "finishingRatePerM": 0,
+    "yarnShortagePct": 0,
+    "warpCrimpPct": 0,
+    "overheadItems": [],
+    "monthlyOutputM": 0,
+    "overheadOverridePerM": 2,
+    "overheadMode": "direct",
+    "loomCount": 0,
+    "avgOutputPerLoomPerDay": 50,
+    "monthlyWorkingDays": 26,
+    "loomType": null,
+    "loomRpm": null,
+    "loomPowerKw": null,
+    "loomRpmIsCustomised": false,
+    "loomPowerKwIsCustomised": false,
+    "hoursPerShift": 12,
+    "warpingMode": "in_house",
+    "sizingMode": "in_house",
+    "overheadPct": 0,
+    "commissionPct": 0,
+    "transportPerM": 0,
+    "profitPct": 0,
+    "orderQuantityM": null,
+    "enabledSections": {
+      "winding": false,
+      "processing": false,
+      "finishing": false,
+      "commission": false,
+      "transport": false
+    },
+    "isConfigured": false
+  },
+  "warningsAcknowledged": true
+}

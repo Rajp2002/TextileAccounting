@@ -1,0 +1,934 @@
+{
+  "generatedAt": "2026-10-28T08:51:09.605Z",
+  "rows": 3000,
+  "runs": 7,
+  "migrations": {
+    "total": 346,
+    "applied": 341,
+    "skipped": [
+      "20260401030000_pg_cron_schedule.sql",
+      "20260402090000_pace_check_cron.sql",
+      "20260402100000_monthly_brief_cron.sql",
+      "20260402120000_retry_cron.sql",
+      "20261001120000_keep_render_function_warm.sql"
+    ]
+  },
+  "policyCount": 304,
+  "perRowPolicies": [
+    {
+      "table": "public.attendance",
+      "policy": "Owner Insert Attendance Past/Today",
+      "cmd": "INSERT",
+      "roles": "{authenticated}",
+      "qual": null,
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (date <= ((now() AT TIME ZONE 'Asia/Kolkata'::text))::date) AND (fixed_worker_id IN ( SELECT fw.id\n   FROM fixed_workers fw\n  WHERE (fw.org_id = ( SELECT p.org_id\n           FROM profiles p\n          WHERE (p.id = auth.uid()))))) AND (NOT check_org_lockdown(org_id)))"
+    },
+    {
+      "table": "public.attendance",
+      "policy": "Owner Update Attendance Past/Today",
+      "cmd": "UPDATE",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (date <= ((now() AT TIME ZONE 'Asia/Kolkata'::text))::date) AND (fixed_worker_id IN ( SELECT fw.id\n   FROM fixed_workers fw\n  WHERE (fw.org_id = ( SELECT p.org_id\n           FROM profiles p\n          WHERE (p.id = auth.uid()))))) AND (NOT check_org_lockdown(org_id)))",
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (date <= ((now() AT TIME ZONE 'Asia/Kolkata'::text))::date) AND (fixed_worker_id IN ( SELECT fw.id\n   FROM fixed_workers fw\n  WHERE (fw.org_id = ( SELECT p.org_id\n           FROM profiles p\n          WHERE (p.id = auth.uid()))))) AND (NOT check_org_lockdown(org_id)))"
+    },
+    {
+      "table": "public.attendance",
+      "policy": "Supervisor Insert Attendance Today",
+      "cmd": "INSERT",
+      "roles": "{authenticated}",
+      "qual": null,
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = 'supervisor'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (date = ((now() AT TIME ZONE 'Asia/Kolkata'::text))::date) AND (fixed_worker_id IN ( SELECT fw.id\n   FROM fixed_workers fw\n  WHERE (fw.org_id = ( SELECT p.org_id\n           FROM profiles p\n          WHERE (p.id = auth.uid()))))) AND (NOT check_org_lockdown(org_id)))"
+    },
+    {
+      "table": "public.attendance",
+      "policy": "Supervisor Update Attendance Today",
+      "cmd": "UPDATE",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'supervisor'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (date = ((now() AT TIME ZONE 'Asia/Kolkata'::text))::date) AND (fixed_worker_id IN ( SELECT fw.id\n   FROM fixed_workers fw\n  WHERE (fw.org_id = ( SELECT p.org_id\n           FROM profiles p\n          WHERE (p.id = auth.uid()))))) AND (NOT check_org_lockdown(org_id)))",
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = 'supervisor'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (date = ((now() AT TIME ZONE 'Asia/Kolkata'::text))::date) AND (fixed_worker_id IN ( SELECT fw.id\n   FROM fixed_workers fw\n  WHERE (fw.org_id = ( SELECT p.org_id\n           FROM profiles p\n          WHERE (p.id = auth.uid()))))) AND (NOT check_org_lockdown(org_id)))"
+    },
+    {
+      "table": "public.attendance",
+      "policy": "Tenant Isolation",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(org_id = ((auth.jwt() ->> 'org_id'::text))::uuid)",
+      "withCheck": null
+    },
+    {
+      "table": "public.attendance",
+      "policy": "attendance_delete_when_unlocked",
+      "cmd": "DELETE",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))",
+      "withCheck": null
+    },
+    {
+      "table": "public.commercial_payment_receipts",
+      "policy": "commercial_payment_receipts_owner_select",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = ((auth.jwt() ->> 'org_id'::text))::uuid))",
+      "withCheck": null
+    },
+    {
+      "table": "public.commercial_payment_receipts",
+      "policy": "commercial_payment_receipts_owner_writes_when_unlocked",
+      "cmd": "ALL",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))",
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))"
+    },
+    {
+      "table": "public.commercial_receivables",
+      "policy": "commercial_receivables_owner_select",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = ((auth.jwt() ->> 'org_id'::text))::uuid))",
+      "withCheck": null
+    },
+    {
+      "table": "public.commercial_receivables",
+      "policy": "commercial_receivables_owner_writes_when_unlocked",
+      "cmd": "ALL",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))",
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))"
+    },
+    {
+      "table": "public.dispatch_package_lines",
+      "policy": "dispatch_package_lines_org_select",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(org_id = ((auth.jwt() ->> 'org_id'::text))::uuid)",
+      "withCheck": null
+    },
+    {
+      "table": "public.dispatch_package_lines",
+      "policy": "dispatch_package_lines_write_when_unlocked",
+      "cmd": "ALL",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = ANY (ARRAY['owner'::text, 'supervisor'::text])) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))",
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = ANY (ARRAY['owner'::text, 'supervisor'::text])) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))"
+    },
+    {
+      "table": "public.dispatches",
+      "policy": "dispatches_org_select",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(org_id = ((auth.jwt() ->> 'org_id'::text))::uuid)",
+      "withCheck": null
+    },
+    {
+      "table": "public.dispatches",
+      "policy": "dispatches_write_when_unlocked",
+      "cmd": "ALL",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = ANY (ARRAY['owner'::text, 'supervisor'::text])) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))",
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = ANY (ARRAY['owner'::text, 'supervisor'::text])) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))"
+    },
+    {
+      "table": "public.fabric_packages",
+      "policy": "fabric_packages_org_select",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(org_id = ((auth.jwt() ->> 'org_id'::text))::uuid)",
+      "withCheck": null
+    },
+    {
+      "table": "public.fabric_packages",
+      "policy": "fabric_packages_write_when_unlocked",
+      "cmd": "ALL",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = ANY (ARRAY['owner'::text, 'supervisor'::text])) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))",
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = ANY (ARRAY['owner'::text, 'supervisor'::text])) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))"
+    },
+    {
+      "table": "public.fabric_stock_inward_drafts",
+      "policy": "fabric_stock_inward_drafts_org_select",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = ANY (ARRAY['owner'::text, 'supervisor'::text])) AND (org_id = ((auth.jwt() ->> 'org_id'::text))::uuid))",
+      "withCheck": null
+    },
+    {
+      "table": "public.fabric_stock_inward_drafts",
+      "policy": "fabric_stock_inward_drafts_owner_insert",
+      "cmd": "INSERT",
+      "roles": "{public}",
+      "qual": null,
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = ANY (ARRAY['owner'::text, 'supervisor'::text])) AND (org_id = ((auth.jwt() ->> 'org_id'::text))::uuid))"
+    },
+    {
+      "table": "public.fabric_stock_inward_drafts",
+      "policy": "fabric_stock_inward_drafts_owner_update",
+      "cmd": "UPDATE",
+      "roles": "{public}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = ((auth.jwt() ->> 'org_id'::text))::uuid))",
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = ((auth.jwt() ->> 'org_id'::text))::uuid))"
+    },
+    {
+      "table": "public.fabric_stock_lots",
+      "policy": "fabric_stock_lots_owner_select",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = ((auth.jwt() ->> 'org_id'::text))::uuid))",
+      "withCheck": null
+    },
+    {
+      "table": "public.fabric_stock_lots",
+      "policy": "fabric_stock_lots_owner_writes_when_unlocked",
+      "cmd": "ALL",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))",
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))"
+    },
+    {
+      "table": "public.fabric_stock_movements",
+      "policy": "fabric_stock_movements_owner_select",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = ((auth.jwt() ->> 'org_id'::text))::uuid))",
+      "withCheck": null
+    },
+    {
+      "table": "public.fabric_stock_movements",
+      "policy": "fabric_stock_movements_owner_writes_when_unlocked",
+      "cmd": "ALL",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))",
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))"
+    },
+    {
+      "table": "public.fabric_stock_sales",
+      "policy": "fabric_stock_sales_owner_select",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = ((auth.jwt() ->> 'org_id'::text))::uuid))",
+      "withCheck": null
+    },
+    {
+      "table": "public.fabric_stock_sales",
+      "policy": "fabric_stock_sales_owner_writes_when_unlocked",
+      "cmd": "ALL",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))",
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))"
+    },
+    {
+      "table": "public.factory_cost_profile",
+      "policy": "Owners Manage Factory Cost Profile",
+      "cmd": "ALL",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (factory_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND org_has_subscription_tier(factory_id, 'base'::text) AND (NOT check_org_lockdown(factory_id)))",
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (factory_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND org_has_subscription_tier(factory_id, 'base'::text) AND (NOT check_org_lockdown(factory_id)))"
+    },
+    {
+      "table": "public.factory_cost_profile",
+      "policy": "Owners Read Factory Cost Profile",
+      "cmd": "SELECT",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (factory_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND org_has_subscription_tier(factory_id, 'base'::text))",
+      "withCheck": null
+    },
+    {
+      "table": "public.fixed_workers",
+      "policy": "Tenant Isolation",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(org_id = ((auth.jwt() ->> 'org_id'::text))::uuid)",
+      "withCheck": null
+    },
+    {
+      "table": "public.fixed_workers",
+      "policy": "fixed_workers_delete_when_unlocked",
+      "cmd": "DELETE",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))",
+      "withCheck": null
+    },
+    {
+      "table": "public.fixed_workers",
+      "policy": "fixed_workers_insert_when_unlocked",
+      "cmd": "INSERT",
+      "roles": "{authenticated}",
+      "qual": null,
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = ANY (ARRAY['owner'::text, 'supervisor'::text])) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))"
+    },
+    {
+      "table": "public.fixed_workers",
+      "policy": "fixed_workers_update_when_unlocked",
+      "cmd": "UPDATE",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = ANY (ARRAY['owner'::text, 'supervisor'::text])) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))",
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = ANY (ARRAY['owner'::text, 'supervisor'::text])) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))"
+    },
+    {
+      "table": "public.machine_assignments",
+      "policy": "Tenant Isolation",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(org_id = ((auth.jwt() ->> 'org_id'::text))::uuid)",
+      "withCheck": null
+    },
+    {
+      "table": "public.machine_assignments",
+      "policy": "machine_assignments_write_when_unlocked",
+      "cmd": "ALL",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = ANY (ARRAY['owner'::text, 'supervisor'::text])) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))",
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = ANY (ARRAY['owner'::text, 'supervisor'::text])) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))"
+    },
+    {
+      "table": "public.machine_operator_assignments",
+      "policy": "machine_operator_assignments_owner_manage",
+      "cmd": "ALL",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid))",
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid))"
+    },
+    {
+      "table": "public.machine_operator_assignments",
+      "policy": "machine_operator_assignments_select_org",
+      "cmd": "SELECT",
+      "roles": "{authenticated}",
+      "qual": "(org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid)",
+      "withCheck": null
+    },
+    {
+      "table": "public.machine_type_pay_defaults",
+      "policy": "machine_type_pay_defaults_owner_manage",
+      "cmd": "ALL",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid))",
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid))"
+    },
+    {
+      "table": "public.machine_type_pay_defaults",
+      "policy": "machine_type_pay_defaults_select_org",
+      "cmd": "SELECT",
+      "roles": "{authenticated}",
+      "qual": "(org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid)",
+      "withCheck": null
+    },
+    {
+      "table": "public.machines",
+      "policy": "Tenant Isolation",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(org_id = ((auth.jwt() ->> 'org_id'::text))::uuid)",
+      "withCheck": null
+    },
+    {
+      "table": "public.machines",
+      "policy": "machines_write_when_unlocked",
+      "cmd": "ALL",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = ANY (ARRAY['owner'::text, 'supervisor'::text])) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))",
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = ANY (ARRAY['owner'::text, 'supervisor'::text])) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))"
+    },
+    {
+      "table": "public.market_run_sales",
+      "policy": "market_run_sales_org_select",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(org_id = ((auth.jwt() ->> 'org_id'::text))::uuid)",
+      "withCheck": null
+    },
+    {
+      "table": "public.market_run_sales",
+      "policy": "market_run_sales_owner_insert",
+      "cmd": "INSERT",
+      "roles": "{public}",
+      "qual": null,
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = ((auth.jwt() ->> 'org_id'::text))::uuid))"
+    },
+    {
+      "table": "public.market_run_sales",
+      "policy": "market_run_sales_owner_update",
+      "cmd": "UPDATE",
+      "roles": "{public}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = ((auth.jwt() ->> 'org_id'::text))::uuid))",
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = ((auth.jwt() ->> 'org_id'::text))::uuid))"
+    },
+    {
+      "table": "public.market_runs",
+      "policy": "market_runs_org_select",
+      "cmd": "SELECT",
+      "roles": "{authenticated}",
+      "qual": "((org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND org_has_subscription_tier(org_id, 'premium'::text))",
+      "withCheck": null
+    },
+    {
+      "table": "public.market_runs",
+      "policy": "market_runs_owner_insert",
+      "cmd": "INSERT",
+      "roles": "{authenticated}",
+      "qual": null,
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND org_has_subscription_tier(org_id, 'premium'::text) AND (NOT check_org_lockdown(org_id)))"
+    },
+    {
+      "table": "public.market_runs",
+      "policy": "market_runs_owner_update",
+      "cmd": "UPDATE",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND org_has_subscription_tier(org_id, 'premium'::text) AND (NOT check_org_lockdown(org_id)))",
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND org_has_subscription_tier(org_id, 'premium'::text) AND (NOT check_org_lockdown(org_id)))"
+    },
+    {
+      "table": "public.notification_consents",
+      "policy": "notification_consents_insert",
+      "cmd": "INSERT",
+      "roles": "{public}",
+      "qual": null,
+      "withCheck": "((org_id = ((auth.jwt() ->> 'org_id'::text))::uuid) AND ((auth.jwt() ->> 'user_role'::text) = ANY (ARRAY['owner'::text, 'supervisor'::text])))"
+    },
+    {
+      "table": "public.notification_consents",
+      "policy": "notification_consents_select",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(org_id = ((auth.jwt() ->> 'org_id'::text))::uuid)",
+      "withCheck": null
+    },
+    {
+      "table": "public.notification_consents",
+      "policy": "notification_consents_update",
+      "cmd": "UPDATE",
+      "roles": "{public}",
+      "qual": "((org_id = ((auth.jwt() ->> 'org_id'::text))::uuid) AND ((auth.jwt() ->> 'user_role'::text) = ANY (ARRAY['owner'::text, 'supervisor'::text])))",
+      "withCheck": "((org_id = ((auth.jwt() ->> 'org_id'::text))::uuid) AND ((auth.jwt() ->> 'user_role'::text) = ANY (ARRAY['owner'::text, 'supervisor'::text])))"
+    },
+    {
+      "table": "public.orders",
+      "policy": "orders_premium_select",
+      "cmd": "SELECT",
+      "roles": "{authenticated}",
+      "qual": "((org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND ((auth.jwt() ->> 'user_role'::text) = ANY (ARRAY['owner'::text, 'supervisor'::text])) AND org_has_subscription_tier(org_id, 'premium'::text))",
+      "withCheck": null
+    },
+    {
+      "table": "public.orders",
+      "policy": "orders_premium_writes_when_unlocked",
+      "cmd": "ALL",
+      "roles": "{authenticated}",
+      "qual": "((org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND ((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND org_has_subscription_tier(org_id, 'premium'::text) AND (NOT check_org_lockdown(org_id)))",
+      "withCheck": "((org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND ((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND org_has_subscription_tier(org_id, 'premium'::text) AND (NOT check_org_lockdown(org_id)))"
+    },
+    {
+      "table": "public.parties",
+      "policy": "parties_org_select",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(org_id = ((auth.jwt() ->> 'org_id'::text))::uuid)",
+      "withCheck": null
+    },
+    {
+      "table": "public.parties",
+      "policy": "parties_owner_writes_when_unlocked",
+      "cmd": "ALL",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))",
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))"
+    },
+    {
+      "table": "public.party_adjustments",
+      "policy": "party_adjustments_owner_select",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = ((auth.jwt() ->> 'org_id'::text))::uuid))",
+      "withCheck": null
+    },
+    {
+      "table": "public.party_adjustments",
+      "policy": "party_adjustments_owner_writes_when_unlocked",
+      "cmd": "ALL",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))",
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))"
+    },
+    {
+      "table": "public.party_dispatch_claims",
+      "policy": "party_dispatch_claims_org_select",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(org_id = ((auth.jwt() ->> 'org_id'::text))::uuid)",
+      "withCheck": null
+    },
+    {
+      "table": "public.party_dispatch_claims",
+      "policy": "party_dispatch_claims_owner_writes_when_unlocked",
+      "cmd": "ALL",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))",
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))"
+    },
+    {
+      "table": "public.party_invoices",
+      "policy": "party_invoices_owner_select",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = ((auth.jwt() ->> 'org_id'::text))::uuid))",
+      "withCheck": null
+    },
+    {
+      "table": "public.party_invoices",
+      "policy": "party_invoices_owner_writes_when_unlocked",
+      "cmd": "ALL",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))",
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))"
+    },
+    {
+      "table": "public.party_receipts",
+      "policy": "party_receipts_owner_select",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = ((auth.jwt() ->> 'org_id'::text))::uuid))",
+      "withCheck": null
+    },
+    {
+      "table": "public.party_receipts",
+      "policy": "party_receipts_owner_writes_when_unlocked",
+      "cmd": "ALL",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))",
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))"
+    },
+    {
+      "table": "public.payment_allocations",
+      "policy": "payment_allocations_owner_select",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "((org_id = ((auth.jwt() ->> 'org_id'::text))::uuid) AND ((auth.jwt() ->> 'user_role'::text) = 'owner'::text))",
+      "withCheck": null
+    },
+    {
+      "table": "public.payment_allocations",
+      "policy": "payment_allocations_owner_writes_when_unlocked",
+      "cmd": "ALL",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))",
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))"
+    },
+    {
+      "table": "public.payroll_adjustments",
+      "policy": "payroll_adjustments_owner_writes_when_unlocked",
+      "cmd": "ALL",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))",
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))"
+    },
+    {
+      "table": "public.payroll_payments",
+      "policy": "Owners Manage Payroll",
+      "cmd": "ALL",
+      "roles": "{public}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = ((auth.jwt() ->> 'org_id'::text))::uuid))",
+      "withCheck": null
+    },
+    {
+      "table": "public.payroll_payments",
+      "policy": "Tenant Isolation",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(org_id = ((auth.jwt() ->> 'org_id'::text))::uuid)",
+      "withCheck": null
+    },
+    {
+      "table": "public.payroll_settlements",
+      "policy": "payroll_settlements_owner_writes_when_unlocked",
+      "cmd": "ALL",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))",
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))"
+    },
+    {
+      "table": "public.production_logs",
+      "policy": "Tenant Isolation Select",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(org_id = ((auth.jwt() ->> 'org_id'::text))::uuid)",
+      "withCheck": null
+    },
+    {
+      "table": "public.production_logs",
+      "policy": "production_logs_delete_when_unlocked",
+      "cmd": "DELETE",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))",
+      "withCheck": null
+    },
+    {
+      "table": "public.production_logs",
+      "policy": "production_logs_insert_when_unlocked",
+      "cmd": "INSERT",
+      "roles": "{authenticated}",
+      "qual": null,
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = ANY (ARRAY['owner'::text, 'supervisor'::text])) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))"
+    },
+    {
+      "table": "public.production_logs",
+      "policy": "production_logs_update_when_unlocked",
+      "cmd": "UPDATE",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = ANY (ARRAY['owner'::text, 'supervisor'::text])) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))",
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = ANY (ARRAY['owner'::text, 'supervisor'::text])) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))"
+    },
+    {
+      "table": "public.qualities",
+      "policy": "Owners Delete Qualities",
+      "cmd": "DELETE",
+      "roles": "{public}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = ((auth.jwt() ->> 'org_id'::text))::uuid))",
+      "withCheck": null
+    },
+    {
+      "table": "public.qualities",
+      "policy": "Owners Insert Qualities",
+      "cmd": "INSERT",
+      "roles": "{public}",
+      "qual": null,
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = ((auth.jwt() ->> 'org_id'::text))::uuid))"
+    },
+    {
+      "table": "public.qualities",
+      "policy": "Owners Update Qualities",
+      "cmd": "UPDATE",
+      "roles": "{public}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = ((auth.jwt() ->> 'org_id'::text))::uuid))",
+      "withCheck": null
+    },
+    {
+      "table": "public.qualities",
+      "policy": "Tenant Isolation",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(org_id = ((auth.jwt() ->> 'org_id'::text))::uuid)",
+      "withCheck": null
+    },
+    {
+      "table": "public.shift_assignments",
+      "policy": "Tenant Isolation Select Shift Assignments",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(org_id = ((auth.jwt() ->> 'org_id'::text))::uuid)",
+      "withCheck": null
+    },
+    {
+      "table": "public.shift_assignments",
+      "policy": "shift_assignments_write_when_unlocked",
+      "cmd": "ALL",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = ANY (ARRAY['owner'::text, 'supervisor'::text])) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))",
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = ANY (ARRAY['owner'::text, 'supervisor'::text])) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))"
+    },
+    {
+      "table": "public.stock_discrepancies",
+      "policy": "stock_discrepancies_owner_select",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = ((auth.jwt() ->> 'org_id'::text))::uuid))",
+      "withCheck": null
+    },
+    {
+      "table": "public.stock_discrepancies",
+      "policy": "stock_discrepancies_owner_writes_when_unlocked",
+      "cmd": "ALL",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))",
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))"
+    },
+    {
+      "table": "public.supervisor_float_transactions",
+      "policy": "Supervisors View Own Transactions",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(supervisor_id = auth.uid())",
+      "withCheck": null
+    },
+    {
+      "table": "public.supervisor_float_transactions",
+      "policy": "supervisor_float_owner_writes_when_unlocked",
+      "cmd": "ALL",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))",
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))"
+    },
+    {
+      "table": "public.supplier_ledger_entries",
+      "policy": "supplier_entries_owner_insert",
+      "cmd": "INSERT",
+      "roles": "{public}",
+      "qual": null,
+      "withCheck": "((org_id = ((auth.jwt() ->> 'org_id'::text))::uuid) AND ((auth.jwt() ->> 'user_role'::text) = 'owner'::text))"
+    },
+    {
+      "table": "public.supplier_ledger_entries",
+      "policy": "supplier_entries_owner_select",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "((org_id = ((auth.jwt() ->> 'org_id'::text))::uuid) AND ((auth.jwt() ->> 'user_role'::text) = 'owner'::text))",
+      "withCheck": null
+    },
+    {
+      "table": "public.suppliers",
+      "policy": "suppliers_owner_insert",
+      "cmd": "INSERT",
+      "roles": "{public}",
+      "qual": null,
+      "withCheck": "((org_id = ((auth.jwt() ->> 'org_id'::text))::uuid) AND ((auth.jwt() ->> 'user_role'::text) = 'owner'::text))"
+    },
+    {
+      "table": "public.suppliers",
+      "policy": "suppliers_owner_select",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "((org_id = ((auth.jwt() ->> 'org_id'::text))::uuid) AND ((auth.jwt() ->> 'user_role'::text) = 'owner'::text))",
+      "withCheck": null
+    },
+    {
+      "table": "public.suppliers",
+      "policy": "suppliers_owner_update",
+      "cmd": "UPDATE",
+      "roles": "{public}",
+      "qual": "((org_id = ((auth.jwt() ->> 'org_id'::text))::uuid) AND ((auth.jwt() ->> 'user_role'::text) = 'owner'::text))",
+      "withCheck": null
+    },
+    {
+      "table": "public.whatsapp_delivery_log",
+      "policy": "owners_read_own_delivery_log",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "((org_id = ((auth.jwt() ->> 'org_id'::text))::uuid) AND ((auth.jwt() ->> 'user_role'::text) = 'owner'::text))",
+      "withCheck": null
+    },
+    {
+      "table": "public.worker_advances",
+      "policy": "Tenant Isolation",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(org_id = ((auth.jwt() ->> 'org_id'::text))::uuid)",
+      "withCheck": null
+    },
+    {
+      "table": "public.worker_advances",
+      "policy": "worker_advances_owner_writes_when_unlocked",
+      "cmd": "ALL",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))",
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))"
+    },
+    {
+      "table": "public.workers",
+      "policy": "Tenant Isolation",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(org_id = ((auth.jwt() ->> 'org_id'::text))::uuid)",
+      "withCheck": null
+    },
+    {
+      "table": "public.workers",
+      "policy": "workers_delete_when_unlocked",
+      "cmd": "DELETE",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = 'owner'::text) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))",
+      "withCheck": null
+    },
+    {
+      "table": "public.workers",
+      "policy": "workers_insert_when_unlocked",
+      "cmd": "INSERT",
+      "roles": "{authenticated}",
+      "qual": null,
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = ANY (ARRAY['owner'::text, 'supervisor'::text])) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))"
+    },
+    {
+      "table": "public.workers",
+      "policy": "workers_update_when_unlocked",
+      "cmd": "UPDATE",
+      "roles": "{authenticated}",
+      "qual": "(((auth.jwt() ->> 'user_role'::text) = ANY (ARRAY['owner'::text, 'supervisor'::text])) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))",
+      "withCheck": "(((auth.jwt() ->> 'user_role'::text) = ANY (ARRAY['owner'::text, 'supervisor'::text])) AND (org_id = (NULLIF((auth.jwt() ->> 'org_id'::text), ''::text))::uuid) AND (NOT check_org_lockdown(org_id)))"
+    }
+  ],
+  "perRowByTable": {
+    "public.attendance": 6,
+    "public.commercial_payment_receipts": 2,
+    "public.commercial_receivables": 2,
+    "public.dispatch_package_lines": 2,
+    "public.dispatches": 2,
+    "public.fabric_packages": 2,
+    "public.fabric_stock_inward_drafts": 3,
+    "public.fabric_stock_lots": 2,
+    "public.fabric_stock_movements": 2,
+    "public.fabric_stock_sales": 2,
+    "public.factory_cost_profile": 2,
+    "public.fixed_workers": 4,
+    "public.machine_assignments": 2,
+    "public.machine_operator_assignments": 2,
+    "public.machine_type_pay_defaults": 2,
+    "public.machines": 2,
+    "public.market_run_sales": 3,
+    "public.market_runs": 3,
+    "public.notification_consents": 3,
+    "public.orders": 2,
+    "public.parties": 2,
+    "public.party_adjustments": 2,
+    "public.party_dispatch_claims": 2,
+    "public.party_invoices": 2,
+    "public.party_receipts": 2,
+    "public.payment_allocations": 2,
+    "public.payroll_adjustments": 1,
+    "public.payroll_payments": 2,
+    "public.payroll_settlements": 1,
+    "public.production_logs": 4,
+    "public.qualities": 4,
+    "public.shift_assignments": 2,
+    "public.stock_discrepancies": 2,
+    "public.supervisor_float_transactions": 2,
+    "public.supplier_ledger_entries": 2,
+    "public.suppliers": 3,
+    "public.whatsapp_delivery_log": 1,
+    "public.worker_advances": 2,
+    "public.workers": 4
+  },
+  "savedCostings": [
+    {
+      "name": "lite_200_lite",
+      "costingsPerOrg": 200,
+      "cameFromFree": false,
+      "asIs": {
+        "medianMs": 1.78,
+        "rowsReturned": 200,
+        "plan": [
+          "Limit rows=200",
+          "  Result rows=1",
+          "  Result rows=1",
+          "  Result rows=1",
+          "  Result rows=1",
+          "  Sort rows=200",
+          "    Result rows=200",
+          "      Seq Scan rows=200 filter ((InitPlan 4).col1 AND (NOT COALESCE((org_id = (InitPlan 1).col1), false)) AND (org_id = 'aaaaaaaa-1111-4111-8111-111111111111'::uuid) AND (((InitPlan 2).col1 ->> 'user_role'::text) = 'owner'::text))"
+        ]
+      },
+      "oncePerQuery": {
+        "medianMs": 1.7,
+        "rowsReturned": 200,
+        "plan": [
+          "Limit rows=200",
+          "  Result rows=1",
+          "  Result rows=1",
+          "  Result rows=1",
+          "  Result rows=1",
+          "  Sort rows=200",
+          "    Result rows=200",
+          "      Seq Scan rows=200 filter ((InitPlan 4).col1 AND (org_id IS DISTINCT FROM (InitPlan 1).col1) AND (org_id = 'aaaaaaaa-1111-4111-8111-111111111111'::uuid) AND (((InitPlan 2).col1 ->> 'user_role'::text) = 'owner'::text))"
+        ]
+      }
+    },
+    {
+      "name": "lite_200_free",
+      "costingsPerOrg": 200,
+      "cameFromFree": true,
+      "asIs": {
+        "medianMs": 2.62,
+        "rowsReturned": 200,
+        "plan": [
+          "Limit rows=200",
+          "  Result rows=1",
+          "  Result rows=1",
+          "  Result rows=1",
+          "  Result rows=1",
+          "  Sort rows=200",
+          "    Result rows=200",
+          "      Seq Scan rows=200 filter ((InitPlan 4).col1 AND (NOT COALESCE((org_id = (InitPlan 1).col1), false)) AND (org_id = 'aaaaaaaa-1111-4111-8111-111111111111'::uuid) AND (((InitPlan 2).col1 ->> 'user_role'::text) = 'owner'::text))"
+        ]
+      },
+      "oncePerQuery": {
+        "medianMs": 2.4,
+        "rowsReturned": 200,
+        "plan": [
+          "Limit rows=200",
+          "  Result rows=1",
+          "  Result rows=1",
+          "  Result rows=1",
+          "  Result rows=1",
+          "  Sort rows=200",
+          "    Result rows=200",
+          "      Seq Scan rows=200 filter ((InitPlan 4).col1 AND (org_id IS DISTINCT FROM (InitPlan 1).col1) AND (org_id = 'aaaaaaaa-1111-4111-8111-111111111111'::uuid) AND (((InitPlan 2).col1 ->> 'user_role'::text) = 'owner'::text))"
+        ]
+      }
+    },
+    {
+      "name": "lite_3000_lite",
+      "costingsPerOrg": 3000,
+      "cameFromFree": false,
+      "asIs": {
+        "medianMs": 6.62,
+        "rowsReturned": 500,
+        "plan": [
+          "Limit rows=500",
+          "  Result rows=1",
+          "  Result rows=1",
+          "  Result rows=1",
+          "  Result rows=1",
+          "  Sort rows=500",
+          "    Result rows=3000",
+          "      Bitmap Heap Scan rows=3000 filter ((InitPlan 4).col1 AND (NOT COALESCE((org_id = (InitPlan 1).col1), false)) AND (((InitPlan 2).col1 ->> 'user_role'::text) = 'owner'::text))",
+          "        Bitmap Index Scan (estimator_quotes_source_same_org_idx) rows=3000"
+        ]
+      },
+      "oncePerQuery": {
+        "medianMs": 6.5,
+        "rowsReturned": 500,
+        "plan": [
+          "Limit rows=500",
+          "  Result rows=1",
+          "  Result rows=1",
+          "  Result rows=1",
+          "  Result rows=1",
+          "  Sort rows=500",
+          "    Result rows=3000",
+          "      Bitmap Heap Scan rows=3000 filter ((InitPlan 4).col1 AND (org_id IS DISTINCT FROM (InitPlan 1).col1) AND (((InitPlan 2).col1 ->> 'user_role'::text) = 'owner'::text))",
+          "        Bitmap Index Scan (estimator_quotes_source_same_org_idx) rows=3000"
+        ]
+      }
+    },
+    {
+      "name": "lite_3000_free",
+      "costingsPerOrg": 3000,
+      "cameFromFree": true,
+      "asIs": {
+        "medianMs": 7.44,
+        "rowsReturned": 500,
+        "plan": [
+          "Limit rows=500",
+          "  Result rows=1",
+          "  Result rows=1",
+          "  Result rows=1",
+          "  Result rows=1",
+          "  Sort rows=500",
+          "    Result rows=3000",
+          "      Bitmap Heap Scan rows=3000 filter ((InitPlan 4).col1 AND (NOT COALESCE((org_id = (InitPlan 1).col1), false)) AND (((InitPlan 2).col1 ->> 'user_role'::text) = 'owner'::text))",
+          "        Bitmap Index Scan (estimator_quotes_source_same_org_idx) rows=3000"
+        ]
+      },
+      "oncePerQuery": {
+        "medianMs": 7.13,
+        "rowsReturned": 500,
+        "plan": [
+          "Limit rows=500",
+          "  Result rows=1",
+          "  Result rows=1",
+          "  Result rows=1",
+          "  Result rows=1",
+          "  Sort rows=500",
+          "    Result rows=3000",
+          "      Bitmap Heap Scan rows=3000 filter ((InitPlan 4).col1 AND (org_id IS DISTINCT FROM (InitPlan 1).col1) AND (((InitPlan 2).col1 ->> 'user_role'::text) = 'owner'::text))",
+          "        Bitmap Index Scan (estimator_quotes_source_same_org_idx) rows=3000"
+        ]
+      }
+    }
+  ]
+}

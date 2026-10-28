@@ -74,11 +74,13 @@ export function buildFixtures() {
             factory_cost_profile: [costProfile(LITE.orgId), costProfile(BASE.orgId)],
             free_account_grants: [{ org_id: FREE.orgId, subject_id: freeSubject, revoked_at: null, free_account_subjects: { active: true, verified_at: iso(-100), beta_allowed: true } }],
             free_account_subjects: [{ id: freeSubject, active: true, verified_at: iso(-100), beta_allowed: true }],
-            free_rollout: [{ singleton: true, enrollment_enabled: true, estimation_enabled: true, tour_enabled: false, free_quota_policies: { id: 'policy', monthly_limit: 10, period: 'month' } }],
+            free_rollout: [{ singleton: true, enrollment_enabled: true, estimation_enabled: true, tour_enabled: false, free_quota_policies: { id: 'policy', version: 1, monthly_limit: 10, period: 'month', receipt_retention_days: 30 } }],
             base_payroll_cycle_configs: [{ id: 'cycle-base', org_id: BASE.orgId, cycle_type: 'monthly', cycle_start_day: 1, pay_day: 5, effective_from: day(-200), effective_until: null, created_at: iso(-200) }],
         },
         rpc: {
             free_server_time: () => new Date().toISOString(),
+            // A committed Calculate receipt (shape only; the harness times the wait).
+            complete_free_saved_costing: () => ({ used: 1, allowance: 10, remaining: 9, savedCostingId: 'dddddddd-3333-4333-8333-333333333333', editWindow: null, costingsUsed: 1 }),
             get_quality_stock_board: { qualities: [], movements: [] },
             get_supervisor_display_names: [],
         },

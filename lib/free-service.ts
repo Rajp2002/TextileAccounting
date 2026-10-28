@@ -1,7 +1,7 @@
 import 'server-only'
 import { cache } from 'react'
 import { makeFreeDemo } from './free-estimator-defaults'
-import { getCachedSession } from './auth'
+import { getCachedSession, getSessionHint } from './auth'
 import { getOrgPlanAccess } from './subscription'
 import { finishFreeProvisioning, getFreeGrant, getFreeRollout } from './free-account'
 import { createAdminClient } from './supabase/admin'
@@ -19,14 +19,30 @@ import { startEarly } from './start-early'
 export const getFreeOrganization = cache(async (orgId: string) => (
   createAdminClient().from('organizations').select('owner_id,is_locked_down,name').eq('id',orgId).single()
 ))
+function startFreeOrgReads(orgId: string) {
+  const grant = startEarly(getFreeGrant(orgId))
+  return {
+    orgId,
+    grant,
+    organization: startEarly(getFreeOrganization(orgId)),
+    access: startEarly(getOrgPlanAccess(orgId, grant)),
+  }
+}
 export async function freeContext(options: { allowInactive?: boolean } = {}) {
+  // The grant, organization and plan reads need only the org id. Proxy's
+  // session hint lets them start while Auth verifies the session; they are
+  // used only when the verified identity names the same user and org. The
+  // promises are held here because route handlers have no request cache.
+  const hint = await getSessionHint()
+  const early = hint?.orgId ? startFreeOrgReads(hint.orgId) : null
   const session = await getCachedSession()
   if (!session || session.profile.role !== 'owner') throw new Error('FREE_AUTH_REQUIRED')
-  // The organization and plan reads need only the verified org id, so they
-  // run alongside the grant read. Each result is still checked in order.
-  const organizationRead = startEarly(getFreeOrganization(session.profile.org_id))
-  const accessRead = startEarly(getOrgPlanAccess(session.profile.org_id))
-  const grant = await getFreeGrant(session.profile.org_id)
+  const reads = early && hint?.userId === session.user.id && early.orgId === session.profile.org_id
+    ? early : startFreeOrgReads(session.profile.org_id)
+  const organizationRead = reads.organization
+  const accessRead = reads.access
+  // Each result is still checked in order.
+  const grant = await reads.grant
   if (!grant && session.user.app_metadata.free_signup === true) {
     if (!await finishFreeProvisioning(session.user, session.profile.org_id)) throw new Error('FREE_PROVISIONING_PENDING')
     // Provisioning changes a previously cached null; read on next request.
@@ -54,16 +70,21 @@ function signing() {
   }
 }
 export async function freeStatus() {
-  const context = await freeContext({ allowInactive:true })
-  const rollout = await getFreeRollout()
   const admin = createAdminClient()
+  // The rollout and the clock don't depend on the account, so they run with
+  // the account reads. Errors still surface in the same order.
+  const rolloutRead = startEarly(getFreeRollout())
   // Trusted database time, also used by the actual debit transaction.
-  const { data: clock, error: clockError } = await admin.rpc('free_server_time')
+  const clockRead = startEarly(Promise.resolve(admin.rpc('free_server_time')))
+  const context = await freeContext({ allowInactive:true })
+  const rollout = await rolloutRead
+  const { data: clock, error: clockError } = await clockRead
   if ((clockError || !clock) && process.env.NODE_ENV === 'production') throw new Error('FREE_TEMPORARY_ERROR')
   const serverTime = clock && !clockError ? new Date(clock as string) : new Date()
   const window = freeQuotaWindow(serverTime)
+  const subjectRead = startEarly(Promise.resolve(admin.from('free_account_subjects').select('tour_state').eq('id',context.grant.subjectId).maybeSingle()))
   const { data: usage, error } = await admin.from('free_monthly_usage').select('*').eq('subject_id', context.grant.subjectId).eq('period_start', window.start).maybeSingle()
-  const { data: subject, error: subjectError } = await admin.from('free_account_subjects').select('tour_state').eq('id',context.grant.subjectId).maybeSingle()
+  const { data: subject, error: subjectError } = await subjectRead
   if (error || (subjectError && subjectError.code !== 'PGRST116')) throw new Error('FREE_TEMPORARY_ERROR')
   const limit = usage?.allowance ?? rollout.policy.monthly_limit
   const used = usage?.used ?? 0
@@ -78,10 +99,12 @@ export async function freeStatus() {
   }
 }
 export async function calculateFreeSubmission(body: { estimate: unknown; requestToken?: string; warningsAcknowledged?: boolean; label?: string; costingId?: string; expectedRevision?: number }) {
+  // The rollout doesn't depend on the account; it is checked after the rate limit as before.
+  const rolloutRead = startEarly(getFreeRollout())
   const context = await freeContext()
   const rate = await checkAuthRateLimit(`free-calculate:${context.grant.subjectId}`)
   if (rate !== null) throw new Error('FREE_THROTTLED')
-  const rollout = await getFreeRollout()
+  const rollout = await rolloutRead
   if (!context.paid && !rollout.estimation_enabled) throw new Error('FREE_PAUSED')
   const estimate = parseFreeEstimate(body.estimate)
   const validation = validateEstimatorSnapshot(estimate, FREE_ESTIMATE_VALIDATION_OPTIONS)

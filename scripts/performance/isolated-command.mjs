@@ -26,6 +26,13 @@ Object.assign(env, {
     UPSTASH_REDIS_REST_URL: '', UPSTASH_REDIS_REST_TOKEN: '',
     RUN_LIVE_SUPABASE_TESTS: '0', NEXT_TELEMETRY_DISABLED: '1',
 })
+// Performance harness builds may compile a Sentry DSN that points at the
+// harness's fake backend, so Sentry initialises as in production. Loopback only.
+const harnessDsn = process.env.WEAVLY_HARNESS_SENTRY_DSN
+if (harnessDsn) {
+    if (!/^http:\/\/[a-z0-9]+@127\.0\.0\.1:\d+\/\d+$/.test(harnessDsn)) throw new Error('WEAVLY_HARNESS_SENTRY_DSN must be a loopback DSN')
+    env.NEXT_PUBLIC_SENTRY_DSN = harnessDsn
+}
 const [command, ...args] = process.argv.slice(2)
 if (!command) throw new Error('Pass a command and arguments')
 const child = spawn(command, args, { env, stdio: 'inherit' })

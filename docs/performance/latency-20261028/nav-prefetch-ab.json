@@ -1,0 +1,1635 @@
+{
+  "generatedAt": "2026-10-28T08:34:29.083Z",
+  "buildId": "caNuMzQDq39N0sSWJj84t",
+  "method": "Playwright Chromium (headless), 1366x768, CPU slowed 4x, fresh context per sample, 5 samples per variant alternating normal prefetching and prefetches blocked. Lite owner lands on /owner/estimator, page left until no long task for 2.5 s, then Saved Costings is clicked in the sidebar and timed to the first frame showing its URL (commit) and to /owner/quotes's route_primary_usable mark. Prefetch requests are counted per segment request (Next 16 fetches route segments separately). next start against the fake backend (30 ms per Supabase call), server warmed first.",
+  "cpuSlowdown": 4,
+  "samples": 5,
+  "summary": {
+    "prefetch": {
+      "landingUsableMs": 2891,
+      "landingTotalBlockingMs": 1592,
+      "landingLongestTaskMs": 924,
+      "prefetchCount": 16,
+      "prefetchKB": 3.8,
+      "firstPrefetchStartMs": 3493,
+      "landingBackendCalls": 57,
+      "clickToCommitMs": 439.9,
+      "clickToUsableMs": 746,
+      "navigationBackendCalls": 18
+    },
+    "blocked": {
+      "landingUsableMs": 2899.7,
+      "landingTotalBlockingMs": 1778,
+      "landingLongestTaskMs": 916,
+      "prefetchCount": 0,
+      "prefetchKB": 0,
+      "firstPrefetchStartMs": 3472,
+      "landingBackendCalls": 32,
+      "clickToCommitMs": 572.8,
+      "clickToUsableMs": 880,
+      "navigationBackendCalls": 14
+    }
+  },
+  "runs": [
+    {
+      "blockPrefetch": false,
+      "landing": {
+        "usable": 3103.7000000001863,
+        "totalBlockingTime": 2033,
+        "longestTask": 962
+      },
+      "navigation": {
+        "clickToUsable": 865.5999999996275,
+        "clickToCommit": 567.2000000001863,
+        "url": "/owner/quotes"
+      },
+      "prefetchCount": 17,
+      "prefetchBytes": 5295,
+      "firstPrefetchStartMs": 3674,
+      "landingBackendCalls": 58,
+      "navigationBackendCalls": 18,
+      "rsc": [
+        {
+          "url": "/support",
+          "prefetch": true,
+          "startMs": 3674,
+          "endMs": 3726,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/billing",
+          "prefetch": true,
+          "startMs": 3675,
+          "endMs": 3739,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/settings",
+          "prefetch": true,
+          "startMs": 3675,
+          "endMs": 3745,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/rates",
+          "prefetch": true,
+          "startMs": 3675,
+          "endMs": 3760,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/quotes",
+          "prefetch": true,
+          "startMs": 3779,
+          "endMs": 3835,
+          "bytes": 322,
+          "aborted": false
+        },
+        {
+          "url": "/support",
+          "prefetch": true,
+          "startMs": 4089,
+          "endMs": 4120,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/billing",
+          "prefetch": true,
+          "startMs": 4090,
+          "endMs": 4126,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/settings",
+          "prefetch": true,
+          "startMs": 4090,
+          "endMs": 4129,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/rates",
+          "prefetch": true,
+          "startMs": 4090,
+          "endMs": 4134,
+          "bytes": 321,
+          "aborted": false
+        },
+        {
+          "url": "/owner/quotes",
+          "prefetch": true,
+          "startMs": 4139,
+          "endMs": 4167,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/estimator",
+          "prefetch": true,
+          "startMs": 4145,
+          "endMs": 4169,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/support",
+          "prefetch": true,
+          "startMs": 4157,
+          "endMs": 4190,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/billing",
+          "prefetch": true,
+          "startMs": 4163,
+          "endMs": 4197,
+          "bytes": 4652,
+          "aborted": false
+        },
+        {
+          "url": "/owner/settings",
+          "prefetch": true,
+          "startMs": 4178,
+          "endMs": 4214,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/rates",
+          "prefetch": true,
+          "startMs": 4185,
+          "endMs": 4223,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/quotes",
+          "prefetch": true,
+          "startMs": 4233,
+          "endMs": 4261,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/quotes",
+          "prefetch": false,
+          "startMs": 6361,
+          "endMs": 6489,
+          "bytes": 3774,
+          "aborted": false
+        },
+        {
+          "url": "/owner/estimator",
+          "prefetch": true,
+          "startMs": 6839,
+          "endMs": 6893,
+          "bytes": null,
+          "aborted": false
+        }
+      ]
+    },
+    {
+      "blockPrefetch": true,
+      "landing": {
+        "usable": 2799.2000000001863,
+        "totalBlockingTime": 1552,
+        "longestTask": 916
+      },
+      "navigation": {
+        "clickToUsable": 863.2000000001863,
+        "clickToCommit": 567.5999999996275,
+        "url": "/owner/quotes"
+      },
+      "prefetchCount": 0,
+      "prefetchBytes": 0,
+      "firstPrefetchStartMs": 3398,
+      "landingBackendCalls": 32,
+      "navigationBackendCalls": 14,
+      "rsc": [
+        {
+          "url": "/support",
+          "prefetch": true,
+          "startMs": 3398,
+          "endMs": 3433,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/billing",
+          "prefetch": true,
+          "startMs": 3400,
+          "endMs": 3451,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/settings",
+          "prefetch": true,
+          "startMs": 3401,
+          "endMs": 3462,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/rates",
+          "prefetch": true,
+          "startMs": 3402,
+          "endMs": 3463,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/quotes",
+          "prefetch": true,
+          "startMs": 3437,
+          "endMs": 3487,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/estimator",
+          "prefetch": true,
+          "startMs": 3461,
+          "endMs": 3529,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/support",
+          "prefetch": true,
+          "startMs": 3785,
+          "endMs": 3790,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/billing",
+          "prefetch": true,
+          "startMs": 3786,
+          "endMs": 3795,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/settings",
+          "prefetch": true,
+          "startMs": 3787,
+          "endMs": 3799,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/rates",
+          "prefetch": true,
+          "startMs": 3787,
+          "endMs": 3800,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/quotes",
+          "prefetch": true,
+          "startMs": 3793,
+          "endMs": 3801,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/estimator",
+          "prefetch": true,
+          "startMs": 3797,
+          "endMs": 3802,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/quotes",
+          "prefetch": false,
+          "startMs": 6042,
+          "endMs": 6168,
+          "bytes": 5422,
+          "aborted": false
+        },
+        {
+          "url": "/support",
+          "prefetch": true,
+          "startMs": 6533,
+          "endMs": 6578,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/billing",
+          "prefetch": true,
+          "startMs": 6534,
+          "endMs": 6582,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/settings",
+          "prefetch": true,
+          "startMs": 6535,
+          "endMs": 6583,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/rates",
+          "prefetch": true,
+          "startMs": 6535,
+          "endMs": 6583,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/estimator",
+          "prefetch": true,
+          "startMs": 6581,
+          "endMs": 6593,
+          "bytes": null,
+          "aborted": true
+        }
+      ]
+    },
+    {
+      "blockPrefetch": false,
+      "landing": {
+        "usable": 2891,
+        "totalBlockingTime": 1568,
+        "longestTask": 931
+      },
+      "navigation": {
+        "clickToUsable": 735.2999999998137,
+        "clickToCommit": 439.90000000037253,
+        "url": "/owner/quotes"
+      },
+      "prefetchCount": 16,
+      "prefetchBytes": 8496,
+      "firstPrefetchStartMs": 3493,
+      "landingBackendCalls": 57,
+      "navigationBackendCalls": 18,
+      "rsc": [
+        {
+          "url": "/support",
+          "prefetch": true,
+          "startMs": 3493,
+          "endMs": 3549,
+          "bytes": 213,
+          "aborted": false
+        },
+        {
+          "url": "/owner/billing",
+          "prefetch": true,
+          "startMs": 3494,
+          "endMs": 3559,
+          "bytes": 323,
+          "aborted": false
+        },
+        {
+          "url": "/owner/settings",
+          "prefetch": true,
+          "startMs": 3494,
+          "endMs": 3561,
+          "bytes": 324,
+          "aborted": false
+        },
+        {
+          "url": "/owner/rates",
+          "prefetch": true,
+          "startMs": 3495,
+          "endMs": 3562,
+          "bytes": 321,
+          "aborted": false
+        },
+        {
+          "url": "/support",
+          "prefetch": true,
+          "startMs": 3843,
+          "endMs": 3867,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/billing",
+          "prefetch": true,
+          "startMs": 3843,
+          "endMs": 3870,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/settings",
+          "prefetch": true,
+          "startMs": 3844,
+          "endMs": 3875,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/rates",
+          "prefetch": true,
+          "startMs": 3844,
+          "endMs": 3881,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/quotes",
+          "prefetch": true,
+          "startMs": 3887,
+          "endMs": 3921,
+          "bytes": 322,
+          "aborted": false
+        },
+        {
+          "url": "/owner/estimator",
+          "prefetch": true,
+          "startMs": 3893,
+          "endMs": 3923,
+          "bytes": 325,
+          "aborted": false
+        },
+        {
+          "url": "/support",
+          "prefetch": true,
+          "startMs": 3903,
+          "endMs": 3938,
+          "bytes": 2016,
+          "aborted": false
+        },
+        {
+          "url": "/owner/billing",
+          "prefetch": true,
+          "startMs": 3913,
+          "endMs": 3945,
+          "bytes": 4652,
+          "aborted": false
+        },
+        {
+          "url": "/owner/settings",
+          "prefetch": true,
+          "startMs": 3928,
+          "endMs": 3982,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/rates",
+          "prefetch": true,
+          "startMs": 3935,
+          "endMs": 3993,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/quotes",
+          "prefetch": true,
+          "startMs": 3954,
+          "endMs": 4025,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/quotes",
+          "prefetch": false,
+          "startMs": 6179,
+          "endMs": 6311,
+          "bytes": 3774,
+          "aborted": false
+        },
+        {
+          "url": "/owner/estimator",
+          "prefetch": true,
+          "startMs": 6529,
+          "endMs": 6593,
+          "bytes": null,
+          "aborted": false
+        }
+      ]
+    },
+    {
+      "blockPrefetch": true,
+      "landing": {
+        "usable": 2963.0999999996275,
+        "totalBlockingTime": 1961,
+        "longestTask": 904
+      },
+      "navigation": {
+        "clickToUsable": 880,
+        "clickToCommit": 572.8000000007451,
+        "url": "/owner/quotes"
+      },
+      "prefetchCount": 0,
+      "prefetchBytes": 0,
+      "firstPrefetchStartMs": 3517,
+      "landingBackendCalls": 32,
+      "navigationBackendCalls": 14,
+      "rsc": [
+        {
+          "url": "/support",
+          "prefetch": true,
+          "startMs": 3517,
+          "endMs": 3545,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/billing",
+          "prefetch": true,
+          "startMs": 3519,
+          "endMs": 3561,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/settings",
+          "prefetch": true,
+          "startMs": 3519,
+          "endMs": 3572,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/rates",
+          "prefetch": true,
+          "startMs": 3520,
+          "endMs": 3572,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/quotes",
+          "prefetch": true,
+          "startMs": 3548,
+          "endMs": 3578,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/estimator",
+          "prefetch": true,
+          "startMs": 3570,
+          "endMs": 3580,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/support",
+          "prefetch": true,
+          "startMs": 3896,
+          "endMs": 3900,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/billing",
+          "prefetch": true,
+          "startMs": 3897,
+          "endMs": 3901,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/settings",
+          "prefetch": true,
+          "startMs": 3897,
+          "endMs": 3902,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/rates",
+          "prefetch": true,
+          "startMs": 3899,
+          "endMs": 3903,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/quotes",
+          "prefetch": true,
+          "startMs": 3901,
+          "endMs": 3903,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/estimator",
+          "prefetch": true,
+          "startMs": 3902,
+          "endMs": 3904,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/quotes",
+          "prefetch": false,
+          "startMs": 6180,
+          "endMs": 6306,
+          "bytes": 5422,
+          "aborted": false
+        },
+        {
+          "url": "/support",
+          "prefetch": true,
+          "startMs": 6676,
+          "endMs": 6722,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/billing",
+          "prefetch": true,
+          "startMs": 6677,
+          "endMs": 6726,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/settings",
+          "prefetch": true,
+          "startMs": 6677,
+          "endMs": 6726,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/rates",
+          "prefetch": true,
+          "startMs": 6678,
+          "endMs": 6726,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/estimator",
+          "prefetch": true,
+          "startMs": 6725,
+          "endMs": 6735,
+          "bytes": null,
+          "aborted": true
+        }
+      ]
+    },
+    {
+      "blockPrefetch": false,
+      "landing": {
+        "usable": 2810.699999999255,
+        "totalBlockingTime": 1605,
+        "longestTask": 924
+      },
+      "navigation": {
+        "clickToUsable": 746,
+        "clickToCommit": 439.79999999981374,
+        "url": "/owner/quotes"
+      },
+      "prefetchCount": 16,
+      "prefetchBytes": 3840,
+      "firstPrefetchStartMs": 3419,
+      "landingBackendCalls": 57,
+      "navigationBackendCalls": 18,
+      "rsc": [
+        {
+          "url": "/support",
+          "prefetch": true,
+          "startMs": 3419,
+          "endMs": 3493,
+          "bytes": 213,
+          "aborted": false
+        },
+        {
+          "url": "/owner/billing",
+          "prefetch": true,
+          "startMs": 3420,
+          "endMs": 3496,
+          "bytes": 323,
+          "aborted": false
+        },
+        {
+          "url": "/owner/settings",
+          "prefetch": true,
+          "startMs": 3420,
+          "endMs": 3499,
+          "bytes": 324,
+          "aborted": false
+        },
+        {
+          "url": "/owner/rates",
+          "prefetch": true,
+          "startMs": 3420,
+          "endMs": 3501,
+          "bytes": 321,
+          "aborted": false
+        },
+        {
+          "url": "/support",
+          "prefetch": true,
+          "startMs": 3778,
+          "endMs": 3805,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/billing",
+          "prefetch": true,
+          "startMs": 3779,
+          "endMs": 3808,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/settings",
+          "prefetch": true,
+          "startMs": 3780,
+          "endMs": 3813,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/rates",
+          "prefetch": true,
+          "startMs": 3780,
+          "endMs": 3818,
+          "bytes": 321,
+          "aborted": false
+        },
+        {
+          "url": "/owner/quotes",
+          "prefetch": true,
+          "startMs": 3826,
+          "endMs": 3860,
+          "bytes": 322,
+          "aborted": false
+        },
+        {
+          "url": "/owner/estimator",
+          "prefetch": true,
+          "startMs": 3830,
+          "endMs": 3862,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/support",
+          "prefetch": true,
+          "startMs": 3840,
+          "endMs": 3880,
+          "bytes": 2016,
+          "aborted": false
+        },
+        {
+          "url": "/owner/billing",
+          "prefetch": true,
+          "startMs": 3850,
+          "endMs": 3888,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/settings",
+          "prefetch": true,
+          "startMs": 3868,
+          "endMs": 3892,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/rates",
+          "prefetch": true,
+          "startMs": 3877,
+          "endMs": 3928,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/quotes",
+          "prefetch": true,
+          "startMs": 3886,
+          "endMs": 3930,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/quotes",
+          "prefetch": false,
+          "startMs": 6072,
+          "endMs": 6201,
+          "bytes": 3774,
+          "aborted": false
+        },
+        {
+          "url": "/owner/estimator",
+          "prefetch": true,
+          "startMs": 6434,
+          "endMs": 6497,
+          "bytes": null,
+          "aborted": false
+        }
+      ]
+    },
+    {
+      "blockPrefetch": true,
+      "landing": {
+        "usable": 2820.7000000001863,
+        "totalBlockingTime": 1567,
+        "longestTask": 927
+      },
+      "navigation": {
+        "clickToUsable": 866.7999999998137,
+        "clickToCommit": 571.6000000005588,
+        "url": "/owner/quotes"
+      },
+      "prefetchCount": 0,
+      "prefetchBytes": 0,
+      "firstPrefetchStartMs": 3427,
+      "landingBackendCalls": 32,
+      "navigationBackendCalls": 14,
+      "rsc": [
+        {
+          "url": "/support",
+          "prefetch": true,
+          "startMs": 3427,
+          "endMs": 3476,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/billing",
+          "prefetch": true,
+          "startMs": 3428,
+          "endMs": 3483,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/settings",
+          "prefetch": true,
+          "startMs": 3428,
+          "endMs": 3491,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/rates",
+          "prefetch": true,
+          "startMs": 3432,
+          "endMs": 3492,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/quotes",
+          "prefetch": true,
+          "startMs": 3482,
+          "endMs": 3562,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/estimator",
+          "prefetch": true,
+          "startMs": 3491,
+          "endMs": 3562,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/support",
+          "prefetch": true,
+          "startMs": 3807,
+          "endMs": 3811,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/billing",
+          "prefetch": true,
+          "startMs": 3808,
+          "endMs": 3812,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/settings",
+          "prefetch": true,
+          "startMs": 3809,
+          "endMs": 3818,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/rates",
+          "prefetch": true,
+          "startMs": 3809,
+          "endMs": 3818,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/quotes",
+          "prefetch": true,
+          "startMs": 3813,
+          "endMs": 3818,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/estimator",
+          "prefetch": true,
+          "startMs": 3816,
+          "endMs": 3818,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/quotes",
+          "prefetch": false,
+          "startMs": 6075,
+          "endMs": 6203,
+          "bytes": 5422,
+          "aborted": false
+        },
+        {
+          "url": "/support",
+          "prefetch": true,
+          "startMs": 6563,
+          "endMs": 6607,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/billing",
+          "prefetch": true,
+          "startMs": 6565,
+          "endMs": 6611,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/settings",
+          "prefetch": true,
+          "startMs": 6566,
+          "endMs": 6612,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/rates",
+          "prefetch": true,
+          "startMs": 6566,
+          "endMs": 6613,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/estimator",
+          "prefetch": true,
+          "startMs": 6610,
+          "endMs": 6622,
+          "bytes": null,
+          "aborted": true
+        }
+      ]
+    },
+    {
+      "blockPrefetch": false,
+      "landing": {
+        "usable": 2784.9000000003725,
+        "totalBlockingTime": 1515,
+        "longestTask": 909
+      },
+      "navigation": {
+        "clickToUsable": 729.7999999998137,
+        "clickToCommit": 436.09999999962747,
+        "url": "/owner/quotes"
+      },
+      "prefetchCount": 16,
+      "prefetchBytes": 1824,
+      "firstPrefetchStartMs": 3384,
+      "landingBackendCalls": 57,
+      "navigationBackendCalls": 18,
+      "rsc": [
+        {
+          "url": "/support",
+          "prefetch": true,
+          "startMs": 3384,
+          "endMs": 3452,
+          "bytes": 213,
+          "aborted": false
+        },
+        {
+          "url": "/owner/billing",
+          "prefetch": true,
+          "startMs": 3385,
+          "endMs": 3460,
+          "bytes": 323,
+          "aborted": false
+        },
+        {
+          "url": "/owner/settings",
+          "prefetch": true,
+          "startMs": 3385,
+          "endMs": 3463,
+          "bytes": 324,
+          "aborted": false
+        },
+        {
+          "url": "/owner/rates",
+          "prefetch": true,
+          "startMs": 3385,
+          "endMs": 3465,
+          "bytes": 321,
+          "aborted": false
+        },
+        {
+          "url": "/support",
+          "prefetch": true,
+          "startMs": 3743,
+          "endMs": 3770,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/billing",
+          "prefetch": true,
+          "startMs": 3744,
+          "endMs": 3774,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/settings",
+          "prefetch": true,
+          "startMs": 3745,
+          "endMs": 3779,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/rates",
+          "prefetch": true,
+          "startMs": 3745,
+          "endMs": 3782,
+          "bytes": 321,
+          "aborted": false
+        },
+        {
+          "url": "/owner/quotes",
+          "prefetch": true,
+          "startMs": 3788,
+          "endMs": 3818,
+          "bytes": 322,
+          "aborted": false
+        },
+        {
+          "url": "/owner/estimator",
+          "prefetch": true,
+          "startMs": 3794,
+          "endMs": 3827,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/support",
+          "prefetch": true,
+          "startMs": 3806,
+          "endMs": 3829,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/billing",
+          "prefetch": true,
+          "startMs": 3814,
+          "endMs": 3840,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/settings",
+          "prefetch": true,
+          "startMs": 3826,
+          "endMs": 3853,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/rates",
+          "prefetch": true,
+          "startMs": 3837,
+          "endMs": 3864,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/quotes",
+          "prefetch": true,
+          "startMs": 3852,
+          "endMs": 3898,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/quotes",
+          "prefetch": false,
+          "startMs": 6151,
+          "endMs": 6278,
+          "bytes": 3774,
+          "aborted": false
+        },
+        {
+          "url": "/owner/estimator",
+          "prefetch": true,
+          "startMs": 6509,
+          "endMs": 6574,
+          "bytes": null,
+          "aborted": false
+        }
+      ]
+    },
+    {
+      "blockPrefetch": true,
+      "landing": {
+        "usable": 2899.7000000001863,
+        "totalBlockingTime": 2188,
+        "longestTask": 775
+      },
+      "navigation": {
+        "clickToUsable": 942.3999999994412,
+        "clickToCommit": 648.6999999992549,
+        "url": "/owner/quotes"
+      },
+      "prefetchCount": 0,
+      "prefetchBytes": 0,
+      "firstPrefetchStartMs": 3472,
+      "landingBackendCalls": 32,
+      "navigationBackendCalls": 14,
+      "rsc": [
+        {
+          "url": "/support",
+          "prefetch": true,
+          "startMs": 3472,
+          "endMs": 3511,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/billing",
+          "prefetch": true,
+          "startMs": 3474,
+          "endMs": 3532,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/settings",
+          "prefetch": true,
+          "startMs": 3474,
+          "endMs": 3533,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/rates",
+          "prefetch": true,
+          "startMs": 3475,
+          "endMs": 3533,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/quotes",
+          "prefetch": true,
+          "startMs": 3514,
+          "endMs": 3549,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/support",
+          "prefetch": true,
+          "startMs": 3828,
+          "endMs": 3832,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/billing",
+          "prefetch": true,
+          "startMs": 3829,
+          "endMs": 3835,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/settings",
+          "prefetch": true,
+          "startMs": 3830,
+          "endMs": 3837,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/rates",
+          "prefetch": true,
+          "startMs": 3830,
+          "endMs": 3839,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/quotes",
+          "prefetch": true,
+          "startMs": 3834,
+          "endMs": 3839,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/estimator",
+          "prefetch": true,
+          "startMs": 3838,
+          "endMs": 3839,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/quotes",
+          "prefetch": false,
+          "startMs": 6667,
+          "endMs": 6812,
+          "bytes": 5422,
+          "aborted": false
+        },
+        {
+          "url": "/support",
+          "prefetch": true,
+          "startMs": 7214,
+          "endMs": 7259,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/billing",
+          "prefetch": true,
+          "startMs": 7215,
+          "endMs": 7263,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/settings",
+          "prefetch": true,
+          "startMs": 7216,
+          "endMs": 7265,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/rates",
+          "prefetch": true,
+          "startMs": 7217,
+          "endMs": 7265,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/estimator",
+          "prefetch": true,
+          "startMs": 7262,
+          "endMs": 7276,
+          "bytes": null,
+          "aborted": true
+        }
+      ]
+    },
+    {
+      "blockPrefetch": false,
+      "landing": {
+        "usable": 2952.5,
+        "totalBlockingTime": 1592,
+        "longestTask": 908
+      },
+      "navigation": {
+        "clickToUsable": 949.7000000001863,
+        "clickToCommit": 641.2000000001863,
+        "url": "/owner/quotes"
+      },
+      "prefetchCount": 16,
+      "prefetchBytes": 3518,
+      "firstPrefetchStartMs": 3531,
+      "landingBackendCalls": 57,
+      "navigationBackendCalls": 18,
+      "rsc": [
+        {
+          "url": "/support",
+          "prefetch": true,
+          "startMs": 3531,
+          "endMs": 3571,
+          "bytes": 213,
+          "aborted": false
+        },
+        {
+          "url": "/owner/billing",
+          "prefetch": true,
+          "startMs": 3532,
+          "endMs": 3579,
+          "bytes": 323,
+          "aborted": false
+        },
+        {
+          "url": "/owner/settings",
+          "prefetch": true,
+          "startMs": 3533,
+          "endMs": 3580,
+          "bytes": 324,
+          "aborted": false
+        },
+        {
+          "url": "/owner/rates",
+          "prefetch": true,
+          "startMs": 3534,
+          "endMs": 3599,
+          "bytes": 321,
+          "aborted": false
+        },
+        {
+          "url": "/support",
+          "prefetch": true,
+          "startMs": 3895,
+          "endMs": 3924,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/billing",
+          "prefetch": true,
+          "startMs": 3896,
+          "endMs": 3927,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/settings",
+          "prefetch": true,
+          "startMs": 3896,
+          "endMs": 3933,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/rates",
+          "prefetch": true,
+          "startMs": 3896,
+          "endMs": 3936,
+          "bytes": 321,
+          "aborted": false
+        },
+        {
+          "url": "/owner/quotes",
+          "prefetch": true,
+          "startMs": 3943,
+          "endMs": 3975,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/estimator",
+          "prefetch": true,
+          "startMs": 3950,
+          "endMs": 3981,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/support",
+          "prefetch": true,
+          "startMs": 3961,
+          "endMs": 4001,
+          "bytes": 2016,
+          "aborted": false
+        },
+        {
+          "url": "/owner/billing",
+          "prefetch": true,
+          "startMs": 3970,
+          "endMs": 4012,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/settings",
+          "prefetch": true,
+          "startMs": 3990,
+          "endMs": 4026,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/rates",
+          "prefetch": true,
+          "startMs": 3998,
+          "endMs": 4036,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/quotes",
+          "prefetch": true,
+          "startMs": 4008,
+          "endMs": 4043,
+          "bytes": null,
+          "aborted": false
+        },
+        {
+          "url": "/owner/quotes",
+          "prefetch": false,
+          "startMs": 6302,
+          "endMs": 6446,
+          "bytes": 3774,
+          "aborted": false
+        },
+        {
+          "url": "/owner/estimator",
+          "prefetch": true,
+          "startMs": 6851,
+          "endMs": 6907,
+          "bytes": null,
+          "aborted": false
+        }
+      ]
+    },
+    {
+      "blockPrefetch": true,
+      "landing": {
+        "usable": 3228.899999999441,
+        "totalBlockingTime": 1778,
+        "longestTask": 989
+      },
+      "navigation": {
+        "clickToUsable": 1024.9000000003725,
+        "clickToCommit": 713.9000000003725,
+        "url": "/owner/quotes"
+      },
+      "prefetchCount": 0,
+      "prefetchBytes": 0,
+      "firstPrefetchStartMs": 3858,
+      "landingBackendCalls": 32,
+      "navigationBackendCalls": 14,
+      "rsc": [
+        {
+          "url": "/support",
+          "prefetch": true,
+          "startMs": 3858,
+          "endMs": 3896,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/billing",
+          "prefetch": true,
+          "startMs": 3860,
+          "endMs": 3921,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/settings",
+          "prefetch": true,
+          "startMs": 3861,
+          "endMs": 3931,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/rates",
+          "prefetch": true,
+          "startMs": 3861,
+          "endMs": 3932,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/quotes",
+          "prefetch": true,
+          "startMs": 3902,
+          "endMs": 3958,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/estimator",
+          "prefetch": true,
+          "startMs": 3930,
+          "endMs": 4005,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/support",
+          "prefetch": true,
+          "startMs": 4253,
+          "endMs": 4256,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/billing",
+          "prefetch": true,
+          "startMs": 4254,
+          "endMs": 4260,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/settings",
+          "prefetch": true,
+          "startMs": 4254,
+          "endMs": 4263,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/rates",
+          "prefetch": true,
+          "startMs": 4255,
+          "endMs": 4263,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/quotes",
+          "prefetch": true,
+          "startMs": 4259,
+          "endMs": 4263,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/estimator",
+          "prefetch": true,
+          "startMs": 4262,
+          "endMs": 4263,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/quotes",
+          "prefetch": false,
+          "startMs": 6546,
+          "endMs": 6703,
+          "bytes": 5422,
+          "aborted": false
+        },
+        {
+          "url": "/support",
+          "prefetch": true,
+          "startMs": 7166,
+          "endMs": 7221,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/billing",
+          "prefetch": true,
+          "startMs": 7168,
+          "endMs": 7224,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/settings",
+          "prefetch": true,
+          "startMs": 7168,
+          "endMs": 7225,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/rates",
+          "prefetch": true,
+          "startMs": 7169,
+          "endMs": 7225,
+          "bytes": null,
+          "aborted": true
+        },
+        {
+          "url": "/owner/estimator",
+          "prefetch": true,
+          "startMs": 7223,
+          "endMs": 7237,
+          "bytes": null,
+          "aborted": true
+        }
+      ]
+    }
+  ]
+}
