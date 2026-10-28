@@ -1,5 +1,5 @@
 // Local pure-module benchmark loader. Uses installed dependencies; no services.
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, resolve } from 'node:path'
 import { compileFunction } from 'node:vm'
@@ -16,7 +16,11 @@ export function createTypeScriptLoader(readSource = file => readFileSync(file, '
             compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, esModuleInterop: true },
         })
         compileFunction(outputText, ['require', 'module', 'exports'], { filename: file })(
-            name => name.startsWith('.') ? load(resolve(dirname(file), `${name}.ts`)) : requirePackage(name),
+            name => {
+                if (!name.startsWith('.')) return requirePackage(name)
+                const base = resolve(dirname(file), name)
+                return load(existsSync(`${base}.ts`) ? `${base}.ts` : resolve(base, 'index.ts'))
+            },
             compiledModule, compiledModule.exports,
         )
         return compiledModule.exports

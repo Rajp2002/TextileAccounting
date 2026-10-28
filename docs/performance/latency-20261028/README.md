@@ -85,3 +85,34 @@ Each task below was built and measured on its own, on top of the previous ones. 
 Signed-in owner and Free pages now send their first byte after one backend wait instead of four. Base pages make one call fewer. `/free/billing` makes one extra (discarded) organization read: the Free layout starts the Free workspace read for every Free page, and billing does not use it.
 
 Not changed by this task, found while reading the timelines: `/owner/assignments` reads its go-live state and pay-cycle rule before its workers, machines and jobs (two waits inside the page).
+
+### Task C: smaller estimator, Saved Costings and Free first loads (findings 7, 8)
+
+- `EstimatorClient` loads `lib/free-estimator-draft.ts` (and with it the Free input schema and zod) only when Free mode mounts. Writes still wait until the stored draft has been checked; once loaded, writes and clears are synchronous as before.
+- `createCostingExportModel` and `shortDocumentReference` move to `lib/costing-export-model.ts`, which imports only the costing engine. `lib/estimator-export.ts` keeps the print/PDF renderer (with the 15 KB base64 logo and every language's labels) and re-exports the model for existing callers. Free costings' export dialog is now lazy, as on the estimator and Saved Costings.
+- `__tests__/performance-bundle-boundaries.test.ts` now walks each page's static import graph and fails if zod, the renderer, the logo or the document labels become reachable again. On `main` it fails for all four pages, which is the regression it is meant to catch.
+
+Measured from `after-task-a.json` to `after-task-bcd.json` (same harness, HTML `<script src>` chunks, gzip 9):
+
+| Account | Route | First-load JS, KB gzip |
+| --- | --- | --- |
+| lite, base | `/owner/estimator` (the post-sign-in landing page) | 562.2 → 513.5 (−48.7) |
+| lite | `/owner/quotes` | 482.8 → 445.0 (−37.8) |
+| free | `/free` | 553.8 → 505.1 (−48.7) |
+| free | `/free/costings` | 433.0 → 385.5 (−47.5) |
+| all | every other page | +0.2 (Task D's phrase index, in the shared i18n provider) |
+
+Saved Costings still loads zod-free code but keeps the document labels it shows on screen elsewhere; it gains less than the estimator.
+
+### Task D: Hindi and Gujarati phrase scan (finding 9)
+
+`lib/i18n/known-fragments.ts` replaces the per-text full scan in `lib/i18n/context.tsx`. It sorts the phrase table once per language and indexes it by each phrase's first four characters, so a text is checked only against phrases that could occur in it; candidates are applied in exactly the old order. Each boundary regex is compiled once per phrase instead of once per use.
+
+`scripts/performance/i18n-fragment-benchmark.mjs` runs the old function (taken verbatim from `main`) and the new one on the real phrase tables and asserts identical output for every string (`i18n-fragments.json`; `__tests__/i18n-known-fragments.test.ts` covers the edge cases):
+
+| Language | Phrases | New texts translated | Before | After |
+| --- | ---: | ---: | ---: | ---: |
+| Hindi | 5,824 | 4,090 | 2,093 ms (0.51 ms each) | 71 ms (0.017 ms each) |
+| Gujarati | 5,813 | 4,090 | 1,968 ms (0.48 ms each) | 72 ms (0.018 ms each) |
+
+Measured on Raj's laptop (Intel i9, Node 24). A mid-range phone is several times slower, so a Base page showing a few hundred new strings in Hindi or Gujarati spent a few hundred milliseconds of main-thread time here before and spends a few tens now. The pass runs only for Hindi/Gujarati on non-Lite surfaces (Lite pages use exact phrases).

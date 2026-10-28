@@ -1,0 +1,22 @@
+{
+  "revision": "8a1dee0f7181b411f4615700b29dfa1db486767b",
+  "method": "Cold pass over each text once (no translation cache), median of 5 runs; a fresh phrase map per run so the indexed version also pays its one-time index build.",
+  "languages": {
+    "hi": {
+      "phrases": 5824,
+      "texts": 4090,
+      "beforeMs": 2093,
+      "afterMs": 71,
+      "beforePerTextMs": 0.512,
+      "afterPerTextMs": 0.017
+    },
+    "gu": {
+      "phrases": 5813,
+      "texts": 4090,
+      "beforeMs": 1968,
+      "afterMs": 72,
+      "beforePerTextMs": 0.481,
+      "afterPerTextMs": 0.018
+    }
+  }
+}
