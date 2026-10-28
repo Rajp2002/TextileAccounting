@@ -38,6 +38,8 @@ Ranked by expected effect on what users wait for. "Waits" are sequential backend
 8. **The costing document renderer ships on page load (about 25 KB gzip).** The estimator, Saved Costings, Free and Free costings import `createCostingExportModel` from `lib/estimator-export.ts`, which also holds the print/PDF HTML builder, a 15 KB base64 Weavly logo and all three languages' document labels. The model builder needs none of that. Splitting it into its own module keeps the renderer in the export dialog's lazy chunk.
 9. **Hindi and Gujarati pages scan the whole phrase table for each new string.** `translateKnownFragments` (`lib/i18n/context.tsx`) copies and filters every phrase (thousands) and sorts the matches for each untranslated text on legacy surfaces. Sorting the candidates once per language keeps the output identical and removes the per-string copy and sort. Main-thread time for hi/gu users on page changes.
 
+14. **The service worker precaches 5.6 MB on install** (found after the first list; `scripts/performance/precache-report.mjs`). Every route's JS, every font subset and every file in `public/images` is downloaded in the background on a phone's first visit, the landing page included, competing with the page itself. 2.1 MB of it is images, mostly screenshots and logos nothing references, and 1 MB is font subsets the pages never use. Documents and RSC are network-only, so none of it makes pages work offline.
+
 ### Found, not changed (need a decision or a larger refactor)
 
 10. **Sentry is the largest shared chunk.** The root chunk every page loads (146 KB gzip) is mostly Sentry's browser SDK, about half of it the tracing integration. `bundleSizeOptimizations.excludeTracing` (with client `tracesSampleRate` 0) would cut roughly 30–40 KB from every page, landing and login included, but ends Sentry browser performance traces. Your own web-vitals reporting (`/api/analytics/web-vitals`) is unaffected. Owner decision.
@@ -153,3 +155,15 @@ Saved Costings still loads zod-free code but keeps the document labels it shows 
 | Gujarati | 5,813 | 4,090 | 1,968 ms (0.48 ms each) | 72 ms (0.018 ms each) |
 
 Measured on Raj's laptop (Intel i9, Node 24). A mid-range phone is several times slower, so a Base page showing a few hundred new strings in Hindi or Gujarati spent a few hundred milliseconds of main-thread time here before and spends a few tens now. The pass runs only for Hindi/Gujarati on non-Lite surfaces (Lite pages use exact phrases).
+
+### Task E: smaller service-worker install (finding 14)
+
+`next.config.ts` stops precaching `public/images/**` and the `next/font` files. The existing CacheFirst static-asset rule still caches every image and font a page actually loads, so revisits and offline use of those are unchanged; the offline fallback page, app icons and all JS/CSS stay precached. No image was deleted: some may be linked from outside the app (for example email templates).
+
+| Precache | Entries | Raw | Transfer |
+| --- | ---: | ---: | ---: |
+| Before (`precache-before.json`) | 367 | 11.44 MB | 5.62 MB |
+| After (`precache-after.json`) | 330 | 8.35 MB | 2.53 MB (−55%) |
+
+Not verified on a device: an installed iPhone/Android app picking up the new worker. Nothing in the update flow depends on these files.
+

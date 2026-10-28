@@ -124,13 +124,20 @@ const withPWA = withPWAInit({
   fallbacks: {
     document: '/_offline',
   },
+  // The install downloads everything precached, on a phone's first visit
+  // (landing page included) and again for whatever changed after a deploy.
+  // Images and fonts are left to the CacheFirst static-asset rule below,
+  // which keeps the ones a page actually loads: precaching them added
+  // 2.1 MB of mostly unused screenshots and logos and 1 MB of font subsets
+  // (next/font emits every Unicode subset; pages use Latin only).
   publicExcludes: [
     '!videos/**/*',
+    '!images/**/*',
     '!**/*.map',
     '!.DS_Store',
   ],
   workboxOptions: {
-    exclude: [/\.map$/],
+    exclude: [/\.map$/, /static\/media\/.+\.woff2?$/],
     skipWaiting: false,
     clientsClaim: false,
     cleanupOutdatedCaches: true,
