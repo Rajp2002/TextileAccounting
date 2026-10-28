@@ -1410,7 +1410,9 @@ export default function RatesClient({
                         <span aria-hidden="true" className="absolute -bottom-[6px] left-12 h-2.5 w-2.5 rotate-45 border-b border-r border-[var(--wv-saffron-200)] bg-[var(--wv-saffron-100)]" />
                     </p>
                 )}
-                <div className="flex flex-wrap items-center gap-2" role="group" aria-label={tx('Actions')}>
+                {/* Pills wrap among themselves so the delete icon stays on their first row instead of dropping to a line of its own. */}
+                <div className="flex items-start gap-2" role="group" aria-label={tx('Actions')}>
+                    <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
                     {quietSample ? (
                         <Button variant="outline" onClick={handleDeleteDemoYarn} className={secondaryAction}>
                             <Trash2 className="h-4 w-4" aria-hidden="true" />{tx('Delete sample yarn')}
@@ -1453,22 +1455,23 @@ export default function RatesClient({
                         <Button onClick={() => openHistory(rate, 'trend')} className={cardAction}>
                             <History className="h-4 w-4" aria-hidden="true" />{tx('Activity')}
                         </Button>
-                        {/* Delete declutters the board; a yarn still in use is offered archive instead. */}
-                        {!sample && (
-                            <Button
-                                data-ratebook-field="deleteYarnAction"
-                                variant="ghost"
-                                size="icon"
-                                disabled={isPending}
-                                onClick={() => { setDeleteError(null); setDeleteRate(rate) }}
-                                aria-label={fillCopy(copy.deleteYarnLabel, { name: rate.name })}
-                                title={copy.deleteYarn}
-                                className="ml-auto text-muted-foreground hover:bg-destructive/10 hover:text-destructive max-md:size-11"
-                            >
-                                {actionKind === 'delete' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" aria-hidden="true" />}
-                            </Button>
-                        )}
                     </>}
+                    </div>
+                    {/* Delete declutters the board; a yarn still in use is offered archive instead. */}
+                    {!sample && (
+                        <Button
+                            data-ratebook-field="deleteYarnAction"
+                            variant="ghost"
+                            size="icon"
+                            disabled={isPending}
+                            onClick={() => { setDeleteError(null); setDeleteRate(rate) }}
+                            aria-label={fillCopy(copy.deleteYarnLabel, { name: rate.name })}
+                            title={copy.deleteYarn}
+                            className="shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive max-md:size-11"
+                        >
+                            {actionKind === 'delete' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" aria-hidden="true" />}
+                        </Button>
+                    )}
                 </div>
                 </div>
             </article>
