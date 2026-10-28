@@ -70,7 +70,8 @@ describe('Rate Book approved copy and control parity', () => {
     it('uses the same approved resolvers at live controls and preserves the bulk-confirm caveat', () => {
         // Add rate is the page header's one primary action.
         expect(rates.match(/t\('tourControls.rateBook.addRate'\)/g)).toHaveLength(1)
-        for (const label of ['Needs Review', 'Edit rate', 'Advanced edit']) expect(rates).toContain(`tx('${label}')`)
+        // The Needs Review queue became the Review prices modal; the tours that name it are switched off (GUIDE_SUPPRESSED).
+        for (const label of ['Edit rate', 'Advanced edit']) expect(rates).toContain(`tx('${label}')`)
         expect(rateBookTutorialCopy.en['review.detail']).toContain('including ones hidden by your search or filters')
         expect(rateBookTutorialCopy.en['usage.body']).toContain('costings already saved keep their numbers')
         expect(rateBookTutorialCopy.en['update.body']).not.toContain('₹200')

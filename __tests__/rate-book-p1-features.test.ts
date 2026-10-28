@@ -145,21 +145,24 @@ describe('Rate Book P1: Server Action batch review (confirmAllCostRateReviews)',
 
 describe('Rate Book P1: UI & Interaction Wiring in RatesClient.tsx', () => {
     const client = read('app/(dashboard)/owner/rates/RatesClient.tsx')
+    const reviewDialog = read('components/rates/RateReviewDialog.tsx')
 
-    it('implements 1-click review execution without modal takeover', () => {
+    it('confirms a price in one click from its review row, with no second confirmation dialog', () => {
         expect(client).toContain('handleQuickReview')
-        // Primary row and card buttons call handleQuickReview directly on click
-        expect(client).toContain('onClick={() => handleQuickReview(rate)}')
-        expect(client).toContain('Confirming…')
+        // Each review row's Confirm calls handleQuickReview directly.
+        expect(client).toContain('onConfirm={handleQuickReview}')
+        expect(reviewDialog).toContain('onClick={() => onConfirm(rate)}')
+        expect(reviewDialog).toContain('Confirming…')
         expect(client).toContain('Costings you already saved did not change.')
     })
 
-    it('implements batch review with a Confirm All button in the review queue', () => {
+    it('implements batch review with a Confirm All button in the review modal', () => {
         expect(client).toContain('handleConfirmAll')
-        expect(client).toContain('Confirm All (')
-        expect(client).toContain('as Current')
+        expect(reviewDialog).toContain('Confirm All (')
+        expect(reviewDialog).toContain('as Current')
         expect(client).toContain('confirmAllCostRateReviews')
-        expect(client).toContain('onClick={handleConfirmAll}')
+        expect(client).toContain('onConfirmAll={handleConfirmAll}')
+        expect(reviewDialog).toContain('onClick={onConfirmAll}')
     })
 
     it('provides keyboard-friendly search with / focus shortcut and clear button', () => {
@@ -170,12 +173,11 @@ describe('Rate Book P1: UI & Interaction Wiring in RatesClient.tsx', () => {
         expect(client).toContain('Clear search')
     })
 
-    it('provides 3-way segmented direction control (All, Warp, Weft) and the Needs Review queue', () => {
+    it('provides 3-way segmented direction control (All, Warp, Weft) and no status filter', () => {
         expect(client).toContain('value={categoryFilter}')
         expect(client).toContain('onValueChange={setCategoryFilter}')
         expect(client).toContain("{ value: 'yarn_warp', label: 'Warp' }")
         expect(client).toContain("{ value: 'yarn_weft', label: 'Weft' }")
         expect(client).not.toContain('statusFilter')
-        expect(client).toContain("{tx('Needs Review')}")
     })
 })

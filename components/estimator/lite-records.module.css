@@ -34,7 +34,6 @@
   .registerMeta > :not(:first-child) { display: none; }
   .registerMeta h2 { font-size: .75rem; }
   .rateFilterToggle { flex: 1 1 100%; justify-content: space-between; }
-  .workspace :global([data-ratebook-field='yarnRow']) :global([data-ratebook-field='quickReviewAction']) { flex: 1 1 100%; }
   .rateFilterControls { display: flex; flex: 1 1 100%; flex-wrap: wrap; gap: .75rem; min-width: 0; }
   .rateFilterControls:not([data-expanded='true']) { display: none; }
   /* Dialogs use portals; the opt-in route class remains the authority. */

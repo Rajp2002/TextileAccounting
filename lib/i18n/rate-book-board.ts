@@ -1,4 +1,4 @@
-/** Copy for the Rate Book board: the summary band, the review queue and the yarn cards. */
+/** Copy for the Rate Book board: the summary band, the price review modal and the yarn cards. */
 export const rateBookBoardText = {
     en: {
         intro: 'What you pay per kg for each yarn. New costings use these prices.',
@@ -6,7 +6,8 @@ export const rateBookBoardText = {
         yarnsUnit: 'yarns', yarnUnit: 'yarn', split: '{warp} warp · {weft} weft', lastReviewed: 'last reviewed {date}',
         nextReview: 'Next review {date} for {n} yarns', nextReviewOne: 'Next review {date} for 1 yarn', then: 'then {dates}',
         noneScheduled: 'Every price is due for a check.',
-        movesTitle: 'Price moves · {month}', movesSummary: '{up} up · {down} down · {same} unchanged', noMoves: 'No price changed this month.',
+        review: 'Review prices', confirm: 'Confirm', done: 'Done', reviewProgress: '{done} of {n} checked',
+        confirmedAt: 'Confirmed at {price}', changedTo: 'Changed from {from} to {to}',
         warp: 'Warp', weft: 'Weft',
         reviewOn: 'Review {date}', dueToday: 'Due today', dueTomorrow: 'Due tomorrow', dueInDays: 'Due in {n} days',
         overdueOne: '1 day overdue', overdueDays: '{n} days overdue', discovered: 'New from a saved quality',
@@ -23,7 +24,8 @@ export const rateBookBoardText = {
         yarnsUnit: 'धागे', yarnUnit: 'धागा', split: '{warp} ताना · {weft} बाना', lastReviewed: 'आखिरी जाँच {date}',
         nextReview: 'अगली जाँच {date} को, {n} धागे', nextReviewOne: 'अगली जाँच {date} को, 1 धागा', then: 'फिर {dates}',
         noneScheduled: 'हर रेट की जाँच बाकी है।',
-        movesTitle: 'रेट में बदलाव · {month}', movesSummary: '{up} बढ़े · {down} घटे · {same} वैसे ही', noMoves: 'इस महीने कोई रेट नहीं बदला।',
+        review: 'रेट जाँचें', confirm: 'पुष्टि करें', done: 'हो गया', reviewProgress: '{n} में से {done} जाँचे',
+        confirmedAt: '{price} पर पुष्टि हुई', changedTo: '{from} से {to} किया',
         warp: 'ताना', weft: 'बाना',
         reviewOn: 'जाँच {date}', dueToday: 'आज जाँच करें', dueTomorrow: 'कल जाँच करें', dueInDays: '{n} दिन में जाँच',
         overdueOne: '1 दिन देर', overdueDays: '{n} दिन देर', discovered: 'सेव की गई क्वालिटी से नया',
@@ -40,7 +42,8 @@ export const rateBookBoardText = {
         yarnsUnit: 'યાર્ન', yarnUnit: 'યાર્ન', split: '{warp} તાણા · {weft} ભરણ', lastReviewed: 'છેલ્લી તપાસ {date}',
         nextReview: 'આગલી તપાસ {date}એ, {n} યાર્ન', nextReviewOne: 'આગલી તપાસ {date}એ, 1 યાર્ન', then: 'પછી {dates}',
         noneScheduled: 'દરેક ભાવની તપાસ બાકી છે.',
-        movesTitle: 'ભાવમાં ફેરફાર · {month}', movesSummary: '{up} વધ્યા · {down} ઘટ્યા · {same} એમ જ', noMoves: 'આ મહિને કોઈ ભાવ બદલાયો નથી.',
+        review: 'ભાવ તપાસો', confirm: 'પુષ્ટિ કરો', done: 'થઈ ગયું', reviewProgress: '{n}માંથી {done} તપાસ્યા',
+        confirmedAt: '{price} પર પુષ્ટિ થઈ', changedTo: '{from}થી {to} કર્યો',
         warp: 'તાણા', weft: 'ભરણ',
         reviewOn: 'તપાસ {date}', dueToday: 'આજે તપાસો', dueTomorrow: 'કાલે તપાસો', dueInDays: '{n} દિવસમાં તપાસ',
         overdueOne: '1 દિવસ મોડું', overdueDays: '{n} દિવસ મોડું', discovered: 'સેવ કરેલી ક્વોલિટીમાંથી નવું',

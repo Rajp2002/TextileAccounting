@@ -42,12 +42,12 @@ describe('Rate Book P3: Quick Rate Edit Dialog in RatesClient.tsx', () => {
             expect(client).not.toContain('quickEditIsMobile')
         })
 
-        it('puts the review action before "Edit rate" in a due card\'s actions', () => {
-            const card = client.slice(client.indexOf('const renderYarnCard = '), client.indexOf('<PlanAnalyticsBeacon'))
-            expect(card).toContain("aria-label={tx(`${reviewLabel} for ${rate.name}`)}")
-            expect(card).toContain("aria-label={`Edit rate for ${rate.name}`}")
-            expect(card).toContain("{tx('Edit rate')}")
-            expect(card.indexOf('data-ratebook-field="quickReviewAction"')).toBeLessThan(card.indexOf('data-ratebook-field="quickEditAction"'))
+        it('puts "Edit rate" before the Confirm primary in a review row, and opens the same quick edit dialog', () => {
+            const row = read('components/rates/RateReviewDialog.tsx')
+            expect(row).toContain("aria-label={`Edit rate for ${rate.name}`}")
+            expect(row).toContain("{tx('Edit rate')}")
+            expect(row.indexOf('data-ratebook-field="reviewEditAction"')).toBeLessThan(row.indexOf('data-ratebook-field="quickReviewAction"'))
+            expect(client).toContain('onEdit={openQuickEdit}')
         })
 
         it('renders the "Edit rate" trigger once, in the one yarn card every width shares', () => {

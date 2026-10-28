@@ -152,11 +152,10 @@ describe('RatesClient UI contract for search, filters, and keyboard shortcuts', 
         expect(clientSource).toContain("{ value: 'yarn_weft', label: 'Weft' }")
     })
 
-    it('leads with a Needs Review queue, with its live count, that search and direction also narrow', () => {
-        expect(clientSource).toContain("{tx('Needs Review')}")
-        expect(clientSource).toContain('{queueRates.length}</span>')
-        expect(clientSource).toContain('visibleRates.filter(isDue)')
+    it('narrows the board with search and direction, while the review counts every due price', () => {
+        expect(clientSource).toContain('rates: visibleRates.filter(rate => rate.category === category)')
         expect(clientSource).toContain('const dueCount = dueReviewRates.length')
+        expect(clientSource).toContain('startRateReview(dueReviewRates)')
     })
 
     it('renders clear filters action when active filters exist', () => {
