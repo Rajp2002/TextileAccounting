@@ -1858,7 +1858,7 @@ export default function RatesClient({
                 onOpenAdvanced={openAdvancedDraft}
             />
 
-            {/* Edit rate opens the quick edit dialog over the review; the row then shows the new price as done. */}
+            {/* Each row confirms its price, or saves the new price typed in its field; the row then shows as done. */}
             <RateReviewDialog
                 session={reviewSession}
                 rates={rates}
@@ -1866,10 +1866,10 @@ export default function RatesClient({
                 isDue={isDue}
                 dueStatus={dueStatus}
                 usage={rate => <YarnUsage rate={rate} loading={usageLoading} copy={copy} />}
-                pendingId={pendingAction?.kind === 'review' ? pendingAction.id : null}
+                pendingId={pendingAction?.id ?? null}
                 busy={isPending}
                 onConfirm={handleQuickReview}
-                onEdit={openQuickEdit}
+                onSavePrice={(rate, value) => handleQuickSave(rate, value, '')}
                 onConfirmAll={handleConfirmAll}
                 onClose={() => setReviewSession(null)}
             />

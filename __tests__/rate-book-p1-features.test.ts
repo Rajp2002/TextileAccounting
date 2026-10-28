@@ -151,8 +151,8 @@ describe('Rate Book P1: UI & Interaction Wiring in RatesClient.tsx', () => {
         expect(client).toContain('handleQuickReview')
         // Each review row's Confirm calls handleQuickReview directly.
         expect(client).toContain('onConfirm={handleQuickReview}')
-        expect(reviewDialog).toContain('onClick={() => onConfirm(rate)}')
-        expect(reviewDialog).toContain('Confirming…')
+        expect(reviewDialog).toContain('if (price === null) onConfirm(rate)')
+        expect(reviewDialog).toContain('onClick={save}')
         expect(client).toContain('Costings you already saved did not change.')
     })
 

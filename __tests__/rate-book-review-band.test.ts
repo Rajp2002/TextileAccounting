@@ -99,15 +99,19 @@ describe('Rate Book summary band, review modal and Guide', () => {
         expect(rates).toContain('rates: visibleRates.filter(rate => rate.category === category)')
         expect(rates.match(/<RateReviewDialog/g)).toHaveLength(1)
         expect(rates).toContain('onConfirm={handleQuickReview}')
-        expect(rates).toContain('onEdit={openQuickEdit}')
+        expect(rates).toContain("onSavePrice={(rate, value) => handleQuickSave(rate, value, '')}")
         // A due card on the board says so in its status instead of carrying the confirm action.
         const card = rates.slice(rates.indexOf('const renderYarnCard = '), rates.indexOf('<PlanAnalyticsBeacon'))
         expect(card).toContain('due ? dueStatus(rate)')
         expect(card).not.toContain('quickReviewAction')
         // Each row asks whether the price still holds, and keeps its place once checked.
         expect(dialog).toContain('fillCopy(copy.stillPrice')
-        expect(dialog).toContain('onClick={() => onConfirm(rate)}')
-        expect(dialog).toContain('onClick={() => onEdit(rate)}')
+        expect(dialog).toContain('onClick={save}')
+        // One field per row: empty or the same price confirms it, a different price saves it.
+        expect(dialog).toContain('data-ratebook-field="reviewPriceInput"')
+        expect(dialog).toContain('if (price === null) onConfirm(rate)')
+        expect(dialog).toContain('else onSavePrice(rate, price)')
+        expect(dialog).not.toContain('queueHint')
         expect(dialog).toContain("outcome !== 'waiting'")
         expect(dialog).toContain('fillCopy(copy.reviewProgress')
     })
@@ -116,7 +120,7 @@ describe('Rate Book summary band, review modal and Guide', () => {
         const footer = dialog.slice(dialog.indexOf('<DialogFooter'))
         expect(footer).toContain('waiting > 1 && waiting === dueCount')
         expect(footer).toContain('data-ratebook-field="confirmAll"')
-        expect(footer).toContain('onClick={onConfirmAll}')
+        expect(footer).toContain('onClick={onConfirmAll} disabled={busy} className={railPrimaryAction}')
         expect(rates).toContain('onConfirmAll={handleConfirmAll}')
     })
 

@@ -1,9 +1,10 @@
 'use client'
 
-import type { ReactNode } from 'react'
-import { Check, CheckCircle2, ClipboardCheck, Loader2, Pencil } from 'lucide-react'
+import { useState, type ReactNode } from 'react'
+import { Check, CheckCircle2, ClipboardCheck, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
 import { railPrimaryAction } from '@/components/ui/rail'
 import { formatRateValue, type CostRateRow } from '@/lib/cost-rates'
 import { fillCopy } from '@/lib/i18n/fill'
@@ -12,11 +13,19 @@ import { useTranslation } from '@/lib/i18n/context'
 import { rateDateLabel, reviewOutcome, type RateReviewSession } from '@/lib/rate-book-board'
 import { cn } from '@/lib/utils'
 
+/** A typed price that differs from the current one, or null when the field is empty, unchanged or not a price. */
+function newPrice(typed: string | undefined, current: number) {
+    if (!typed?.trim()) return null
+    const value = Number(typed)
+    if (!Number.isFinite(value) || value < 0 || value > 10_000_000) return Number.NaN
+    return Math.abs(value - current) < 0.0001 ? null : value
+}
+
 /**
- * The prices due for a check, one row each: confirm the price if the supplier still charges it, or edit it.
- * A checked row stays in place, marked done, so the list never jumps while the owner works down it.
+ * The prices due for a check, one row each: confirm the price if the supplier still charges it, or type the new
+ * price in the row's field and save it. A checked row stays in place, marked done, so the list never jumps.
  */
-export function RateReviewDialog({ session, rates, dueCount, isDue, dueStatus, usage, pendingId, busy, onConfirm, onEdit, onConfirmAll, onClose }: {
+export function RateReviewDialog({ session, rates, dueCount, isDue, dueStatus, usage, pendingId, busy, onConfirm, onSavePrice, onConfirmAll, onClose }: {
     /** The review in progress; null keeps the modal closed. */
     session: RateReviewSession | null
     rates: CostRateRow[]
@@ -25,16 +34,18 @@ export function RateReviewDialog({ session, rates, dueCount, isDue, dueStatus, u
     isDue: (rate: CostRateRow) => boolean
     dueStatus: (rate: CostRateRow) => string
     usage: (rate: CostRateRow) => ReactNode
-    /** The rate being confirmed, or 'all-review' while Confirm All runs. */
+    /** The rate being confirmed or saved, or 'all-review' while Confirm All runs. */
     pendingId: string | null
     busy: boolean
     onConfirm: (rate: CostRateRow) => void
-    onEdit: (rate: CostRateRow) => void
+    onSavePrice: (rate: CostRateRow, value: number) => void
     onConfirmAll: () => void
     onClose: () => void
 }) {
     const { tx, language } = useTranslation()
     const copy = rateBookBoardText[language]
+    // What the owner typed in each row's price field, by rate id.
+    const [typed, setTyped] = useState<Record<string, string>>({})
     const items = (session?.ids ?? []).flatMap(id => {
         const rate = rates.find(candidate => candidate.id === id)
         const before = session?.before[id]
@@ -45,19 +56,14 @@ export function RateReviewDialog({ session, rates, dueCount, isDue, dueStatus, u
     const finished = items.length > 0 && waiting === 0
 
     return (
-        <Dialog open={Boolean(session)} onOpenChange={open => { if (!open && !busy) onClose() }}>
-            <DialogContent data-ratebook-field="reviewDialog" data-i18n-skip="true" lang={language} className="sm:max-w-2xl">
+        <Dialog open={Boolean(session)} onOpenChange={open => { if (!open && !busy) { setTyped({}); onClose() } }}>
+            <DialogContent data-ratebook-field="reviewDialog" data-i18n-skip="true" lang={language} aria-describedby={undefined} className="sm:max-w-2xl">
                 <DialogHeader className="pr-10">
                     <div className="flex items-center gap-3">
                         <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-hairline bg-surface-soft text-[var(--wv-ochre-800)]">
                             <ClipboardCheck className="size-5" aria-hidden="true" />
                         </div>
-                        <div className="min-w-0">
-                            <DialogTitle className="text-xl font-bold text-ink">{copy.review}</DialogTitle>
-                            <DialogDescription className="mt-0.5 text-sm text-muted-foreground">
-                                {fillCopy(copy.queueHint, { edit: `“${tx('Edit rate')}”` })}
-                            </DialogDescription>
-                        </div>
+                        <DialogTitle className="min-w-0 text-xl font-bold text-ink">{copy.review}</DialogTitle>
                     </div>
                 </DialogHeader>
 
@@ -91,7 +97,14 @@ export function RateReviewDialog({ session, rates, dueCount, isDue, dueStatus, u
                                 </li>
                             )
                         }
-                        const confirming = pendingId === rate.id
+                        const working = pendingId === rate.id
+                        const price = newPrice(typed[rate.id], Number(rate.current_value))
+                        const invalid = Number.isNaN(price)
+                        const save = () => {
+                            if (busy || invalid) return
+                            if (price === null) onConfirm(rate)
+                            else onSavePrice(rate, price)
+                        }
                         return (
                             <li key={rate.id} data-ratebook-row-id={rate.id} className="p-4 sm:px-5">
                                 <div className="flex items-start justify-between gap-3">
@@ -113,26 +126,36 @@ export function RateReviewDialog({ session, rates, dueCount, isDue, dueStatus, u
                                             {rate.is_reviewed === false ? copy.notConfirmed : fillCopy(copy.confirmedOn, { date: rateDateLabel(rate.last_reviewed_at, language) })}
                                         </p>
                                     </div>
-                                    <div className="flex w-full gap-2 sm:w-auto" role="group" aria-label={tx('Actions')}>
-                                        <Button
-                                            data-ratebook-field="reviewEditAction"
-                                            variant="outline"
-                                            onClick={() => onEdit(rate)}
-                                            disabled={busy}
-                                            aria-label={`Edit rate for ${rate.name}`}
-                                            className="h-10 flex-1 rounded-lg border-hairline font-semibold shadow-xs max-md:min-h-[44px] sm:flex-none"
-                                        >
-                                            <Pencil className="h-4 w-4" aria-hidden="true" />{tx('Edit rate')}
-                                        </Button>
+                                    {/* Empty or the same price confirms it; a different price is saved as the new rate. */}
+                                    <div className="flex w-full items-center gap-2 sm:w-auto">
+                                        <div className="relative min-w-0 flex-1 sm:w-36 sm:flex-none">
+                                            <span aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-subtle">₹</span>
+                                            <Input
+                                                data-ratebook-field="reviewPriceInput"
+                                                type="number"
+                                                inputMode="decimal"
+                                                step="0.01"
+                                                min="0"
+                                                value={typed[rate.id] ?? ''}
+                                                onChange={event => setTyped(current => ({ ...current, [rate.id]: event.target.value }))}
+                                                onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); save() } }}
+                                                placeholder={Number(rate.current_value).toFixed(2)}
+                                                aria-label={fillCopy(copy.newPriceFor, { name: rate.name })}
+                                                aria-invalid={invalid || undefined}
+                                                disabled={busy}
+                                                className="h-10 rounded-lg border-hairline bg-surface pl-7 pr-10 text-sm font-semibold tabular-nums shadow-xs [appearance:textfield] max-md:min-h-[44px] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                            />
+                                            <span aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-subtle">/kg</span>
+                                        </div>
                                         <Button
                                             data-ratebook-field="quickReviewAction"
-                                            onClick={() => onConfirm(rate)}
-                                            disabled={busy}
-                                            aria-label={`${copy.confirm}: ${rate.name}`}
-                                            className={cn(railPrimaryAction, 'flex-1 sm:flex-none')}
+                                            onClick={save}
+                                            disabled={busy || invalid}
+                                            aria-label={`${price === null ? copy.confirm : copy.update}: ${rate.name}`}
+                                            className={cn(railPrimaryAction, 'shrink-0')}
                                         >
-                                            {confirming ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Check className="h-4 w-4" strokeWidth={2.5} aria-hidden="true" />}
-                                            {confirming ? tx('Confirming…') : copy.confirm}
+                                            {working ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Check className="h-4 w-4" strokeWidth={2.5} aria-hidden="true" />}
+                                            {working ? tx('Saving…') : price === null ? copy.confirm : copy.update}
                                         </Button>
                                     </div>
                                 </div>
@@ -143,7 +166,7 @@ export function RateReviewDialog({ session, rates, dueCount, isDue, dueStatus, u
 
                 <DialogFooter className="gap-2 sm:justify-between">
                     {waiting > 1 && waiting === dueCount ? (
-                        <Button data-ratebook-field="confirmAll" variant="outline" onClick={onConfirmAll} disabled={busy} className="border-hairline font-semibold shadow-xs">
+                        <Button data-ratebook-field="confirmAll" onClick={onConfirmAll} disabled={busy} className={railPrimaryAction}>
                             {pendingId === 'all-review' ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <CheckCircle2 className="h-4 w-4" aria-hidden="true" />}
                             {pendingId === 'all-review' ? tx('Confirming…') : tx(`Confirm All (${waiting}) as Current`)}
                         </Button>
