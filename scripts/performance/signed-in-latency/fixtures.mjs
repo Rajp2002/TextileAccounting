@@ -91,6 +91,8 @@ export function buildFixtures() {
             complete_free_saved_costing: () => ({ used: 1, allowance: 10, remaining: 9, savedCostingId: 'dddddddd-3333-4333-8333-333333333333', editWindow: null, costingsUsed: 1 }),
             get_quality_stock_board: { qualities: [], movements: [] },
             get_supervisor_display_names: [],
+            // Log out revokes founder sessions for every account; owners have none.
+            admin_founder_session: { allowed: true, revoked: false },
         },
     }
 }

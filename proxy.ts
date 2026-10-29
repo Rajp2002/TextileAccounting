@@ -193,7 +193,10 @@ export async function updateSession(request: NextRequest) {
 
     // Auth mutations manage their own cookie lifecycle. Let them run directly
     // instead of validating or redirecting the session before their handlers run.
-    const isLoginActionRequest = request.method === 'POST' && (pathname === '/login' || isFounderAuthRoute(pathname))
+    // /auth/signin is the login form's request. A /login post can only be a
+    // Server Action from a tab opened before that; it still skips session work.
+    const isLoginActionRequest = request.method === 'POST'
+        && (pathname === '/login' || pathname === '/auth/signin' || isFounderAuthRoute(pathname))
     if (isLoginActionRequest || isSignOutRequest) {
         return response
     }
