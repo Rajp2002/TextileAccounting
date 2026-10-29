@@ -29,9 +29,11 @@ function formatExportDate(value: string) {
 export function OrganizationDataExportButton({
     showHistory = false,
     testId = 'settings-data-export',
+    centered = false,
 }: {
     showHistory?: boolean
     testId?: string
+    centered?: boolean
 }) {
     const { t, tx } = useTranslation()
     const [pending, startTransition] = useTransition()
@@ -105,7 +107,7 @@ export function OrganizationDataExportButton({
     return (
         <div className="space-y-4">
             <p className="text-xs text-subtle">{t('base_plan.export.timezone')}</p>
-            <div className="flex min-w-0 flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+            <div className={`flex min-w-0 flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center ${centered ? 'sm:justify-center' : ''}`}>
                 <Button
                     data-testid={testId}
                     onClick={download}

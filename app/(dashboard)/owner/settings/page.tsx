@@ -138,19 +138,19 @@ export default function SettingsPage() {
         />
         <div>
             <details id="account-data" className="ui-details group overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-4 sm:px-5">
-                    <div>
-                        <div className="flex items-center gap-2"><User className="h-4 w-4" /><h2 className="text-base font-semibold text-ink">{tier === 'lite' ? liteSupportingText(language, 'accountData') : 'Account & data'}</h2></div>
+                <summary className="relative flex cursor-pointer list-none items-center justify-center gap-4 px-12 py-4 text-center">
+                    <div className="min-w-0">
+                        <div className="flex items-center justify-center gap-2"><User className="h-4 w-4" /><h2 className="text-base font-semibold text-ink">{tier === 'lite' ? liteSupportingText(language, 'accountData') : 'Account & data'}</h2></div>
                         {tier === 'lite' && <p className={`mt-1 text-sm text-muted-foreground ${styles.mobileSummary}`}>{liteSupportingText(language, 'accountDataSummary')}</p>}
                         <p className={`mt-1 text-sm text-muted-foreground ${tier === 'lite' ? styles.desktopSummary : ''}`}>Organization export, export history, and account deletion.</p>
                     </div>
-                    <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
+                    <ChevronDown className="absolute right-4 h-4 w-4 transition-transform group-open:rotate-180 sm:right-5" />
                 </summary>
                 <div className="space-y-4 border-t border-hairline px-4 py-4 sm:px-5">
-                    <section id="privacy-data" className="rounded-xl border border-hairline p-5">
-                        <h3 className="flex items-center gap-2 font-semibold"><Download className="h-4 w-4" /> Download organization data</h3>
+                    <section id="privacy-data" className="rounded-xl border border-hairline p-5 text-center">
+                        <h3 className="flex items-center justify-center gap-2 font-semibold"><Download className="h-4 w-4" /> Download organization data</h3>
                         <p className="mt-2 text-sm text-muted-foreground">Create an export of the factory records your account can access.</p>
-                        <div className="mt-4"><OrganizationDataExportButton /></div>
+                        <div className="mt-4"><OrganizationDataExportButton centered /></div>
                         <Link href="/owner/data-export" className="mt-3 inline-flex text-xs font-semibold text-saffron-deep hover:underline">View export history</Link>
                         <Link href="/privacy-request" className="mt-3 block text-xs font-semibold text-saffron-deep hover:underline">Make a privacy or grievance request</Link>
                         <Link href="/security-incident" className="mt-3 block text-xs font-semibold text-saffron-deep hover:underline">Report a security incident</Link>
