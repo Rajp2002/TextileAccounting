@@ -1,14 +1,12 @@
 'use client'
 
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
-import { ShieldCheck, Calendar, Receipt, CheckCircle2 } from 'lucide-react'
 import { PlanCard } from './PlanCard'
 import { PlanPreviewModal } from './PlanPreviewModal'
+import { PlanTrustTiles } from './PlanTrustTiles'
 import { Button } from '@/components/ui/button'
 import { completePlanSelection } from '@/app/(auth)/onboarding/plans/actions'
 import { upgradeText, type UpgradeFeature, type UpgradePlan } from '@/lib/upgrade-wall'
-import { BILLING_DOCUMENT_POLICY } from '@/lib/billing-document-policy'
-import { freeMobileEntryText } from '@/lib/i18n/free-mobile-entry'
 import { cn } from '@/lib/utils'
 import { useTranslation } from '@/lib/i18n/context'
 
@@ -45,7 +43,7 @@ export function PlanChooserClient({
     planTier: 'free',
   })
 
-  const { language, tx, t } = useTranslation()
+  const { language, tx } = useTranslation()
 
   const mobileCompact = currentPlan === 'free' || currentPlan === 'lite' || currentPlan === 'unassigned'
 
@@ -84,9 +82,9 @@ export function PlanChooserClient({
   }
 
   return (
-    <div className={cn("space-y-10 pb-16 pt-4", mobileCompact && "max-md:space-y-5 max-md:pb-6 max-md:pt-3")}>
+    <div className={cn("space-y-10 pb-16 pt-4 lg:space-y-6 lg:pb-8 lg:pt-2", mobileCompact && "max-md:space-y-5 max-md:pb-6 max-md:pt-3")}>
       {/* Title & Subheading */}
-      <div className={cn("mx-auto max-w-2xl text-center space-y-3", mobileCompact && "max-md:space-y-2 max-md:text-left")}>
+      <div className={cn("mx-auto max-w-2xl text-center space-y-3 lg:space-y-2", mobileCompact && "max-md:space-y-2 max-md:text-left")}>
         <p className={cn("text-sm font-medium text-subtle", mobileCompact && "max-md:hidden")}>
           {tx('Clear pricing, no hidden fees')}
         </p>
@@ -124,8 +122,8 @@ export function PlanChooserClient({
         </div>
       )}
 
-      {/* Pricing grid: three columns when Base is visible, otherwise Free and Lite only */}
-      <div className={cn("mx-auto grid grid-cols-1 gap-6", baseVisible ? "max-w-6xl lg:grid-cols-3" : "max-w-4xl lg:grid-cols-2", mobileCompact && "max-md:gap-4")}>
+      {/* Pricing grid: fills the page width; three columns when Base is visible, otherwise Free and Lite only */}
+      <div className={cn("grid grid-cols-1 gap-6", baseVisible ? "lg:grid-cols-3" : "lg:grid-cols-2", mobileCompact && "max-md:gap-4")}>
         <PlanCard
           planTier="free"
           currentPlan={currentPlan}
@@ -166,54 +164,8 @@ export function PlanChooserClient({
         )}
       </div>
 
-      {/* Commercial Terms & Purchase Disclosure Panel */}
-      <section
-        aria-label={freeMobileEntryText(language, 'billingTerms')}
-        className={cn("mx-auto max-w-4xl rounded-2xl border border-hairline bg-surface-soft/60 p-6 shadow-sm", mobileCompact && "max-md:p-4")}
-        data-billing-document-state={BILLING_DOCUMENT_POLICY.state}
-      >
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4">
-          <div className="flex items-start gap-3">
-            <Receipt className="h-5 w-5 shrink-0 text-saffron-deep mt-0.5" aria-hidden="true" />
-            <div>
-              <h4 className="text-xs font-bold text-ink">{freeMobileEntryText(language, 'receiptDocument')}</h4>
-              <p className={cn("mt-1 text-xs leading-relaxed text-subtle", mobileCompact && "max-md:text-xs")}>
-                {t('base_plan.billing.receipt_only')}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <Calendar className="h-5 w-5 shrink-0 text-saffron-deep mt-0.5" aria-hidden="true" />
-            <div>
-              <h4 className="text-xs font-bold text-ink">{freeMobileEntryText(language, 'manualRenewal')}</h4>
-              <p className={cn("mt-1 text-xs leading-relaxed text-subtle", mobileCompact && "max-md:text-xs")}>
-                {freeMobileEntryText(language, 'manualRenewalDescription')}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <CheckCircle2 className="h-5 w-5 shrink-0 text-saffron-deep mt-0.5" aria-hidden="true" />
-            <div>
-              <h4 className="text-xs font-bold text-ink">{freeMobileEntryText(language, 'verifiedActivation')}</h4>
-              <p className={cn("mt-1 text-xs leading-relaxed text-subtle", mobileCompact && "max-md:text-xs")}>
-                {freeMobileEntryText(language, 'verifiedActivationDescription')}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <ShieldCheck className="h-5 w-5 shrink-0 text-saffron-deep mt-0.5" aria-hidden="true" />
-            <div>
-              <h4 className="text-xs font-bold text-ink">{freeMobileEntryText(language, 'secureCheckout')}</h4>
-              <p className={cn("mt-1 text-xs leading-relaxed text-subtle", mobileCompact && "max-md:text-xs")}>
-                {freeMobileEntryText(language, 'secureCheckoutDescription')}
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Billing terms: tiles that open a full explanation */}
+      <PlanTrustTiles mobileCompact={mobileCompact} />
 
       {/* Enlarged Feature Preview Modal */}
       <PlanPreviewModal

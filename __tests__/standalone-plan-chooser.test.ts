@@ -12,6 +12,7 @@ import {
 } from '@/lib/upgrade-wall'
 import { BILLING_DOCUMENT_POLICY } from '@/lib/billing-document-policy'
 import { freeMobileEntryText } from '@/lib/i18n/free-mobile-entry'
+import { planTrustDetails } from '@/lib/i18n/plan-trust-tiles'
 import { CARD_FEATURE_PREVIEWS } from '@/components/plans/PlanCard'
 
 const root = process.cwd()
@@ -153,7 +154,9 @@ describe('Standalone Plan Chooser & Upgrade Experience', () => {
     })
 
     it('PAY-02: client layout provides full commercial disclosure section', () => {
-      const client = read('components/plans/PlanChooserClient.tsx')
+      // The disclosure lives in the trust tiles under the plan cards; each tile opens a full explanation.
+      expect(read('components/plans/PlanChooserClient.tsx')).toContain('<PlanTrustTiles mobileCompact={mobileCompact} />')
+      const client = read('components/plans/PlanTrustTiles.tsx')
       expect(BILLING_DOCUMENT_POLICY.state).toBe('not_supported')
       expect(client).toContain('data-billing-document-state={BILLING_DOCUMENT_POLICY.state}')
       expect(client).toContain("t('base_plan.billing.receipt_only')")
@@ -165,7 +168,14 @@ describe('Standalone Plan Chooser & Upgrade Experience', () => {
           expect(freeMobileEntryText(language, key)).toBeTruthy()
           expect(client).toContain(`freeMobileEntryText(language, '${key}')`)
         }
+        for (const topic of ['receipt', 'renewal', 'activation', 'checkout'] as const) {
+          expect(planTrustDetails(language, topic).length).toBeGreaterThan(0)
+        }
       }
+      // The receipt explanation must keep the not-a-GST-invoice disclosure in every language.
+      expect(planTrustDetails('en', 'receipt').join(' ')).toContain('not a GST tax invoice')
+      expect(planTrustDetails('gu', 'receipt').join(' ')).toContain('GST')
+      expect(planTrustDetails('hi', 'receipt').join(' ')).toContain('GST')
     })
   })
 
