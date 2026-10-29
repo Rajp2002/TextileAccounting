@@ -10,6 +10,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { nanoid } from 'nanoid'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { railPrimaryAction } from '@/components/ui/rail'
 import { Input } from '@/components/ui/input'
 import { CostEstimateTutorial } from '@/components/estimator/CostEstimateTutorial'
 import { Label } from '@/components/ui/label'
@@ -5233,7 +5234,6 @@ export default function EstimatorClient({
                         />
                         <Button
                             type="button"
-                            variant="outline"
                             data-testid="estimator-new-pill"
                             onClick={() => {
                                 if (!hasUnsavedEdits && !qualityLabel.trim() && !sourceQuoteId && !appliedTemplate) {
@@ -5242,11 +5242,11 @@ export default function EstimatorClient({
                                     setShowConfirmNewQuality(true)
                                 }
                             }}
-                            className="h-10 rounded-lg border-hairline bg-surface px-4 font-semibold text-ink shadow-xs hover:bg-surface-soft max-md:min-h-[44px]"
+                            className={railPrimaryAction}
                             title={tx('Clear all inputs and start a new cost estimate')}
                         >
                             <Plus className="h-4 w-4" aria-hidden="true" />
-                            {tx('New')}
+                            {tx('New quality')}
                         </Button>
                     </>
                 }
