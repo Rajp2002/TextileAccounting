@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createSignInServerTimer } from '@/lib/sign-in-telemetry.server'
 import { WORKSPACE_HINT_COOKIE } from '@/lib/workspace-hint'
-import { revokeFounderSession } from '@/lib/admin/founder'
+import { revokeFounderSessionsOf, verifyFounderRevocationActor, type FounderCandidate } from '@/lib/admin/founder'
 import { isSupabaseAuthSessionCookie } from '@/lib/supabase/auth-cookie'
 
 export async function POST(request: NextRequest) {
@@ -25,22 +25,23 @@ export async function POST(request: NextRequest) {
         claimsValid = Boolean(claimsResult.data?.claims)
     } catch { /* Continue trying both independent sign-out authorities. */ }
 
-    let signOutFailed = false
-    let founderRevocation: 'revoked' | 'not_applicable' | 'unavailable' = 'unavailable'
-    try { founderRevocation = await revokeFounderSession() }
+    // The founder revocation binds to a fresh Auth identity, which only the
+    // live session can give, so that check finishes before sign-out ends it.
+    // The revocation itself never reads the provider session, so it runs
+    // alongside sign-out rather than before it.
+    let founderActor: FounderCandidate | null | undefined
+    try { founderActor = await telemetry.measure('founder_identity', () => verifyFounderRevocationActor(supabase)) }
     catch { /* Unavailable is never treated as proof of revocation. */ }
-    try {
+    const [founderRevocation, signOutFailed] = await Promise.all([
+        founderActor === undefined
+            ? 'unavailable' as const
+            : revokeFounderSessionsOf(founderActor).catch(() => 'unavailable' as const),
         // Keep Supabase's default global scope for this sprint. The call is
         // independent of local cleanup and still clears the server-side
         // session/cookies before the 303 response.
-        const signOutResult = await telemetry.measure(
-            'supabase_signout',
-            () => supabase.auth.signOut(),
-        )
-        signOutFailed = Boolean(signOutResult.error)
-    } catch {
-        signOutFailed = true
-    }
+        telemetry.measure('supabase_signout', () => supabase.auth.signOut())
+            .then(signOutResult => Boolean(signOutResult.error), () => true),
+    ])
     const confirmed = !signOutFailed || founderRevocation === 'revoked' || (authCookies.length === 0 && !claimsValid)
     telemetry.log(confirmed ? 'success' : 'signout_error', {
         claims_valid: claimsValid, founder_revocation: founderRevocation,

@@ -15,7 +15,7 @@ import { cookies, headers } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { parseJWT } from '@/lib/auth'
-import { canEnrollFree, finishFreeProvisioning } from '@/lib/free-account'
+import { canEnrollFree, finishFreeProvisioning, getFreeGrant } from '@/lib/free-account'
 import { CreateOrgSchema, PasswordResetRequestSchema, SignInSchema, safeParse } from '@/lib/schemas'
 import { getOrgTier } from '@/lib/subscription'
 import { createSignInServerTimer, persistSignInTraceCookie } from '@/lib/sign-in-telemetry.server'
@@ -26,6 +26,7 @@ import { freeWorkspaceHintValue, WORKSPACE_HINT_COOKIE, WORKSPACE_HINT_COOKIE_OP
 import { founderEmailAllowed, FOUNDER_ONLY_LOGIN_MESSAGE } from '@/lib/admin/founder-email'
 import { SUPERVISOR_HOME_PATH } from '@/lib/supervisor-access'
 import { normalizeSignupPlan } from '@/lib/base-plan-visibility'
+import { startEarly } from '@/lib/start-early'
 
 const REVOKED_ACCOUNT_MESSAGE = 'This account no longer has access. Ask the factory owner.'
 
@@ -414,7 +415,10 @@ export async function signIn(input: { email: string; password: string; traceId?:
         }
 
         if (data.session.user.app_metadata?.plan_selection_pending === true) return succeed('/plans?from=onboarding')
-        const tier = await telemetry.measure('tier_lookup', () => getOrgTier(orgId))
+        // A Free signup's tier usually comes from its Free grant, a read that
+        // would otherwise wait for the plan row; start it alongside.
+        const freeGrantRead = data.session.user.app_metadata?.free_signup === true ? startEarly(getFreeGrant(orgId)) : undefined
+        const tier = await telemetry.measure('tier_lookup', () => getOrgTier(orgId, freeGrantRead))
         if (tier === 'free' || data.session.user.app_metadata.free_signup === true && tier === 'none') return succeed('/free', data.session.user.id)
 
         if (!onboardingComplete) {

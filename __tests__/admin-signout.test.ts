@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { NextRequest } from 'next/server'
 
-const mocks=vi.hoisted(()=>({claims:vi.fn(),signOut:vi.fn(),revoke:vi.fn(),log:vi.fn()}))
+const mocks=vi.hoisted(()=>({claims:vi.fn(),signOut:vi.fn(),actor:vi.fn(),revoke:vi.fn(),log:vi.fn()}))
 vi.mock('@/lib/supabase/server',()=>({createClient:async()=>({auth:{getClaims:mocks.claims,signOut:mocks.signOut}})}))
-vi.mock('@/lib/admin/founder',()=>({revokeFounderSession:mocks.revoke}))
+vi.mock('@/lib/admin/founder',()=>({verifyFounderRevocationActor:mocks.actor,revokeFounderSessionsOf:mocks.revoke}))
 vi.mock('@/lib/sign-in-telemetry.server',()=>({createSignInServerTimer:()=>({measure:async(_name:string,work:()=>Promise<unknown>)=>work(),log:mocks.log})}))
 import { POST } from '@/app/auth/signout/route'
 
@@ -18,12 +18,13 @@ beforeEach(()=>{
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_PROJECT_ID','localproject')
     mocks.claims.mockResolvedValue({data:{claims:{sub:'synthetic-user'}},error:null})
     mocks.signOut.mockResolvedValue({error:null})
+    mocks.actor.mockResolvedValue({userId:'synthetic-user',sessionId:'synthetic-session',aal:'aal1'})
     mocks.revoke.mockResolvedValue('revoked')
 })
 
 describe('AD01 logout confirmation boundary',()=>{
     it('returns503 when profile/identity verification is unavailable and provider signout also fails',async()=>{
-        mocks.revoke.mockRejectedValue(new Error('sensitive identity source detail'))
+        mocks.actor.mockRejectedValue(new Error('sensitive identity source detail'))
         mocks.signOut.mockResolvedValue({error:new Error('sensitive provider detail')})
         const response=await POST(request())
         expect(response.status).toBe(503)
@@ -42,7 +43,7 @@ describe('AD01 logout confirmation boundary',()=>{
     })
 
     it('confirmed provider signout succeeds even when founder verification is unavailable',async()=>{
-        mocks.revoke.mockRejectedValue(new Error('profile unavailable'))
+        mocks.actor.mockRejectedValue(new Error('profile unavailable'))
         const response=await POST(request())
         expect(response.status).toBe(303)
         expect(response.headers.get('location')).toBe('http://localhost/login')
@@ -68,30 +69,48 @@ describe('AD01 logout confirmation boundary',()=>{
 
     it('a claims-provider exception still tries both authorities and fails closed for a cookie-bearing session',async()=>{
         mocks.claims.mockRejectedValue(new Error('claims unavailable'))
-        mocks.revoke.mockRejectedValue(new Error('verification unavailable'))
+        mocks.actor.mockRejectedValue(new Error('verification unavailable'))
         mocks.signOut.mockRejectedValue(new Error('signout unavailable'))
         expect((await POST(request())).status).toBe(503)
-        expect(mocks.revoke).toHaveBeenCalledTimes(1)
+        expect(mocks.actor).toHaveBeenCalledTimes(1)
+        expect(mocks.revoke).not.toHaveBeenCalled()
         expect(mocks.signOut).toHaveBeenCalledTimes(1)
     })
 
     it('an Auth-cookie project-hint mismatch cannot masquerade as anonymous when both authorities fail',async()=>{
         vi.stubEnv('NEXT_PUBLIC_SUPABASE_PROJECT_ID','differentproject')
         mocks.claims.mockResolvedValue({data:{claims:null},error:new Error('verification unavailable')})
-        mocks.revoke.mockRejectedValue(new Error('verification unavailable'))
+        mocks.actor.mockRejectedValue(new Error('verification unavailable'))
         mocks.signOut.mockResolvedValue({error:new Error('provider unavailable')})
         expect((await POST(request())).status).toBe(503)
+    })
+
+    it('verifies the founder actor before sign-out ends the session, then revokes alongside sign-out',async()=>{
+        const order:string[]=[]
+        let finishRevoke=()=>{}
+        mocks.actor.mockImplementation(async()=>{order.push('actor');return {userId:'synthetic-user',sessionId:'synthetic-session',aal:'aal1'}})
+        mocks.revoke.mockImplementation(()=>{order.push('revoke:start');return new Promise(resolve=>{finishRevoke=()=>{order.push('revoke:end');resolve('not_applicable')}})})
+        mocks.signOut.mockImplementation(async()=>{order.push('signout:start');finishRevoke();return {error:null}})
+        expect((await POST(request())).status).toBe(303)
+        expect(order).toEqual(['actor','revoke:start','signout:start','revoke:end'])
+    })
+
+    it('identity check reuses the route client, so the session is read once',async()=>{
+        await POST(request())
+        expect(mocks.actor).toHaveBeenCalledWith(expect.objectContaining({auth:expect.objectContaining({signOut:mocks.signOut})}))
     })
 
     it('cross-origin logout is rejected before either authority is called',async()=>{
         expect((await POST(request(true,'https://unrelated.example'))).status).toBe(403)
         expect(mocks.signOut).not.toHaveBeenCalled()
+        expect(mocks.actor).not.toHaveBeenCalled()
         expect(mocks.revoke).not.toHaveBeenCalled()
     })
 
     it('missing Origin is rejected instead of bypassing cookie mutation protection',async()=>{
         expect((await POST(request(true,null))).status).toBe(403)
         expect(mocks.signOut).not.toHaveBeenCalled()
+        expect(mocks.actor).not.toHaveBeenCalled()
         expect(mocks.revoke).not.toHaveBeenCalled()
     })
 
@@ -99,6 +118,7 @@ describe('AD01 logout confirmation boundary',()=>{
         const crossSite=request();crossSite.headers.set('sec-fetch-site','cross-site')
         expect((await POST(crossSite)).status).toBe(403)
         expect(mocks.signOut).not.toHaveBeenCalled()
+        expect(mocks.actor).not.toHaveBeenCalled()
         expect(mocks.revoke).not.toHaveBeenCalled()
     })
 })

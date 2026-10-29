@@ -37,7 +37,7 @@ describe('sign-in timing telemetry', () => {
         const reporter = read('components/telemetry/sign-in-timing-reporter.tsx')
         const endpoint = read('app/api/telemetry/sign-in/route.ts')
 
-        expect(loginForm).toContain('signIn({ email: email.trim(), password, traceId })')
+        expect(loginForm).toContain('requestSignIn({ email: email.trim(), password, traceId })')
         expect(loginForm).toContain('SIGN_IN_TRACE_STORAGE_KEY')
         expect(authAction).toContain("createSignInServerTimer('sign_in_server_action', input.traceId)")
         expect(authAction).toMatch(/telemetry\.measure\(\s*'password_auth'/)

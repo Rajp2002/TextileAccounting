@@ -11,8 +11,8 @@ vi.mock('next/headers', () => ({ headers: async () => new Headers({ 'x-pathname'
 
 import {
     adminRecordAudit, establishFounderSession, FOUNDER_CAPABILITIES, founderConsoleEnabled,
-    requireFounder, requireFounderCandidate, requireFounderPage, revokeFounderSession,
-    touchFounderSession, validateFounderClaims, requireLegacyFounder,
+    requireFounder, requireFounderCandidate, requireFounderPage, revokeFounderSession, revokeFounderSessionsOf,
+    touchFounderSession, validateFounderClaims, requireLegacyFounder, verifyFounderRevocationActor,
 } from '@/lib/admin/founder'
 import { AdminError, adminErrorResponse } from '@/lib/admin/errors'
 import { getGrievances } from '@/lib/actions/compliance'
@@ -166,6 +166,24 @@ describe('AD01 founder identity and session boundary', () => {
         expect(mocks.identity).not.toHaveBeenCalled()
         mocks.rpc.mockResolvedValue({data:{allowed:true,revoked:false},error:null})
         expect(await revokeFounderSession()).toBe('not_applicable')
+    })
+
+    it('a signed-out request has no revocation actor and revokes nothing', async () => {
+        mocks.user.mockResolvedValue({ data: { user: null }, error: null })
+        expect(await verifyFounderRevocationActor()).toBeNull()
+        expect(await revokeFounderSessionsOf(null)).toBe('not_applicable')
+        expect(await revokeFounderSession()).toBe('not_applicable')
+        expect(mocks.claims).not.toHaveBeenCalled()
+        expect(mocks.rpc).not.toHaveBeenCalled()
+    })
+
+    it('verifies the actor on a caller-supplied client', async () => {
+        const getUser = vi.fn().mockResolvedValue({ data: { user: { id: userId } }, error: null })
+        const getClaims = vi.fn().mockResolvedValue({ data: { claims: claims() }, error: null })
+        const client = { auth: { getUser, getClaims } } as unknown as Parameters<typeof verifyFounderRevocationActor>[0]
+        expect(await verifyFounderRevocationActor(client)).toMatchObject({ userId, sessionId })
+        expect(getUser).toHaveBeenCalledOnce()
+        expect(mocks.user).not.toHaveBeenCalled()
     })
 
     it('fails closed if access auditing fails and sanitizes unknown database errors', async () => {

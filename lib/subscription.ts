@@ -65,8 +65,8 @@ export async function getOrgPlanAccess(
     return applyFreeGrantToAccess(access, subscriptionRows, Boolean(grant))
 }
 
-export async function getOrgTier(orgId: string): Promise<SubscriptionTier> {
-    return (await getOrgPlanAccess(orgId)).effectiveTier
+export async function getOrgTier(orgId: string, freeGrantRead?: Promise<unknown>): Promise<SubscriptionTier> {
+    return (await getOrgPlanAccess(orgId, freeGrantRead)).effectiveTier
 }
 
 /**

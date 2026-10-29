@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { SIGNUP_LEGAL_ACCEPTANCE } from '@/lib/legal-documents'
 import { FOUNDER_ONLY_LOGIN_MESSAGE, founderOnlyIdentity } from '@/lib/admin/founder-email'
 
-const mocks = vi.hoisted(() => ({ client: vi.fn(), admin: vi.fn(), password: vi.fn(), signOut: vi.fn(), refresh: vi.fn(), exchange: vi.fn(), reset: vi.fn(), tier: vi.fn(), enroll: vi.fn(), cookie: vi.fn() }))
+const mocks = vi.hoisted(() => ({ client: vi.fn(), admin: vi.fn(), password: vi.fn(), signOut: vi.fn(), refresh: vi.fn(), exchange: vi.fn(), reset: vi.fn(), tier: vi.fn(), enroll: vi.fn(), cookie: vi.fn(), grant: vi.fn() }))
 vi.mock('server-only', () => ({}))
 vi.mock('next/headers', () => ({ headers: async () => new Headers({ host: 'app.example.test' }), cookies: async () => ({ set: mocks.cookie, delete: mocks.cookie }) }))
 vi.mock('next/navigation', () => ({ redirect: (path: string) => { throw new Error(`REDIRECT:${path}`) } }))
@@ -10,7 +10,7 @@ vi.mock('@/lib/supabase/server', () => ({ createClient: mocks.client }))
 vi.mock('@/lib/supabase/admin', () => ({ createAdminClient: mocks.admin }))
 vi.mock('@/lib/auth', () => ({ parseJWT: (value: string) => JSON.parse(value) }))
 vi.mock('@/lib/subscription', () => ({ getOrgTier: mocks.tier }))
-vi.mock('@/lib/free-account', () => ({ canEnrollFree: mocks.enroll, finishFreeProvisioning: vi.fn() }))
+vi.mock('@/lib/free-account', () => ({ canEnrollFree: mocks.enroll, finishFreeProvisioning: vi.fn(), getFreeGrant: mocks.grant }))
 vi.mock('@/lib/sign-in-telemetry.server', () => ({ createSignInServerTimer: () => ({ log: vi.fn(), measure: async (_name: string, fn: () => unknown) => fn() }), persistSignInTraceCookie: vi.fn() }))
 
 import { createOrganization, signIn, requestPasswordReset } from '@/app/(auth)/actions/auth'
@@ -64,6 +64,22 @@ describe('founder identity has no customer login or signup', () => {
         expect(await signIn({ email: ownerEmail, password: 'synthetic-only' })).toEqual({ redirectTo: '/owner/estimator' })
         mocks.password.mockResolvedValue({ data: { session: null }, error: { message: 'provider detail' } })
         expect(await signIn({ email: ownerEmail, password: 'wrong' })).toEqual({ error: 'Incorrect email or password.' })
+    })
+    it('reads a Free signup\'s grant alongside its plan, and no grant for other owners', async () => {
+        const grantRead = Promise.resolve({ subjectId: userId, state: 'active' })
+        mocks.grant.mockReturnValue(grantRead)
+        mocks.tier.mockResolvedValue('free')
+        mocks.password.mockResolvedValue({ data: { session: { ...session(), user: { id: userId, email: ownerEmail, app_metadata: { free_signup: true } } } }, error: null })
+        expect(await signIn({ email: ownerEmail, password: 'synthetic-only' })).toEqual({ redirectTo: '/free' })
+        expect(mocks.grant).toHaveBeenCalledWith('organization-a')
+        expect(mocks.tier).toHaveBeenCalledWith('organization-a', grantRead)
+
+        vi.clearAllMocks()
+        mocks.tier.mockResolvedValue('lite')
+        mocks.password.mockResolvedValue({ data: { session: session() }, error: null })
+        expect(await signIn({ email: ownerEmail, password: 'synthetic-only' })).toEqual({ redirectTo: '/owner/estimator' })
+        expect(mocks.grant).not.toHaveBeenCalled()
+        expect(mocks.tier).toHaveBeenCalledWith('organization-a', undefined)
     })
     it('permits password recovery without granting customer access', async () => {
         expect(await requestPasswordReset({ email: founderEmail })).toEqual({ success: true })
