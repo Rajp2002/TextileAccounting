@@ -121,7 +121,7 @@ export function CompanyProfileCard({ onDirtyChange }: { onDirtyChange?: (dirty: 
                 </div>
             )}
             {view && view.entitled && (
-                <div className="mt-6 space-y-8">
+                <div className="mt-6 grid gap-8 xl:grid-cols-2 xl:gap-10">
                     <BusinessDetailsForm view={view} onSaved={load} onDirtyChange={onDirtyChange} />
                     <LogoSection view={view} onChanged={load} />
                 </div>
@@ -175,7 +175,7 @@ function BusinessDetailsForm({ view, onSaved, onDirtyChange }: { view: DocumentB
     const inputClass = 'h-11 rounded-xl border-hairline bg-surface text-sm focus-visible:border-loom'
 
     return (
-        <form onSubmit={submit} className="space-y-5" aria-labelledby="business-details-heading">
+        <form onSubmit={submit} className="min-w-0 space-y-5" aria-labelledby="business-details-heading">
             <div className="space-y-1">
                 <h3 id="business-details-heading" className="text-base font-bold text-ink">{text('businessDetailsTitle')}</h3>
                 <p className="text-sm leading-relaxed text-muted-foreground">{text('businessDetailsHelp')} {text('businessNameNote')}</p>
@@ -271,7 +271,7 @@ function LogoSection({ view, onChanged }: { view: DocumentBrandingSettingsView; 
     const uploadDisabled = uploading || busy !== null || !view.canManage
 
     return (
-        <div className="space-y-5 border-t border-hairline/80 pt-6" aria-labelledby="factory-logo-heading">
+        <div className="min-w-0 space-y-5 border-t border-hairline/80 pt-6 xl:border-l xl:border-t-0 xl:pl-10 xl:pt-0" aria-labelledby="factory-logo-heading">
             <div className="space-y-1">
                 <h3 id="factory-logo-heading" className="text-base font-bold text-ink">{text('logoTitle')}</h3>
                 <p className="text-sm leading-relaxed text-muted-foreground">{text('logoIntro')}</p>

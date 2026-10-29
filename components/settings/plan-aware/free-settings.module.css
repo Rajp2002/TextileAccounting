@@ -1,6 +1,13 @@
 .toggle { display: none; }
 .slot { min-width: 0; }
 
+/* A stretched row: the slot, the fold wrappers around its card, and the card all fill the row height. */
+@media (min-width: 1280px) {
+  .fill { display: flex; flex: 1 1 auto; flex-direction: column; }
+  .fill > *, .fill > .group > div:last-child > * { flex: 1 1 auto; }
+  .fill > .group, .fill > .group > div:last-child { display: flex; flex-direction: column; }
+}
+
 @media (max-width: 767.98px) {
   .root > header { padding-bottom: 1rem; }
   .root > header h1 { font-size: 1.375rem; }
