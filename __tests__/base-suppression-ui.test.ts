@@ -69,7 +69,8 @@ describe('Base suppression: plan chooser', () => {
 
   it('PlanChooserClient uses a two-column grid when Base is hidden and keeps the three-column grid otherwise', () => {
     const client = read('components/plans/PlanChooserClient.tsx')
-    expect(client).toContain('baseVisible ? "max-w-6xl lg:grid-cols-3" : "max-w-4xl lg:grid-cols-2"')
+    // The grid fills the page width (25px gutters come from the layout), so neither variant carries a max width.
+    expect(client).toContain('baseVisible ? "lg:grid-cols-3" : "lg:grid-cols-2"')
   })
 
   it('the feature preview modal receives baseVisible and drops the Base note for hidden orgs', () => {

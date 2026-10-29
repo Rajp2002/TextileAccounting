@@ -2090,6 +2090,100 @@ button[aria-expanded="true"] .nav-chevron {
   [data-configuration-picker-preview="true"] { top: 72px !important; left: 8px !important; width: calc(100vw - 16px) !important; max-height: calc(54dvh - 88px) !important; }
 }
 
+/* ── Lift tiles ───────────────────────────────────────────────────
+ * A tile that opens a dialog (components/plans/PlanTrustTiles.tsx). Hover raises it a few
+ * pixels while a soft shadow blooms in and its icon chip swells; a press settles it back down.
+ * Only translate, scale and opacity animate (the hover shadow is drawn once on ::after and
+ * faded), so the motion stays on the compositor in Safari too.
+ */
+@layer components {
+  .ui-tile-lift {
+    position: relative;
+    isolation: isolate;
+    transition:
+      translate var(--motion-slow) var(--ease-out-soft),
+      scale var(--motion-slow) var(--ease-out-soft),
+      border-color var(--motion-base) ease;
+  }
+
+  .ui-tile-lift::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    z-index: -1;
+    border-radius: inherit;
+    box-shadow: 0 1px 2px rgba(22, 33, 62, 0.05), 0 14px 32px -14px rgba(22, 33, 62, 0.3);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--motion-slow) var(--ease-out-soft);
+  }
+
+  .ui-tile-lift [data-tile-icon] {
+    transition: scale 420ms cubic-bezier(0.34, 1.4, 0.64, 1);
+  }
+
+  .ui-tile-lift [data-tile-arrow] {
+    transition: translate var(--motion-slow) var(--ease-out-soft);
+  }
+
+  .ui-tile-lift:focus-visible {
+    translate: 0 -3px;
+  }
+
+  .ui-tile-lift:focus-visible::after {
+    opacity: 1;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .ui-tile-lift:hover {
+      translate: 0 -3px;
+      border-color: var(--color-hairline-strong);
+    }
+
+    .ui-tile-lift:hover::after {
+      opacity: 1;
+    }
+
+    .ui-tile-lift:hover [data-tile-icon] {
+      scale: 1.08;
+    }
+
+    .ui-tile-lift:hover [data-tile-arrow] {
+      translate: 3px 0;
+    }
+  }
+
+  /* The press lands quickly; letting go springs back on the slower hover curve. */
+  .ui-tile-lift:active {
+    translate: 0 -1px;
+    scale: 0.985;
+    transition-duration: var(--motion-fast);
+  }
+
+  .ui-tile-lift:active::after {
+    opacity: 0.6;
+    transition-duration: var(--motion-fast);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ui-tile-lift,
+    .ui-tile-lift::after,
+    .ui-tile-lift [data-tile-icon],
+    .ui-tile-lift [data-tile-arrow] {
+      transition-duration: 0.01ms !important;
+    }
+
+    .ui-tile-lift:hover,
+    .ui-tile-lift:focus-visible,
+    .ui-tile-lift:active,
+    .ui-tile-lift:hover [data-tile-icon],
+    .ui-tile-lift:hover [data-tile-arrow] {
+      translate: none;
+      scale: none;
+    }
+  }
+}
+
 /* Spring pop shared by every modal (Dialog): scale + slight tilt on enter, quick shrink on exit.
    Uses the individual `scale`/`rotate` properties so the centring `translate` is untouched. */
 @keyframes modal-spring-in {

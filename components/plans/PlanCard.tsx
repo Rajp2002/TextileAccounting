@@ -223,7 +223,7 @@ export function PlanCard({
           <button
             type="button"
             onClick={() => onOpenPreview(activeFeature, planTier)}
-            className="group relative flex aspect-[16/9] w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-hairline bg-surface-soft p-2 transition-colors hover:border-saffron/40"
+            className="group relative flex aspect-[16/9] w-full lg:max-h-[clamp(140px,18vh,280px)] cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-hairline bg-surface-soft p-2 transition-colors hover:border-saffron/40"
             aria-label={upgradeText(language, 'watchFeatureDemo', { feature: activeFeatureName })}
           >
             <Image
@@ -231,7 +231,7 @@ export function PlanCard({
               alt={upgradeText(language, 'picture', { feature: activeFeatureName })}
               width={1440}
               height={960}
-              sizes="(min-width: 1024px) 320px, (min-width: 640px) 600px, 90vw"
+              sizes="(min-width: 1024px) 45vw, (min-width: 640px) 600px, 90vw"
               className="max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-105"
             />
             <div className="absolute inset-0 flex items-center justify-center bg-black/15 transition-colors group-hover:bg-black/25">
@@ -256,7 +256,7 @@ export function PlanCard({
             </p>
           )}
 
-          <ul className="space-y-2 text-xs leading-relaxed text-body">
+          <ul className="space-y-2 text-xs leading-relaxed text-body 2xl:grid 2xl:grid-cols-2 2xl:gap-x-6 2xl:gap-y-2 2xl:space-y-0">
             {isFree && (
               <>
                 <li className="flex items-start gap-2">
