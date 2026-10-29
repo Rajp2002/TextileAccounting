@@ -177,6 +177,22 @@ describe('Standalone Plan Chooser & Upgrade Experience', () => {
       expect(planTrustDetails('gu', 'receipt').join(' ')).toContain('GST')
       expect(planTrustDetails('hi', 'receipt').join(' ')).toContain('GST')
     })
+
+    it('PAY-03: trust tiles lift on the compositor and their dialog grows out of the tile', () => {
+      const tiles = read('components/plans/PlanTrustTiles.tsx')
+      const css = read('app/globals.css')
+      const lift = css.slice(css.indexOf('.ui-tile-lift {'), css.indexOf('/* Spring pop shared by every modal'))
+      expect(tiles).toContain("'ui-tile-lift ")
+      // Only translate, scale and opacity move: the hover shadow is a faded layer, never a box-shadow transition.
+      expect(lift).toContain('.ui-tile-lift::after')
+      expect(lift).not.toMatch(/transition:[^;]*box-shadow/)
+      expect(lift).toContain('prefers-reduced-motion: reduce')
+      // The shared modal spring stays; only its origin and scale are tuned, and the dialog stays mounted for its exit.
+      expect(tiles).toContain('ref={growFromTile}')
+      expect(tiles).toContain('node.style.transformOrigin')
+      expect(tiles).toContain('<Dialog open={open} onOpenChange={setOpen}>')
+      expect(tiles).not.toMatch(/\{active && \(\s*<DialogContent/)
+    })
   })
 
   describe('REG: Entry Points & Billing Integration', () => {
