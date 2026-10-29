@@ -1,0 +1,609 @@
+{
+  "generatedAt": "2026-10-29T20:41:57.565Z",
+  "buildId": "_gy5dTxl-Ldwog3Z1suMG",
+  "method": "next start (production build, isolated env) against a fake Supabase/Upstash backend; each Supabase call waits 30 ms, each Redis call 10 ms; 7 measured requests per route after two warm-up passes; medians reported. JS sizes are the gzip-9 total of the <script src> chunks in the returned HTML (polyfills excluded).",
+  "supabaseDelayMs": 30,
+  "iterations": 7,
+  "results": [
+    {
+      "account": "lite",
+      "path": "/owner/estimator",
+      "action": "getEstimatorSecondaryData",
+      "note": "saved qualities and rate badges, requested once the estimator hydrates",
+      "status": 200,
+      "location": null,
+      "ttfbMs": 133.2,
+      "totalMs": 204.7,
+      "contentMs": null,
+      "backendCalls": 16,
+      "sequentialWaits": 6,
+      "callTimeline": [
+        {
+          "kind": "redis",
+          "method": "POST",
+          "target": "redis [[\"get\",\"revoked:11111111-1111-4111-8111",
+          "startMs": 0,
+          "endMs": 10.6
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=base_plan_visible,lite_trial_eligible,org_subscriptions(stat",
+          "startMs": 17.8,
+          "endMs": 48.3
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "profiles?select=role,org_id,full_name,phone,whatsapp_number,whatsapp_opted_i",
+          "startMs": 18.4,
+          "endMs": 48.4
+        },
+        {
+          "kind": "auth",
+          "method": "GET",
+          "target": "/auth/v1/user",
+          "startMs": 18.6,
+          "endMs": 48.6
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=base_plan_visible,lite_trial_eligible,org_subscriptions(stat",
+          "startMs": 52.1,
+          "endMs": 83.2
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "estimator_templates?select=*",
+          "startMs": 52.5,
+          "endMs": 83.3
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "cost_rate_book?select=name,last_reviewed_at,review_interval_days",
+          "startMs": 52.9,
+          "endMs": 83.3
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "cost_rate_book?select=id,name,category,current_value,unit",
+          "startMs": 53.3,
+          "endMs": 84.8
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "estimator_quotes?select=template_id,updated_at,version_number,warp_rows,weft_rows,pe",
+          "startMs": 85.8,
+          "endMs": 116.6
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=base_plan_visible,lite_trial_eligible,org_subscriptions(stat",
+          "startMs": 123.7,
+          "endMs": 154.5
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=id,name,production_mode,onboarding_complete,is_locked_down,b",
+          "startMs": 123.8,
+          "endMs": 154.7
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "profiles?select=role,org_id,full_name,phone,whatsapp_number,whatsapp_opted_i",
+          "startMs": 124.3,
+          "endMs": 156.1
+        },
+        {
+          "kind": "auth",
+          "method": "GET",
+          "target": "/auth/v1/user",
+          "startMs": 125.1,
+          "endMs": 156.3
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_production_workers?select=id,name,role,pay_type,is_active,monthly_salary,start_date,en",
+          "startMs": 125.5,
+          "endMs": 156.4
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "factory_cost_profile?select=*",
+          "startMs": 126,
+          "endMs": 157.8
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "cost_rate_book?select=last_reviewed_at,review_interval_days",
+          "startMs": 160.5,
+          "endMs": 191
+        }
+      ],
+      "html": null,
+      "errorDigest": null,
+      "apiBody": "2:\"$Sreact.fragment\"\nc:I[45020,[\"8500\",\"static/chunks/8500-f6fc0bcfaf5dbe40.js\",\"6609\",\"static/chunks/6609-cdd7829b3b445dd1.js\",\"3310\",\"static/chunks/3310-2580075fe4e120b5.js\",\"7177\",\"static/chunks/app/layout-498c90c3e05bab35.js\"],\"default\"]\nd:I[57121,[],\"\"]\ne:I[74581,[],\"\"]\nf:I[5649,[\"8500\",\"static",
+      "responseBytes": 25138
+    },
+    {
+      "account": "lite",
+      "path": "/owner/estimator",
+      "action": "getEstimatorTemplates",
+      "note": "saved-quality refresh after a save",
+      "status": 200,
+      "location": null,
+      "ttfbMs": 129.1,
+      "totalMs": 201.9,
+      "contentMs": null,
+      "backendCalls": 14,
+      "sequentialWaits": 6,
+      "callTimeline": [
+        {
+          "kind": "redis",
+          "method": "POST",
+          "target": "redis [[\"get\",\"revoked:11111111-1111-4111-8111",
+          "startMs": 0,
+          "endMs": 10.8
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=base_plan_visible,lite_trial_eligible,org_subscriptions(stat",
+          "startMs": 16.6,
+          "endMs": 47.1
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "profiles?select=role,org_id,full_name,phone,whatsapp_number,whatsapp_opted_i",
+          "startMs": 17,
+          "endMs": 47.3
+        },
+        {
+          "kind": "auth",
+          "method": "GET",
+          "target": "/auth/v1/user",
+          "startMs": 17.3,
+          "endMs": 47.5
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=base_plan_visible,lite_trial_eligible,org_subscriptions(stat",
+          "startMs": 50.5,
+          "endMs": 81.6
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "estimator_templates?select=*",
+          "startMs": 50.9,
+          "endMs": 81.7
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "estimator_quotes?select=template_id,updated_at,version_number,warp_rows,weft_rows,pe",
+          "startMs": 84,
+          "endMs": 114.7
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=base_plan_visible,lite_trial_eligible,org_subscriptions(stat",
+          "startMs": 121.4,
+          "endMs": 152.5
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=id,name,production_mode,onboarding_complete,is_locked_down,b",
+          "startMs": 121.6,
+          "endMs": 152.6
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "profiles?select=role,org_id,full_name,phone,whatsapp_number,whatsapp_opted_i",
+          "startMs": 122,
+          "endMs": 152.7
+        },
+        {
+          "kind": "auth",
+          "method": "GET",
+          "target": "/auth/v1/user",
+          "startMs": 122.8,
+          "endMs": 152.8
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_production_workers?select=id,name,role,pay_type,is_active,monthly_salary,start_date,en",
+          "startMs": 123.1,
+          "endMs": 154.2
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "factory_cost_profile?select=*",
+          "startMs": 123.6,
+          "endMs": 154.4
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "cost_rate_book?select=last_reviewed_at,review_interval_days",
+          "startMs": 157,
+          "endMs": 188.2
+        }
+      ],
+      "html": null,
+      "errorDigest": null,
+      "apiBody": "2:\"$Sreact.fragment\"\nc:I[45020,[\"8500\",\"static/chunks/8500-f6fc0bcfaf5dbe40.js\",\"6609\",\"static/chunks/6609-cdd7829b3b445dd1.js\",\"3310\",\"static/chunks/3310-2580075fe4e120b5.js\",\"7177\",\"static/chunks/app/layout-498c90c3e05bab35.js\"],\"default\"]\nd:I[57121,[],\"\"]\ne:I[74581,[],\"\"]\nf:I[5649,[\"8500\",\"static",
+      "responseBytes": 25074
+    },
+    {
+      "account": "lite",
+      "path": "/owner/settings",
+      "action": "getFactoryCostProfile",
+      "note": "costing defaults (Settings requested this once hydrated)",
+      "status": 200,
+      "location": null,
+      "ttfbMs": 63.2,
+      "totalMs": 134,
+      "contentMs": null,
+      "backendCalls": 13,
+      "sequentialWaits": 4,
+      "callTimeline": [
+        {
+          "kind": "redis",
+          "method": "POST",
+          "target": "redis [[\"get\",\"revoked:11111111-1111-4111-8111",
+          "startMs": 0,
+          "endMs": 10.6
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=base_plan_visible,lite_trial_eligible,org_subscriptions(stat",
+          "startMs": 17.4,
+          "endMs": 47.5
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "profiles?select=role,org_id,full_name,phone,whatsapp_number,whatsapp_opted_i",
+          "startMs": 17.8,
+          "endMs": 48.8
+        },
+        {
+          "kind": "auth",
+          "method": "GET",
+          "target": "/auth/v1/user",
+          "startMs": 18.2,
+          "endMs": 48.9
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_production_workers?select=id,name,role,pay_type,is_active,monthly_salary,start_date,en",
+          "startMs": 18.5,
+          "endMs": 49.1
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "factory_cost_profile?select=*",
+          "startMs": 18.7,
+          "endMs": 50.3
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=base_plan_visible,lite_trial_eligible,org_subscriptions(stat",
+          "startMs": 56.8,
+          "endMs": 88.3
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=id,name,production_mode,onboarding_complete,is_locked_down,b",
+          "startMs": 56.9,
+          "endMs": 88.4
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "profiles?select=role,org_id,full_name,phone,whatsapp_number,whatsapp_opted_i",
+          "startMs": 57.5,
+          "endMs": 88.5
+        },
+        {
+          "kind": "auth",
+          "method": "GET",
+          "target": "/auth/v1/user",
+          "startMs": 58.2,
+          "endMs": 88.6
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_production_workers?select=id,name,role,pay_type,is_active,monthly_salary,start_date,en",
+          "startMs": 58.5,
+          "endMs": 88.7
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "factory_cost_profile?select=*",
+          "startMs": 59,
+          "endMs": 88.8
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "cost_rate_book?select=last_reviewed_at,review_interval_days",
+          "startMs": 93.6,
+          "endMs": 124.3
+        }
+      ],
+      "html": null,
+      "errorDigest": null,
+      "apiBody": "2:\"$Sreact.fragment\"\nc:I[45020,[\"8500\",\"static/chunks/8500-f6fc0bcfaf5dbe40.js\",\"6609\",\"static/chunks/6609-cdd7829b3b445dd1.js\",\"3310\",\"static/chunks/3310-2580075fe4e120b5.js\",\"7177\",\"static/chunks/app/layout-498c90c3e05bab35.js\"],\"default\"]\nd:I[57121,[],\"\"]\ne:I[74581,[],\"\"]\nf:I[5649,[\"8500\",\"static",
+      "responseBytes": 27255
+    },
+    {
+      "account": "lite",
+      "path": "/owner/settings",
+      "action": "getDocumentBrandingSettings",
+      "note": "company profile, requested once Settings hydrates",
+      "status": 200,
+      "location": null,
+      "ttfbMs": 161,
+      "totalMs": 232.5,
+      "contentMs": null,
+      "backendCalls": 15,
+      "sequentialWaits": 7,
+      "callTimeline": [
+        {
+          "kind": "redis",
+          "method": "POST",
+          "target": "redis [[\"get\",\"revoked:11111111-1111-4111-8111",
+          "startMs": 0,
+          "endMs": 10.6
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=base_plan_visible,lite_trial_eligible,org_subscriptions(stat",
+          "startMs": 19.2,
+          "endMs": 50.1
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "profiles?select=role,org_id,full_name,phone,whatsapp_number,whatsapp_opted_i",
+          "startMs": 19.9,
+          "endMs": 50.2
+        },
+        {
+          "kind": "auth",
+          "method": "GET",
+          "target": "/auth/v1/user",
+          "startMs": 20.4,
+          "endMs": 51.5
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=name",
+          "startMs": 53.7,
+          "endMs": 84.5
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=base_plan_visible,lite_trial_eligible,org_subscriptions(stat",
+          "startMs": 54,
+          "endMs": 84.7
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "document_branding_settings?select=org_id,active_logo_asset_id,quotation_logo_enabled,internal_",
+          "startMs": 87.1,
+          "endMs": 117.7
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "document_branding_logo_assets?select=id,org_id,status,original_object_path,fallback_object_path,s",
+          "startMs": 119.4,
+          "endMs": 150.1
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=base_plan_visible,lite_trial_eligible,org_subscriptions(stat",
+          "startMs": 157.3,
+          "endMs": 188.3
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=id,name,production_mode,onboarding_complete,is_locked_down,b",
+          "startMs": 157.4,
+          "endMs": 188.4
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "profiles?select=role,org_id,full_name,phone,whatsapp_number,whatsapp_opted_i",
+          "startMs": 157.9,
+          "endMs": 188.4
+        },
+        {
+          "kind": "auth",
+          "method": "GET",
+          "target": "/auth/v1/user",
+          "startMs": 158.6,
+          "endMs": 189.7
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "base_production_workers?select=id,name,role,pay_type,is_active,monthly_salary,start_date,en",
+          "startMs": 159.1,
+          "endMs": 189.8
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "factory_cost_profile?select=*",
+          "startMs": 159.6,
+          "endMs": 189.8
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "cost_rate_book?select=last_reviewed_at,review_interval_days",
+          "startMs": 194.1,
+          "endMs": 224.5
+        }
+      ],
+      "html": null,
+      "errorDigest": null,
+      "apiBody": "2:\"$Sreact.fragment\"\nc:I[45020,[\"8500\",\"static/chunks/8500-f6fc0bcfaf5dbe40.js\",\"6609\",\"static/chunks/6609-cdd7829b3b445dd1.js\",\"3310\",\"static/chunks/3310-2580075fe4e120b5.js\",\"7177\",\"static/chunks/app/layout-498c90c3e05bab35.js\"],\"default\"]\nd:I[57121,[],\"\"]\ne:I[74581,[],\"\"]\nf:I[5649,[\"8500\",\"static",
+      "responseBytes": 26922
+    },
+    {
+      "account": "lite",
+      "path": "/owner/rates",
+      "action": "getCostRateUsage",
+      "note": "saved-quality usage per rate, requested once the Rate Book hydrates",
+      "status": 200,
+      "location": null,
+      "ttfbMs": 128,
+      "totalMs": 199.3,
+      "contentMs": null,
+      "backendCalls": 14,
+      "sequentialWaits": 6,
+      "callTimeline": [
+        {
+          "kind": "redis",
+          "method": "POST",
+          "target": "redis [[\"get\",\"revoked:11111111-1111-4111-8111",
+          "startMs": 0,
+          "endMs": 10.6
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=base_plan_visible,lite_trial_eligible,org_subscriptions(stat",
+          "startMs": 16.4,
+          "endMs": 46.7
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "profiles?select=role,org_id,full_name,phone,whatsapp_number,whatsapp_opted_i",
+          "startMs": 16.7,
+          "endMs": 46.8
+        },
+        {
+          "kind": "auth",
+          "method": "GET",
+          "target": "/auth/v1/user",
+          "startMs": 17,
+          "endMs": 46.9
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=base_plan_visible,lite_trial_eligible,org_subscriptions(stat",
+          "startMs": 49.8,
+          "endMs": 80.6
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "estimator_templates?select=id,name,warp_rows,weft_rows",
+          "startMs": 83.1,
+          "endMs": 113.8
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=base_plan_visible,lite_trial_eligible,org_subscriptions(stat",
+          "startMs": 120.3,
+          "endMs": 151
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "organizations?select=id,name,production_mode,onboarding_complete,is_locked_down,b",
+          "startMs": 120.5,
+          "endMs": 151.2
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "profiles?select=role,org_id,full_name,phone,whatsapp_number,whatsapp_opted_i",
+          "startMs": 120.9,
+          "endMs": 151.2
+        },
+        {
+          "kind": "auth",
+          "method": "GET",
+          "target": "/auth/v1/user",
+          "startMs": 121.5,
+          "endMs": 151.4
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "cost_rate_book?select=id,name,category,unit,current_value,previous_value,effective",
+          "startMs": 154.7,
+          "endMs": 185.1
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "factory_cost_profile?select=yarn_review_interval_days",
+          "startMs": 154.8,
+          "endMs": 185.2
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "cost_rate_history?select=rate_id,value,effective_date",
+          "startMs": 155.2,
+          "endMs": 185.3
+        },
+        {
+          "kind": "rest",
+          "method": "GET",
+          "target": "cost_rate_book?select=last_reviewed_at,review_interval_days",
+          "startMs": 156.7,
+          "endMs": 187.5
+        }
+      ],
+      "html": null,
+      "errorDigest": null,
+      "apiBody": "2:\"$Sreact.fragment\"\nc:I[45020,[\"8500\",\"static/chunks/8500-f6fc0bcfaf5dbe40.js\",\"6609\",\"static/chunks/6609-cdd7829b3b445dd1.js\",\"3310\",\"static/chunks/3310-2580075fe4e120b5.js\",\"7177\",\"static/chunks/app/layout-498c90c3e05bab35.js\"],\"default\"]\nd:I[57121,[],\"\"]\ne:I[74581,[],\"\"]\nf:I[5649,[\"8500\",\"static",
+      "responseBytes": 24590
+    }
+  ],
+  "serverErrors": []
+}

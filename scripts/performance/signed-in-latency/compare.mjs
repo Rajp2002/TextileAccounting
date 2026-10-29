@@ -8,12 +8,12 @@ const showJs = process.argv.includes('--js')
 const load = path => JSON.parse(readFileSync(path, 'utf8'))
 const before = load(beforePath)
 const after = load(afterPath)
-const key = result => `${result.account} ${result.path}`
+const key = result => `${result.account} ${result.path}${result.action ? `#${result.action}` : ''}`
 const afterByKey = new Map(after.results.map(result => [key(result), result]))
 const kb = bytes => (bytes / 1024).toFixed(1)
 const change = (from, to) => from ? `${to - from > 0 ? '+' : ''}${Math.round((to - from) / from * 100)}%` : ''
 
-const header = ['Account', 'Route', 'TTFB ms', 'Full page ms', 'Waits', 'Calls']
+const header = ['Account', 'Route', 'TTFB ms', 'Page content ms', 'Full page ms', 'Waits', 'Calls']
 if (showJs) header.push('First-load JS (KB gz)')
 console.log(`| ${header.join(' | ')} |`)
 console.log(`|${header.map(() => ' --- ').join('|')}|`)
@@ -22,8 +22,9 @@ for (const result of before.results) {
     if (!next) continue
     const cells = [
         result.account,
-        `\`${result.path}\`${result.status === 307 ? ' (redirect)' : ''}`,
+        `\`${result.path}\`${result.action ? ` action \`${result.action}\`` : ''}${result.status === 307 ? ' (redirect)' : ''}`,
         `${result.ttfbMs} → ${next.ttfbMs} (${change(result.ttfbMs, next.ttfbMs)})`,
+        result.contentMs && next.contentMs ? `${result.contentMs} → ${next.contentMs} (${change(result.contentMs, next.contentMs)})` : '',
         `${result.totalMs} → ${next.totalMs} (${change(result.totalMs, next.totalMs)})`,
         `${result.sequentialWaits} → ${next.sequentialWaits}`,
         `${result.backendCalls} → ${next.backendCalls}`,

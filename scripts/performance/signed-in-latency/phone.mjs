@@ -22,6 +22,10 @@
 // --profile: also record a V8 CPU profile of the load and report main-thread
 // time by script (self time) and the busiest functions.
 //
+// --ab <checkout>: also serve another checkout's build (on the next port) and
+// alternate every sample between the two, so both see the same conditions;
+// the other build's medians are reported under "ab".
+//
 //   node scripts/performance/signed-in-latency/phone.mjs <output.json> [--samples 5] [--cpu 4] [--only lite:/owner/estimator,free:/free] [--modules] [--profile]
 import { spawn } from 'node:child_process'
 import { readFileSync, writeFileSync } from 'node:fs'
@@ -35,7 +39,7 @@ import { ACCOUNTS } from './fixtures.mjs'
 const here = fileURLToPath(new URL('.', import.meta.url))
 const repo = resolve(here, '../../..')
 const args = process.argv.slice(2)
-const outputPath = args.find(arg => !arg.startsWith('--') && !/^\d+$/.test(arg) && !arg.includes(':/'))
+const outputPath = args.find((arg, index) => !arg.startsWith('--') && !/^\d+$/.test(arg) && !arg.includes(':/') && args[index - 1] !== '--ab')
 const option = (name, fallback) => {
     const index = args.indexOf(`--${name}`)
     return index >= 0 ? args[index + 1] : fallback
@@ -49,10 +53,12 @@ const ROUTES = [
     { account: 'free', path: '/free', note: 'the same estimator in Free mode' },
     { account: 'lite', path: '/owner/quotes' },
     { account: 'free', path: '/free/costings' },
+    { account: 'lite', path: '/owner/settings' },
 ]
 const withModules = args.includes('--modules')
 const withProfile = args.includes('--profile')
 const compareLegacyQueue = args.includes('--compare-legacy-queue')
+const abRepo = option('ab', null) ? resolve(option('ab', null)) : null
 const only = option('only', null)?.split(',')
 const routes = only ? ROUTES.filter(route => only.includes(`${route.account}:${route.path}`)) : ROUTES
 
@@ -116,6 +122,15 @@ async function measure(browser, base, cookieValue, route, { legacyQueue = false 
         await cdp.send('Profiler.setSamplingInterval', { interval: 200 })
         await cdp.send('Profiler.start')
     }
+    // Server actions the page sends while loading, and whether each response
+    // re-rendered the page (Next's x-action-revalidated header).
+    const actions = []
+    const navigationStartedAt = Date.now()
+    page.on('requestfinished', async request => {
+        if (!request.headers()['next-action']) return
+        const actionResponse = await request.response()
+        actions.push({ endMs: Date.now() - navigationStartedAt, revalidated: (actionResponse?.headers()['x-action-revalidated'] ?? '0') !== '0' })
+    })
     const response = await page.goto(`${base}${route.path}`, { waitUntil: 'load', timeout: 120_000 })
     // Quiet: no long task for 3 s (or 30 s at most).
     for (let waited = 0; waited < 30_000; waited += 500) {
@@ -160,7 +175,12 @@ async function measure(browser, base, cookieValue, route, { legacyQueue = false 
         scripts.push({ url: entry.url.replace(/^.*\/_next\/static\/chunks\//, ''), bytes: length, usedBytes: usedCount, ...(withModules && length > 100_000 ? { modules: webpackModules(entry.source, used) } : {}) })
     }
     await context.close()
-    return { status: response?.status() ?? null, ...result, jsBytes, usedBytes, scripts: scripts.sort((a, b) => b.bytes - a.bytes).slice(0, 15), profile }
+    return {
+        status: response?.status() ?? null, ...result, jsBytes, usedBytes,
+        actionCount: actions.length, actionsRevalidated: actions.filter(action => action.revalidated).length,
+        lastActionEndMs: actions.length ? Math.max(...actions.map(action => action.endMs)) : null,
+        scripts: scripts.sort((a, b) => b.bytes - a.bytes).slice(0, 15), profile,
+    }
 }
 
 // The module factories of a webpack chunk: (self.webpackChunk…).push([[ids], { id: factory, … }]).
@@ -254,28 +274,40 @@ async function main() {
         WEAVLY_FAKE_BACKEND_ORIGIN: `http://127.0.0.1:${backendPort}`,
         NODE_OPTIONS: `--require "${join(here, 'redirect-fetch.cjs')}"`,
     }
-    const child = spawn(join(repo, 'node_modules/.bin/next'), ['start', '-p', String(appPort)], { cwd: repo, env, stdio: ['ignore', 'pipe', 'pipe'] })
-    const log = []
-    child.stdout.on('data', chunk => log.push(chunk.toString()))
-    child.stderr.on('data', chunk => log.push(chunk.toString()))
+    const startServer = (checkout, port) => {
+        const child = spawn(join(checkout, 'node_modules/.bin/next'), ['start', '-p', String(port)], { cwd: checkout, env: { ...env, NEXT_PUBLIC_SITE_URL: `http://localhost:${port}` }, stdio: ['ignore', 'pipe', 'pipe'] })
+        const log = []
+        child.stdout.on('data', chunk => log.push(chunk.toString()))
+        child.stderr.on('data', chunk => log.push(chunk.toString()))
+        return { child, log, base: `http://localhost:${port}` }
+    }
+    const servers = [startServer(repo, appPort), ...(abRepo ? [startServer(abRepo, appPort + 1)] : [])]
     const browser = await chromium.launch({ headless: true })
     const results = []
     try {
-        for (let attempt = 0; !/Ready in/.test(log.join('')); attempt += 1) {
-            if (attempt > 240 || child.exitCode !== null) throw new Error(`next start did not start: ${log.join('')}`)
-            await new Promise(resolve => setTimeout(resolve, 250))
+        for (const { child, log } of servers) {
+            for (let attempt = 0; !/Ready in/.test(log.join('')); attempt += 1) {
+                if (attempt > 240 || child.exitCode !== null) throw new Error(`next start did not start: ${log.join('')}`)
+                await new Promise(resolve => setTimeout(resolve, 250))
+            }
         }
-        const base = `http://localhost:${appPort}`
+        const [{ base }, abServer] = servers
         // Warm the server (route code, React caches) so samples time the phone, not the server.
-        for (const route of routes) for (let pass = 0; pass < 2; pass += 1) await (await fetch(`${base}${route.path}`, { headers: { cookie: cookies[route.account] } })).text()
+        for (const { base: warmBase } of servers) for (const route of routes) for (let pass = 0; pass < 2; pass += 1) await (await fetch(`${warmBase}${route.path}`, { headers: { cookie: cookies[route.account] } })).text()
         for (const route of routes) {
             const runs = []
             const legacyRuns = []
+            const abRuns = []
             for (let index = 0; index < samples; index += 1) {
                 if (compareLegacyQueue) legacyRuns.push(await measure(browser, base, cookies[route.account], route, { legacyQueue: true }))
+                // Alternate which build goes first, so neither always follows the other.
+                if (abServer && index % 2 === 0) abRuns.push(await measure(browser, abServer.base, cookies[route.account], route))
                 runs.push(await measure(browser, base, cookies[route.account], route))
+                if (abServer && index % 2 === 1) abRuns.push(await measure(browser, abServer.base, cookies[route.account], route))
             }
             const pick = field => median(runs.map(run => run[field]))
+            const ab = abServer ? Object.fromEntries(['fcp', 'lcp', 'primaryUsable', 'totalBlockingTime', 'longestTask', 'longTaskCount', 'actionCount', 'actionsRevalidated', 'lastActionEndMs', 'jsBytes'].map(field => [field, median(abRuns.map(run => run[field]))])) : undefined
+            if (ab) console.log(`      --ab build: FCP ${ab.fcp} LCP ${ab.lcp} usable ${ab.primaryUsable} TBT ${ab.totalBlockingTime} longest ${ab.longestTask} actions ${ab.actionCount} (${ab.actionsRevalidated} re-rendered, last done ${ab.lastActionEndMs}) JS ${Math.round(ab.jsBytes / 1024)} KB`)
             const legacyQueue = compareLegacyQueue ? Object.fromEntries(['primaryUsable', 'totalBlockingTime', 'longestTask', 'lcp', 'jsBytes', 'mainThreadInLongTasks'].map(field => [field, median(legacyRuns.map(run => run[field]))])) : undefined
             if (legacyQueue) console.log(`      with legacy queue: usable ${legacyQueue.primaryUsable} TBT ${legacyQueue.totalBlockingTime} JS ${Math.round(legacyQueue.jsBytes / 1024)} KB`)
             const result = {
@@ -283,21 +315,24 @@ async function main() {
                 fcpMs: pick('fcp'), lcpMs: pick('lcp'), primaryUsableMs: pick('primaryUsable'), loadMs: pick('load'),
                 longTaskCount: pick('longTaskCount'), longestTaskMs: pick('longestTask'), totalBlockingTimeMs: pick('totalBlockingTime'),
                 mainThreadInLongTasksMs: pick('mainThreadInLongTasks'), heapUsedMB: pick('heapUsedMB'),
+                actionCount: pick('actionCount'), actionsRevalidated: pick('actionsRevalidated'), lastActionEndMs: pick('lastActionEndMs'),
                 jsKB: Math.round(pick('jsBytes') / 1024), usedJsKB: Math.round(pick('usedBytes') / 1024),
                 legacyQueue,
+                ab, abSamples: abServer ? abRuns.map(run => Object.fromEntries(Object.entries(run).filter(([key]) => !['scripts', 'marks', 'profile'].includes(key)))) : undefined,
                 marks: runs.at(-1).marks, scripts: runs.at(-1).scripts, profile: runs.at(-1).profile, samples: runs.map(run => Object.fromEntries(Object.entries(run).filter(([key]) => !['scripts', 'marks', 'profile'].includes(key)))),
             }
             results.push(result)
-            console.log(`${route.account.padEnd(5)} ${route.path.padEnd(18)} ${result.status} FCP ${result.fcpMs} LCP ${result.lcpMs} usable ${result.primaryUsableMs} TBT ${result.totalBlockingTimeMs} longest ${result.longestTaskMs} tasks ${result.longTaskCount} JS ${result.jsKB} KB (${result.usedJsKB} KB ran)`)
+            console.log(`${route.account.padEnd(5)} ${route.path.padEnd(18)} ${result.status} FCP ${result.fcpMs} LCP ${result.lcpMs} usable ${result.primaryUsableMs} TBT ${result.totalBlockingTimeMs} longest ${result.longestTaskMs} tasks ${result.longTaskCount} JS ${result.jsKB} KB (${result.usedJsKB} KB ran) actions ${result.actionCount} (${result.actionsRevalidated} re-rendered, last done ${result.lastActionEndMs})`)
         }
     } finally {
         await browser.close()
-        child.kill('SIGTERM')
+        for (const { child } of servers) child.kill('SIGTERM')
         await backend.close()
     }
     writeFileSync(outputPath, JSON.stringify({
         generatedAt: new Date().toISOString(),
         buildId: readFileSync(join(repo, '.next/BUILD_ID'), 'utf8').trim(),
+        ...(abRepo ? { abBuildId: readFileSync(join(abRepo, '.next/BUILD_ID'), 'utf8').trim() } : {}),
         method: `Playwright Chromium (headless), 390x844 at 3x, touch, CPU slowed ${cpuSlowdown}x via CDP, no network throttling, fresh context (empty cache) per sample, ${samples} samples per route, medians. next start against the fake backend (30 ms per Supabase call), server warmed first. Long tasks are counted until no long task for 3 s; total blocking time counts tasks after FCP. JS bytes are uncompressed /_next/static scripts; "ran" is V8 block coverage during load.`,
         cpuSlowdown, samples, results,
     }, null, 2))

@@ -2,7 +2,7 @@
 
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { requireRole } from '@/lib/auth'
+import { getSessionHint, requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import { buildCostingResult, calcFullTotals, calcWorkerRateSnapshot, normalizeCurrencySnapshot, getEffectiveCostingWidthCm, getEffectiveYarnDenier, ensureOverheadIntegrity, LOOM_TYPE_DEFAULTS, makeDefaultEstimateState, type EstimateState, type FactorySections, type WarpRow, type WeftRow, type OverheadItem, type OverheadMode } from '@/lib/estimator'
 import { getFirstEstimatorValidationMessage, requiresFactoryCapacity, validateEstimatorQuoteBoundary, validateEstimatorSnapshot, validateFactoryCostProfile } from '@/lib/estimator-validation'
@@ -12,6 +12,7 @@ import { currentBaseMonthlySalary, mergeBaseSalaryOverhead, readBaseSalaryHistor
 import type { BaseProductionWorker } from '@/lib/base-production-core'
 import { getSuratTodayString } from '@/lib/time'
 import { getCachedOrgTier } from '@/lib/subscription'
+import { startEarly } from '@/lib/start-early'
 import { normalizeCostingRecordKind } from '@/lib/costing-workspace'
 import { buildSavedQualityRecipeState, type SavedQualityCostingReuse } from '@/lib/saved-costings'
 import { auditHistoricalCosting } from '@/lib/costing-reconciliation'
@@ -299,22 +300,32 @@ function totalsMatchAuthoritative(
 
 // ─── Factory Cost Profile ─────────────────────────────────────────────────────
 
-export async function getFactoryCostProfile(options?: { createIfMissing?: boolean }) {
-    const { user, profile } = await requireRole(['owner'])
-    const supabase = await createServerClient()
-
-    // The fixed-salary staff feed the overhead; they do not depend on the
-    // profile row, so both are read at once.
-    const [{ data, error }, staffResult] = await Promise.all([
+// The fixed-salary staff feed the overhead; they do not depend on the
+// profile row, so both are read at once.
+function readFactoryCostProfileRows(supabase: Awaited<ReturnType<typeof createServerClient>>, orgId: string) {
+    return Promise.all([
         supabase
             .from('factory_cost_profile')
             .select('*')
-            .eq('factory_id', profile.org_id)
+            .eq('factory_id', orgId)
             .maybeSingle(),
         readCompleteBaseRows((from, to) => supabase.from('base_production_workers')
             .select('id, name, role, pay_type, is_active, monthly_salary, start_date, end_date, salary_history', from === 0 ? { count: 'exact' } : {})
-            .eq('org_id', profile.org_id).eq('pay_type', 'fixed_monthly').order('id').range(from, to)),
+            .eq('org_id', orgId).eq('pay_type', 'fixed_monthly').order('id').range(from, to)),
     ])
+}
+
+export async function getFactoryCostProfile(options?: { createIfMissing?: boolean }) {
+    // The rows need only the org, so they start with Proxy's session hint
+    // while the identity is verified, and are used only when it names the
+    // same user and org. RLS limits them to the caller's own org either way.
+    const [hint, supabase] = await Promise.all([getSessionHint(), createServerClient()])
+    const earlyRows = hint?.orgId ? { ...hint, read: startEarly(readFactoryCostProfileRows(supabase, hint.orgId)) } : null
+    const { user, profile } = await requireRole(['owner'])
+
+    const [{ data, error }, staffResult] = await (earlyRows && earlyRows.userId === user.id && earlyRows.orgId === profile.org_id
+        ? earlyRows.read
+        : readFactoryCostProfileRows(supabase, profile.org_id))
 
     if (error) return { error: error.message }
     if (staffResult.error) return { error: 'Staff salary overhead could not be loaded. Please refresh and try again.' }
@@ -637,7 +648,18 @@ export async function applyMonthlyDerivedOverhead(data: {
 
 export async function getEstimatorTemplates(options?: { includeArchived?: boolean; summary?: boolean }) {
     const { profile } = await requireRole(['owner'])
-    const supabase = await createServerClient()
+    return readEstimatorTemplates(await createServerClient(), profile.org_id, options)
+}
+
+/** Saved qualities of an org whose owner the caller has already verified. */
+async function readEstimatorTemplates(
+    supabase: Awaited<ReturnType<typeof createServerClient>>,
+    orgId: string,
+    options?: { includeArchived?: boolean; summary?: boolean },
+) {
+    // The plan does not depend on the qualities, so it is read alongside them.
+    // A server action has no request cache: this is its own read there.
+    const tierRead = options?.summary ? null : startEarly(getCachedOrgTier(orgId))
 
     // The summary carries the recipe rows only for their yarn names, which the
     // Saved Costings catalogue lists on each quality's card.
@@ -647,7 +669,7 @@ export async function getEstimatorTemplates(options?: { includeArchived?: boolea
         // The Supabase select parser cannot represent this conditional string
         // as one literal union; the runtime projection remains explicit.
         .select(templateSelect as '*')
-        .eq('org_id', profile.org_id)
+        .eq('org_id', orgId)
         .order('created_at', { ascending: false })
 
     if (!options?.includeArchived) query = query.eq('is_active', true)
@@ -660,7 +682,7 @@ export async function getEstimatorTemplates(options?: { includeArchived?: boolea
     if (options?.summary) return { data: templates }
     // Reopened qualities combine current recipe/rate rows with their latest
     // linked costing assumptions in the Lite and Base workspaces.
-    const effectiveTier = await getCachedOrgTier(profile.org_id)
+    const effectiveTier = await (tierRead ?? getCachedOrgTier(orgId))
     if ((effectiveTier !== 'base' && effectiveTier !== 'lite') || templates.length === 0) return { data: templates }
 
     const templateIds = templates.map(template => template.id).filter(Boolean)
@@ -698,7 +720,7 @@ export async function getEstimatorTemplates(options?: { includeArchived?: boolea
     const readReuse = (columns: string) => supabase
         .from('estimator_quotes')
         .select(columns as '*')
-        .eq('org_id', profile.org_id)
+        .eq('org_id', orgId)
         .eq('record_kind', 'costing')
         .in('template_id', templateIds)
         .order('updated_at', { ascending: false })
@@ -746,8 +768,11 @@ export async function getEstimatorSecondaryData() {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
+    // The identity verified above covers the saved qualities too. Calling the
+    // getEstimatorTemplates action here would verify it again, since a server
+    // action has no request cache.
     const [templatesResult, workersResult, ratesResult, yarnRatesResult] = await Promise.all([
-        getEstimatorTemplates(),
+        readEstimatorTemplates(supabase, profile.org_id),
         Promise.resolve({ data: [] }),
         supabase
             .from('cost_rate_book')
@@ -1328,6 +1353,7 @@ export async function saveEstimatorQuoteV3(params: {
         .maybeSingle()
     if (replayError) return { error: replayError.message }
     if (replay) {
+        revalidatePath('/owner/quotes')
         return { success: true, quoteId: replay.id, updatedAt: replay.updated_at, createdAt: replay.created_at, versionNumber: replay.version_number, quotationReference: replay.quotation_reference, idempotentReplay: true }
     }
 
@@ -1491,6 +1517,10 @@ export async function saveEstimatorQuoteV3(params: {
     if (!costingResult || costingResult.success !== true) {
         return { error: costingResult?.error ?? 'The Cost Estimate could not be saved.' }
     }
+    // The browser keeps a page visited in the last 30 seconds (staleTimes in
+    // next.config.ts) until an action revalidates: Saved Costings must show
+    // the new costing at once.
+    revalidatePath('/owner/quotes')
     return {
         success: true,
         quoteId: costingResult.quoteId,

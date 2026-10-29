@@ -36,6 +36,9 @@ const appPort = option('port', 3012)
 const coldSamples = option('cold', 0)
 // --sentry: give the server a Sentry DSN (pointing at the fake backend), as production has.
 const withSentry = args.includes('--sentry')
+// --stale-activity: send actions with no inactivity timestamp, so Proxy writes
+// one into the action's response (what it did for every action before 2026-10-29).
+const staleActivity = args.includes('--stale-activity')
 const only = args.includes('--only') ? args[args.indexOf('--only') + 1].split(',') : null
 
 const ROUTES = [
@@ -47,6 +50,17 @@ const ROUTES = [
     { account: 'lite', path: '/owner/rates' },
     { account: 'lite', path: '/owner/settings' },
     { account: 'lite', path: '/owner/billing' },
+    // Server actions the Lite pages call right after hydrating, timed as the
+    // browser sends them (POST with a Next-Action header; no page render).
+    { account: 'lite', path: '/owner/estimator', action: 'getEstimatorSecondaryData', note: "saved qualities and rate badges, requested once the estimator hydrates" },
+    { account: 'lite', path: '/owner/estimator', action: 'getEstimatorTemplates', note: 'saved-quality refresh after a save' },
+    { account: 'lite', path: '/owner/settings', action: 'getFactoryCostProfile', args: [{ createIfMissing: false }], note: 'costing defaults (Settings requested this once hydrated)' },
+    { account: 'lite', path: '/owner/settings', action: 'getDocumentBrandingSettings', note: 'company profile, requested once Settings hydrates' },
+    { account: 'lite', path: '/owner/rates', action: 'getCostRateUsage', note: 'saved-quality usage per rate, requested once the Rate Book hydrates' },
+    // New accounts start on a Lite trial, which carries a dormant Free grant.
+    { account: 'trial', path: '/owner/estimator' },
+    { account: 'trial', path: '/owner/quotes' },
+    { account: 'trial', path: '/owner/settings' },
     { account: 'base', path: '/owner/estimator' },
     { account: 'base', path: '/owner/production' },
     { account: 'base', path: '/owner/production/daily-sheet' },
@@ -65,6 +79,27 @@ const ROUTES = [
     { account: 'free', path: '/api/free/calculate', method: 'POST', note: 'Calculate: a fresh request token from /api/free/status is fetched before each timed request' },
 ]
 const freeEstimateBody = JSON.parse(readFileSync(join(here, 'free-estimate.json'), 'utf8'))
+const routeKey = route => `${route.account ?? 'public'}:${route.path}${route.action ? `#${route.action}` : ''}`
+
+// A server action's id, from the build's manifest (by exported name).
+function serverActionId(name) {
+    const manifest = JSON.parse(readFileSync(join(repo, '.next/server/server-reference-manifest.json'), 'utf8'))
+    const ids = Object.entries(manifest.node ?? {}).filter(([, entry]) => entry.exportedName === name).map(([id]) => id)
+    if (ids.length !== 1) throw new Error(`expected one server action named ${name}, found ${ids.length}`)
+    return ids[0]
+}
+
+// The browser sends the inactivity timestamp its page load just renewed.
+function actionInit(base, route, cookie) {
+    return {
+        method: 'POST',
+        headers: {
+            cookie: staleActivity ? cookie : `${cookie}; last_activity=${Date.now() - 1000}`,
+            'next-action': serverActionId(route.action), 'content-type': 'text/plain;charset=UTF-8', accept: 'text/x-component', origin: base,
+        },
+        body: JSON.stringify(route.args ?? []),
+    }
+}
 
 function isolatedEnv(extra = {}) {
     const env = Object.fromEntries(['PATH', 'HOME', 'USER', 'TMPDIR', 'LANG', 'SHELL'].filter(key => process.env[key]).map(key => [key, process.env[key]]))
@@ -135,9 +170,19 @@ async function timedRequest(url, cookie, init = {}) {
     const startedAt = performance.now()
     const response = await fetch(url, { redirect: 'manual', ...init, headers: { ...(cookie ? { cookie } : {}), ...init.headers } })
     const ttfb = performance.now() - startedAt
-    const body = await response.text()
+    // The page's own content (not the sidebar or its loading skeleton) has
+    // arrived when the stream carries its usable route-milestone marker
+    // (components/performance/route-milestones.tsx; skeletons render false).
+    let body = ''
+    let content = null
+    const decoder = new TextDecoder()
+    for await (const chunk of response.body ?? []) {
+        body += decoder.decode(chunk, { stream: true })
+        if (content === null && body.includes('data-route-primary-usable="true"')) content = performance.now() - startedAt
+    }
+    body += decoder.decode()
     const total = performance.now() - startedAt
-    return { status: response.status, location: response.headers.get('location'), ttfb, total, body }
+    return { status: response.status, location: response.headers.get('location'), ttfb, content, total, body }
 }
 
 async function waitForServer(base, child) {
@@ -244,7 +289,7 @@ async function coldMain({ backend, cookies, routes }) {
                 slowestFiles: [...byFile.values()].filter(entry => !entry.root.startsWith('next.config')).sort((a, b) => b.selfMs - a.selfMs).slice(0, 25),
             }
             results.push(result)
-            console.log(`${result.account.padEnd(6)} ${route.path.padEnd(32)} ${String(result.status).padEnd(4)} boot ${String(result.bootMs).padStart(6)} ms  first request ${String(result.coldTotalMs).padStart(7)} ms (${String(result.withoutConfigMs).padStart(6)} ms without next.config)  files ${String(result.filesLoaded).padStart(4)} (${result.loadedSelfMs} ms own time)`)
+            console.log(`${result.account.padEnd(6)} ${(route.action ? `${route.path}#${route.action}` : route.path).padEnd(32)} ${String(result.status).padEnd(4)} boot ${String(result.bootMs).padStart(6)} ms  first request ${String(result.coldTotalMs).padStart(7)} ms (${String(result.withoutConfigMs).padStart(6)} ms without next.config)  files ${String(result.filesLoaded).padStart(4)} (${result.loadedSelfMs} ms own time)`)
         }
     } finally {
         rmSync(logDir, { recursive: true, force: true })
@@ -274,7 +319,11 @@ async function main() {
         return [name, `sb-127-auth-token=${value}; sb-localperformance-auth-token=present`]
     }))
 
-    const selectRoutes = () => only ? ROUTES.filter(route => only.some(token => `${route.account ?? 'public'}:${route.path}`.includes(token))) : ROUTES
+    const selectRoutes = () => {
+        const selected = only ? ROUTES.filter(route => only.some(token => routeKey(route).includes(token))) : ROUTES
+        // Cold mode times a function's first page request; actions are not that.
+        return coldSamples ? selected.filter(route => !route.action) : selected
+    }
     if (coldSamples) {
         let results
         try { results = await coldMain({ backend, cookies, routes: selectRoutes() }) } finally { await backend.close() }
@@ -297,7 +346,8 @@ async function main() {
         await waitForServer(base, child).catch(error => { console.error(serverLog.join('')); throw error })
         const routes = selectRoutes()
         // Request options, prepared outside the timed request.
-        const requestInit = route => route.path === '/api/free/calculate' ? freeCalculateInit(base, cookies[route.account]) : {}
+        const requestInit = route => route.action ? actionInit(base, route, cookies[route.account])
+            : route.path === '/api/free/calculate' ? freeCalculateInit(base, cookies[route.account]) : {}
         // Two warm-up passes so module loading and JIT are out of the numbers.
         for (let pass = 0; pass < 2; pass += 1) {
             for (const route of routes) await timedRequest(`${base}${route.path}`, route.account ? cookies[route.account] : undefined, await requestInit(route))
@@ -323,23 +373,27 @@ async function main() {
             const result = {
                 account: route.account ?? 'public',
                 path: route.path,
+                action: route.action,
                 note: route.note,
                 status: last.status,
                 location: last.location,
                 ttfbMs: round(median(samples.map(sample => sample.ttfb))),
                 totalMs: round(median(samples.map(sample => sample.total))),
+                contentMs: samples.every(sample => sample.content !== null) ? round(median(samples.map(sample => sample.content))) : null,
                 backendCalls: median(callCounts),
                 sequentialWaits: median(waits),
                 callTimeline: last.calls.map(call => ({
                     kind: call.kind, method: call.method, target: call.target,
                     startMs: round(call.startedAt - last.calls[0].startedAt), endMs: round(call.endedAt - last.calls[0].startedAt),
                 })),
-                html: last.status === 200 && !route.path.startsWith('/api/') ? { bytes: Buffer.byteLength(lastBody), gzipBytes: gzipSync(lastBody).length, ...firstLoadJs(lastBody) } : null,
+                html: last.status === 200 && !route.path.startsWith('/api/') && !route.action ? { bytes: Buffer.byteLength(lastBody), gzipBytes: gzipSync(lastBody).length, ...firstLoadJs(lastBody) } : null,
                 errorDigest: /NEXT_HTTP_ERROR|Application error|digest/.test(lastBody) && last.status >= 500 ? 'server error' : null,
-                apiBody: route.path.startsWith('/api/') ? lastBody.slice(0, 300) : undefined,
+                apiBody: route.path.startsWith('/api/') || route.action ? lastBody.slice(0, 300) : undefined,
+                // An action that re-renders the page also returns the page's RSC payload.
+                responseBytes: route.action ? Buffer.byteLength(lastBody) : undefined,
             }
             results.push(result)
-            console.log(`${result.account.padEnd(6)} ${route.path.padEnd(32)} ${String(result.status).padEnd(4)} ttfb ${String(result.ttfbMs).padStart(7)} ms  total ${String(result.totalMs).padStart(7)} ms  calls ${String(result.backendCalls).padStart(3)}  waits ${String(result.sequentialWaits).padStart(2)}${result.html ? `  js ${(result.html.gzipBytes / 1024).toFixed(1)} KB gz` : ''}`)
+            console.log(`${result.account.padEnd(6)} ${route.path.padEnd(32)} ${String(result.status).padEnd(4)} ttfb ${String(result.ttfbMs).padStart(7)} ms  content ${String(result.contentMs ?? '-').padStart(7)} ms  total ${String(result.totalMs).padStart(7)} ms  calls ${String(result.backendCalls).padStart(3)}  waits ${String(result.sequentialWaits).padStart(2)}${result.html ? `  js ${(result.html.gzipBytes / 1024).toFixed(1)} KB gz` : ''}`)
         }
     } finally {
         child.kill('SIGTERM')

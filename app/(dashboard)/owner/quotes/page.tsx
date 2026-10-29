@@ -2,31 +2,42 @@ import { getFreeGrant, hasSavedFreeCostings } from '@/lib/free-account'
 import SavedFreeCostings from '@/app/free/costings/SavedFreeCostings'
 import { getEstimatorQuotes, getEstimatorTemplates } from '../estimator/actions'
 import QuotesClient from './QuotesClient'
-import { getAuthenticatedUser } from '@/lib/auth'
+import { getAuthenticatedUser, getSessionHint } from '@/lib/auth'
+import { startEarly } from '@/lib/start-early'
 import { getCachedOrgPlanAccess } from '@/lib/subscription'
 import { hasCapability } from '@/lib/subscription-access'
 import { getCachedOwnerOrganization } from '@/lib/owner-organization'
 import { LitePriorFreeHistory } from '@/components/estimator/LitePriorFreeHistory'
 
+// A Lite owner who started on Free also sees their Free costings. A Lite
+// trial carries a dormant Free grant; only saved Free costings earn the
+// history block. Both reads are request-cached by org.
+function readPreviousFreeGrant(orgId: string) {
+    return getFreeGrant(orgId).then(freeGrant => freeGrant ? hasSavedFreeCostings(orgId, freeGrant.subjectId) : false)
+}
+
 export default async function QuotesPage(props: { searchParams: Promise<{ status?: string }> }) {
+    // The grant and its count need only the org id, so they start with Proxy's
+    // session hint while the identity is verified. The verified org reuses
+    // them through the request cache; a read for another org is discarded.
+    const hint = await getSessionHint()
+    if (hint?.orgId) startEarly(readPreviousFreeGrant(hint.orgId))
     const searchParamsPromise = props.searchParams
     const authPromise = getAuthenticatedUser()
     const planAccessPromise = authPromise.then(({ profile }) => getCachedOrgPlanAccess(profile.org_id))
     const organizationPromise = authPromise.then(({ user, profile }) => (
         getCachedOwnerOrganization(user.id, profile.org_id)
     ))
-    // A Lite owner who started on Free also sees their Free costings; the
-    // grant read needs only the org id, so it runs with the page's reads.
-    const freeGrantPromise = authPromise.then(({ profile }) => getFreeGrant(profile.org_id))
+    const previousFreeGrantPromise = authPromise.then(({ profile }) => readPreviousFreeGrant(profile.org_id))
 
-    const [searchParams, { data: quotes, error: quotesError }, { data: templates, error: templatesError }, auth, planAccess, organizationRes, freeGrant] = await Promise.all([
+    const [searchParams, { data: quotes, error: quotesError }, { data: templates, error: templatesError }, auth, planAccess, organizationRes, previousFreeGrant] = await Promise.all([
         searchParamsPromise,
         getEstimatorQuotes(),
         getEstimatorTemplates({ includeArchived: true, summary: true }),
         authPromise,
         planAccessPromise,
         organizationPromise,
-        freeGrantPromise,
+        previousFreeGrantPromise,
     ])
     // The prior getEstimatorTemplates({ includeArchived: true }) full read is
     // intentionally represented by summary=true here. The summary carries the
@@ -40,9 +51,6 @@ export default async function QuotesPage(props: { searchParams: Promise<{ status
     const { user, profile } = auth
     const canUseProductionPipeline = hasCapability(planAccess.effectiveTier, 'production')
 
-    // Only real Free records earn the history block; a trial's dormant grant
-    // would otherwise render an empty Free list with its demo example.
-    const previousFreeGrant = freeGrant && await hasSavedFreeCostings(profile.org_id, freeGrant.subjectId)
     return (<>
         {previousFreeGrant && (planAccess.effectiveTier === 'lite'
             ? <LitePriorFreeHistory><SavedFreeCostings embedded idPrefix="lite-prior-" /></LitePriorFreeHistory>

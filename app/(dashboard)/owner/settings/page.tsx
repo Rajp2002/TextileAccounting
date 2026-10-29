@@ -70,6 +70,8 @@ export default function SettingsPage() {
             if (result.error) throw new Error(result.error)
             return result.data
         },
+        // The layout reads the defaults with the page (null: no profile yet).
+        initialData: settingsBootstrap?.costProfile,
         staleTime: 1000 * 60 * 5,
     })
     const { data: payrollCycleData } = useQuery({
@@ -79,8 +81,11 @@ export default function SettingsPage() {
         queryFn: getBasePayrollCycleConfig,
         staleTime: 1000 * 60 * 5,
     })
+    // The layout passes the verified account's email; ask Auth only without it.
+    const bootstrapAccount = settingsBootstrap?.account
     const { data: authUser } = useQuery({
         queryKey: ['auth_user_details'],
+        enabled: !bootstrapAccount,
         queryFn: async () => {
             const { data: { user } } = await supabase.auth.getUser()
             return user
@@ -107,8 +112,8 @@ export default function SettingsPage() {
             profile={{
                 userId: userProfile.id || userProfile.userId || '',
                 fullName: userProfile.full_name || '',
-                email: authUser?.email || '',
-                emailVerified: !!authUser?.email_confirmed_at,
+                email: bootstrapAccount?.email ?? authUser?.email ?? '',
+                emailVerified: bootstrapAccount?.emailVerified ?? !!authUser?.email_confirmed_at,
                 phone: userProfile.phone,
                 role: userProfile.role || 'owner',
             }}

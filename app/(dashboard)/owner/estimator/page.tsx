@@ -4,8 +4,12 @@ import { requireRole } from '@/lib/auth'
 import { getCachedOrgPlanAccess } from '@/lib/subscription'
 import { hasCapability } from '@/lib/subscription-access'
 import { getCachedOwnerOrganization } from '@/lib/owner-organization'
+import { startEarly } from '@/lib/start-early'
 
 export default async function EstimatorPage() {
+    // Started before the identity check so its rows can be read alongside it
+    // (see getFactoryCostProfile); a redirect below discards it.
+    const profileRead = startEarly(getFactoryCostProfile({ createIfMissing: false }))
     const { user, profile } = await requireRole(['owner'])
     // AccessGate and the owner shell already resolve this request-scoped
     // entitlement. Reuse that promise instead of issuing a second org-tier
@@ -15,7 +19,7 @@ export default async function EstimatorPage() {
     const canUseProductionPipeline = hasCapability(subscriptionTier, 'production')
 
     const [profileRes, organizationRes] = await Promise.all([
-        getFactoryCostProfile({ createIfMissing: false }),
+        profileRead,
         getCachedOwnerOrganization(user.id, profile.org_id),
     ])
 
