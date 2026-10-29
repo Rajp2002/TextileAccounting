@@ -83,7 +83,7 @@ describe('Plan-Aware Settings & Factory Defaults Permissions (ST01–ST18)', () 
 
     it('ST08: PlanAwareSettingsView conditionally mounts defaults based on canEditDefaults', () => {
         expect(settingsView).toContain('canEditDefaults: boolean')
-        expect(settingsView).toContain('{canEditDefaults && (')
+        expect(settingsView).toMatch(/\{canEditDefaults && <div className=\{[^}]+\}><FreeSettingsGroup[^>]*><CostingDefaultsCard/)
         expect(settingsView).toContain('<CostingDefaultsCard')
     })
 

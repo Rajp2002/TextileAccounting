@@ -93,7 +93,7 @@ export default function SettingsPage() {
             <div className="border-b border-hairline/70 pb-5 sm:pb-6">
                 <Skeleton className="h-9 w-40" />
             </div>
-            <div className="max-w-[960px] space-y-6">
+            <div className="grid gap-6 xl:grid-cols-2">
                 <Skeleton className="h-64 rounded-2xl" />
                 <Skeleton className="h-56 rounded-2xl" />
             </div>
@@ -136,7 +136,7 @@ export default function SettingsPage() {
             }}
             onDefaultsChange={() => queryClient.invalidateQueries({ queryKey: ['factory_cost_profile'] })}
         />
-        <div className="max-w-[960px]">
+        <div>
             <details id="account-data" className="ui-details group overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-4 sm:px-5">
                     <div>

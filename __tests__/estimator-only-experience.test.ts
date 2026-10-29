@@ -83,7 +83,7 @@ describe('Estimator-only product presentation', () => {
     it('uses current plan settings and keeps payroll configuration in Base', () => {
         expect(settingsLayout).toContain('requiredCapability="account_data"')
         expect(settings).toContain('<PlanAwareSettingsView')
-        expect(read('components/settings/plan-aware/plan-aware-settings-view.tsx')).toContain("tier === 'base' && <PayrollCycleSettingsCard")
+        expect(read('components/settings/plan-aware/plan-aware-settings-view.tsx')).toMatch(/tier === 'base' && <div className=\{[^}]+\}><PayrollCycleSettingsCard/)
     })
 
     it('saves Base edits through the authoritative versioned quote path', () => {

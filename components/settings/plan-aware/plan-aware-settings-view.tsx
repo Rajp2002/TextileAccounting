@@ -164,68 +164,67 @@ export function PlanAwareSettingsView({
         updatedAt: null,
     }
 
+    // Personal and account settings fill the left column on wide screens, factory tools
+    // the right. Below xl the columns dissolve and every section keeps its reading order.
+    const hasFactoryTools = canEditDefaults || tier === 'lite' || tier === 'base'
+    const securitySection = <div className={cn(styles.slot, 'order-7 xl:order-none')}><FreeSettingsGroup compact={tier === 'free' || tier === 'lite'} title={freeSupportingText(language, 'security')} summary={profile.emailVerified ? profile.email : `${profile.email} · ${freeSupportingText(language, 'emailUnverified')}`}><SecurityCard email={profile.email} /></FreeSettingsGroup></div>
+    const displaySection = <div className={cn(styles.slot, 'order-8 xl:order-none')}><FreeSettingsGroup compact={tier === 'free' || tier === 'lite'} title={freeSupportingText(language, 'display')} summary={freeSupportingText(language, 'device')}><StartupIntroSetting /></FreeSettingsGroup></div>
+    const column = 'contents xl:flex xl:min-w-0 xl:flex-col xl:gap-6'
+
     return (
         <div className={cn('ui-route-enter w-full space-y-6', (tier === 'free' || tier === 'lite') && styles.root)}>
-            {/* The same title row as the other workspace pages; the forms keep a readable width below it. */}
+            {/* The same title row as the other workspace pages. */}
             <PageHeader title={t('settings.title') || 'Settings'} />
-            <div className="w-full max-w-[960px]">
-                {/* Ordered Sections Stack */}
-                <main className="space-y-6">
-                    {/* Section 1: Personal Information (Universal) */}
-                    <FreeSettingsGroup compact={tier === 'free' || tier === 'lite'} title={freeSupportingText(language, 'personal')} summary={tier === 'lite' ? confirmedName : profile.fullName} dirty={personalDirty}><PersonalInformationCard
+            <main className="flex flex-col gap-6 xl:grid xl:grid-cols-2 xl:items-start">
+                <div className={column}>
+                    <div className={cn(styles.slot, 'order-1 xl:order-none')}><FreeSettingsGroup compact={tier === 'free' || tier === 'lite'} title={freeSupportingText(language, 'personal')} summary={tier === 'lite' ? confirmedName : profile.fullName} dirty={personalDirty}><PersonalInformationCard
                         initialName={profile.fullName}
                         email={profile.email}
                         emailVerified={profile.emailVerified}
                         phone={profile.phone}
                         onNameUpdated={tier === 'lite' ? name => { setConfirmedName(name); onProfileNameChange?.(name) } : onProfileNameChange}
                         onDirtyChange={setPersonalDirty}
-                    /></FreeSettingsGroup>
-
-                    {/* Section 2: Factory Details (Where factory exists) */}
-                    <FreeSettingsGroup compact={tier === 'free' || tier === 'lite'} title={freeSupportingText(language, 'factory')} summary={factory.name} dirty={factoryDirty}><FactoryDetailsCard
+                    /></FreeSettingsGroup></div>
+                    <div className={cn(styles.slot, 'order-2 xl:order-none')}><FreeSettingsGroup compact={tier === 'free' || tier === 'lite'} title={freeSupportingText(language, 'factory')} summary={factory.name} dirty={factoryDirty}><FactoryDetailsCard
                         initialFactoryName={factory.name}
                         isAuthorizedEditor={factory.isAuthorizedEditor ?? true}
                         onFactoryNameUpdated={onFactoryNameChange}
                         onDirtyChange={setFactoryDirty}
-                    /></FreeSettingsGroup>
-
-                    {/* Section 3: Costing Defaults (Lite/Base Entitled; Omitted for Free) */}
-                    {canEditDefaults && (
-                        <FreeSettingsGroup compact={tier === 'lite'} title={liteSupportingText(language, 'defaults')} summary={`${resolvedDefaults.yarnShortagePct}% ${liteSupportingText(language, 'wastage')} · ${resolvedDefaults.defaultMarginPct}% ${liteSupportingText(language, 'margin')}`} dirty={defaultsDirty}><CostingDefaultsCard
+                    /></FreeSettingsGroup></div>
+                    {hasFactoryTools && securitySection}
+                    {hasFactoryTools && displaySection}
+                </div>
+                <div className={column}>
+                    {/* Costing defaults (Lite/Base entitled; omitted for Free) */}
+                    {canEditDefaults && <div className={cn(styles.slot, 'order-3 xl:order-none')}><FreeSettingsGroup compact={tier === 'lite'} title={liteSupportingText(language, 'defaults')} summary={`${resolvedDefaults.yarnShortagePct}% ${liteSupportingText(language, 'wastage')} · ${resolvedDefaults.defaultMarginPct}% ${liteSupportingText(language, 'margin')}`} dirty={defaultsDirty}><CostingDefaultsCard
                             initialDefaults={resolvedDefaults}
                             mobileFeedback={tier === 'lite'}
                             onDefaultsUpdated={tier === 'lite' ? defaults => { setConfirmedDefaults(defaults); onDefaultsChange?.(defaults) } : onDefaultsChange}
                             onDirtyChange={setDefaultsDirty}
-                        /></FreeSettingsGroup>
-                    )}
-
+                        /></FreeSettingsGroup></div>}
                     {/* Company profile and document branding (Lite/Base; the card re-checks entitlement) */}
-                    {(tier === 'lite' || tier === 'base') && (
-                        <FreeSettingsGroup compact={tier === 'lite'} anchor="company-profile" title={brandingText(language, 'companyProfileTitle')} summary={brandingText(language, 'companyProfileSummary')} dirty={brandingDirty}><CompanyProfileCard
+                    {(tier === 'lite' || tier === 'base') && <div className={cn(styles.slot, 'order-4 xl:order-none')}><FreeSettingsGroup compact={tier === 'lite'} anchor="company-profile" title={brandingText(language, 'companyProfileTitle')} summary={brandingText(language, 'companyProfileSummary')} dirty={brandingDirty}><CompanyProfileCard
                             onDirtyChange={setBrandingDirty}
-                        /></FreeSettingsGroup>
-                    )}
-
-                    {/* Section 4: Production & Payroll */}
-                    {tier === 'base' && <PayrollCycleSettingsCard
+                        /></FreeSettingsGroup></div>}
+                    {/* Production & Payroll */}
+                    {tier === 'base' && <div className={cn(styles.slot, 'order-5 xl:order-none')}><PayrollCycleSettingsCard
                         initialConfig={payrollCycleConfig ?? undefined}
                         isAuthorizedEditor={factory.isAuthorizedEditor ?? true}
                         onDirtyChange={setPayrollDirty}
-                    />}
-                    {tier === 'base' && <SupervisorAccessCard orgId={factory.id} factoryName={factory.name} />}
-                    <FreeSettingsGroup compact={tier === 'free' || tier === 'lite'} title={freeSupportingText(language, 'security')} summary={profile.emailVerified ? profile.email : `${profile.email} · ${freeSupportingText(language, 'emailUnverified')}`}><SecurityCard email={profile.email} /></FreeSettingsGroup>
-                    <FreeSettingsGroup compact={tier === 'free' || tier === 'lite'} title={freeSupportingText(language, 'display')} summary={freeSupportingText(language, 'device')}><StartupIntroSetting /></FreeSettingsGroup>
-
-                    {/* Section 6: Account & Factory Deletion (Universal) */}
-                    <DeletionReviewCard
+                    /></div>}
+                    {tier === 'base' && <div className={cn(styles.slot, 'order-6 xl:order-none')}><SupervisorAccessCard orgId={factory.id} factoryName={factory.name} /></div>}
+                    {!hasFactoryTools && securitySection}
+                    {!hasFactoryTools && displaySection}
+                </div>
+                {/* Account & Factory Deletion (Universal) */}
+                <div className={cn(styles.slot, 'order-9 xl:order-none xl:col-span-2')}><DeletionReviewCard
                         organizationName={factory.name}
                         accountEmail={profile.email}
                         restoreMobileFocus={tier === 'free' || tier === 'lite'}
                         mobileExportHref={tier === 'lite' ? '/owner/data-export' : undefined}
                         mobileContentClassName={tier === 'lite' ? liteStyles.dialog : undefined}
-                    />
-                </main>
-            </div>
+                    /></div>
+            </main>
         </div>
     )
 }

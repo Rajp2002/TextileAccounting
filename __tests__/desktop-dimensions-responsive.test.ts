@@ -41,8 +41,9 @@ describe('Desktop workspace composition (sidebar | full-width workspace)', () =>
         }
         expect(pageTitleLayoutClass('/owner/data-export')).toContain('max-w-2xl')
         expect(read('app/(dashboard)/owner/data-export/page.tsx')).toContain('max-w-2xl')
-        expect(read('app/(dashboard)/owner/settings/page.tsx')).toContain('max-w-[960px]')
-        expect(read('components/settings/plan-aware/plan-aware-settings-view.tsx')).toContain('max-w-[960px]')
+        // Settings uses the full width too: two columns of sections on wide screens, one below xl.
+        expect(read('app/(dashboard)/owner/settings/page.tsx')).not.toContain('max-w-[960px]')
+        expect(read('components/settings/plan-aware/plan-aware-settings-view.tsx')).toContain('xl:grid xl:grid-cols-2')
     })
 
     it('lets Lite pages run to the right window edge while keeping the left gap', () => {

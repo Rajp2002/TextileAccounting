@@ -115,6 +115,6 @@ describe('Supervisors card', () => {
 
     it('appears in Settings only on Base', () => {
         const view = readFileSync('components/settings/plan-aware/plan-aware-settings-view.tsx', 'utf8')
-        expect(view).toMatch(/tier === 'base' && <SupervisorAccessCard/)
+        expect(view).toMatch(/tier === 'base' && <div className=\{[^}]+\}><SupervisorAccessCard/)
     })
 })
