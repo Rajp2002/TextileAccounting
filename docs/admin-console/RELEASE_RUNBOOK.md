@@ -10,6 +10,7 @@ This checkout is a local implementation, not a deployed release. All new capabil
 | `WEAVLY_ADMIN_PRODUCTION_APPROVED=true` | Additional production prerequisite. An enabled console without this approval fails closed. |
 | `WEAVLY_SUPPORT_ENABLED=true` | Enables requester support reads/intake/replies and founder support writes. Founder read-only access to retained tickets independently requires the admin boundary. |
 | `WEAVLY_SUPPORT_PRODUCTION_APPROVED=true` | Additional production prerequisite for the support capability. |
+| `RESEND_API_KEY` | Secret, not a gate. Lets the server email the founder (`LEGAL_OPERATOR.contactEmail`) about each new customer ticket and customer reply through Resend. Missing or rejected, the ticket still saves; the failure goes to Sentry with tag `support_email`. Customers are never emailed. |
 | `WEAVLY_ADMIN_MFA_ENROLLMENT_ENABLED=true` | Guarded first-TOTP setup after password, confirmed approved email, current UUID grant and provider-bound AAL1 candidate. Never removes a factor. |
 | `WEAVLY_ADMIN_MFA_SETUP_APPROVED=true` | Additional production prerequisite for enrollment, separate from console approval. Recovery and actual provider tests are required first. |
 | `WEAVLY_ADMIN_LEGACY_READS_ENABLED=true` | Bounded read-only formal registers/details. Checked independently inside every DAL read. |
@@ -45,9 +46,29 @@ After staging acceptance and explicit deployment/migration approval, deploy the 
 
 Record exact application commit, migration history, gates, verified founder UUID/setup evidence (without credentials), operation owners, classification/financial limitations, observation results and recovery evidence. No production launch is authorized by this document.
 
+## Support tickets: founder email and simple founder screen (2026-10-30)
+
+Spec: `docs/superpowers/specs/2026-10-30-support-tickets-founder-email-design.md`.
+
+Release order (production):
+
+1. Apply migration `supabase/migrations/20261030150000_support_answered_queue.sql`. It replaces `public.admin_support_read` with the same function plus the `answered` queue, and re-applies its `REVOKE`/`GRANT`. Without it the founder Answered tab shows an error (`SUPPORT_INVALID`, surfaced as "Check the ticket state…"); the other tabs work.
+2. In Vercel production, set `WEAVLY_SUPPORT_ENABLED=true`, `WEAVLY_SUPPORT_PRODUCTION_APPROVED=true` and `RESEND_API_KEY` (from the Resend account created with the founder address; sender `onboarding@resend.dev` needs no domain verification while the founder is the only recipient).
+3. Deploy.
+
+Post-deploy check, on production with a disposable test customer account:
+
+1. Open a ticket as the customer. The founder email arrives with subject `New ticket · {factory} ({Plan}): {subject}`, and its Open ticket link opens `/admin/support/{id}`.
+2. Reply with **Send**. The ticket moves from Needs reply to Answered, and the customer sees the reply in-app.
+3. Reply as the customer. The ticket returns to Needs reply and a second email arrives (`Customer replied · …`).
+4. Reply with **Send and resolve**. The ticket moves to Resolved.
+5. If no email arrives, check Sentry for tag `support_email` and the Resend dashboard.
+
+Rollback: unset `RESEND_API_KEY` to stop email (tickets keep working), or set `WEAVLY_SUPPORT_ENABLED=false` to close support. The migration is additive and needs no rollback.
+
 ## Critical support escalation
 
-Review whether the reported impact involves suspected data loss, unauthorized access or widespread core-work failure. Record a safe diagnostic/incident reference, the founder's next action and the next promised in-app update. Use the existing published `/security-incident` guidance and the separately approved incident operation/owner where relevant; the ticket UI links that guidance. Critical priority does not trigger lockdown, external delivery or a 24/7 guarantee. Retained formal controls remain gated until their operational replacement/fallback is verified.
+Review whether the reported impact involves suspected data loss, unauthorized access or widespread core-work failure. Record a safe diagnostic/incident reference in a private founder note and reply to the customer in-app (the founder screen no longer edits next action, due dates or references; the columns are kept). Use the existing published `/security-incident` guidance and the separately approved incident operation/owner where relevant; the ticket UI links that guidance. Critical priority does not trigger lockdown, external delivery or a 24/7 guarantee. Retained formal controls remain gated until their operational replacement/fallback is verified.
 
 ## Rollback and emergency recovery
 
