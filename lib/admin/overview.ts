@@ -7,6 +7,7 @@ import { getSupportSummary } from './support'
 import { getPaymentsReport } from './payments'
 import { getAdminSystem } from './system'
 import { getPaidPlansAdmin } from './paid-plans'
+import { contactLists, loadGrowthInput } from './growth'
 
 export type AttentionItem = { id: string; target: string; reason: string; observedAt: string; ageSeconds: number; severity: 'critical' | 'high' | 'normal'; owner: 'Founder'; nextAction: string; href: string; group: 'incidents' | 'payments' | 'support'; supportRank?: number; dueLabel?: string; dueAt?: string }
 type Source<T> = { state: 'available'; value: T } | { state: 'unavailable'; value: null; detail: string }
@@ -19,11 +20,12 @@ function source<T>(result: PromiseSettledResult<T>): Source<T> {
 /** Optional source failure stays local; founder verification and required audit fail closed. */
 export async function getAdminOverview(paymentQuery: unknown = {}) {
     const principal = await requireFounder(), requestId = randomUUID(), asOf = new Date().toISOString()
-    const [factoryRead, supportRead, paymentRead, systemRead, paidPlansRead] = await Promise.allSettled([
+    const [factoryRead, supportRead, paymentRead, systemRead, paidPlansRead, contactsRead] = await Promise.allSettled([
         getFactorySummary(), getSupportSummary(), getPaymentsReport(paymentQuery), getAdminSystem(), getPaidPlansAdmin(),
+        loadGrowthInput(principal, asOf).then(contactLists),
     ])
     const factories = source(factoryRead), support = source(supportRead), payments = source(paymentRead), system = source(systemRead)
-    const paidPlans = source(paidPlansRead)
+    const paidPlans = source(paidPlansRead), contacts = source(contactsRead)
     const age = (time: string) => Math.max(0, Math.floor((Date.parse(asOf) - Date.parse(time)) / 1000))
     const attention: AttentionItem[] = []
     if (system.value) for (const signal of system.value.signals) for (const item of signal.items) {
@@ -56,7 +58,7 @@ export async function getAdminOverview(paymentQuery: unknown = {}) {
         || (a.group === 'support' && b.group === 'support' ? (a.supportRank ?? 3) - (b.supportRank ?? 3) : 0)
         || a.observedAt.localeCompare(b.observedAt) || a.id.localeCompare(b.id))
     await adminRecordAudit(principal, 'overview.read', 'overview', 'today', requestId, { after: { count: unique.length } })
-    return { factories, support, payments, system, paidPlans, attention: unique.slice(0, 100), attentionLimit: 100,
+    return { factories, support, payments, system, paidPlans, contacts, attention: unique.slice(0, 100), attentionLimit: 100,
         asOf, definitionVersion: 'admin-today-v1', reportingZone: 'Asia/Kolkata', requestId,
         activation: { state: 'unavailable' as const, detail: 'Activation-gap queues need complete prerequisite and event coverage. No missing history is treated as inactivity.' },
         sourceFreshness: [factories, support, payments, system].map((entry, index) => ({ source: ['factories', 'support', 'payments', 'system'][index], state: entry.state, asOf: entry.value?.asOf ?? null })) }

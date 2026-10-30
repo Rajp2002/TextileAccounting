@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('server-only', () => ({}))
-const mocks = vi.hoisted(() => ({ requireFounder: vi.fn(), audit: vi.fn(), factory: vi.fn(), support: vi.fn(), payments: vi.fn(), system: vi.fn(), paidPlans: vi.fn() }))
+const mocks = vi.hoisted(() => ({ requireFounder: vi.fn(), audit: vi.fn(), factory: vi.fn(), support: vi.fn(), payments: vi.fn(), system: vi.fn(), paidPlans: vi.fn(), growth: vi.fn(), contacts: vi.fn() }))
 vi.mock('@/lib/admin/paid-plans', () => ({ getPaidPlansAdmin: mocks.paidPlans }))
+vi.mock('@/lib/admin/growth', () => ({ loadGrowthInput: mocks.growth, contactLists: mocks.contacts }))
 vi.mock('@/lib/admin/founder', () => ({ requireFounder: mocks.requireFounder, adminRecordAudit: mocks.audit }))
 vi.mock('@/lib/admin/factories', () => ({ getFactorySummary: mocks.factory }))
 vi.mock('@/lib/admin/support', () => ({ getSupportSummary: mocks.support }))
@@ -16,6 +17,23 @@ beforeEach(() => {
     mocks.payments.mockResolvedValue({ asOf: '2026-10-04T00:00:00Z', exceptions: [] })
     mocks.system.mockResolvedValue({ asOf: '2026-10-04T00:00:00Z', signals: [] })
     mocks.paidPlans.mockResolvedValue({ goLiveAt: null, endingIn14Days: 0, endingIn30Days: 0, alreadyEnded: 0, readiness: { mode: 'test', missing: [] } })
+    mocks.growth.mockResolvedValue({ asOf: '2026-10-04T00:00:00Z', goLiveAt: null, trackingSince: null, factories: [] })
+    mocks.contacts.mockReturnValue({ trialsEnding: [], renewalsDue: [], upgradeSignals: [] })
+})
+describe('Release 3 Customers to contact on Today', () => {
+    it('loads the contact lists from the growth input', async () => {
+        mocks.contacts.mockReturnValue({ trialsEnding: [{ orgId: 'o1' }], renewalsDue: [], upgradeSignals: [] })
+        const result = await getAdminOverview()
+        expect(result.contacts).toMatchObject({ state: 'available', value: { trialsEnding: [{ orgId: 'o1' }] } })
+        expect(mocks.growth).toHaveBeenCalledWith({ userId: 'founder', sessionId: 'session' }, expect.any(String))
+    })
+    it('a contacts source failure leaves the rest of Today intact', async () => {
+        mocks.growth.mockRejectedValue(new Error('private backend failure'))
+        const result = await getAdminOverview()
+        expect(result.contacts).toMatchObject({ state: 'unavailable', value: null })
+        expect(result.support.value?.needsReply).toBe(1)
+        expect(JSON.stringify(result)).not.toContain('private backend failure')
+    })
 })
 describe('Release 2 paid plans warning on Today', () => {
     it('warns while paid plans are not live and unpaid trials end within 14 days', async () => {
