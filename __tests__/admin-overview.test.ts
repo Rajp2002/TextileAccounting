@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { readFileSync } from 'node:fs'
 vi.mock('server-only', () => ({}))
 const mocks = vi.hoisted(() => ({ requireFounder: vi.fn(), audit: vi.fn(), factory: vi.fn(), support: vi.fn(), payments: vi.fn(), system: vi.fn(), paidPlans: vi.fn(), growth: vi.fn(), contacts: vi.fn() }))
 vi.mock('@/lib/admin/paid-plans', () => ({ getPaidPlansAdmin: mocks.paidPlans }))
@@ -91,5 +92,14 @@ describe('AD08 partial-source operating queue', () => {
         expect(result.attention[0]).toMatchObject({ dueLabel: 'Promised customer update due', dueAt: promise.nextUpdateDueAt })
         expect(result.support.value?.overdueFollowUps).toBe(1)
         expect(result.support.value?.overduePromises).toBe(1)
+    })
+})
+describe('Today page support tiles', () => {
+    it('today keeps needs-reply and drops promise and follow-up tiles', () => {
+        const page = readFileSync('app/(admin-console)/admin/page.tsx', 'utf8')
+        expect(page).toContain('Needs our reply')
+        expect(page).toContain('/admin/support?queue=needs_reply')
+        expect(page).not.toContain('Promised updates overdue')
+        expect(page).not.toContain('Internal customer follow-ups due')
     })
 })
