@@ -1,12 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { completePlanSelection } from '@/app/(auth)/onboarding/plans/actions'
 import { useTranslation } from '@/lib/i18n/context'
 import { liteTrialText } from '@/lib/i18n/lite-trial'
 import { cn } from '@/lib/utils'
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
+import { planSelectionText } from '@/lib/i18n/plan-selection'
 
 /**
  * Pay-now control shown beside the trial start: a quiet text link that opens the
@@ -19,13 +21,15 @@ interface StartTrialButtonProps {
   className?: string
   /** Runs once the trial is confirmed, just before the browser moves to the workspace. */
   onStarted?: () => void
+  errorPresentation?: 'inline' | 'dialog'
 }
 
 /** Starts the 90-day Lite trial from the verified owner session, then moves to the estimator. */
-export function StartTrialButton({ className, onStarted }: StartTrialButtonProps) {
+export function StartTrialButton({ className, onStarted, errorPresentation = 'inline' }: StartTrialButtonProps) {
   const { language, tx } = useTranslation()
   const [pending, setPending] = useState(false)
   const [error, setError] = useState('')
+  const buttonRef = useRef<HTMLButtonElement>(null)
 
   const start = async () => {
     setPending(true)
@@ -48,6 +52,7 @@ export function StartTrialButton({ className, onStarted }: StartTrialButtonProps
   return (
     <div className="space-y-2">
       <Button
+        ref={buttonRef}
         type="button"
         size="lg"
         disabled={pending}
@@ -58,14 +63,22 @@ export function StartTrialButton({ className, onStarted }: StartTrialButtonProps
         {pending && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
         <span>{liteTrialText(language, 'startTrial')}</span>
       </Button>
-      {error && (
+      {error && errorPresentation === 'dialog' ? (
+        <Dialog open onOpenChange={open => { if (!open) setError('') }}>
+          <DialogContent mobilePresentation="center" showCloseButton={false} onCloseAutoFocus={event => { event.preventDefault(); buttonRef.current?.focus() }}>
+            <DialogTitle>{planSelectionText(language, 'trialError')}</DialogTitle>
+            <DialogDescription role="alert">{tx(error)}</DialogDescription>
+            <DialogClose asChild><Button size="lg" className="min-h-[44px] justify-self-end">{planSelectionText(language, 'close')}</Button></DialogClose>
+          </DialogContent>
+        </Dialog>
+      ) : error ? (
         <p
           role="alert"
           className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-center text-sm font-medium text-destructive"
         >
           {tx(error)}
         </p>
-      )}
+      ) : null}
     </div>
   )
 }

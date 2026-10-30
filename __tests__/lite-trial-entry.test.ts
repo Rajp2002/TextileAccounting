@@ -46,8 +46,8 @@ const PAY_NOW = 'Or pay now: ₹2,999 for the first year'
 
 /** The Lite branch of PlanCard's CTA block, from its isLite test to the Base branch. */
 function liteCtaBlock(card: string) {
-  const start = card.indexOf('{isLite && (\n          <>')
-  const end = card.indexOf('{isBase && (\n          <>')
+  const start = card.indexOf('{isLite && (')
+  const end = card.indexOf('{isBase && (')
   expect(start).toBeGreaterThan(-1)
   expect(end).toBeGreaterThan(start)
   return card.slice(start, end)
@@ -104,7 +104,8 @@ describe('Lite trial entry: PlanCard', () => {
     expect(block).toContain('<StartTrialButton')
     expect(block).toContain("liteTrialText(language, 'trialDisclosure')")
     expect(block).toContain("liteTrialText(language, 'trialPayNow')")
-    expect(block).toMatch(/liteTrialEligible \? \([\s\S]*?<SubscribeButton[\s\S]*?\) : billingReady \? \(/)
+    expect(block).toMatch(/liteTrialEligible \? \([\s\S]*?<DialogTrigger[\s\S]*?\) : billingReady \? \(/)
+    expect(read('components/plans/PlanCard.tsx')).toMatch(/\{showTrial && billingReady && checkoutOpen && \(\s*<SubscribeButton/)
   })
 
   it('renders the trial button and the disclosure for an eligible Lite card', async () => {
@@ -114,7 +115,8 @@ describe('Lite trial entry: PlanCard', () => {
     expect(html).toContain(TRIAL_START)
     expect(html).toContain(TRIAL_DISCLOSURE)
     expect(html).toContain(PAY_NOW)
-    expect(html).toContain('SUBSCRIBE Or pay now')
+    // The pay-now entry opens plan details; checkout and its document disclosure render inside that dialog.
+    expect(html).toContain('aria-haspopup="dialog"')
     expect(html).not.toContain('Upgrade to Lite')
   })
 
