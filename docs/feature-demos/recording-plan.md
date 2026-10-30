@@ -1,5 +1,22 @@
 # Plan-page feature demonstrations
 
+## Update 2026-10-30: Free and Lite demos cut from the launch film
+
+Cost Estimator, Saved Qualities, Rate Book and Saved Costings are now stretches of the Lite launch film v2 (`marketing/lite-launch-video`, `LiteLaunchV2`). The film shows today's screens as captures of the app's own components with sample data (Shubh Weaves, Maslin Lichi), so the old 2 October recordings below no longer apply to these four.
+
+| Feature | From the film | Length |
+| --- | --- | --- |
+| Cost Estimator | Estimator scene up to Save Costing: warp, the 711/71 usual-range check, yarn components, two-weft picks split, overhead, Live cost | 0:54 |
+| Saved Qualities | "Save Quality and Costing", then a scene made for the preview: open Saved qualities, search, load Maslin Lichi, add this order's costs, Live cost | 0:31 |
+| Rate Book | Rates scene: review dates, confirm, Edit rate, Activity, Propagate | 0:33 |
+| Saved Costings | Breakdown, quotation export, Check an offer, then the version rail, costings behind today's rates and archiving | 1:12 |
+
+- Each clip uses the film's own sound: the voice and effects stems over its stretch of the film, the music ducked under its own lines, mastered to -16 LUFS. The Saved Qualities scene uses the same guide voice (Kokoro `af_heart`) and the film's synthesised effects.
+- The voice is English. Hindi and Gujarati viewers get the same video with captions and transcripts in their language (`<feature>.hi|gu.vtt/txt/json`), shown from the start; the player labels the selector "Caption language" for these four. The captions have not yet been reviewed by a native speaker.
+- MP4s are H.264 1280 × 720 at 30 fps with stereo AAC and fast start; posters are 1280 × 720 frames from each clip. Asset URLs carry `?v=film-1`.
+- Production and Payroll (Base) keep the recordings described below, voiced in all three languages.
+- The tooling (Remotion compositions over a copy of the film project, the Saved Qualities capture script, the audio mix and the assembly script) is not in the repository because the film project is not yet; it belongs in `marketing/lite-launch-video/src/previews` when the film is copied back.
+
 Capture source: the production UI at https://textile-accounting.vercel.app on 2 October 2026, using the supplied Base demo account. Capture starts after authentication. New business records use the `Demo` prefix; no production readings or payments are entered for existing workers.
 
 Each video is a recording of real UI actions, with a visible pointer, reading pauses, and short chapter descriptions. English narration is generated locally with Kokoro and aligned to the recorded actions. Preparation and investigation are excluded from the finished clips.

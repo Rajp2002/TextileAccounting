@@ -1,26 +1,23 @@
 Rate Book
-Recorded in Weavly Base with demonstration data. English narration generated locally with Kokoro.
+Recorded from Weavly Lite with sample data (Shubh Weaves is a sample factory). English narration generated locally with Kokoro.
 
-00:00:00.500 – 00:00:05.332
-Find the demo yarns in Rate Book, and check which saved quality uses them.
+00:00:00.467 – 00:00:02.500
+A few weeks later, yarn goes up.
 
-00:00:11.000 – 00:00:18.845
-Update the weft rate to one hundred and forty rupees per kilogram. Add a supplier note so you can identify the source.
+00:00:04.333 – 00:00:08.300
+Every yarn has a review date, so Weavly tells you when a rate is due.
 
-00:00:24.900 – 00:00:30.437
-Save the new rate, then open Activity to review the recorded change and its history.
+00:00:08.733 – 00:00:11.200
+If a price hasn't moved, just confirm it.
 
-00:00:38.000 – 00:00:40.159
-Reopen the linked saved quality.
+00:00:11.667 – 00:00:15.300
+This one has gone up: Edit rate, type the new price, and save.
 
-00:00:45.000 – 00:00:47.424
-The weft rate now includes your update.
+00:00:18.267 – 00:00:21.733
+Activity shows how that yarn's rate has moved over time.
 
-00:00:50.000 – 00:00:58.099
-Apply the quality and check its yarn inputs. Open Live Cost to review the recalculated production cost and selling price.
+00:00:23.733 – 00:00:25.000
+Now, Propagate.
 
-00:01:05.800 – 00:01:10.983
-Now open an earlier saved costing to compare it with the updated estimate.
-
-00:01:13.500 – 00:01:20.790
-The earlier costing keeps its original figures. Changing Rate Book does not rewrite saved costing snapshots.
+00:00:25.333 – 00:00:31.500
+Every costing that uses this yarn gets a new version, with the new rate worked in. No rebuilding.

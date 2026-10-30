@@ -1,38 +1,44 @@
 Saved Costings
-Recorded in Weavly Base with demonstration data. English narration generated locally with Kokoro.
+Recorded from Weavly Lite with sample data (Shubh Weaves is a sample factory). English narration generated locally with Kokoro.
 
-00:00:00.500 – 00:00:05.982
-Search for the fabric and open its saved costing to inspect the original figures.
+00:00:02.333 – 00:00:05.500
+Want to see how a number was reached? Open Breakdown.
 
-00:00:09.200 – 00:00:14.715
-This snapshot preserves the original inputs and results, so you can refer back to them.
+00:00:06.333 – 00:00:09.600
+Every calculation, step by step. Nothing hidden.
 
-00:00:20.000 – 00:00:25.473
-Choose Use to restore the inputs. Change the weaving rate to sixteen rupees per metre.
+00:00:13.133 – 00:00:15.600
+Export a polished quotation for the trader.
 
-00:00:33.500 – 00:00:39.527
-Set the target margin to twenty percent, then open Live Cost to review the updated result.
+00:00:17.333 – 00:00:19.600
+Your costs stay on a separate internal sheet.
 
-00:00:42.500 – 00:00:49.549
-Choose Save New Version. Version two preserves your changes while version one keeps its original figures.
+00:00:22.000 – 00:00:24.067
+Then he comes back, with his own rate.
 
-00:00:53.300 – 00:00:58.355
-Enable Compare, then open the fabric's version history to choose the estimates.
+00:00:27.533 – 00:00:29.900
+Before you reply, open Check an offer.
 
-00:01:02.000 – 00:01:08.623
-Select versions one and two. You can now compare how the changed assumptions affect the same fabric.
+00:00:30.667 – 00:00:32.800
+Pick the costing, and type his rate.
 
-00:01:15.500 – 00:01:25.475
-Open Compare Costings. Review the differences in production cost, selling price, margin and quantity to understand the effect of your changes.
+00:00:38.333 – 00:00:43.433
+Here you keep forty-two paisa a metre: eight thousand four hundred rupees on the order.
 
-00:01:34.000 – 00:01:37.053
-Open Export to preview an internal cost sheet.
+00:00:44.000 – 00:00:45.767
+Now you know whether to say yes.
 
-00:01:43.000 – 00:01:47.374
-Enter your business name and notes, then download the detailed cost sheet.
+00:00:47.833 – 00:00:51.233
+Open Breakdown again. The version rail keeps every one.
 
-00:01:58.000 – 00:02:02.822
-Switch to Customer Quotation. Add the buyer’s name and delivery terms.
+00:00:51.833 – 00:00:54.800
+Same quality, different yarn rates, different costs.
 
-00:02:07.000 – 00:02:11.097
-Download a quote that keeps your internal costs and margins private.
+00:00:55.167 – 00:00:59.233
+The latest is always on top, and older versions keep their numbers.
+
+00:00:59.833 – 00:01:05.567
+Haven't propagated yet? Saved Costings shows which costings are behind today's rates.
+
+00:01:06.167 – 00:01:10.800
+And archive the costings and yarns you no longer use, to keep things tidy.

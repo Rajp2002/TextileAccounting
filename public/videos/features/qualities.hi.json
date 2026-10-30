@@ -1,36 +1,31 @@
 {
   "feature": "qualities",
-  "duration": 51.958,
-  "bytes": 1988602,
+  "source": "Weavly Lite launch film v2 (app captures), cut for the plan page",
+  "duration": 30.867,
+  "bytes": 3134360,
   "chapters": [
     {
       "start": 0,
-      "title": "Save a reusable fabric recipe",
-      "description": "From Live cost, choose Save Quality & Create Costing. Review the yarn rates, overhead, margin and quantity, then save the quality and its first costing snapshot together."
+      "title": "Save the fabric with its costing",
+      "description": "Save Quality and Costing keeps the fabric construction for next time."
     },
     {
-      "start": 14.958,
-      "title": "Find a quality and review new rates",
-      "description": "Search the saved-quality library for Demo. Open the rate editor, change the warp rate from Rs 125 to Rs 130/kg, review its cost impact, and save and apply the quality. Existing costing snapshots stay unchanged."
-    },
-    {
-      "start": 39.958,
-      "title": "Reuse the saved construction",
-      "description": "Open the quality library and select the saved fabric to restore its yarn recipe and costing assumptions without entering all the inputs again."
+      "start": 8.2,
+      "title": "Start the next costing from it",
+      "description": "Open Saved qualities, search, load the fabric and its yarns, add this order's costs and open Live cost."
     }
   ],
   "narration": {
-    "engine": "AI4Bharat IndicF5",
-    "reference": "MAR_F_WIKI_00001.wav",
-    "model_revision": "ba85abedf18dc479a447eaa0eccbd76ab78a47d5",
-    "generation": [
-      "Local CPU"
-    ],
-    "language": "hi",
+    "engine": "Kokoro-82M v1.0 via kokoro-onnx 0.6.1",
+    "voice": "af_heart",
+    "language": "en",
     "audio_codec": "aac",
     "sample_rate": 48000,
-    "channels": 1,
-    "cue_count": 5,
-    "caption_count": 5
+    "channels": 2,
+    "cue_count": 6
+  },
+  "captions": {
+    "language": "hi",
+    "caption_count": 6
   }
 }
