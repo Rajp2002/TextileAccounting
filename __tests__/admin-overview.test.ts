@@ -52,6 +52,8 @@ describe('Release 2 paid plans warning on Today', () => {
         const result = await getAdminOverview()
         expect(result.paidPlans).toMatchObject({ state: 'unavailable', value: null })
         expect(result.support.value?.needsReply).toBe(1)
+        // The 14-day trial warning must not vanish silently: Today names the source as unavailable.
+        expect(result.sourceFreshness).toContainEqual(expect.objectContaining({ source: 'paid plans', state: 'unavailable' }))
     })
 })
 describe('AD08 partial-source operating queue', () => {

@@ -61,5 +61,10 @@ export async function getAdminOverview(paymentQuery: unknown = {}) {
     return { factories, support, payments, system, paidPlans, contacts, attention: unique.slice(0, 100), attentionLimit: 100,
         asOf, definitionVersion: 'admin-today-v1', reportingZone: 'Asia/Kolkata', requestId,
         activation: { state: 'unavailable' as const, detail: 'Activation-gap queues need complete prerequisite and event coverage. No missing history is treated as inactivity.' },
-        sourceFreshness: [factories, support, payments, system].map((entry, index) => ({ source: ['factories', 'support', 'payments', 'system'][index], state: entry.state, asOf: entry.value?.asOf ?? null })) }
+        sourceFreshness: [
+            ...[factories, support, payments, system].map((entry, index) => ({ source: ['factories', 'support', 'payments', 'system'][index], state: entry.state, asOf: entry.value?.asOf ?? null })),
+            // Read live on each request; a failure here would otherwise hide the trial warning and contact lists silently.
+            { source: 'paid plans', state: paidPlans.state, asOf: paidPlans.value ? asOf : null },
+            { source: 'customers to contact', state: contacts.state, asOf: contacts.value ? asOf : null },
+        ] }
 }
