@@ -82,6 +82,7 @@ export const LITE_COPY_NOT_SHOWN = new Set<string>([
     "input:not([type=\"hidden\"]):not([type=\"button\"]):not([type=\"submit\"]):not([type=\"reset\"]):not([type=\"checkbox\"]):not([type=\"radio\"]):not([type=\"file\"]):not([disabled]):not([readonly])",
     "internal notes",
     "left 160ms ease-out, top 160ms ease-out, width 160ms ease-out, height 160ms ease-out, opacity 120ms ease-out",
+    "live Razorpay keys",
     "matching Razorpay key ID and secret",
     "matching supplier state code",
     "monthly production",
