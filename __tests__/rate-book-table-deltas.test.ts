@@ -88,11 +88,11 @@ describe('Rate Book board: one card per yarn in RatesClient.tsx', () => {
         expect(client).toContain('{section.rates.map(rate => renderYarnCard(rate))}')
     })
 
-    it('reads the price large, its change in words and its trail as a small stepped line', () => {
+    it('reads the price large and its change in words, leaving the trend to the Activity modal', () => {
         expect(card).toContain('{amount}<span className="ml-1 text-base font-medium tracking-normal text-muted-foreground">{suffix}</span>')
         expect(card).toContain('<PriceChange rate={rate} copy={copy} language={language} />')
-        expect(card).toContain('priceTrail(rate.price_points ?? [], Number(rate.current_value), todayDate)')
-        expect(card).toContain('<PriceTrailSpark trail={trail}')
+        expect(card).not.toContain('PriceTrailSpark')
+        expect(card).toContain("onClick={() => openHistory(rate, 'trend')}")
         const change = client.slice(client.indexOf('function PriceChange('), client.indexOf('export default function RatesClient'))
         expect(change).toContain("delta.direction === 'initial'")
         expect(change).toContain("delta.direction === 'unchanged'")

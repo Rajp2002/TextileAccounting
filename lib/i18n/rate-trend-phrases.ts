@@ -1,12 +1,16 @@
 import type { BasePlanLocalLanguage } from './base-plan-phrases'
 
 /**
- * Hindi and Gujarati for the Rate Book price-history modal (the chart opened from
- * a yarn's rate and trend). Kept together so a native reviewer can check them in
- * one place; native review is a release gate and is not done.
+ * Hindi and Gujarati for the Rate Book Activity modal (every yarn's price chart,
+ * opened from the page header or a yarn's price). Kept together so a native
+ * reviewer can check them in one place; native review is a release gate and is
+ * not done.
  */
 const PHRASES: Array<[string, string, string]> = [
   ['Price history', 'भाव का इतिहास', 'ભાવનો ઇતિહાસ'],
+  ['Yarn rate activity', 'यार्न रेट गतिविधि', 'યાર્ન રેટ પ્રવૃત્તિ'],
+  ['Pick a yarn to see how its price has moved.', 'भाव कैसे बदला, यह देखने के लिए यार्न चुनें।', 'ભાવ કેવી રીતે બદલાયો તે જોવા યાર્ન પસંદ કરો.'],
+  ['See the price history of every yarn', 'हर यार्न का भाव इतिहास देखें', 'દરેક યાર્નનો ભાવ ઇતિહાસ જુઓ'],
   ['View price history', 'भाव का इतिहास देखें', 'ભાવનો ઇતિહાસ જુઓ'],
   ['Price history chart', 'भाव इतिहास चार्ट', 'ભાવ ઇતિહાસ ચાર્ટ'],
   ['Loading price history…', 'भाव का इतिहास लोड हो रहा है…', 'ભાવનો ઇતિહાસ લોડ થઈ રહ્યો છે…'],

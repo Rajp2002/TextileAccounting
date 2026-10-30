@@ -165,11 +165,13 @@ describe('price-history translations', () => {
         ...literalsIn('components/rates/RateTrendDialog.tsx'),
         ...literalsIn('components/rates/RateTrendChart.tsx'),
         'View price history',
+        'See the price history of every yarn',
     ])]
 
     it('guards the strings it is meant to guard', () => {
-        expect(literals).toEqual(expect.arrayContaining(['View price history', 'Price history', 'Since first entry', 'Full activity', 'First entry', 'Price changes']))
+        expect(literals).toEqual(expect.arrayContaining(['View price history', 'Yarn rate activity', 'Pick a yarn to see how its price has moved.', 'Since first entry', 'Full activity', 'First entry', 'Price changes']))
         expect(read('app/(dashboard)/owner/rates/RatesClient.tsx')).toContain("tx('View price history')")
+        expect(read('app/(dashboard)/owner/rates/RatesClient.tsx')).toContain("tx('See the price history of every yarn')")
     })
 
     it.each(['hi', 'gu'] as const)('has a non-empty %s translation for every new string', language => {

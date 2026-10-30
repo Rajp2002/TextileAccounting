@@ -8,13 +8,24 @@ const cardStart = client.indexOf('const renderYarnCard')
 const card = client.slice(cardStart, client.indexOf('data-lite-rates=', cardStart))
 
 describe('Rate Book yarn card actions', () => {
-    it('keeps Edit rate and Activity on the yarn card', () => {
+    it('keeps Edit rate on the yarn card and moves Activity to the page header', () => {
         const edit = card.slice(card.lastIndexOf('<Button', card.indexOf('quickEditAction')), card.indexOf("{tx('Edit rate')}"))
         expect(edit).not.toContain('variant=')
         expect(edit).toContain('cardAction')
-        const activity = card.slice(card.lastIndexOf('<Button', card.indexOf("{tx('Activity')}")), card.indexOf("{tx('Activity')}"))
-        expect(activity).not.toContain('variant=')
-        expect(activity).toContain('cardAction')
+        expect(card).not.toContain("{tx('Activity')}")
+        const header = client.slice(client.indexOf('<PageHeader'), client.indexOf('data-ratebook-field="addRateAction"'))
+        expect(header).toContain('data-ratebook-field="activityAction"')
+        expect(header).toContain("openHistory(activityRates[0], 'trend')")
+    })
+
+    it('offers every real active yarn in the Activity modal, and ignores a stale history fetch', () => {
+        expect(client).toContain("rate.category === category && !isSampleRecordId(rate.id)")
+        expect(client).toContain('groups={activityGroups}')
+        expect(client).toContain("onSelectRate={rate => openHistory(rate, 'trend')}")
+        expect(client).toContain('if (request !== historyRequest.current) return')
+        const dialog = readFileSync(join(process.cwd(), 'components/rates/RateTrendDialog.tsx'), 'utf8')
+        expect(dialog).toContain('data-ratebook-field="activityYarnPicker"')
+        expect(dialog).toContain('aria-pressed={selected}')
     })
 
     it('leaves costing updates to Saved Costings instead of offering a per-yarn propagation', () => {

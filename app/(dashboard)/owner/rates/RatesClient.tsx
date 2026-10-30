@@ -67,8 +67,6 @@ import {
 import {
     compareReviewUrgency,
     daysUntil,
-    priceTrail,
-    priceTrailPath,
     rateDateLabel,
     reviewDueDate,
     startRateReview,
@@ -212,7 +210,7 @@ function getRateUsageNames(rate: Pick<CostRateRow, 'fabric_names'> | null) {
 const secondaryAction = 'h-10 rounded-lg border-hairline bg-surface font-semibold text-ink shadow-xs hover:bg-surface-soft max-md:min-h-[44px]'
 const ghostAction = 'h-10 rounded-lg font-semibold text-body max-md:min-h-[44px]'
 // A yarn card's own actions are filled pills so they read as tappable; Propagate is saffron because it is waiting on the owner.
-// Card pills are a step smaller than page buttons so Propagate, Edit rate, Activity and delete share one row.
+// Card pills are a step smaller than page buttons so Edit rate and delete share one row.
 const cardAction = 'h-9 gap-1 rounded-lg px-2.5 text-[13px] font-semibold has-[>svg]:px-2 max-md:min-h-[44px]'
 /** Cards fill the width in columns of at least 22rem, one column on phones. */
 const yarnCardGrid = 'grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(min(100%,22rem),1fr))]'
@@ -353,18 +351,6 @@ function YarnUsage({ rate, loading, copy }: { rate: CostRateRow; loading: boolea
             {loading ? copy.usageLoading : copy.notUsed}
             {!loading && ownSource && ` · ${fillCopy(copy.from, { source: ownSource })}`}
         </p>
-    )
-}
-
-/** A yarn's recorded prices as a small stepped line: saffron-ochre when the price ended higher, green when lower. */
-function PriceTrailSpark({ trail, label }: { trail: PricePoint[]; label: string }) {
-    const { line, area } = priceTrailPath(trail, 112, 40)
-    const rose = trail.at(-1)!.value >= trail[0].value
-    return (
-        <svg role="img" aria-label={label} viewBox="0 0 112 40" preserveAspectRatio="none" className="block h-10 w-28 shrink-0" style={{ color: rose ? 'var(--wv-ochre-400)' : 'var(--wv-moss-700)' }}>
-            <path d={area} fill="currentColor" fillOpacity={0.14} />
-            <path d={line} fill="none" stroke="currentColor" strokeWidth={2} vectorEffect="non-scaling-stroke" strokeLinejoin="round" />
-        </svg>
     )
 }
 
@@ -733,6 +719,8 @@ export default function RatesClient({
     const [historyRows, setHistoryRows] = useState<RateHistoryRow[]>([])
     const [historyLoading, setHistoryLoading] = useState(false)
     const [historyError, setHistoryError] = useState<string | null>(null)
+    // Switching yarns in the Activity modal can overlap fetches; only the latest one may land.
+    const historyRequest = useRef(0)
     const [reviewRate, setReviewRate] = useState<CostRateRow | null>(null)
     const [reviewError, setReviewError] = useState<string | null>(null)
     // Prices due for a check open in one modal from the summary band, not as cards on the page.
@@ -1179,6 +1167,7 @@ export default function RatesClient({
             toast.info(tourCommonCopy[language].sampleBanner)
             return
         }
+        const request = ++historyRequest.current
         setHistoryRate(rate)
         setHistoryMode(mode)
         setHistoryRows([])
@@ -1186,6 +1175,7 @@ export default function RatesClient({
         setHistoryLoading(true)
         try {
             const result = await getCostRateHistory(rate.id)
+            if (request !== historyRequest.current) return
             if (result.error) {
                 const message = tx(userFacingError(result.error, 'Rate activity could not be loaded. Try again.'))
                 setHistoryError(message)
@@ -1194,11 +1184,12 @@ export default function RatesClient({
             }
             setHistoryRows((result.data ?? []) as RateHistoryRow[])
         } catch (error) {
+            if (request !== historyRequest.current) return
             const message = tx(userFacingError(error, 'Rate activity could not be loaded. Try again.'))
             setHistoryError(message)
             toast.error(message)
         } finally {
-            setHistoryLoading(false)
+            if (request === historyRequest.current) setHistoryLoading(false)
         }
     }
 
@@ -1343,6 +1334,14 @@ export default function RatesClient({
         return dueIn === 0 ? copy.dueToday : dueIn === 1 ? copy.dueTomorrow : fillCopy(copy.dueInDays, { n: dueIn })
     }
     // Every yarn stays on the board, due ones first in each section; confirming them happens in the review modal.
+    // The Activity modal offers every real active yarn, warp first, whatever the board is filtered to.
+    const activityGroups = YARN_CATEGORIES.map(category => ({
+        label: category === 'yarn_warp' ? copy.warp : copy.weft,
+        rates: activeYarnRates
+            .filter(rate => rate.category === category && !isSampleRecordId(rate.id))
+            .sort((left, right) => left.name.localeCompare(right.name, 'en-IN')),
+    }))
+    const activityRates = activityGroups.flatMap(group => group.rates)
     const boardSections = (categoryFilter === 'all' || tourStep !== null ? YARN_CATEGORIES : [categoryFilter])
         .map(category => ({ category, rates: visibleRates.filter(rate => rate.category === category) }))
         .filter(section => section.rates.length > 0)
@@ -1369,7 +1368,6 @@ export default function RatesClient({
         const quietSample = sample && tourStep === null
         const actionKind = pendingAction?.id === rate.id ? pendingAction.kind : null
         const { amount, suffix } = ratePriceParts(rate.current_value, rate.unit)
-        const trail = archived ? null : priceTrail(rate.price_points ?? [], Number(rate.current_value), todayDate)
         const status = archived
             ? copy.archived
             : due ? dueStatus(rate) : fillCopy(copy.reviewOn, { date: rateDateLabel(reviewDueDate(rate), language) })
@@ -1390,6 +1388,7 @@ export default function RatesClient({
                     </h3>
                     {!quietSample && <p data-ratebook-field="reviewStatusBadge" className={cn('shrink-0 text-[13px] tabular-nums', due ? 'font-semibold text-[var(--wv-ochre-800)]' : 'text-muted-foreground')}>{status}</p>}
                 </div>
+                {/* The price opens this yarn in the Activity modal, where every yarn's chart lives. */}
                 <div data-ratebook-field="rateAndTrend" tabIndex={-1} className="flex items-end justify-between gap-4">
                     <button
                         type="button"
@@ -1405,7 +1404,6 @@ export default function RatesClient({
                         </span>
                         <span className="sr-only">{`${tx('View price history')}: ${rate.name}`}</span>
                     </button>
-                    {trail && <PriceTrailSpark trail={trail} label={fillCopy(copy.trendLabel, { from: formatRateValue(trail[0].value, rate.unit), to: formatRateValue(trail.at(-1)!.value, rate.unit) })} />}
                 </div>
                 {quietSample
                     ? <p className="text-[13px] leading-snug text-muted-foreground">{copy.sampleNote}</p>
@@ -1414,7 +1412,6 @@ export default function RatesClient({
                 <div className="mt-auto border-t border-hairline pt-4">
                 {/* Pills wrap among themselves so the delete icon stays on their first row instead of dropping to a line of its own. */}
                 <div className="flex items-start gap-1.5" role="group" aria-label={tx('Actions')}>
-                    {/* Keep the yarn's editing and history actions together. */}
                     <div className="@container flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
                     {quietSample ? (
                         <Button variant="outline" onClick={handleDeleteDemoYarn} className={secondaryAction}>
@@ -1443,10 +1440,6 @@ export default function RatesClient({
                                 <Pencil className="size-3.5" aria-hidden="true" /><span>{tx('Edit rate')}</span>
                             </Button>
                         )}
-                        {/* Activity opens the price-history chart; its Full activity button switches to the audit list. */}
-                        <Button onClick={() => openHistory(rate, 'trend')} className={cardAction} aria-label={tx('Activity')} title={tx('Activity')}>
-                            <History className="size-3.5" aria-hidden="true" /><span>{tx('Activity')}</span>
-                        </Button>
                     </>}
                     </div>
                     {/* Delete declutters the board; a yarn still in use is offered archive instead. */}
@@ -1506,6 +1499,18 @@ export default function RatesClient({
                                 }
                             }}
                         />
+                        {/* Activity holds every yarn's price chart in one modal, so the cards stay plain. */}
+                        <Button
+                            data-ratebook-field="activityAction"
+                            variant="outline"
+                            disabled={activityRates.length === 0}
+                            onClick={() => openHistory(activityRates[0], 'trend')}
+                            title={tx('See the price history of every yarn')}
+                            className={secondaryAction}
+                        >
+                            <History className="h-4 w-4" aria-hidden="true" />
+                            <span>{tx('Activity')}</span>
+                        </Button>
                         <Button
                             data-ratebook-field="addRateAction"
                             onClick={() => { setSaveError(null); setDraft(defaultDraft(defaultReviewIntervalDays)) }}
@@ -1919,6 +1924,8 @@ export default function RatesClient({
 
             <RateTrendDialog
                 rate={historyMode === 'trend' ? historyRate : null}
+                groups={activityGroups}
+                onSelectRate={rate => openHistory(rate, 'trend')}
                 rows={historyRows}
                 loading={historyLoading}
                 error={historyError}

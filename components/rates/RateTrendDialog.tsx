@@ -14,14 +14,20 @@ import { cn } from '@/lib/utils'
 
 const DATE_OPTIONS = { day: 'numeric', month: 'short', year: 'numeric' } as const
 
+/** The yarns offered in the modal's picker, one labelled group per section of the board. */
+export type RateTrendGroup = { label: string; rates: CostRateRow[] }
+
 /**
- * The yarn's full recorded price history as a chart, from its first entry to today.
- * It shares the Activity sheet's history fetch; `onOpenActivity` switches to that
- * audit list without loading it again.
+ * Every active yarn's price history in one place: pills pick a yarn, and its full
+ * recorded history shows as a chart from its first entry to today. It shares the
+ * Activity sheet's history fetch; `onOpenActivity` switches to that audit list
+ * without loading it again.
  */
-export function RateTrendDialog({ rate, rows, loading, error, onClose, onOpenActivity }: {
+export function RateTrendDialog({ rate, groups, onSelectRate, rows, loading, error, onClose, onOpenActivity }: {
     /** The yarn to chart; null keeps the modal closed. */
     rate: CostRateRow | null
+    groups: RateTrendGroup[]
+    onSelectRate: (rate: CostRateRow) => void
     rows: RateTrendRow[]
     loading: boolean
     error: string | null
@@ -48,21 +54,52 @@ export function RateTrendDialog({ rate, rows, loading, error, onClose, onOpenAct
                             <History className="h-5 w-5" aria-hidden="true" />
                         </div>
                         <div className="min-w-0">
-                            <DialogTitle className="break-words text-xl font-bold text-ink">{rate?.name}</DialogTitle>
+                            <DialogTitle className="text-xl font-bold text-ink">{tx('Yarn rate activity')}</DialogTitle>
                             <DialogDescription className="mt-0.5 text-sm text-muted-foreground">
-                                {tx('Price history')}
-                                {trend && (
-                                    <>
-                                        {' · '}
-                                        {formatDateOnly(trend.points[0].date, DATE_OPTIONS)}
-                                        {' – '}
-                                        {trend.endTime === Date.parse(`${today}T00:00:00Z`) ? tx('Today') : formatDateOnly(new Date(trend.endTime).toISOString(), DATE_OPTIONS)}
-                                    </>
-                                )}
+                                {tx('Pick a yarn to see how its price has moved.')}
                             </DialogDescription>
                         </div>
                     </div>
                 </DialogHeader>
+
+                {/* One pill per active yarn, grouped like the board; the chosen one is filled ink. */}
+                <div data-ratebook-field="activityYarnPicker" className="max-h-36 space-y-2 overflow-y-auto rounded-xl border border-hairline bg-surface-soft/50 p-3">
+                    {groups.filter(group => group.rates.length > 0).map(group => (
+                        <div key={group.label} role="group" aria-label={group.label} className="flex flex-wrap items-center gap-1.5">
+                            <span className="mr-1 w-11 shrink-0 text-xs font-semibold text-subtle">{group.label}</span>
+                            {group.rates.map(option => {
+                                const selected = option.id === rate?.id
+                                return (
+                                    <button
+                                        key={option.id}
+                                        type="button"
+                                        aria-pressed={selected}
+                                        onClick={() => { if (!selected) onSelectRate(option) }}
+                                        className={cn(
+                                            'h-8 max-w-full truncate rounded-full border px-3 text-[13px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/50 max-md:min-h-[44px]',
+                                            selected ? 'border-ink bg-ink text-surface' : 'border-hairline bg-surface text-body hover:bg-surface-soft',
+                                        )}
+                                    >
+                                        {option.name}
+                                    </button>
+                                )
+                            })}
+                        </div>
+                    ))}
+                </div>
+
+                {rate && (
+                    <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                        <h3 className="min-w-0 break-words text-base font-semibold text-ink">{rate.name}</h3>
+                        {trend && !loading && !error && (
+                            <p className="text-[13px] tabular-nums text-muted-foreground">
+                                {formatDateOnly(trend.points[0].date, DATE_OPTIONS)}
+                                {' – '}
+                                {trend.endTime === Date.parse(`${today}T00:00:00Z`) ? tx('Today') : formatDateOnly(new Date(trend.endTime).toISOString(), DATE_OPTIONS)}
+                            </p>
+                        )}
+                    </div>
+                )}
 
                 {loading ? (
                     <div className="flex min-h-[18rem] items-center justify-center gap-2 text-sm text-subtle" role="status" aria-live="polite">

@@ -10,7 +10,7 @@ describe('Rate Book P2: Linked Qualities on each yarn card in RatesClient.tsx', 
     const client = read('app/(dashboard)/owner/rates/RatesClient.tsx')
 
     describe('One fitted line and the modal it opens', () => {
-        const usage = client.slice(client.indexOf('function YarnUsageDialog('), client.indexOf('function PriceTrailSpark('))
+        const usage = client.slice(client.indexOf('function YarnUsageDialog('), client.indexOf('function PriceChange('))
 
         it('replaces the popover with a modal listing every quality', () => {
             expect(client).not.toContain("from '@/components/ui/popover'")
@@ -50,7 +50,7 @@ describe('Rate Book P2: Linked Qualities on each yarn card in RatesClient.tsx', 
 
     describe('Fallback for Unassigned Yarns (No Linked Usages)', () => {
         it('says the yarn is not used yet, with the owner-recorded source, without a popover', () => {
-            const usage = client.slice(client.indexOf('function YarnUsage('), client.indexOf('function PriceTrailSpark('))
+            const usage = client.slice(client.indexOf('function YarnUsage('), client.indexOf('function PriceChange('))
             expect(usage).toContain('const ownSource = rate.discovery_source ? null : rate.source?.trim()')
             expect(usage).toContain('{loading ? copy.usageLoading : copy.notUsed}')
         })
