@@ -27,6 +27,20 @@ describe('paid plans state', () => {
         expect(await state(marked.orgId)).toEqual({ goLiveAt: null, testAccount: true })
     })
 
+    it('test checkout needs an explicit marking: a founder + alias alone is not enough', async () => {
+        const founder = await seedOwnerOrg(db, { tier: null })
+        await asSuperuser(db)
+        await db.query("UPDATE auth.users SET email='founder-fixture@example.test' WHERE id=$1", [founder.userId])
+        await db.query("INSERT INTO private.platform_founder_grants(user_id,enabled,grant_reason,login_email) VALUES($1,true,'Synthetic grant','founder-fixture@example.test')", [founder.userId])
+        const alias = await seedOwnerOrg(db, { tier: null })
+        await asSuperuser(db)
+        await db.query("UPDATE auth.users SET email='founder-fixture+x@example.test' WHERE id=$1", [alias.userId])
+        expect(await state(alias.orgId)).toEqual({ goLiveAt: null, testAccount: false })
+        await asSuperuser(db)
+        await db.query("INSERT INTO private.admin_org_reporting(org_id,cohort,classification_reason) VALUES($1,'internal','Marked by founder')", [alias.orgId])
+        expect(await state(alias.orgId)).toEqual({ goLiveAt: null, testAccount: true })
+    })
+
     it('records interest once per org and counts taps', async () => {
         const org = await seedOwnerOrg(db, { tier: null })
         expect(await interest(org.orgId, org.userId, 'billing')).toBe(1)

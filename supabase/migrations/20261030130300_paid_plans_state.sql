@@ -4,7 +4,7 @@
 -- Weavly takes no real money until the owner incorporates. private.paid_plans_state holds the
 -- one go-live instant (NULL until then). public.paid_plans_state(org) tells the server whether
 -- that org may check out: the app opens checkout for everyone after go-live, and before it
--- only for factories marked test, demo or internal (test keys only). Customers who tap
+-- only for factories the founder explicitly marked test, demo or internal (test keys only). Customers who tap
 -- "Notify me" land in private.paid_plan_interest, one row per factory.
 
 CREATE TABLE private.paid_plans_state (
@@ -25,13 +25,12 @@ SET search_path = ''
 AS $$
   SELECT jsonb_build_object(
     'goLiveAt', (SELECT s.go_live_at FROM private.paid_plans_state s WHERE s.id),
-    'testAccount', coalesce((
-      SELECT private.resolve_reporting_cohort(r.cohort, u.email) IN ('test', 'demo', 'internal')
-      FROM public.organizations o
-      LEFT JOIN private.admin_org_reporting r ON r.org_id = o.id
-      LEFT JOIN auth.users u ON u.id = o.owner_id
-      WHERE o.id = p_org_id
-    ), false)
+    -- Test checkout needs an explicit founder marking. The founder-alias rule is for reporting
+    -- only: anyone can sign up with a + alias of the published founder email.
+    'testAccount', EXISTS (
+      SELECT 1 FROM private.admin_org_reporting r
+      WHERE r.org_id = p_org_id AND r.cohort IN ('test', 'demo', 'internal')
+    )
   )
 $$;
 REVOKE ALL ON FUNCTION public.paid_plans_state(uuid) FROM PUBLIC, anon, authenticated;
