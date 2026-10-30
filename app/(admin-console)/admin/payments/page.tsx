@@ -2,10 +2,23 @@ import { getPaymentsReport } from '@/lib/admin/payments'
 import { formatMinor } from '@/lib/admin/payments-domain'
 import { ReportHeader, ReportLink, ReportSurface, ReportTime, SourceUnavailable } from '@/components/admin/report-ui'
 import { PaymentFilters } from './filters'
+import { getPaidPlansAdmin } from '@/lib/admin/paid-plans'
+import { PaidPlansCard } from '@/components/admin/paid-plans-card'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
-export default async function PaymentsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+type PaymentsSearchParams = { searchParams: Promise<Record<string, string | string[] | undefined>> }
+export default async function PaymentsPage({ searchParams }: PaymentsSearchParams) {
+    return <><PaidPlansPanel/><PaymentsReport searchParams={searchParams}/></>
+}
+/** Paid-plan pilot controls load on their own, so a payments-report failure never hides them. */
+async function PaidPlansPanel() {
+    let summary
+    try { summary = await getPaidPlansAdmin() }
+    catch { return <section id="paid-plans" className="mb-6 rounded-xl border border-hairline bg-surface p-5"><h2 className="font-semibold">Paid plans</h2><p className="mt-1 text-sm text-body">Paid plan status is unavailable. Nothing has changed.</p></section> }
+    return <section id="paid-plans" className="mb-6"><PaidPlansCard summary={summary}/></section>
+}
+async function PaymentsReport({ searchParams }: PaymentsSearchParams) {
     const params = await searchParams
     const input = Object.fromEntries(Object.entries(params).filter(([, value]) => value !== undefined))
     let report

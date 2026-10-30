@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('server-only', () => ({}))
-const mocks = vi.hoisted(() => ({ requireFounder: vi.fn(), audit: vi.fn(), factory: vi.fn(), support: vi.fn(), payments: vi.fn(), system: vi.fn() }))
+const mocks = vi.hoisted(() => ({ requireFounder: vi.fn(), audit: vi.fn(), factory: vi.fn(), support: vi.fn(), payments: vi.fn(), system: vi.fn(), paidPlans: vi.fn() }))
+vi.mock('@/lib/admin/paid-plans', () => ({ getPaidPlansAdmin: mocks.paidPlans }))
 vi.mock('@/lib/admin/founder', () => ({ requireFounder: mocks.requireFounder, adminRecordAudit: mocks.audit }))
 vi.mock('@/lib/admin/factories', () => ({ getFactorySummary: mocks.factory }))
 vi.mock('@/lib/admin/support', () => ({ getSupportSummary: mocks.support }))
@@ -14,6 +15,26 @@ beforeEach(() => {
     mocks.support.mockResolvedValue({ asOf: '2026-10-04T00:00:00Z', unanswered: 1, needsReply: 1, overdueFollowUps: 0, attention: [{ id: 'support:1', ticketId: '1', subject: 'Synthetic help', priority: 'normal', observedAt: '2026-10-01T00:00:00Z', status: 'in_progress', followUpDueAt: null, nextUpdateDueAt: null, sortRank: 3, nextAction: 'Reply in-app', reason: 'Customer is waiting.' }] })
     mocks.payments.mockResolvedValue({ asOf: '2026-10-04T00:00:00Z', exceptions: [] })
     mocks.system.mockResolvedValue({ asOf: '2026-10-04T00:00:00Z', signals: [] })
+    mocks.paidPlans.mockResolvedValue({ goLiveAt: null, endingIn14Days: 0, endingIn30Days: 0, alreadyEnded: 0, readiness: { mode: 'test', missing: [] } })
+})
+describe('Release 2 paid plans warning on Today', () => {
+    it('warns while paid plans are not live and unpaid trials end within 14 days', async () => {
+        mocks.paidPlans.mockResolvedValue({ goLiveAt: null, endingIn14Days: 3, endingIn30Days: 4, alreadyEnded: 0, readiness: { mode: 'test', missing: [] } })
+        const item = (await getAdminOverview()).attention.find(entry => entry.id === 'paid_plans:trials_ending')
+        expect(item).toMatchObject({ group: 'payments', severity: 'high', href: '/admin/payments#paid-plans', reason: "3 unpaid trials end in the next 14 days. Paid plans aren't live yet." })
+    })
+    it('does not warn after go-live or when no trial is ending', async () => {
+        mocks.paidPlans.mockResolvedValue({ goLiveAt: '2027-03-12T05:00:00Z', endingIn14Days: 3, endingIn30Days: 4, alreadyEnded: 0, readiness: { mode: 'live', missing: [] } })
+        expect((await getAdminOverview()).attention.some(entry => entry.id === 'paid_plans:trials_ending')).toBe(false)
+        mocks.paidPlans.mockResolvedValue({ goLiveAt: null, endingIn14Days: 0, endingIn30Days: 2, alreadyEnded: 1, readiness: { mode: 'test', missing: [] } })
+        expect((await getAdminOverview()).attention.some(entry => entry.id === 'paid_plans:trials_ending')).toBe(false)
+    })
+    it('a paid plans source failure leaves the rest of Today intact', async () => {
+        mocks.paidPlans.mockRejectedValue(new Error('private backend failure'))
+        const result = await getAdminOverview()
+        expect(result.paidPlans).toMatchObject({ state: 'unavailable', value: null })
+        expect(result.support.value?.needsReply).toBe(1)
+    })
 })
 describe('AD08 partial-source operating queue', () => {
     it('keeps support actionable when optional factory/payment sources fail', async () => {
