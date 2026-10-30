@@ -229,6 +229,12 @@ export async function POST(req: NextRequest) {
         }, { status: 409 })
     }
 
+    // Record which Razorpay keys this order uses; payment rows copy it, and founder
+    // revenue counts only live payments.
+    const { error: modeError } = await admin.from('billing_checkout_attempts')
+        .update({ provider_mode: billingReadiness.mode }).eq('id', attempt.id)
+    if (modeError) Sentry.captureException(modeError, { tags: { route: 'billing_create_order', phase: 'record_provider_mode' } })
+
     // 4. Create Razorpay order
     // Receipt format must be short (under 40 chars)
     const receipt = `wvl_${orgId.slice(0, 8)}_${Date.now()}`
