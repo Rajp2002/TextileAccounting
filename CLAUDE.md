@@ -51,6 +51,7 @@ npm run qa:provisioning-smoke        # provisions against QA via .env.qa.local (
 
 - Only use `npm run build` for builds (never bare `next build`). It runs `scripts/reset-build-type-cache.mjs` to delete `.next/cache/.tsbuildinfo`, which works around a Vercel TypeScript stall (see `docs/deployment-typescript-cache-incident.md`). Webpack is required by the PWA plugin.
 - Use `npm ci` for lockfile parity; dependency drift has caused misleading local results before.
+- Every checkout and `.claude/worktrees/*` worktree has its own `node_modules`, and nothing reinstalls them when `package.json` gains a dependency (on 2026-10-30, most of them were missing `@visioncortex/vtracer`, so `next dev` failed with "Module not found"). `npm run dev` runs `scripts/ensure-deps.mjs` first (`predev`), which runs `npm ci` when a direct dependency is missing or at the wrong version (`WEAVLY_SKIP_DEPS_CHECK=1` skips it). Start dev servers with `npm run dev`, not `npx next dev`, so the check runs; for anything else that loads app code (vitest, tsc), run `node scripts/ensure-deps.mjs` first in a checkout you haven't installed recently.
 - Deploys go to Vercel, region `bom1` (`vercel.json`).
 
 ### CI
