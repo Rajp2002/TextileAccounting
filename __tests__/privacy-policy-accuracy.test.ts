@@ -11,9 +11,15 @@ describe('Free, Lite, and Base privacy policy accuracy', () => {
     const privacy = source('app/privacy/page.tsx')
 
     it('publishes a new version for the corrected privacy notice', () => {
-        expect(LEGAL_DOCUMENTS.privacy.version).toBe('2026-10-11')
-        expect(LEGAL_DOCUMENTS.privacy.identifier).toBe('privacy:2026-10-11')
+        expect(LEGAL_DOCUMENTS.privacy.version).toBe('2026-10-30')
+        expect(LEGAL_DOCUMENTS.privacy.identifier).toBe('privacy:2026-10-30')
+        expect(LEGAL_DOCUMENTS.privacy.displayDate).toBe('October 30, 2026')
         expect(privacy).toContain('LEGAL_DOCUMENTS.privacy.displayDate')
+    })
+
+    it('discloses active time and how long it is kept', () => {
+        expect(privacy).toContain('Active time in the app')
+        expect(privacy).toContain('<strong>Active time records</strong> — kept while the account exists and deleted with it.')
     })
 
     it('discloses saved Free costings separately from temporary inputs and allowance records', () => {

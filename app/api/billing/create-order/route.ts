@@ -20,6 +20,7 @@ import {
     type BillingSubscriptionRow,
 } from '@/lib/billing-lifecycle'
 import { getBillingReadiness } from '@/lib/billing-readiness'
+import { getPaidPlansState } from '@/lib/paid-plans.server'
 import { getOrgPlanAccess } from '@/lib/subscription'
 
 export const dynamic = 'force-dynamic'
@@ -88,6 +89,15 @@ export async function POST(req: NextRequest) {
                 { status: 403 },
             )
         }
+    }
+
+    // No real payments before the founder goes live; test accounts may use test keys.
+    const paidPlans = await getPaidPlansState(orgId)
+    if (!paidPlans.checkoutOpen) {
+        return NextResponse.json(
+            { error: 'Paid plans are not open yet.', code: 'PAID_PLANS_NOT_OPEN' },
+            { status: 409 },
+        )
     }
 
     const billingReadiness = getBillingReadiness()
@@ -228,6 +238,12 @@ export async function POST(req: NextRequest) {
             clientRequestId,
         }, { status: 409 })
     }
+
+    // Record which Razorpay keys this order uses; payment rows copy it, and founder
+    // revenue counts only live payments.
+    const { error: modeError } = await admin.from('billing_checkout_attempts')
+        .update({ provider_mode: billingReadiness.mode }).eq('id', attempt.id)
+    if (modeError) Sentry.captureException(modeError, { tags: { route: 'billing_create_order', phase: 'record_provider_mode' } })
 
     // 4. Create Razorpay order
     // Receipt format must be short (under 40 chars)

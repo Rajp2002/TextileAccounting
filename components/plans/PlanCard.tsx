@@ -390,6 +390,7 @@ export function PlanCard({
                 <p className="text-xs leading-relaxed text-body">{liteTrialText(language, 'trialDisclosure')}</p>
                 {billingReady && (
                   <SubscribeButton
+                    interestSource="plan_card"
                     planTier="lite"
                     tierName={BILLING_PLANS.lite.name}
                     displayAmount={formatPaise(BILLING_PLANS.lite.firstYearTotalPaise)}
@@ -401,6 +402,7 @@ export function PlanCard({
               </div>
             ) : billingReady ? (
               <SubscribeButton
+                interestSource="plan_card"
                 planTier="lite"
                 tierName={BILLING_PLANS.lite.name}
                 displayAmount={formatPaise(BILLING_PLANS.lite.firstYearTotalPaise)}
@@ -429,6 +431,7 @@ export function PlanCard({
               </Button>
             ) : billingReady ? (
               <SubscribeButton
+                interestSource="plan_card"
                 planTier="base"
                 tierName={BILLING_PLANS.base.name}
                 displayAmount={formatPaise(BILLING_PLANS.base.firstYearTotalPaise)}

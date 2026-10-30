@@ -143,6 +143,13 @@ export function getTrackingLimiter() {
     return _trackingLimiter
 }
 
+/** Owner active-time flushes: about one per 5 minutes per window, plus hide/close flushes. */
+let _activityLimiter: Ratelimit | null | undefined = undefined
+export function getActivityLimiter() {
+    if (_activityLimiter === undefined) _activityLimiter = createLimiter(30, 600)
+    return _activityLimiter
+}
+
 /**
  * Public POST limiter. Used for unauthenticated endpoints before expensive work
  * or signature parsing.

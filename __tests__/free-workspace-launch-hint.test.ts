@@ -135,7 +135,7 @@ describe('Free workspace launch hint contracts', () => {
         const layout = read('app/free/layout.tsx')
 
         expect(layout).toContain("const session=await getCachedSession();if(!session)redirect('/login')")
-        expect(layout).toContain('const access=await getOrgPlanAccess(session.profile.org_id)')
+        expect(layout).toContain('const [access,paidPlans]=await Promise.all([getOrgPlanAccess(session.profile.org_id),getPaidPlansState(session.profile.org_id)])')
         expect(layout).toContain("if(freeWorkspaceHint&&!freeWorkspace)redirect('/owner/estimator')")
         expect(layout).toContain('{freeWorkspace&&!freeWorkspaceHint&&<WorkspaceHintSync/>}')
     })

@@ -84,7 +84,7 @@ export async function getAdminOverview(input: unknown = {}): Promise<OverviewRep
     const payment = await getPaymentsReport(input), system = await getAdminSystem(input)
     const factorySummary = await getFactorySummary()
     const support = { asOf, unanswered: 1, needsReply: 2, overduePromises: 1, overdueFollowUps: 1, reopened: 0, waitingOnFix: 1, critical: 0, attention: [] }
-    return { factories: { state: 'available', value: factorySummary }, support: { state: 'available', value: support }, payments: { state: 'available', value: payment }, system: { state: 'available', value: system },
+    return { factories: { state: 'available', value: factorySummary }, support: { state: 'available', value: support }, payments: { state: 'available', value: payment }, paidPlans: { state: 'available', value: { goLiveAt: null, endingIn14Days: 0, endingIn30Days: 0, alreadyEnded: 0, readiness: { mode: 'test', missing: [] } } }, contacts: { state: 'available', value: { trialsEnding: [], renewalsDue: [], upgradeSignals: [] } }, system: { state: 'available', value: system },
         attention: [
             { id: 'payment:synthetic', target: 'synthetic_capture_needs_review', reason: 'Verified capture has no matching entitlement link; review access evidence.', observedAt: '2026-10-01T12:00:00.000Z',
                 ageSeconds: 259200, severity: 'high', owner: 'Founder', nextAction: 'Review evidence and factory access state.', href: '/admin/payments', group: 'payments' },

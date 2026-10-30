@@ -18,7 +18,7 @@ export function isDedicatedSupportRoute(pathname: string): boolean {
 }
 
 const destinations = new Set([
-    '/admin', '/admin/factories', '/admin/support', '/admin/payments',
+    '/admin', '/admin/metrics', '/admin/metrics/accounts', '/admin/factories', '/admin/support', '/admin/payments',
     '/admin/system', '/admin/audit', '/admin/legacy', '/admin/formal', '/admin/formal/new', '/admin/formal/retention',
 ])
 

@@ -11,6 +11,7 @@ const instant = z.string().refine(value => Number.isFinite(Date.parse(value))).t
 const sourceSchema = z.object({
     id: z.uuid(), name: z.string().max(240), created_at: instant, cohort: z.enum(REPORTING_COHORTS),
     is_locked_down: z.boolean(), owner_revoked: z.boolean(), verified_email: z.string().nullable(),
+    owner_name: z.string().max(240).nullable().optional().default(null), owner_phone: z.string().max(40).nullable().optional().default(null),
     subscriptions: z.array(z.object({
         id: z.uuid(), status: z.string(), plan_tier: z.string().nullable(), current_start: instant.nullable(),
         current_end: instant.nullable(), razorpay_payment_id: z.string().nullable(), created_at: instant.nullable(), payment_evidenced: z.boolean(),
@@ -86,7 +87,7 @@ export async function getFactoryDetail(orgId: string) {
     await adminRecordAudit(principal, 'factories.detail.read', 'organization', orgId, requestId)
     return {
         ...toFactoryRow(source, asOf), asOf, definitionVersion: ADMIN_METRIC_VERSION, reportingZone: ADMIN_REPORTING_ZONE,
-        contact: { verifiedOwnerEmail: source.verified_email },
+        contact: { verifiedOwnerEmail: source.verified_email, ownerName: source.owner_name ?? null, ownerPhone: source.owner_phone ?? null },
         quota: !quota.error && parsedQuota?.success ? parsedQuota.data as AccountQuota : null,
         quotaState: quota.error || (parsedQuota && !parsedQuota.success) ? 'unavailable' as const : parsedQuota ? 'observed' as const : 'not_applicable' as const,
         termHistory: source.subscriptions?.slice(-20).reverse().map(term => ({ id: term.id, tier: term.plan_tier, status: term.status, startsAt: term.current_start, endsAt: term.current_end, paymentReference: term.razorpay_payment_id, isTrial: term.is_trial === true })) ?? null,

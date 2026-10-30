@@ -97,7 +97,7 @@ export async function installSupabaseStubs(client) {
         CREATE SCHEMA storage;
         CREATE SCHEMA cron;
         CREATE EXTENSION pgcrypto WITH SCHEMA extensions;
-        CREATE TABLE auth.users(id uuid PRIMARY KEY, email text, email_confirmed_at timestamptz, raw_user_meta_data jsonb, raw_app_meta_data jsonb, created_at timestamptz, updated_at timestamptz);
+        CREATE TABLE auth.users(id uuid PRIMARY KEY, email text, email_confirmed_at timestamptz, last_sign_in_at timestamptz, raw_user_meta_data jsonb, raw_app_meta_data jsonb, created_at timestamptz, updated_at timestamptz);
         -- Provider session binding for founder tests. This stand-in is local
         -- only; the production Auth schema is never exposed to the Data API.
         CREATE TABLE auth.sessions(id uuid PRIMARY KEY, user_id uuid REFERENCES auth.users(id), aal text, factor_id uuid, not_after timestamptz, created_at timestamptz DEFAULT now());

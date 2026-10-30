@@ -8,10 +8,10 @@ export const LEGAL_DOCUMENTS = {
     },
     privacy: {
         type: 'privacy',
-        version: '2026-10-11',
-        identifier: 'privacy:2026-10-11',
+        version: '2026-10-30',
+        identifier: 'privacy:2026-10-30',
         path: '/privacy',
-        displayDate: 'October 11, 2026',
+        displayDate: 'October 30, 2026',
     },
 } as const
 

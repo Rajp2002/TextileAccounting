@@ -42,7 +42,7 @@ export function UpgradeBenefitsPreview({ onActivated, open: controlledOpen, onOp
       void fetch('/api/free/events', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ eventId: upgradeEventId.current[tier], name: 'upgrade_started', language, entryPoint: 'billing' }) }).catch(() => {})
     }
   }}>
-    <SubscribeButton planTier={tier} deferRefresh buttonLabel={buttonLabel ?? freeText(language, tier === 'lite' ? 'upgradeButton' : 'upgradeBaseButton')} className={className} onSuccess={() => { setOpen(false); onActivated() }} />
+    <SubscribeButton planTier={tier} deferRefresh interestSource="upgrade_preview" buttonLabel={buttonLabel ?? freeText(language, tier === 'lite' ? 'upgradeButton' : 'upgradeBaseButton')} className={className} onSuccess={() => { setOpen(false); onActivated() }} />
   </div>
   const paidAction = (tier: PurchasablePlanTier, trialFirst = false) => <>
     <div className="space-y-1">
