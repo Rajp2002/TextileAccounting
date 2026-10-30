@@ -1,6 +1,6 @@
 import {ActivityTracker} from '@/components/analytics/ActivityTracker'
-import {SupportShell} from '@/components/support/support-shell'
+import {SupportWorkspaceFrame} from '@/components/support/support-workspace-frame'
 
 export default function SupportLayout({children}:{children:React.ReactNode}){
- return <SupportShell><ActivityTracker/>{children}</SupportShell>
+ return <SupportWorkspaceFrame><ActivityTracker/>{children}</SupportWorkspaceFrame>
 }

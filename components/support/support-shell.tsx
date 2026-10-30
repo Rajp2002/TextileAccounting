@@ -7,12 +7,12 @@ import { I18nContext } from '@/lib/i18n/context'
 import { customerSupportText } from '@/lib/i18n/customer-support'
 import styles from './customer-support.module.css'
 
-/** Support remains reachable independently of a customer's plan or workspace access. */
+/** Standalone fallback when the owner workspace is unavailable, so support stays reachable regardless of plan or workspace access. */
 export function SupportShell({ children }: { children: ReactNode }) {
   const language = useContext(I18nContext)?.language ?? 'en'
   const text = (key: Parameters<typeof customerSupportText>[1]) => customerSupportText(language, key)
 
-  return <div className={styles.shell}>
+  return <div className={`${styles.shell} ${styles.scope}`}>
     <a className={styles.skipLink} href="#support-main">{text('support')}</a>
     <aside className={styles.sidebar} aria-label={text('support')}>
       <Link href="/" className={styles.brand} aria-label="Weavly">

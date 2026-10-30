@@ -1,4 +1,5 @@
-.shell { --spacing: 4px; --text-sm: 14px; --text-xs: 12px; min-height: 100svh; background: var(--wv-bg-canvas); color: var(--wv-text-primary); }
+.scope { --spacing: 4px; --text-sm: 14px; --text-xs: 12px; color: var(--wv-text-primary); }
+.shell { min-height: 100svh; background: var(--wv-bg-canvas); }
 .sidebar { position: fixed; inset: 0 auto 0 0; width: 248px; display: flex; flex-direction: column; background: var(--wv-bg-inverse); color: var(--wv-text-inverse); padding: 0 16px; }
 .brand { display: flex; align-items: center; justify-content: center; height: 132px; flex-shrink: 0; border-bottom: 1px solid var(--wv-border-inverse); }
 .brand img { width: 176px; height: 112px; object-fit: contain; }
@@ -160,4 +161,4 @@
   .details { padding: 20px; }
   .history { padding-inline: 20px; }
 }
-@media (prefers-reduced-motion: reduce) { .shell *, .shell *::before { transition: none; scroll-behavior: auto; } }
+@media (prefers-reduced-motion: reduce) { .scope *, .scope *::before { transition: none; scroll-behavior: auto; } }

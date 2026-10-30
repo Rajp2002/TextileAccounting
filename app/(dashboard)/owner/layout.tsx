@@ -4,7 +4,6 @@ import { cookies, headers } from 'next/headers'
 import { OwnerSidebar } from '@/components/navigation/owner-sidebar'
 import { OwnerRouteLoading } from '@/components/navigation/owner-route-loading'
 import { requireRole } from '@/lib/auth'
-import { createClient } from '@/lib/supabase/server'
 import { BrandBackground } from '@/components/brand-background'
 import { normalizeProductionMode } from '@/lib/production-mode'
 import { createPerfTimer } from '@/lib/perf'
@@ -16,7 +15,7 @@ import { ActivityTracker } from '@/components/analytics/ActivityTracker'
 import { PaidPlansProvider } from '@/components/billing/PaidPlansProvider'
 import { getPaidPlansState } from '@/lib/paid-plans.server'
 import { createSignInServerTimerFromCookie } from '@/lib/sign-in-telemetry.server'
-import { getRateReviewStatus } from '@/lib/cost-rates'
+import { getYarnReviewDueCount } from '@/lib/yarn-review-due.server'
 import { getCachedOwnerOrganization, startOwnerShellReads } from '@/lib/owner-organization'
 import { createPrincipalCacheScope } from '@/lib/auth-cache-scope'
 import { startEarly } from '@/lib/start-early'
@@ -167,28 +166,17 @@ async function OwnerSidebarBoundary() {
         'organization_query',
         () => perf.measure('profileOrgTier', () => getCachedOwnerOrganization(user.id, userOrgId), 1),
     )
-    const reviewRatesPromise = (async () => {
-        const supabase = await createClient()
-        return supabase
-            .from('cost_rate_book')
-            .select('last_reviewed_at, review_interval_days')
-            .eq('org_id', userOrgId)
-            .eq('is_active', true)
-            .in('category', ['yarn_warp', 'yarn_weft'])
-    })()
-
-    const [{ data: organization }, planAccess, { data: reviewRates }] = await Promise.all([
+    const [{ data: organization }, planAccess, yarnReviewDueCount] = await Promise.all([
         organizationPromise,
         signInTelemetry.measure(
             'tier_lookup',
             () => perf.measure('businessData', () => getCachedOrgPlanAccess(userOrgId), 1),
         ),
-        reviewRatesPromise,
+        getYarnReviewDueCount(userOrgId),
     ])
 
     if (!organization || organization.is_locked_down) return null
 
-    const yarnReviewDueCount = (reviewRates ?? []).filter(rate => getRateReviewStatus(rate) !== 'current').length
     perf.log({ organization_state: 'verified' })
     signInTelemetry.log('success', { route: '/owner/* sidebar' })
 
