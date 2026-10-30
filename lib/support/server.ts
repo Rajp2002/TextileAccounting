@@ -7,8 +7,9 @@ import { AdminError, adminErrorResponse } from '@/lib/admin/errors'
 import { checkAuthRateLimit,isUserRevoked } from '@/lib/rate-limit'
 import { z } from 'zod'
 import { NextResponse,after } from 'next/server'
-import { notifyFounderOfCustomerMessage } from './notify'
-import { listTicketSchema,createTicketSchema,manualTicketSchema,customerReplySchema,founderReplySchema,internalNoteSchema,patchTicketSchema,validExternalReference,type TicketList,type CustomerTicketDetail,type FounderTicketDetail,type SupportSummary } from './contracts'
+import { notifyFounderOfCustomerMessage,planLabel } from './notify'
+import { getOrgPlanAccess } from '@/lib/subscription'
+import { listTicketSchema,createTicketSchema,manualTicketSchema,customerReplySchema,founderReplySchema,internalNoteSchema,patchTicketSchema,validExternalReference,type Ticket,type TicketList,type CustomerTicketDetail,type FounderTicketDetail,type SupportSummary } from './contracts'
 
 export function supportEnabled(){return process.env.WEAVLY_SUPPORT_ENABLED==='true' && (process.env.NODE_ENV!=='production'||process.env.WEAVLY_SUPPORT_PRODUCTION_APPROVED==='true')}
 function assertSupportEnabled(){if(!supportEnabled())throw new AdminError('SUPPORT_DISABLED',503,'In-app support is not enabled. Use the published contact or recovery route.')}
@@ -48,12 +49,22 @@ function dbError(error:{code?:string;message?:string}):never{
  if(error.code==='22023'||error.code==='23514'||error.code==='22P02'||error.code==='23502')throw new AdminError('INVALID_INPUT',400,'Check the ticket state, required dates, and reference.')
  throw new AdminError('UNAVAILABLE',503,'Support is unavailable. Your message has not been confirmed sent.')
 }
+/** Founder-only: factory name and plan label per ticket, one name query per page. A failed lookup leaves the field null. */
+async function withFactoryContext(tickets:Ticket[]):Promise<Ticket[]>{
+ const ids=[...new Set(tickets.map(t=>t.orgId))];if(!ids.length)return tickets
+ const [names,plans]=await Promise.all([
+  Promise.resolve(createAdminClient().from('organizations').select('id,name').in('id',ids)).then(({data,error})=>error?new Map<string,string>():new Map((data??[]).map(row=>[row.id as string,row.name as string])),()=>new Map<string,string>()),
+  Promise.all(ids.map(orgId=>getOrgPlanAccess(orgId).then(access=>[orgId,planLabel(access.effectiveTier)] as const,()=>[orgId,null] as const))).then(entries=>new Map(entries)),
+ ])
+ return tickets.map(t=>({...t,factoryName:names.get(t.orgId)??null,planLabel:plans.get(t.orgId)??null}))
+}
 export async function listSupportTickets(filters:unknown={},founder=true):Promise<TicketList>{
  const who=await principal(founder);const parsed=parse(listTicketSchema,filters);let cursor:unknown
  if(parsed.cursor){try{cursor=JSON.parse(Buffer.from(parsed.cursor,'base64url').toString());parse(z.object({id:z.uuid(),updatedAt:z.iso.datetime({offset:true}),rank:z.number().int().min(0).max(7),asOf:z.iso.datetime({offset:true})}).strict(),cursor)}catch{throw new AdminError('INVALID_INPUT',400,'Invalid page cursor.')}}
  const {data,error}=await createAdminClient().rpc('admin_support_read',{p_actor_id:who.userId,p_session_id:who.sessionId,p_operation:'list',p_filters:{...parsed,cursor}})
  if(error)dbError(error)
  const result=data as TicketList;const hasMore=result.items.length>parsed.limit;result.items=result.items.slice(0,parsed.limit)
+ if(founder)result.items=await withFactoryContext(result.items)
  const last=result.items.at(-1);return {...result,nextCursor:hasMore&&last?Buffer.from(JSON.stringify({id:last.id,updatedAt:last.updatedAt,rank:last.sortRank??0,asOf:result.asOf})).toString('base64url'):null}
 }
 export async function readSupportTicket(id:string,founder:true,filters?:unknown):Promise<FounderTicketDetail>
@@ -64,7 +75,9 @@ export async function readSupportTicket(id:string,founder:boolean,filters:unknow
  if(!!parsed.eventBeforeId!==!!parsed.eventBeforeAt||!!parsed.noteBeforeId!==!!parsed.noteBeforeAt)throw new AdminError('INVALID_INPUT',400,'Invalid history cursor.')
  if(!founder&&(parsed.noteBeforeId||parsed.noteBeforeAt))throw new AdminError('FORBIDDEN',403,'Private history is unavailable.')
  const {data,error}=await createAdminClient().rpc('admin_support_read',{p_actor_id:who.userId,p_session_id:who.sessionId,p_operation:'detail',p_ticket_id:id,p_filters:parsed})
- if(error)dbError(error);return data
+ if(error)dbError(error)
+ if(founder){const detail=data as FounderTicketDetail;const [ticket]=await withFactoryContext([detail.ticket]);return {...detail,ticket}}
+ return data
 }
 export async function getSupportSummary():Promise<SupportSummary>{
  const who=await requireFounder();const {data,error}=await createAdminClient().rpc('admin_support_read',{p_actor_id:who.userId,p_session_id:who.sessionId,p_operation:'summary'})
