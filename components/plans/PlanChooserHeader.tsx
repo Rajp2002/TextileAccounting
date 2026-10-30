@@ -47,36 +47,34 @@ export function PlanChooserHeader({ effectiveTier = 'unassigned', isUnassigned =
   }
 
   return (
-    // No bar: the logo sits in the top-left corner and the account actions in the top-right.
-    // On desktop it floats over the page's top corners so it costs the plan cards no height.
-    <header className={cn("flex flex-wrap items-center justify-between gap-3 pt-5 sm:items-start pb-2 lg:absolute lg:inset-x-[25px] lg:top-0 lg:z-20 lg:pb-0", mobileCompact && "max-sm:gap-2 max-sm:pt-2 max-sm:pb-0")}>
-      <div className={cn("flex items-center gap-4", mobileCompact && "max-sm:hidden")}>
-        <Link href={backHref ?? '/'} className="flex min-h-[44px] items-center gap-2 group focus:outline-none focus-visible:ring-2 focus-visible:ring-saffron rounded-lg">
+    <header className={cn("flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-hairline/60 py-1", mobileCompact && "max-sm:gap-2")}>
+      <div className="flex shrink-0 items-center">
+        <Link href={backHref ?? '/'} className="group flex h-16 w-32 min-h-[44px] items-center justify-center overflow-hidden rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-saffron">
           <Image
             src="/images/WeavlyLogo.png"
             alt="Weavly"
-            width={278}
-            height={128}
+            width={130}
+            height={108}
             priority
-            className="h-[80px] w-auto lg:h-[128px] object-contain transition-opacity group-hover:opacity-90"
+            className="h-auto w-32 max-w-none object-contain transition-opacity duration-150 group-hover:opacity-90 motion-reduce:transition-none"
           />
         </Link>
       </div>
 
-      <div className="ml-auto flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+      <div className="ml-auto flex flex-wrap items-center justify-end gap-1 sm:gap-3">
         {backHref ? (
           <Link
             href={backHref}
-            className="inline-flex min-h-[44px] sm:min-h-10 items-center gap-1.5 rounded-lg border border-hairline bg-surface px-3.5 py-2 text-sm font-semibold text-body hover:border-saffron/40 hover:bg-surface-soft hover:text-ink transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-hairline bg-surface px-3 py-2 text-xs font-semibold text-body hover:border-saffron/40 hover:bg-surface-soft hover:text-ink transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
           >
-            <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <ArrowLeft className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
             <span>{backLabel}</span>
           </Link>
         ) : (
-          <LogoutButton variant="header" className="min-h-[44px] sm:h-10 sm:min-h-10 px-4 text-sm text-subtle hover:text-ink" />
+          <LogoutButton variant="header" className="min-h-[44px] px-2.5 text-sm text-subtle hover:text-ink" />
         )}
 
-        <LanguageSwitcher align={mobileCompact ? "mobile-right" : "left"} placement="bottom" className="min-h-[44px] sm:min-h-10 border-hairline bg-surface/90 px-3.5 text-sm" />
+        <LanguageSwitcher align={mobileCompact ? "mobile-right" : "left"} placement="bottom" className="min-h-[44px] bg-surface border border-hairline text-sm" />
       </div>
     </header>
   )

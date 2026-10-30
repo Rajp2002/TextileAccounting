@@ -6,10 +6,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({ getCachedSession: vi.fn(), rpc: vi.fn() }))
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }) }))
+vi.mock('@/app/(auth)/onboarding/plans/actions', () => ({ completePlanSelection: async () => ({}) }))
 vi.mock('@/lib/auth', () => ({ getCachedSession: mocks.getCachedSession }))
 vi.mock('@/lib/supabase/admin', () => ({ createAdminClient: () => ({ rpc: mocks.rpc }) }))
 
 import { SubscribeButton } from '@/components/billing/SubscribeButton'
+import { PlanCard } from '@/components/plans/PlanCard'
 import { PaidPlansProvider } from '@/components/billing/PaidPlansProvider'
 import { POST } from '@/app/api/billing/notify-me/route'
 import { ACCOUNT_PHRASES } from '@/lib/i18n/lite-phrases/account'
@@ -71,5 +73,25 @@ describe('notify-me copy', () => {
             expect(row, en).toBeDefined()
             expect(row!.slice(1).every(text => typeof text === 'string' && text.length > 0)).toBe(true)
         }
+    })
+})
+
+
+describe('Plan selection trial entry respects checkout availability', () => {
+    const props = { planTier: 'lite' as const, currentPlan: 'unassigned' as const, isOnboarding: true, freeAvailable: true, billingReady: true, busy: false, liteTrialEligible: true, onSelectFree() {}, onOpenPreview() {} }
+
+    it('keeps trial activation and the notify action visible before paid plans open', () => {
+        const html = renderToStaticMarkup(<PlanCard {...props} />)
+        expect(html).toContain('Start 3-month free trial')
+        expect(html).toContain('Notify me when paid plans open')
+        expect(html).not.toContain('Or pay now:')
+        expect(html).not.toContain('Payment document:')
+    })
+
+    it('opens the paid details entry only when checkout is open', () => {
+        const html = renderToStaticMarkup(<PaidPlansProvider checkoutOpen><PlanCard {...props} /></PaidPlansProvider>)
+        expect(html).toContain('Start 3-month free trial')
+        expect(html).toContain('Or pay now:')
+        expect(html).not.toContain('Notify me when paid plans open')
     })
 })

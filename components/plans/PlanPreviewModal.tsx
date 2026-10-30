@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/compone
 import { getFeatureDemo, isFilmCut, isNarrationLanguage, NARRATION_LANGUAGES, NARRATION_LANGUAGE_LABELS, type NarrationLanguage } from '@/lib/feature-demos'
 import { upgradeFeatureBullets, upgradeText, type UpgradeFeature, type UpgradePlan } from '@/lib/upgrade-wall'
 import { useTranslation } from '@/lib/i18n/context'
+import { planSelectionText } from '@/lib/i18n/plan-selection'
 
 interface PlanPreviewModalProps {
   feature: UpgradeFeature | null
@@ -14,6 +15,7 @@ interface PlanPreviewModalProps {
   /** Base copy is shown only to organizations that may see Base. Defaults to hidden. */
   baseVisible?: boolean
   onClose: () => void
+  returnFocusElement?: HTMLElement | null
 }
 
 const NARRATION_STORAGE_KEY = 'weavly_demo_narration_language'
@@ -138,22 +140,21 @@ function FeatureVideo({ feature }: { feature: UpgradeFeature }) {
   )
 }
 
-export function PlanPreviewModal({ feature, planTier, baseVisible = false, onClose }: PlanPreviewModalProps) {
+export function PlanPreviewModal({ feature, planTier, baseVisible = false, onClose, returnFocusElement }: PlanPreviewModalProps) {
   const { language } = useTranslation()
   const previousFocusRef = useRef<HTMLElement | null>(null)
 
   return (
     <Dialog open={feature !== null} onOpenChange={open => { if (!open) onClose() }}>
       <DialogContent
-        className="gap-4 p-4 sm:max-w-6xl sm:p-6"
+        className="gap-4 p-4 sm:max-w-6xl sm:p-6 motion-reduce:animate-none"
         mobilePresentation="center"
         showCloseButton={false}
-        onOpenAutoFocus={() => { previousFocusRef.current = document.activeElement as HTMLElement | null }}
+        onOpenAutoFocus={() => { previousFocusRef.current = returnFocusElement ?? document.activeElement as HTMLElement | null }}
         onCloseAutoFocus={event => {
           event.preventDefault()
           previousFocusRef.current?.focus()
         }}
-        {...(baseVisible ? {} : { 'aria-describedby': undefined })}
       >
         {feature && (
           <>
@@ -163,7 +164,10 @@ export function PlanPreviewModal({ feature, planTier, baseVisible = false, onClo
                   {upgradeText(language, 'sample')}
                 </p>
                 <DialogTitle className="text-xl font-bold text-ink">{upgradeText(language, feature)}</DialogTitle>
-                {baseVisible && <DialogDescription className="text-xs">{upgradeText(language, isFilmCut(feature) ? 'demoPlanNoteLite' : 'demoPlanNote')}</DialogDescription>}
+                <DialogDescription className="text-sm leading-relaxed">
+                  {planSelectionText(language, `${feature}Description`)}
+                  {baseVisible && <span className="mt-1 block text-xs">{upgradeText(language, isFilmCut(feature) ? 'demoPlanNoteLite' : 'demoPlanNote')}</span>}
+                </DialogDescription>
               </div>
               <Button type="button" variant="ghost" size="icon" className="max-sm:size-[44px]" onClick={onClose} aria-label={upgradeText(language, 'closePreview')}>
                 <X className="h-5 w-5" aria-hidden="true" />

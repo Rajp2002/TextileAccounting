@@ -69,8 +69,7 @@ describe('Base suppression: plan chooser', () => {
 
   it('PlanChooserClient uses a two-column grid when Base is hidden and keeps the three-column grid otherwise', () => {
     const client = read('components/plans/PlanChooserClient.tsx')
-    // The grid fills the page width (25px gutters come from the layout), so neither variant carries a max width.
-    expect(client).toContain('baseVisible ? "lg:grid-cols-[repeat(3,minmax(0,500px))]" : "lg:grid-cols-[repeat(2,minmax(0,600px))]"')
+    expect(client).toContain('baseVisible ? "max-w-7xl lg:grid-cols-3" : "max-w-6xl md:grid-cols-2"')
   })
 
   it('the feature preview modal receives baseVisible and drops the Base note for hidden orgs', () => {
@@ -78,7 +77,7 @@ describe('Base suppression: plan chooser', () => {
     const modal = read('components/plans/PlanPreviewModal.tsx')
     expect(client).toContain('baseVisible={baseVisible}')
     expect(modal).toContain('baseVisible?: boolean')
-    expect(modal).toMatch(/\{baseVisible && <DialogDescription/)
+    expect(modal).toMatch(/\{baseVisible && <span[^>]*>\{upgradeText\(language, isFilmCut\(feature\) \? 'demoPlanNoteLite' : 'demoPlanNote'\)\}/)
   })
 
   it('renders only Free and Lite cards for a hidden org, and keeps the Base card for a visible one', async () => {
@@ -87,13 +86,13 @@ describe('Base suppression: plan chooser', () => {
     const hidden = renderToStaticMarkup(createElement(PlanChooserClient, { ...base, baseVisible: false }))
     expect(hidden).not.toMatch(BASE_WORD)
     expect(hidden).not.toContain('Costing, production and payroll')
-    expect(hidden).toContain('lg:grid-cols-[repeat(2,minmax(0,600px))]')
-    expect(hidden).not.toContain('lg:grid-cols-[repeat(3,minmax(0,500px))]')
+    expect(hidden).toContain('md:grid-cols-2')
+    expect(hidden).not.toContain('lg:grid-cols-3')
 
     const visible = renderToStaticMarkup(createElement(PlanChooserClient, { ...base, baseVisible: true }))
     expect(visible).toMatch(BASE_WORD)
     expect(visible).toContain('Costing, production and payroll')
-    expect(visible).toContain('lg:grid-cols-[repeat(3,minmax(0,500px))]')
+    expect(visible).toContain('lg:grid-cols-3')
   })
 })
 

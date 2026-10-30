@@ -3,12 +3,15 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { PlanCard } from './PlanCard'
 import { PlanPreviewModal } from './PlanPreviewModal'
-import { PlanTrustTiles } from './PlanTrustTiles'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { completePlanSelection } from '@/app/(auth)/onboarding/plans/actions'
 import { upgradeText, type UpgradeFeature, type UpgradePlan } from '@/lib/upgrade-wall'
+import { PlanTrustTiles } from './PlanTrustTiles'
+import { planSelectionText } from '@/lib/i18n/plan-selection'
 import { cn } from '@/lib/utils'
 import { useTranslation } from '@/lib/i18n/context'
+import styles from './plan-selection.module.css'
 
 interface PlanChooserClientProps {
   currentPlan: UpgradePlan | 'unassigned'
@@ -35,17 +38,20 @@ export function PlanChooserClient({
 }: PlanChooserClientProps) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [mobilePlan, setMobilePlan] = useState<UpgradePlan>(baseVisible && currentPlan === 'base' ? 'base' : currentPlan === 'lite' || liteTrialEligible ? 'lite' : 'free')
   const [previewState, setPreviewState] = useState<{
     feature: UpgradeFeature | null
     planTier: UpgradePlan
+    returnFocusElement: HTMLElement | null
   }>({
     feature: null,
     planTier: 'free',
+    returnFocusElement: null,
   })
 
   const { language, tx } = useTranslation()
-
   const mobileCompact = currentPlan === 'free' || currentPlan === 'lite' || currentPlan === 'unassigned'
+
 
   const finish = useCallback(async (plan: 'free' | 'paid') => {
     setBusy(true)
@@ -73,38 +79,51 @@ export function PlanChooserClient({
     return () => window.clearTimeout(timer)
   }, [paid, isOnboarding, finish])
 
-  const handleOpenPreview = (feature: UpgradeFeature, planTier: UpgradePlan) => {
-    setPreviewState({ feature, planTier })
+  const handleOpenPreview = (feature: UpgradeFeature, planTier: UpgradePlan, trigger?: HTMLElement) => {
+    setPreviewState({ feature, planTier, returnFocusElement: trigger ?? null })
   }
 
   const handleClosePreview = () => {
-    setPreviewState({ feature: null, planTier: 'free' })
+    setPreviewState({ feature: null, planTier: 'free', returnFocusElement: null })
   }
 
   return (
-    <div className={cn("space-y-10 pb-16 pt-4 lg:space-y-4 lg:pb-0 lg:pt-0", mobileCompact && "max-md:space-y-5 max-md:pb-6 max-md:pt-3")}>
-      {/* Title. On desktop it shares a band with the floating header, centred beside the logo, so the
-          cards always start below the logo whatever the screen width. */}
-      <div className={cn("mx-auto max-w-2xl text-center space-y-3 lg:flex lg:min-h-[148px] lg:items-center lg:justify-center lg:space-y-0", mobileCompact && "max-md:space-y-2 max-md:text-left")}>
-        <h1 className={cn("text-3xl font-extrabold tracking-tight text-ink sm:text-4xl md:text-5xl lg:text-4xl", mobileCompact && "max-md:text-2xl")}>
-          {upgradeText(language, 'title')}
+    <div className={styles.chooser}>
+      <div className={cn(styles.intro, 'mx-auto max-w-3xl text-center')}>
+        <h1 className="text-3xl font-semibold leading-tight text-ink sm:text-4xl">
+          <span className="hidden md:inline">{planSelectionText(language, 'title')}</span>
+          <span className="md:hidden">{upgradeText(language, 'title')}</span>
         </h1>
+        <p className="mx-auto max-w-2xl text-base leading-relaxed text-subtle">
+          {baseVisible ? upgradeText(language, 'upgradeSubtitle') : planSelectionText(language, 'subtitle')}
+        </p>
+      </div>
+
+      <div className={cn(styles.mobilePlans, baseVisible && styles.basePlanControls)} role="group" aria-label={upgradeText(language, 'title')}>
+        {(['free', 'lite', ...(baseVisible ? ['base'] : [])] as UpgradePlan[]).map(plan => (
+          <Button key={plan} type="button" variant={mobilePlan === plan ? 'default' : 'outline'} aria-pressed={mobilePlan === plan} onClick={() => setMobilePlan(plan)}>
+            Weavly {plan === 'free' ? 'Free' : plan === 'lite' ? 'Lite' : 'Base'}
+          </Button>
+        ))}
       </div>
 
       {/* Payment Recovery / In-progress notice */}
       {paymentRecovery && (
-        <div className="mx-auto max-w-xl">
-          {paymentRecovery}
-        </div>
+        <Dialog defaultOpen>
+          <DialogTrigger asChild><Button variant="outline" className="min-h-[44px] shrink-0 self-center">{planSelectionText(language, 'paymentStatus')}</Button></DialogTrigger>
+          <DialogContent mobilePresentation="center" showCloseButton={false} aria-describedby={undefined}>
+            <DialogTitle>{planSelectionText(language, 'paymentStatus')}</DialogTitle>
+            {paymentRecovery}
+            <DialogClose asChild><Button size="lg" className="min-h-[44px] justify-self-end">{planSelectionText(language, 'close')}</Button></DialogClose>
+          </DialogContent>
+        </Dialog>
       )}
 
       {/* Error alert */}
-      {error && (
-        <div
-          role="alert"
-          className="mx-auto max-w-xl rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-center text-sm font-medium text-destructive space-y-2"
-        >
-          <p>{tx(error)}</p>
+      <Dialog open={Boolean(error)} onOpenChange={open => { if (!open) setError('') }}>
+        <DialogContent mobilePresentation="center" showCloseButton={false} onCloseAutoFocus={event => { event.preventDefault(); document.getElementById('continue-free-btn')?.focus() }}>
+          <DialogTitle>{planSelectionText(language, 'activationError')}</DialogTitle>
+          <DialogDescription role="alert">{tx(error)}</DialogDescription>
           <Button
             type="button"
             variant="outline"
@@ -114,53 +133,55 @@ export function PlanChooserClient({
           >
             {tx('Check activation and continue')}
           </Button>
-        </div>
-      )}
+          <DialogClose asChild><Button size="lg" className="min-h-[44px]">{planSelectionText(language, 'close')}</Button></DialogClose>
+        </DialogContent>
+      </Dialog>
 
-      {/* Pricing grid: each plan keeps a readable width, and the spare width becomes equal gaps
-          before, between and after the cards. Three columns when Base is visible. */}
-      <div className={cn("grid grid-cols-1 gap-6 lg:justify-evenly", baseVisible ? "lg:grid-cols-[repeat(3,minmax(0,500px))]" : "lg:grid-cols-[repeat(2,minmax(0,600px))]", mobileCompact && "max-md:gap-4")}>
-        <PlanCard
-          planTier="free"
-          currentPlan={currentPlan}
-          isOnboarding={isOnboarding}
-          freeAvailable={freeAvailable}
-          billingReady={billingReady}
-          busy={busy}
-          mobileCompact={mobileCompact}
-          onSelectFree={() => void finish('free')}
-          onOpenPreview={handleOpenPreview}
-        />
-
-        <PlanCard
-          planTier="lite"
-          currentPlan={currentPlan}
-          isOnboarding={isOnboarding}
-          freeAvailable={freeAvailable}
-          billingReady={billingReady}
-          busy={busy}
-          mobileCompact={mobileCompact}
-          onSelectFree={() => void finish('free')}
-          onOpenPreview={handleOpenPreview}
-          liteTrialEligible={liteTrialEligible}
-        />
-
-        {baseVisible && (
+      {/* Pricing grid: three columns when Base is visible, otherwise Free and Lite only */}
+      <div className={cn(styles.cards, baseVisible && styles.baseCards, "mx-auto grid w-full grid-cols-1 gap-4", baseVisible ? "max-w-7xl lg:grid-cols-3" : "max-w-6xl md:grid-cols-2")}>
+        <div className={cn(styles.cardSlot, mobilePlan !== 'free' && styles.mobileHidden)}>
           <PlanCard
-            planTier="base"
+            planTier="free"
             currentPlan={currentPlan}
             isOnboarding={isOnboarding}
             freeAvailable={freeAvailable}
             billingReady={billingReady}
             busy={busy}
-            mobileCompact={mobileCompact}
             onSelectFree={() => void finish('free')}
             onOpenPreview={handleOpenPreview}
           />
+        </div>
+
+        <div className={cn(styles.cardSlot, mobilePlan !== 'lite' && styles.mobileHidden)}>
+          <PlanCard
+            planTier="lite"
+            currentPlan={currentPlan}
+            isOnboarding={isOnboarding}
+            freeAvailable={freeAvailable}
+            billingReady={billingReady}
+            busy={busy}
+            onSelectFree={() => void finish('free')}
+            onOpenPreview={handleOpenPreview}
+            liteTrialEligible={liteTrialEligible}
+          />
+        </div>
+
+        {baseVisible && (
+          <div className={cn(styles.cardSlot, mobilePlan !== 'base' && styles.mobileHidden)}>
+            <PlanCard
+              planTier="base"
+              currentPlan={currentPlan}
+              isOnboarding={isOnboarding}
+              freeAvailable={freeAvailable}
+              billingReady={billingReady}
+              busy={busy}
+              onSelectFree={() => void finish('free')}
+              onOpenPreview={handleOpenPreview}
+            />
+          </div>
         )}
       </div>
 
-      {/* Billing terms: tiles that open a full explanation */}
       <PlanTrustTiles mobileCompact={mobileCompact} />
 
       {/* Enlarged Feature Preview Modal */}
@@ -169,6 +190,7 @@ export function PlanChooserClient({
         planTier={previewState.planTier}
         baseVisible={baseVisible}
         onClose={handleClosePreview}
+        returnFocusElement={previewState.returnFocusElement}
       />
     </div>
   )
