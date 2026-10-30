@@ -115,6 +115,8 @@ describe('Sprint 22 auth boundary', () => {
         expect(nextConfig).toContain('cacheStartUrl: false')
         expect(nextConfig).toContain('dynamicStartUrl: false')
         expect(nextConfig).toContain("document: '/_offline'")
+        // Preloading only starts the same network request while the worker boots.
+        expect(nextConfig).toContain('navigationPreload: true')
         expect(nextConfig).toContain("private, no-store, max-age=0, must-revalidate")
         expect(worker).toContain("'pages-rsc'")
         expect(worker).toContain("'pages-rsc-prefetch'")

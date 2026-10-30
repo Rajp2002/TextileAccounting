@@ -129,6 +129,10 @@ function createClone(target: HTMLImageElement): { box: HTMLDivElement; img: HTML
     Object.assign(box.style, { position: 'absolute', left: '0px', top: '0px', opacity: '0', pointerEvents: 'none' })
     const img = document.createElement('img')
     img.alt = ''
+    // Same srcset and sizes, so the clone picks the logo's own candidate and shares its request. Under a
+    // service worker the logo has no currentSrc while it loads, and its plain src is the largest variant.
+    img.sizes = target.sizes
+    img.srcset = target.srcset
     img.src = target.currentSrc || target.src
     // Layout-positioned, never transformed as a whole: browsers draw transformed images with a
     // cheaper filter, which would make the logo visibly thinner than the navbar's until the last frame.
@@ -220,6 +224,7 @@ export function startWeavingIntro({ surface, overlay, skipButton, handle }: Star
     let last = 0
     let paused = false
     let skip: IntroSkip | null = null
+    let logosReady = false
     let lastFrame: IntroFrame | null = null
     let frames = 0
     let slowFrames = 0
@@ -367,6 +372,8 @@ export function startWeavingIntro({ surface, overlay, skipButton, handle }: Star
         last = now
         if (!startedAt) startedAt = now
         if (!paused) t += Math.min(0.05, realDt)
+        // Hold the finished logo until the page's own logo and its clone can take over from it.
+        if (!logosReady && !skip) t = Math.min(t, HANDOFF_START)
         // Weak GPU: judge the first real frames (after warm-up) and never let the intro crawl.
         frames++
         if (!paused && frames > 2 && frames <= 8 && realDt > 0.07) slowFrames++
@@ -408,13 +415,15 @@ export function startWeavingIntro({ surface, overlay, skipButton, handle }: Star
         // The start watchdog (or an early tap) may have removed the stage while we waited:
         // then stop quietly, never attaching listeners to a page that has moved on.
         const superseded = () => finished || handle.state !== 'pending'
-        // Decode the logo, the page's own logo and the handoff clone together, not one after another.
+        // The weave needs only the mask source, which the pre-paint script preloads and the service
+        // worker caches. The page's logo and the handoff clone can still be on the network; they are
+        // first shown at the handoff, and the clock holds before it until both have decoded.
         const clone = createClone(target)
-        const [logo] = await Promise.all([
-            loadImage(LOGO_SOURCE.src),
+        void Promise.all([
             target.decode().catch(() => undefined),
             clone.img.decode().catch(() => undefined),
-        ])
+        ]).then(() => { logosReady = true })
+        const logo = await loadImage(LOGO_SOURCE.src)
         if (superseded()) { finished = true; return }
         mask = readMask(logo)
         geo = measure(surface, overlay, target)

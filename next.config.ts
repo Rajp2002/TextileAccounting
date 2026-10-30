@@ -141,6 +141,10 @@ const withPWA = withPWAInit({
     skipWaiting: false,
     clientsClaim: false,
     cleanupOutdatedCaches: true,
+    // Navigations are network-only, so let the browser send each one while
+    // the worker boots instead of after (most visible on an installed app's
+    // cold launch). The response is the same network response either way.
+    navigationPreload: true,
     runtimeCaching: authBoundaryRuntimeCaching,
   },
 })
