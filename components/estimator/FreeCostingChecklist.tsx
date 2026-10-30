@@ -19,9 +19,9 @@ export function FreeCostingChecklist({ sections, onSelect }: { sections: FreeCos
         const complete = section.status === 'complete'
         const label = freeText(language, section.label)
         const status = freeText(language, complete ? 'sectionComplete' : section.status === 'review' ? 'sectionReview' : 'sectionIncomplete')
-        return <button key={section.id} type="button" data-free-section={section.id} data-status={section.status}
+        return <button key={section.id} type="button" data-free-section={section.id} data-status={section.status} data-tone={section.tone}
           aria-label={`${label}: ${status}`} onClick={() => onSelect(section)}
-          className={`inline-flex min-h-[44px] max-w-full items-center gap-2 rounded-full border px-3 py-2 text-left text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 ${complete ? 'border-[var(--wv-moss-200)] bg-[var(--wv-moss-50)] text-[var(--wv-moss-700)] hover:bg-[var(--color-factory-green-soft)]' : 'border-[var(--wv-ochre-200)] bg-[var(--wv-ochre-50)] text-[var(--wv-ochre-900)] hover:bg-[var(--color-warning-amber-soft)]'}`}>
+          className="estimator-section-pill inline-flex min-h-[44px] max-w-full items-center gap-2 rounded-full border-[1.5px] px-3 py-2 text-left text-xs font-medium transition-[border-color] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2">
           {complete ? <Check className="h-3.5 w-3.5 shrink-0" aria-hidden="true" /> : <CircleAlert className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />}
           <span>{label}</span>
         </button>

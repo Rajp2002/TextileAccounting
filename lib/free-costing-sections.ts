@@ -1,18 +1,19 @@
 import type { EstimatorValidationResult } from './estimator-validation'
 import type { FreeText } from './i18n/free-tier'
 
+// tone is the section's tile colour in the estimator (app/globals.css, .estimator-step-tile).
 const sections = [
-  { id: 'details', label: 'sectionDetails', field: 'qualityLabel', number: 1 },
-  { id: 'warp', label: 'sectionWarp', field: 'warpRows.0.label', number: 2 },
-  { id: 'weft', label: 'sectionWeft', field: 'weftRows.0.label', number: 3 },
-  { id: 'weaving', label: 'sectionWeaving', field: 'perPickCostPaisa', number: 4 },
-  { id: 'preparation', label: 'sectionPreparation', field: 'warpingRatePerKg', number: 5 },
-  { id: 'overhead', label: 'sectionOverhead', field: 'overheadOverridePerM', number: 6 },
-  { id: 'processing', label: 'sectionProcessing', field: 'processingRatePerM', number: 7 },
-  { id: 'pricing', label: 'sectionPricing', field: 'profitPct', number: 9 },
-] as const satisfies ReadonlyArray<{ id: string; label: FreeText; field: string; number: number }>
+  { id: 'details', label: 'sectionDetails', field: 'qualityLabel', number: 1, tone: 1 },
+  { id: 'warp', label: 'sectionWarp', field: 'warpRows.0.label', number: 2, tone: 2 },
+  { id: 'weft', label: 'sectionWeft', field: 'weftRows.0.label', number: 3, tone: 3 },
+  { id: 'weaving', label: 'sectionWeaving', field: 'perPickCostPaisa', number: 4, tone: 4 },
+  { id: 'preparation', label: 'sectionPreparation', field: 'warpingRatePerKg', number: 5, tone: 5 },
+  { id: 'overhead', label: 'sectionOverhead', field: 'overheadOverridePerM', number: 6, tone: 6 },
+  { id: 'processing', label: 'sectionProcessing', field: 'processingRatePerM', number: 7, tone: 9 },
+  { id: 'pricing', label: 'sectionPricing', field: 'profitPct', number: 9, tone: 7 },
+] as const satisfies ReadonlyArray<{ id: string; label: FreeText; field: string; number: number; tone: number }>
 type SectionId = typeof sections[number]['id']
-export type FreeCostingSection = { id: SectionId; label: FreeText; field: string; number: number; status: 'complete' | 'incomplete' | 'review' }
+export type FreeCostingSection = { id: SectionId; label: FreeText; field: string; number: number; tone: number; status: 'complete' | 'incomplete' | 'review' }
 
 function sectionForField(field: string): SectionId {
   if (field.startsWith('warpRows')) return 'warp'
