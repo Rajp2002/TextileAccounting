@@ -38,7 +38,7 @@ export function PaidPlansCard({ summary }: { summary: PaidPlansAdmin }) {
     const confirmExtension = () => preview && run(() => post<Preview>('/api/admin/paid-plans/extend', { newEnd: preview.newEnd, dryRun: false }), result => {
         setPreview(null); setMessage(`Done. ${result.total} trials now end on ${date(result.newEnd)}.`); router.refresh()
     })
-    const goLive = () => run(() => post<{ goLiveAt: string; movedTrials: number }>('/api/admin/paid-plans/go-live'), result => {
+    const goLive = () => run(() => post<{ goLiveAt: string; movedTrials: number }>('/api/admin/paid-plans/go-live', {}), result => {
         setConfirmGoLive(false); setMessage(`Paid plans are live. ${result.movedTrials} trials moved to ${date(new Date(Date.parse(result.goLiveAt) + 30 * DAY).toISOString())}.`); router.refresh()
     })
 
