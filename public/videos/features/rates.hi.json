@@ -1,36 +1,31 @@
 {
   "feature": "rates",
-  "duration": 84.208,
-  "bytes": 2458726,
+  "source": "Weavly Lite launch film v2 (app captures), cut for the plan page",
+  "duration": 32.667,
+  "bytes": 1855144,
   "chapters": [
     {
       "start": 0,
-      "title": "Update a yarn price and inspect its history",
-      "description": "Find the demo yarns, inspect their linked quality, change the weft rate from Rs 128 to Rs 140/kg, add a supplier note, and save. Open Activity to review the recorded change."
+      "title": "Keep yarn rates current",
+      "description": "Review dates, confirming an unchanged price, editing a rate and its activity."
     },
     {
-      "start": 36.75,
-      "title": "Use the updated linked quality",
-      "description": "Reopen the saved quality and inspect its updated weft rate. Apply the recipe, check the yarn inputs, then review the recalculated live cost."
-    },
-    {
-      "start": 65.333,
-      "title": "Earlier costings keep their original figures",
-      "description": "Open the earlier saved costing. Its production cost remains Rs 33.23/m and its suggested price remains Rs 39.09/m. Updating Rate Book does not rewrite historical snapshots."
+      "start": 23.0,
+      "title": "Propagate a new rate",
+      "description": "Every costing that uses the yarn gets a new version with the new rate."
     }
   ],
   "narration": {
-    "engine": "AI4Bharat IndicF5",
-    "reference": "MAR_F_WIKI_00001.wav",
-    "model_revision": "ba85abedf18dc479a447eaa0eccbd76ab78a47d5",
-    "generation": [
-      "Local CPU"
-    ],
-    "language": "hi",
+    "engine": "Kokoro-82M v1.0 via kokoro-onnx 0.6.1",
+    "voice": "af_heart",
+    "language": "en",
     "audio_codec": "aac",
     "sample_rate": 48000,
-    "channels": 1,
-    "cue_count": 8,
-    "caption_count": 8
+    "channels": 2,
+    "cue_count": 7
+  },
+  "captions": {
+    "language": "hi",
+    "caption_count": 7
   }
 }

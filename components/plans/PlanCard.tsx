@@ -240,8 +240,8 @@ export function PlanCard({
             <Image
               src={activeDemo.poster}
               alt={upgradeText(language, 'picture', { feature: activeFeatureName })}
-              width={1440}
-              height={960}
+              width={activeDemo.posterSize[0]}
+              height={activeDemo.posterSize[1]}
               sizes="(min-width: 1024px) 45vw, (min-width: 640px) 600px, 90vw"
               className="max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-105"
             />

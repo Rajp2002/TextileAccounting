@@ -1,32 +1,38 @@
 Cost Estimator
-Recorded in Weavly Base with demonstration data. English narration generated locally with Kokoro.
+Recorded from Weavly Lite with sample data (Shubh Weaves is a sample factory). English narration generated locally with Kokoro.
 
-00:00:02.000 – 00:00:10.475
-Start a new fabric costing. Name the fabric, enter its warp and weft construction, and include the crimp and waste allowances.
+00:00:00.400 – 00:00:01.933
+Go section by section.
 
-00:00:18.000 – 00:00:25.613
-Add the warp yarn’s denier, beam ends, rate and G S T. These inputs determine warp consumption and cost.
+00:00:03.200 – 00:00:06.667
+In the warp, put in your denier, beam ends and yarn rate.
 
-00:00:31.000 – 00:00:36.149
-Enter the weft yarn, picks per inch, fabric width, denier, rate and G S T.
+00:00:07.133 – 00:00:11.667
+Seven eleven instead of seventy-one? Weavly asks before it accepts.
 
-00:00:46.000 – 00:00:51.687
-Review the weaving cost and overhead. Then enter your target margin and order quantity.
+00:00:12.067 – 00:00:16.900
+Every input has a usual range, and anything outside it gets a second look.
 
-00:00:57.000 – 00:00:59.363
-Open Live Cost to see your estimate.
+00:00:17.467 – 00:00:21.400
+More than one warp? Add warp yarn component adds the next layer.
 
-00:01:05.000 – 00:01:11.041
-Review the pricing assumptions, then return to the inputs to explore a different costing scenario.
+00:00:23.000 – 00:00:26.967
+The weft works the same way, with Add weft yarn component for another.
 
-00:01:15.000 – 00:01:21.725
-Increase the weft rate to one hundred and twenty eight rupees per kilogram, and set the margin to fifteen percent.
+00:00:27.867 – 00:00:34.300
+Two wefts? Set the picks in each repeat, say two to one, and Weavly splits the total picks between them.
 
-00:01:28.000 – 00:01:32.617
-Live Cost now shows the updated production cost and selling price.
+00:00:35.533 – 00:00:38.367
+For overhead, enter a direct rate if you know it,
 
-00:01:36.000 – 00:01:42.081
-Switch to Detailed to inspect the yarn calculations, including consumption, crimp and waste.
+00:00:38.867 – 00:00:41.867
+or work it out from your monthly expenses and output.
 
-00:01:46.000 – 00:01:54.711
-Scroll down to review the production cost breakdown. Quick and Detailed use the same calculations, with different levels of detail.
+00:00:43.533 – 00:00:45.300
+Done? Open Live cost.
+
+00:00:45.867 – 00:00:50.300
+Your production cost, your break-even, and the price to quote at your margin.
+
+00:00:51.067 – 00:00:53.667
+Save Costing keeps it in Saved Costings.

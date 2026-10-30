@@ -1,37 +1,31 @@
 {
   "feature": "estimator",
-  "duration": 118.75,
-  "bytes": 3293262,
+  "source": "Weavly Lite launch film v2 (app captures), cut for the plan page",
+  "duration": 54.133,
+  "bytes": 3906032,
   "chapters": [
     {
       "start": 0,
-      "title": "Build a complete fabric costing",
-      "description": "Enter fabric construction, warp and weft yarns, rates, waste, weaving, overhead, margin and quantity. Review the live production cost of Rs 32.08/m and suggested price of Rs 36.45/m."
+      "title": "Fill the estimate section by section",
+      "description": "Warp, weft and their yarn components, with a usual-range check on every input."
     },
     {
-      "start": 62.208,
-      "title": "Change inputs and recheck live cost",
-      "description": "Review pricing assumptions. Change the weft yarn rate from Rs 112 to Rs 128/kg and the target margin from 12% to 15%. The updated cost is Rs 33.23/m and the selling price is Rs 39.09/m."
-    },
-    {
-      "start": 94.75,
-      "title": "Understand the cost breakdown",
-      "description": "Switch to Detailed to inspect the yarn-consumption formulas, waste and crimp adjustments, and production-cost breakdown. Quick and Detailed use the same calculation engine."
+      "start": 35.0,
+      "title": "Overhead, live cost and saving",
+      "description": "Enter overhead directly or from monthly expenses, open Live cost, and save the costing."
     }
   ],
   "narration": {
-    "engine": "AI4Bharat IndicF5",
-    "reference": "MAR_F_WIKI_00001.wav",
-    "model_revision": "ba85abedf18dc479a447eaa0eccbd76ab78a47d5",
-    "generation": [
-      "Local CPU",
-      "Official AI4Bharat Hugging Face Space"
-    ],
-    "language": "hi",
+    "engine": "Kokoro-82M v1.0 via kokoro-onnx 0.6.1",
+    "voice": "af_heart",
+    "language": "en",
     "audio_codec": "aac",
     "sample_rate": 48000,
-    "channels": 1,
-    "cue_count": 10,
-    "caption_count": 10
+    "channels": 2,
+    "cue_count": 12
+  },
+  "captions": {
+    "language": "hi",
+    "caption_count": 12
   }
 }

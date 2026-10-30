@@ -4,7 +4,7 @@ import { useId, useRef, useState } from 'react'
 import { Check, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
-import { getFeatureDemo, isNarrationLanguage, NARRATION_LANGUAGES, NARRATION_LANGUAGE_LABELS, type NarrationLanguage } from '@/lib/feature-demos'
+import { getFeatureDemo, isFilmCut, isNarrationLanguage, NARRATION_LANGUAGES, NARRATION_LANGUAGE_LABELS, type NarrationLanguage } from '@/lib/feature-demos'
 import { upgradeFeatureBullets, upgradeText, type UpgradeFeature, type UpgradePlan } from '@/lib/upgrade-wall'
 import { useTranslation } from '@/lib/i18n/context'
 
@@ -45,6 +45,9 @@ function FeatureVideo({ feature }: { feature: UpgradeFeature }) {
   const selectorId = useId()
   const narrationLanguage = preference ?? language
   const demo = getFeatureDemo(feature, narrationLanguage)
+  // Film cuts are voiced in English only: another language comes as captions, shown from the start.
+  const captionsOnly = demo.voice !== narrationLanguage
+  const filmCut = isFilmCut(feature)
 
   function changeNarration(next: string) {
     if (!isNarrationLanguage(next) || next === narrationLanguage) return
@@ -75,7 +78,7 @@ function FeatureVideo({ feature }: { feature: UpgradeFeature }) {
     <>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <label htmlFor={selectorId} className="text-sm font-semibold text-ink">
-          {upgradeText(language, 'demoNarrationLanguage')}
+          {upgradeText(language, filmCut ? 'demoCaptionLanguage' : 'demoNarrationLanguage')}
         </label>
         <select
           id={selectorId}
@@ -109,11 +112,11 @@ function FeatureVideo({ feature }: { feature: UpgradeFeature }) {
           video.muted = playback.muted
           video.volume = playback.volume
           video.playbackRate = playback.rate
-          if (video.textTracks[0]) video.textTracks[0].mode = playback.captions ? 'showing' : 'disabled'
+          if (video.textTracks[0]) video.textTracks[0].mode = playback.captions || captionsOnly ? 'showing' : 'disabled'
           if (playback.playing) void video.play().catch(() => { /* Native controls remain available if autoplay is blocked. */ })
         }}
       >
-        <track kind="captions" src={demo.captions} srcLang={narrationLanguage} label={NARRATION_LANGUAGE_LABELS[narrationLanguage]} />
+        <track kind="captions" src={demo.captions} srcLang={narrationLanguage} label={NARRATION_LANGUAGE_LABELS[narrationLanguage]} default={captionsOnly} />
         <a href={demo.src}>{upgradeText(language, 'openVideo')}</a>
       </video>
       {failed && (
@@ -125,7 +128,7 @@ function FeatureVideo({ feature }: { feature: UpgradeFeature }) {
         </p>
       )}
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-subtle">
-        <span>{upgradeText(language, 'demoHelp', { language: NARRATION_LANGUAGE_LABELS[narrationLanguage] })}</span>
+        <span>{upgradeText(language, captionsOnly ? 'demoCaptionsOnly' : 'demoHelp', { language: NARRATION_LANGUAGE_LABELS[narrationLanguage] })}</span>
         <a href={demo.transcript} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-[44px] items-center font-semibold text-saffron-deep underline underline-offset-2 sm:min-h-0 sm:inline">
           {upgradeText(language, 'demoTranscript')}
         </a>
@@ -160,7 +163,7 @@ export function PlanPreviewModal({ feature, planTier, baseVisible = false, onClo
                   {upgradeText(language, 'sample')}
                 </p>
                 <DialogTitle className="text-xl font-bold text-ink">{upgradeText(language, feature)}</DialogTitle>
-                {baseVisible && <DialogDescription className="text-xs">{upgradeText(language, 'demoPlanNote')}</DialogDescription>}
+                {baseVisible && <DialogDescription className="text-xs">{upgradeText(language, isFilmCut(feature) ? 'demoPlanNoteLite' : 'demoPlanNote')}</DialogDescription>}
               </div>
               <Button type="button" variant="ghost" size="icon" className="max-sm:size-[44px]" onClick={onClose} aria-label={upgradeText(language, 'closePreview')}>
                 <X className="h-5 w-5" aria-hidden="true" />
