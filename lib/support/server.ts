@@ -6,7 +6,8 @@ import { founderOnlyIdentity } from '@/lib/admin/founder-email'
 import { AdminError, adminErrorResponse } from '@/lib/admin/errors'
 import { checkAuthRateLimit,isUserRevoked } from '@/lib/rate-limit'
 import { z } from 'zod'
-import { NextResponse } from 'next/server'
+import { NextResponse,after } from 'next/server'
+import { notifyFounderOfCustomerMessage } from './notify'
 import { listTicketSchema,createTicketSchema,manualTicketSchema,customerReplySchema,founderReplySchema,internalNoteSchema,patchTicketSchema,validExternalReference,type TicketList,type CustomerTicketDetail,type FounderTicketDetail,type SupportSummary } from './contracts'
 
 export function supportEnabled(){return process.env.WEAVLY_SUPPORT_ENABLED==='true' && (process.env.NODE_ENV!=='production'||process.env.WEAVLY_SUPPORT_PRODUCTION_APPROVED==='true')}
@@ -78,6 +79,9 @@ export async function mutateSupport(founder:boolean,operation:'create'|'reply'|'
  if(!validExternalReference(payload.externalReference as string|undefined))throw new AdminError('INVALID_INPUT',400,'Use a safe reference or HTTPS link.')
  const {clientRequestId,...validated}=payload
  const {data,error}=await createAdminClient().rpc('admin_support_mutate',{p_actor_id:who.userId,p_session_id:who.sessionId,p_operation:operation,p_ticket_id:id,p_payload:validated,p_request_id:clientRequestId})
- if(error)dbError(error);return data
+ if(error)dbError(error)
+ // Founder email runs after the response; a send failure never fails the customer's write.
+ if(!founder&&(operation==='create'||operation==='reply')){const ticketId=operation==='create'?(data as {id:string}).id:id!;after(()=>notifyFounderOfCustomerMessage({kind:operation==='create'?'created':'customer_reply',ticketId,requestId:clientRequestId}).catch(()=>{}))}
+ return data
 }
 export function supportFilters(request:Request){return Object.fromEntries(new URL(request.url).searchParams.entries())}
