@@ -56,7 +56,7 @@ export function RateBookCostingReview({ item, copy, warpLabel, weftLabel, savedM
 
             <section aria-label={copy.yarnRates} className="min-w-0 lg:row-span-2">
                 <div className="mb-3 flex items-center justify-between gap-4 text-[14px] text-body">
-                    <h4 className="font-semibold">{copy.yarnRates} <span className="ml-1 font-normal">· ₹/kg</span></h4>
+                    <h4 className="font-semibold">{copy.yarnRates} <span className="ml-1 font-normal">· {copy.yarnRateUnit}</span></h4>
                     <div aria-hidden="true" className="hidden w-60 grid-cols-[minmax(0,1fr)_1.25rem_minmax(0,1fr)] gap-3 text-right sm:grid">
                         <span>{copy.savedRate}</span><span /><span>{copy.latestRate}</span>
                     </div>
