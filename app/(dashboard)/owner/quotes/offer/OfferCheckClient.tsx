@@ -260,7 +260,7 @@ export default function OfferCheckClient({
 
                     <div className="min-w-0">
                         <Label htmlFor={quantityId} className={cn(FIELD_LABEL, 'flex flex-wrap items-baseline gap-x-1.5')}>
-                            {copy.quantityLabel} <span className="font-normal text-muted-foreground/80">· {copy.optional}</span>
+                            {copy.quantityLabel} <span className="font-normal text-muted-foreground">· {copy.optional}</span>
                         </Label>
                         <div className="relative mt-2">
                             <Input

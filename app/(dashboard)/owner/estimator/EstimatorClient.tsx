@@ -2179,7 +2179,7 @@ function LayerNameField({
                     data-testid="yarn-ratebook-dropdown"
                     className="absolute left-0 top-full mt-1.5 z-50 w-[360px] sm:w-[440px] max-w-[calc(100vw-2.5rem)] rounded-[14px] border border-[var(--wv-cotton-400)] bg-[var(--wv-cotton-0)] shadow-[0_16px_40px_-6px_rgba(15,23,42,0.18),0_4px_16px_-2px_rgba(15,23,42,0.08)] ring-1 ring-black/5 overflow-hidden"
                 >
-                    <div className="sticky top-0 z-10 bg-[var(--wv-cotton-100)]/95 backdrop-blur-xs px-3.5 py-2 border-b border-[var(--wv-cotton-200)] flex items-center justify-between text-xs font-bold text-[var(--wv-neel-500)]">
+                    <div className="sticky top-0 z-10 bg-[var(--wv-cotton-100)]/95 backdrop-blur-xs px-3.5 py-2 border-b border-[var(--wv-cotton-200)] flex items-center justify-between text-xs font-bold text-ink">
                         <div className="flex items-center gap-1.5">
                             <BookOpen className="h-3.5 w-3.5 text-[var(--wv-text-secondary)] shrink-0" />
                             <span>Saved Yarns ({filteredOptions.length})</span>
@@ -6255,7 +6255,7 @@ export default function EstimatorClient({
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Fabric / Quality Name (visible in both modes) */}
                             <div className="col-span-1 md:col-span-2 space-y-1.5">
-                                <Label className="text-xs font-bold text-[var(--wv-neel-500)]">
+                                <Label className="text-xs font-bold text-ink">
                                     {t('estimator.order_basics.fabric_quality_name')}
                                 </Label>
                                 <Input
@@ -6990,7 +6990,7 @@ export default function EstimatorClient({
                                                 )}
                                             </div>
                                             <div className="text-right">
-                                                <p className="text-xs font-semibold text-[var(--wv-neel-500)] leading-none mb-1">Method</p>
+                                                <p className="text-xs font-semibold text-ink leading-none mb-1">Method</p>
                                                 <p className="text-sm font-semibold text-[var(--wv-neel-700)] leading-tight">{state.overheadMode === 'direct' ? 'Direct rate' : 'Monthly expenses'}</p>
                                                 <p className="text-xs text-[var(--wv-text-secondary)] mt-0.5">{state.overheadMode === 'direct' ? 'saved ₹/m input' : 'saved expenses ÷ output'}</p>
                                             </div>

@@ -36,7 +36,7 @@ export function MachineToolbar({
         />
         <Input
           type="search"
-          className="h-11 w-full rounded-xl border-hairline/80 bg-surface/95 pl-10 pr-9 text-sm text-ink placeholder:text-subtle/60 shadow-xs focus-visible:border-saffron focus-visible:ring-saffron/30"
+          className="h-11 w-full rounded-xl border-hairline/80 bg-surface/95 pl-10 pr-9 text-sm text-ink placeholder:text-[var(--color-placeholder)] shadow-xs focus-visible:border-saffron focus-visible:ring-saffron/30"
           aria-label={tx('Search machines')}
           placeholder={tx('Search machines...')}
           value={search}

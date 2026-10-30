@@ -318,7 +318,7 @@ function SignupForm() {
                                         <div key={check.label} className={cn(
                                             'flex items-center gap-1 text-[10px]',
                                             compactMobile && 'max-sm:text-xs',
-                                            check.met ? 'text-[var(--wv-status-success-fg)]' : cn('text-muted-foreground/60', compactMobile && 'max-sm:text-body')
+                                            check.met ? 'text-[var(--wv-status-success-fg)]' : cn('text-muted-foreground', compactMobile && 'max-sm:text-body')
                                         )}>
                                             <CheckCircle2 className={cn('h-3 w-3', check.met ? 'opacity-100' : 'opacity-40')} />
                                             <span className={compactMobile ? undefined : 'hidden sm:inline'}>{check.label}</span>

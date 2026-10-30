@@ -77,7 +77,7 @@ export function SecurityCard({ email }: SecurityCardProps) {
                             {tx('Send a secure password reset link to your registered email address.')}
                         </p>
                         {email && (
-                            <p className="text-xs font-mono text-ink/80 pt-0.5 select-all">
+                            <p className="text-xs font-mono text-ink pt-0.5 select-all">
                                 {email}
                             </p>
                         )}

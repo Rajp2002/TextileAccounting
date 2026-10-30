@@ -56,7 +56,7 @@ export function WorkerCard({ worker, onEdit, tourPreview = false }: WorkerCardPr
                 'flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition-colors',
                 worker.is_active
                   ? 'border-hairline/80 bg-surface-soft text-subtle'
-                  : 'border-hairline/50 bg-muted/15 text-subtle/60'
+                  : 'border-hairline/50 bg-muted/15 text-subtle'
               )}
               aria-hidden="true"
             >
@@ -93,7 +93,7 @@ export function WorkerCard({ worker, onEdit, tourPreview = false }: WorkerCardPr
                 <p
                   className={cn(
                     'truncate text-sm font-medium leading-5',
-                    summary.assignedMachineCount > 0 ? 'text-ink' : 'text-subtle/70 font-normal italic'
+                    summary.assignedMachineCount > 0 ? 'text-ink' : 'text-subtle font-normal italic'
                   )}
                 >
                   {summary.assignedMachineCount > 0
@@ -122,7 +122,7 @@ export function WorkerCard({ worker, onEdit, tourPreview = false }: WorkerCardPr
                 <p
                   className={cn(
                     'truncate text-sm font-medium leading-5',
-                    summary.hasSalaryConfigured ? 'text-ink' : 'text-subtle/70 font-normal italic'
+                    summary.hasSalaryConfigured ? 'text-ink' : 'text-subtle font-normal italic'
                   )}
                 >
                   {tx(summary.salaryStatusLabel)}
@@ -148,7 +148,7 @@ export function WorkerCard({ worker, onEdit, tourPreview = false }: WorkerCardPr
                     <p
                       className={cn(
                         'truncate text-sm font-medium leading-5',
-                        summary.payrollStatusLabel === 'Ready' ? 'text-ink' : 'text-subtle/70 font-normal italic'
+                        summary.payrollStatusLabel === 'Ready' ? 'text-ink' : 'text-subtle font-normal italic'
                       )}
                     >
                       {tx(summary.payrollStatusLabel)}

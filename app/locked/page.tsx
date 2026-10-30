@@ -75,7 +75,7 @@ export default async function LockedPage() {
                             name="reason"
                             required
                             placeholder="Provide details for the unlock request..."
-                            className="w-full bg-surface border border-wv-border-control rounded-md p-3 text-sm placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-wv-border-focus focus:border-wv-border-focus min-h-[100px]"
+                            className="w-full bg-surface border border-wv-border-control rounded-md p-3 text-sm placeholder:text-[var(--color-placeholder)] focus:outline-none focus:ring-2 focus:ring-wv-border-focus focus:border-wv-border-focus min-h-[100px]"
                         />
                         <Button type="submit" className="w-full bg-ink hover:bg-body text-wv-text-on-action border-none transition-all">
                             <MessageSquare className="w-4 h-4 mr-2" />

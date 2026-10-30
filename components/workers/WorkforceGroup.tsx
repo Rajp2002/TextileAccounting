@@ -68,7 +68,7 @@ export function WorkforceGroup({
         </ul>
       ) : (
         <div className="flex min-h-[140px] items-center justify-center rounded-2xl border border-dashed border-hairline/80 bg-surface/50 p-6 text-center">
-          <p className="text-sm font-medium text-subtle/80 italic">
+          <p className="text-sm font-medium text-subtle italic">
             {emptyText}
           </p>
         </div>

@@ -592,7 +592,7 @@ export function PayrollCycleSettingsCard({
 
                     {/* Plain-Language Explanation */}
                     {plainExplanation && (
-                        <p className="mt-3.5 text-xs font-medium text-ink/80 sm:text-sm">
+                        <p className="mt-3.5 text-xs font-medium text-ink sm:text-sm">
                             {plainExplanation}
                         </p>
                     )}

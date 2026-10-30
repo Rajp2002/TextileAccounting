@@ -408,7 +408,7 @@ export default function ChallansClient({
                         />
                         <Input
                             type="search"
-                            className="h-10 w-full rounded-lg border-hairline bg-surface pl-10 pr-3 text-sm text-ink shadow-xs placeholder:text-subtle/60 focus-visible:border-saffron focus-visible:ring-saffron/30 max-md:min-h-[44px]"
+                            className="h-10 w-full rounded-lg border-hairline bg-surface pl-10 pr-3 text-sm text-ink shadow-xs placeholder:text-[var(--color-placeholder)] focus-visible:border-saffron focus-visible:ring-saffron/30 max-md:min-h-[44px]"
                             aria-label={tx('search')}
                             placeholder={tx('search')}
                             value={search}

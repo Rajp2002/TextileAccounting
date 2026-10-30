@@ -80,7 +80,7 @@ export function MachineCard({ machine, onEdit, tourPreview = false }: MachineCar
               data-i18n-skip={readiness.hasWorker ? 'true' : undefined}
               className={cn(
                 'truncate text-sm font-semibold',
-                readiness.hasWorker ? 'text-ink' : 'text-subtle/70 font-normal italic'
+                readiness.hasWorker ? 'text-ink' : 'text-subtle font-normal italic'
               )}
               title={readiness.workerName ?? undefined}
             >
@@ -99,7 +99,7 @@ export function MachineCard({ machine, onEdit, tourPreview = false }: MachineCar
               data-i18n-skip={readiness.hasCosting ? 'true' : undefined}
               className={cn(
                 'truncate text-sm font-semibold',
-                readiness.hasCosting ? 'text-ink' : 'text-subtle/70 font-normal italic'
+                readiness.hasCosting ? 'text-ink' : 'text-subtle font-normal italic'
               )}
               title={readiness.costingLabel ?? undefined}
             >

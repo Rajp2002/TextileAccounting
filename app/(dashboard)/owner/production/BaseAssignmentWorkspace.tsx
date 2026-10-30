@@ -1343,7 +1343,7 @@ export default function BaseAssignmentWorkspace({
                                 onChange={(event) => setWorkerSearch(event.target.value)}
                                 aria-label="Search workers"
                                 placeholder="Search workers"
-                                className="h-10 sm:h-11 rounded-xl border border-hairline bg-surface pl-9 text-sm text-ink placeholder:text-muted-foreground/70 focus:border-loom-subtle focus:ring-2 focus:ring-loom/10"
+                                className="h-10 sm:h-11 rounded-xl border border-hairline bg-surface pl-9 text-sm text-ink placeholder:text-[var(--color-placeholder)] focus:border-loom-subtle focus:ring-2 focus:ring-loom/10"
                             />
                         </div>
                         <MachineTypeFilters machineTypes={machineTypes} selected={selectedMachineTypes} onSelect={(machineType) => setSelectedMachineTypes(machineType ? [machineType] : [])} />
@@ -1432,7 +1432,7 @@ export default function BaseAssignmentWorkspace({
                                 onChange={(event) => setWorkerSearch(event.target.value)}
                                 aria-label="Search workers"
                                 placeholder="Search workers"
-                                className="h-10 rounded-xl border border-hairline bg-surface pl-9 text-sm text-ink placeholder:text-muted-foreground/70 focus:border-loom-subtle focus:ring-2 focus:ring-loom/10"
+                                className="h-10 rounded-xl border border-hairline bg-surface pl-9 text-sm text-ink placeholder:text-[var(--color-placeholder)] focus:border-loom-subtle focus:ring-2 focus:ring-loom/10"
                             />
                         </div>
                         {otherShiftHiddenCount > 0 && (

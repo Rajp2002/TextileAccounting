@@ -56,7 +56,7 @@ export function OnboardingShell({
                             />
                         </Link>
                         <div className="hidden h-5 w-px bg-[var(--wv-cotton-300)] sm:block" />
-                        <span className="hidden text-xs font-semibold text-[var(--wv-neel-500)] sm:inline">
+                        <span className="hidden text-xs font-semibold text-ink sm:inline">
                             {tx('Factory Setup')}
                         </span>
                     </div>

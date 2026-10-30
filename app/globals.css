@@ -307,8 +307,8 @@
   --wv-bg-inverse-raised: var(--wv-neel-900);
 
   --wv-text-primary: var(--wv-neel-900);
-  --wv-text-body: var(--wv-neel-700);
-  --wv-text-secondary: var(--wv-neel-500);
+  --wv-text-body: var(--wv-neel-900);
+  --wv-text-secondary: var(--wv-neel-900);
   --wv-text-disabled: var(--wv-disabled);
   --wv-text-inverse: var(--wv-neel-50);
   --wv-text-inverse-secondary: var(--wv-neel-300);
@@ -381,8 +381,8 @@
   --color-hairline: var(--wv-border-subtle);
   --color-hairline-strong: var(--wv-border-control);
   --color-ink: var(--wv-text-primary);
-  /* Secondary text steps down from ink but stays at AAA contrast (≥ 7:1)
-     on the warm canvas, so hierarchy never costs legibility. */
+  /* Body and secondary text use the ink colour: the lighter greys read too faint
+     on the warm canvas. Hierarchy comes from size and weight instead. */
   --color-body: var(--wv-text-body);
   --color-muted: var(--wv-text-secondary);
   --color-subtle: var(--wv-text-secondary);

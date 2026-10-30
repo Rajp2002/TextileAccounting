@@ -207,14 +207,14 @@ export function BulkEntryGrid<T extends { id: string; error?: string }>({
     return (
         <div className={cn('space-y-2', className)} data-bulk-grid={gridId}>
             {helperText && (
-                <p className="text-xs text-[var(--wv-neel-500)]">
+                <p className="text-xs text-ink">
                     {tx(helperText)}
                 </p>
             )}
 
             <div className="overflow-hidden rounded-xl border border-[var(--wv-cotton-400)] bg-[var(--wv-cotton-0)] shadow-sm">
                 {/* Table Header */}
-                <div className={cn('grid items-center border-b border-[var(--wv-cotton-300)] bg-[var(--wv-cotton-200)] px-3 py-2 text-xs font-semibold text-[var(--wv-neel-500)]', rowGrid, dialog && columns.length > 1 && 'max-sm:hidden')}>
+                <div className={cn('grid items-center border-b border-[var(--wv-cotton-300)] bg-[var(--wv-cotton-200)] px-3 py-2 text-xs font-semibold text-ink', rowGrid, dialog && columns.length > 1 && 'max-sm:hidden')}>
                     <div className="text-center font-mono">#</div>
                     <div className={cn('grid gap-3', cellsGrid)}>
                         {columns.map(col => (

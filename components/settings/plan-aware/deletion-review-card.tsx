@@ -132,7 +132,7 @@ export function DeletionReviewCard({ organizationName, accountEmail, restoreMobi
                             <AlertTriangle className="h-5 w-5 text-risk" aria-hidden="true" />
                             {tx('Permanently delete this account and factory?')}
                         </DialogTitle>
-                        <DialogDescription className="space-y-3 pt-2 text-sm leading-relaxed text-ink/80">
+                        <DialogDescription className="space-y-3 pt-2 text-sm leading-relaxed text-ink">
                             <span>
                                 {tx('This permanently deletes your personal Weavly login ({email}), the factory workspace ({factory}), and all stored factory records.', {
                                     email: accountEmail || 'your account',

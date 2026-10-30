@@ -54,7 +54,7 @@ export function WorkerToolbar({
         />
         <Input
           type="search"
-          className="h-10 w-full rounded-lg border-hairline bg-surface pl-10 pr-9 text-sm text-ink placeholder:text-subtle/70 shadow-2xs focus-visible:border-saffron focus-visible:ring-saffron"
+          className="h-10 w-full rounded-lg border-hairline bg-surface pl-10 pr-9 text-sm text-ink placeholder:text-[var(--color-placeholder)] shadow-2xs focus-visible:border-saffron focus-visible:ring-saffron"
           aria-label={tx('Search workers')}
           placeholder={tx('Search workers…')}
           value={search}
