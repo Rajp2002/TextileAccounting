@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { BillingAttemptStatus } from '@/components/billing/BillingAttemptStatus'
 import type { BillingAttemptRow } from '@/lib/billing-attempts'
 import { PlanChooserClient } from '@/components/plans/PlanChooserClient'
+import { ActivityTracker } from '@/components/analytics/ActivityTracker'
 import type { UpgradePlan } from '@/lib/upgrade-wall'
 
 export const metadata = {
@@ -55,6 +56,8 @@ export default async function PlansPage(props: PlansPageProps) {
   const billingReadiness = getBillingReadiness()
 
   return (
+    <>
+    <ActivityTracker />
     <PlanChooserClient
       currentPlan={currentPlan}
       isOnboarding={isOnboarding}
@@ -69,5 +72,6 @@ export default async function PlansPage(props: PlansPageProps) {
         ) : undefined
       }
     />
+    </>
   )
 }

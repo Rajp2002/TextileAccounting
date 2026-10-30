@@ -108,6 +108,7 @@ export default function PrivacyPolicyPage() {
                 <ul>
                     <li>Server-recorded feature events such as estimator use, costing saves and reopens, quality reuse, Rate Book activity, production actions, and upgrade-intent interactions</li>
                     <li>The organization&apos;s server-derived subscription tier at the time of the event, together with limited event properties needed to measure Free and Lite usage, Base production adoption, conversion, and retention</li>
+                    <li>Active time in the app: minutes of use per day, which area of the app was open, the device type and whether the installed app was used, and when the account was last seen. Page content and anything you type are not recorded.</li>
                 </ul>
             </PolicySection>
 

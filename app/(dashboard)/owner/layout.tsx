@@ -12,6 +12,7 @@ import { getCachedOrgPlanAccess } from '@/lib/subscription'
 import { hasOwnerArchiveAccess } from '@/lib/subscription-access'
 import { OwnerPlanProvider } from '@/components/providers/owner-plan-provider'
 import { TrialNudge } from '@/components/billing/TrialNudge'
+import { ActivityTracker } from '@/components/analytics/ActivityTracker'
 import { createSignInServerTimerFromCookie } from '@/lib/sign-in-telemetry.server'
 import { getRateReviewStatus } from '@/lib/cost-rates'
 import { getCachedOwnerOrganization, startOwnerShellReads } from '@/lib/owner-organization'
@@ -141,6 +142,7 @@ async function OwnerRouteBoundary({ children }: { children: React.ReactNode }) {
     return (
         <OwnerPlanProvider access={planAccess}>
             <AuthBoundaryCleanup scope={cacheScope} />
+            <ActivityTracker />
             {planAccess.trialEndsAt ? <TrialNudge endsAt={planAccess.trialEndsAt} /> : null}
             {children}
         </OwnerPlanProvider>
