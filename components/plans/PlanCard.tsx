@@ -68,6 +68,8 @@ export function PlanCard({
 
   const isCurrent = currentPlan === planTier && !isOnboarding
   const isLite = planTier === 'lite'
+  // Same condition as the Start trial button below, so the badge never promises a trial the card can't start.
+  const showTrialBadge = isLite && liteTrialEligible && !isCurrent && currentPlan !== 'base'
   const isBase = planTier === 'base'
   const isFree = planTier === 'free'
 
@@ -83,7 +85,7 @@ export function PlanCard({
   return (
     <div
       className={cn(
-        'relative flex flex-col justify-between rounded-2xl border bg-surface p-6 shadow-sm transition-all duration-200',
+        'relative flex flex-col justify-between rounded-2xl border bg-surface p-6 lg:p-5 shadow-sm transition-all duration-200',
         mobileCompact && 'max-md:p-[16px]',
         isLite
           ? 'border-saffron/40 shadow-md ring-1 ring-saffron/30 hover:border-saffron/60'
@@ -102,20 +104,29 @@ export function PlanCard({
 
       {/* Card Header & Pricing */}
       <div className="space-y-4">
-        <div>
-          <div className="flex items-center justify-between gap-2">
-            <h3 className="text-xl font-bold text-ink">
-              {isFree ? 'Weavly Free' : BILLING_PLANS[planTier].name}
-            </h3>
-            {isCurrent && (
-              <span className="rounded-md border border-hairline bg-surface-soft px-2 py-0.5 text-xs font-semibold text-subtle">
-                {upgradeText(language, 'current')}
-              </span>
-            )}
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-xl font-bold text-ink">
+                {isFree ? 'Weavly Free' : BILLING_PLANS[planTier].name}
+              </h3>
+              {isCurrent && (
+                <span className="rounded-md border border-hairline bg-surface-soft px-2 py-0.5 text-xs font-semibold text-subtle">
+                  {upgradeText(language, 'current')}
+                </span>
+              )}
+            </div>
+            <p className="mt-1 text-xs font-medium text-saffron-deep">
+              {upgradeText(language, isFree ? 'freeFit' : isLite ? 'liteFit' : 'baseFit')}
+            </p>
           </div>
-          <p className="mt-1 text-xs font-medium text-saffron-deep">
-            {upgradeText(language, isFree ? 'freeFit' : isLite ? 'liteFit' : 'baseFit')}
-          </p>
+          {/* The eye lands on the plan names first, so the free trial is said up here as well as on
+              the button: a large tag in the card's top-right corner, as tall as the name and tagline. */}
+          {showTrialBadge && (
+            <span className="inline-flex min-h-[64px] shrink-0 items-center rounded-xl bg-success px-6 text-xl font-bold text-white">
+              {liteTrialText(language, 'freeForThreeMonths')}
+            </span>
+          )}
         </div>
 
         {/* Price display */}
@@ -223,7 +234,7 @@ export function PlanCard({
           <button
             type="button"
             onClick={() => onOpenPreview(activeFeature, planTier)}
-            className="group relative flex aspect-[16/9] w-full lg:max-h-[clamp(140px,18vh,280px)] cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-hairline bg-surface-soft p-2 transition-colors hover:border-saffron/40"
+            className="group relative flex aspect-[16/9] w-full lg:max-h-[clamp(110px,12vh,280px)] cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-hairline bg-surface-soft p-2 transition-colors hover:border-saffron/40"
             aria-label={upgradeText(language, 'watchFeatureDemo', { feature: activeFeatureName })}
           >
             <Image
@@ -329,7 +340,7 @@ export function PlanCard({
       </div>
 
       {/* Action CTA Button */}
-      <div className={cn("mt-6 pt-4 border-t border-hairline/60", mobileCompact && "max-md:mt-3 max-md:[&_button]:min-h-[44px] max-md:[&_button]:h-auto max-md:[&_button]:whitespace-normal max-md:[&_button]:py-3")}>
+      <div className={cn("mt-6 pt-4 border-t border-hairline/60 lg:mt-4", mobileCompact && "max-md:mt-3 max-md:[&_button]:min-h-[44px] max-md:[&_button]:h-auto max-md:[&_button]:whitespace-normal max-md:[&_button]:py-3")}>
         {isFree && (
           <>
             {isCurrent ? (

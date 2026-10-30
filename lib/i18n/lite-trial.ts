@@ -2,6 +2,7 @@ import type { Language } from './context'
 
 // Tuples are [English, Gujarati, Hindi], the same order as lib/i18n/free-mobile-entry.ts.
 export const liteTrialPhrases = {
+  freeForThreeMonths: ['Free for 3 months', '3 મહિના મફત', '3 महीने मुफ़्त'],
   startTrial: ['Start 3-month free trial', '3 મહિનાની મફત ટ્રાયલ શરૂ કરો', '3 महीने का मुफ़्त ट्रायल शुरू करें'],
   trialPayNow: ['Or pay now: ₹2,999 for the first year', 'અથવા હમણાં ચૂકવો: પહેલા વર્ષ માટે ₹2,999', 'या अभी भुगतान करें: पहले साल के लिए ₹2,999'],
   trialDisclosure: [

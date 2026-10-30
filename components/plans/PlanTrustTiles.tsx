@@ -15,12 +15,19 @@ interface TrustTile {
   icon: ComponentType<{ className?: string; 'aria-hidden'?: boolean }>
   title: string
   summary: string
-  /** Soft pastel chip behind the icon, matching the estimator's section tiles. */
+  /**
+   * The tile's colour with brand ink text; also used for the icon chip in its dialog. The four
+   * hues share one dusty, mid-light recipe pulled toward the brand: saffron for checkout and a
+   * Neel periwinkle for renewal, with teal and rose alongside.
+   */
   tone: string
 }
 
 /**
- * Billing terms as four tiles under the plan cards. Each tile lifts on hover (`ui-tile-lift`)
+ * Billing terms as four colour-coded tiles that show only their title; the summary and full
+ * explanation live in the dialog each one opens. On desktop they are pinned to the bottom of the viewport with only
+ * their top half showing, like cards tucked into a pocket; hovering or focusing one slides it up
+ * (`plan-trust-peek`). Smaller screens keep them in the page flow under the plan cards. Each tile lifts on hover (`ui-tile-lift`)
  * and opens a dialog with the full explanation, so the short line never has to carry the whole
  * policy. The dialog keeps the shared modal spring but grows out of the tile that opened it.
  */
@@ -39,28 +46,28 @@ export function PlanTrustTiles({ mobileCompact }: { mobileCompact: boolean }) {
       icon: Receipt,
       title: freeMobileEntryText(language, 'receiptDocument'),
       summary: t('base_plan.billing.receipt_only'),
-      tone: 'bg-[#DDEBFF] text-[#2C5FAE]',
+      tone: 'bg-[#5FAEA8] text-ink',
     },
     {
       topic: 'renewal',
       icon: Calendar,
       title: freeMobileEntryText(language, 'manualRenewal'),
       summary: freeMobileEntryText(language, 'manualRenewalDescription'),
-      tone: 'bg-[#ECE7FF] text-[#5B45B0]',
+      tone: 'bg-[#8F9DD3] text-ink',
     },
     {
       topic: 'activation',
       icon: CheckCircle2,
       title: freeMobileEntryText(language, 'verifiedActivation'),
       summary: freeMobileEntryText(language, 'verifiedActivationDescription'),
-      tone: 'bg-[#FFE1EC] text-[#AE3566]',
+      tone: 'bg-[#E4909E] text-ink',
     },
     {
       topic: 'checkout',
       icon: ShieldCheck,
       title: freeMobileEntryText(language, 'secureCheckout'),
       summary: freeMobileEntryText(language, 'secureCheckoutDescription'),
-      tone: 'bg-[#FFF1C7] text-[#8A6100]',
+      tone: 'bg-[#F2A766] text-ink',
     },
   ]
 
@@ -86,7 +93,9 @@ export function PlanTrustTiles({ mobileCompact }: { mobileCompact: boolean }) {
   return (
     <section
       aria-label={freeMobileEntryText(language, 'billingTerms')}
-      className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
+      // Desktop: fixed-width tiles packed close together and centred, so the spare width sits at the
+      // row's two ends rather than between the tiles.
+      className="plan-trust-peek-row grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[repeat(4,minmax(0,260px))] lg:justify-center lg:gap-5"
       data-billing-document-state={BILLING_DOCUMENT_POLICY.state}
     >
       {tiles.map(tile => {
@@ -98,21 +107,16 @@ export function PlanTrustTiles({ mobileCompact }: { mobileCompact: boolean }) {
             onClick={event => openTile(event, tile.topic)}
             aria-haspopup="dialog"
             className={cn(
-              'ui-tile-lift flex min-h-[44px] w-full items-start gap-3 rounded-xl border border-hairline bg-surface p-4 text-left shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron',
-              mobileCompact && 'max-md:p-3',
+              'ui-tile-lift plan-trust-peek flex min-h-[44px] w-full items-start gap-3 rounded-xl border-[1.5px] border-ink p-3 text-left shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron lg:min-h-[112px] lg:p-4',
+              tile.tone,
+              mobileCompact && 'max-md:py-2.5',
             )}
           >
-            <span data-tile-icon className={cn('grid size-10 shrink-0 place-items-center rounded-lg', tile.tone)}>
-              <Icon className="h-5 w-5" aria-hidden={true} />
+            <span data-tile-icon className={'grid size-8 shrink-0 place-items-center rounded-lg bg-white/40'}>
+              <Icon className="h-4 w-4" aria-hidden={true} />
             </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-bold text-ink">{tile.title}</span>
-              <span className="mt-1 block text-xs leading-relaxed text-subtle">{tile.summary}</span>
-              <span className="mt-2 inline-flex items-center gap-0.5 text-xs font-semibold text-ink">
-                {planTrustLabel(language, 'learnMore')}
-                <ChevronRight data-tile-arrow className="h-3.5 w-3.5" aria-hidden="true" />
-              </span>
-            </span>
+            <span className="flex min-h-8 min-w-0 flex-1 items-center text-sm font-bold">{tile.title}</span>
+            <ChevronRight data-tile-arrow className="mt-2 h-4 w-4 shrink-0" aria-hidden="true" />
           </button>
         )
       })}
