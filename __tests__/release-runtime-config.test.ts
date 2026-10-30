@@ -27,6 +27,14 @@ describe('release/runtime configuration', () => {
     )
   })
 
+  it('shares the Sentry core version between reporting helpers and SDK initialization', () => {
+    // Sentry scopes are keyed by SDK version. A separately upgraded Next.js
+    // SDK must not leave the capture helpers reporting to an uninitialized scope.
+    const core = JSON.parse(read('node_modules/@sentry/core/package.json'))
+    const nextSdk = JSON.parse(read('node_modules/@sentry/nextjs/package.json'))
+    expect(core.version).toBe(nextSdk.dependencies['@sentry/core'])
+  })
+
   it('uses one Sentry tunnel route controlled by withSentryConfig', () => {
     const nextConfig = read('next.config.ts')
     const clientInstrumentation = read('instrumentation-client.ts')

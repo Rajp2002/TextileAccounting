@@ -1,6 +1,6 @@
 'use client'
 
-import { captureMessage } from '@sentry/nextjs'
+import { captureMessage } from '@sentry/core'
 import { prepareForPwaRefresh } from '@/lib/pwa-refresh-safety'
 
 export type PwaUpdateStatus = 'idle' | 'available' | 'activating' | 'ready' | 'blocked'

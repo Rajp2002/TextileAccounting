@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const { prepare, captureMessage } = vi.hoisted(() => ({ prepare: vi.fn(() => true), captureMessage: vi.fn() }))
 vi.mock('../lib/pwa-refresh-safety', () => ({ prepareForPwaRefresh: prepare }))
-vi.mock('@sentry/nextjs', () => ({ captureMessage }))
+vi.mock('@sentry/core', () => ({ captureMessage }))
 
 class FakePort {
     peer!: FakePort

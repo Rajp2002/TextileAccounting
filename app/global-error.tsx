@@ -1,6 +1,8 @@
 "use client"
 
-import * as Sentry from "@sentry/nextjs"
+// This boundary is in every page's server tree. Core shares the initialized
+// client without pulling the Next.js/Node integrations into each page bundle.
+import { captureException } from "@sentry/core"
 import NextError from "next/error"
 import { useEffect } from "react"
 
@@ -10,7 +12,7 @@ export default function GlobalError({
     error: Error & { digest?: string }
 }) {
     useEffect(() => {
-        Sentry.captureException(error)
+        captureException(error)
     }, [error])
 
     return (

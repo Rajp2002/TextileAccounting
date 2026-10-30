@@ -12,7 +12,16 @@ export default defineConfig({
         // millisecond-scale test passes the 5-second default (date-only-format,
         // 2026-10-13). A real hang still fails; per-test timeouts still apply.
         testTimeout: 15_000,
-        exclude: [...configDefaults.exclude, '__tests__/browser-admin/**', '__tests__/browser-support-fixture/**', '__tests__/browser-founder-auth-fixture/**'],
+        // Local previews and nested checkouts are separate from this app's suite.
+        exclude: [
+            ...configDefaults.exclude,
+            'scratch/**',
+            'tmp/**',
+            '.claude/worktrees/**',
+            '__tests__/browser-admin/**',
+            '__tests__/browser-support-fixture/**',
+            '__tests__/browser-founder-auth-fixture/**',
+        ],
         // `npm run build` runs `prebuild` (npm test) with NODE_ENV=production on Vercel. React ships no `act` in its
         // production build, so tests that mount roots through `act` fail there while passing locally. Pin the test
         // environment so a deploy build runs the same tests the same way as `npx vitest run`.
