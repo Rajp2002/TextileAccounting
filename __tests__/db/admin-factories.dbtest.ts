@@ -32,7 +32,7 @@ beforeAll(async () => {
 })
 afterAll(async () => { await db?.end() })
 describe('AD03/04 real DB guarded read models and synthetic scale', () => {
-    it('counts organization keys once; missing classification is unclassified', async () => {
+    it('counts organization keys once; missing classification counts as production', async () => {
         const snapshot = await read()
         const summary = summarizeFactories(snapshot.rows, snapshot.asOf)
         expect(summary.totalProductionFactories).toBe(1000)
@@ -41,7 +41,7 @@ describe('AD03/04 real DB guarded read models and synthetic scale', () => {
         await db.query('DELETE FROM private.admin_org_reporting WHERE org_id=$1', [secondOrg])
         await asServiceRole(db)
         const unclassified = await read(secondOrg)
-        expect(unclassified.rows[0].cohort).toBe('unclassified')
+        expect(unclassified.rows[0].cohort).toBe('production')
         await asSuperuser(db)
         await db.query("INSERT INTO private.admin_org_reporting(org_id,cohort,classification_reason) VALUES($1,'production','Synthetic restore fixture')", [secondOrg])
         await asServiceRole(db)

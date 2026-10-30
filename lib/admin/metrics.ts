@@ -50,7 +50,8 @@ export function resolveFactoryAccess(rows: SubscriptionInput[] | null, hasFreeGr
 
 export type FactorySource = {
     id: string; name: string; created_at: string; cohort: ReportingCohort; is_locked_down: boolean
-    owner_revoked: boolean; verified_email: string | null; subscriptions: SubscriptionInput[] | null
+    owner_revoked: boolean; verified_email: string | null; owner_name?: string | null; owner_phone?: string | null
+    subscriptions: SubscriptionInput[] | null
     has_free_grant: boolean | null; free_subject_id: string | null
     estimator_at: string | null; production_at: string | null; last_outcome_at: string | null
     open_tickets?: number | null
