@@ -9,7 +9,7 @@ import { offerCheckText } from '@/lib/i18n/offer-check'
 import { buildOfferBase, evaluateOffer, listOfferCandidates, offerSliderRange, type OfferBase } from '@/lib/offer-check'
 import { makeSavedCostingTourExamples } from '@/lib/saved-costings-tour'
 
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: () => {}, push: () => {} }) }))
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: () => {}, push: () => {} }), redirect: vi.fn() }))
 vi.mock('@/app/(dashboard)/owner/quotes/offer/actions', () => ({ getOfferBase: async () => ({ error: 'unused' }) }))
 
 const root = path.resolve(__dirname, '..')
@@ -186,7 +186,7 @@ describe('the offer check looks like the rest of the app', () => {
             expect(html).not.toMatch(/wv-bg-inverse|wv-text-inverse|bg-white\/|text-white/)
         }
         expect(fs.existsSync(path.join(root, 'components/estimator/offer-check.module.css'))).toBe(false)
-        for (const file of ['app/(dashboard)/owner/quotes/offer/OfferCheckClient.tsx', 'app/(dashboard)/owner/quotes/offer/loading.tsx', 'components/estimator/OfferCheckResult.tsx']) {
+        for (const file of ['app/(dashboard)/owner/quotes/offer/OfferCheckClient.tsx', 'components/estimator/OfferCheckDialog.tsx', 'components/estimator/OfferCheckResult.tsx']) {
             const source = read(file)
             expect(source, file).not.toContain('offer-check.module.css')
             expect(source, file).not.toContain('WeavlyLogoDark')
@@ -216,7 +216,7 @@ describe('the offer check looks like the rest of the app', () => {
     })
 })
 
-describe('the check an offer page', () => {
+describe('the check an offer form', () => {
     const candidates = listOfferCandidates([{
         id: 'a1',
         quality_label: 'Fabric 75D',
@@ -240,10 +240,15 @@ describe('the check an offer page', () => {
         }))
     }
 
-    it('puts the inputs and the answer on one plain white sheet', async () => {
+    it('keeps the form inside the dialog without its own page header', async () => {
         const client = read('app/(dashboard)/owner/quotes/offer/OfferCheckClient.tsx')
         expect(client).not.toContain('styles.')
-        expect(client).toContain('@container overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs')
+        expect(client).toContain('@container bg-surface')
+        expect(client).not.toContain('PageHeader')
+        expect(client).not.toContain('window.history.replaceState')
+        const dialog = read('components/estimator/OfferCheckDialog.tsx')
+        expect(dialog).toContain('<DialogTitle')
+        expect(dialog).toContain('<DialogDescription')
         const html = await renderPage({})
         expect(html).not.toContain('data-offer-loom')
     })
@@ -271,7 +276,7 @@ describe('the check an offer page', () => {
         expect(html).toContain('placeholder="19.82"')
         expect(html).toContain('type="range"')
         // The quantity the costing was made for is one tap away, never filled in unasked.
-        expect(html).toContain('Use 1,000 m from the costing')
+        expect(html).toContain('Use saved 1,000 m')
         expect(html).not.toContain('value="1000"')
         expect(html).toContain('₹17.44')
     })
@@ -328,10 +333,23 @@ describe('where the check lives', () => {
 
     it('is reachable from the Saved Costings header and from each checkable card', () => {
         const quotes = read('app/(dashboard)/owner/quotes/QuotesClient.tsx')
-        expect(quotes).toContain('href="/owner/quotes/offer"')
-        expect(quotes).toContain('href={`/owner/quotes/offer?costing=${latest.id}`}')
+        expect(quotes).toContain('<OfferCheckDialog')
+        expect(quotes).toContain('setOfferRequest({ costingId: null, trigger: event.currentTarget })')
+        expect(quotes).toContain('onCheckOffer?.(latest.id, event.currentTarget)')
+        expect(quotes).not.toContain('href="/owner/quotes/offer"')
         // Not on the sample card, a costing without a saved cost, or an archived one.
         expect(quotes).toContain("latest && canReuseLatest && !costNotSaved && !tourStep && !isSampleRecordId(group.key) && getCostingStatus(latest) === 'verified'")
+    })
+
+    it.each([
+        [undefined, 'choose'],
+        ['costing-123', 'costing-123'],
+        ['costing?status=archived&other=value', 'costing%3Fstatus%3Darchived%26other%3Dvalue'],
+    ])('opens an existing offer link over Saved Costings (%s)', async (costing, expected) => {
+        const { redirect } = await import('next/navigation')
+        const { default: OfferCheckPage } = await import('@/app/(dashboard)/owner/quotes/offer/page')
+        await OfferCheckPage({ searchParams: Promise.resolve({ costing }) })
+        expect(redirect).toHaveBeenLastCalledWith(`/owner/quotes?offer=${expected}`)
     })
 
     it('keeps one price track mounted from the prompt to the answer', () => {

@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils'
 export const LOSS_TEXT = 'text-[var(--wv-madder-600)]'
 
 /** The label over a figure or a block of lines, as on Saved Costings: sentence case, quiet. */
-export const SECTION_LABEL = 'text-sm font-medium text-muted-foreground'
+export const SECTION_LABEL = 'text-[15px] font-medium text-ink'
 
 /** Rupees with the Indian grouping; a minus sign, not a bracket, for money lost. */
 export function rupees(value: number, decimals = 2) {
@@ -91,38 +91,41 @@ export function OfferPriceTrack({
     // Marks and names sit 11px in from each end (half the thumb), where the thumb's centre stops.
     // Each name slides along its own width as its mark moves, so it stays inside the track at either end.
     const label = (position: number): CSSProperties => ({ left: `${position}%`, transform: `translateX(-${position}%)` })
-    const name = 'absolute whitespace-nowrap text-[13px] text-muted-foreground'
+    const name = 'absolute whitespace-nowrap text-[14px] text-muted-foreground'
 
     return (
-        <div data-offer-track className={cn(crowded && 'pt-4')}>
-            <div className="relative">
-                <span aria-hidden="true" className="pointer-events-none absolute inset-x-[11px] inset-y-0">
-                    {[breakEven, price].map((position, index) => (
-                        <span key={index} className="absolute top-1/2 h-3.5 w-0.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-muted-foreground" style={{ left: `${position}%` }} />
-                    ))}
-                </span>
-                <RangeSlider
-                    min={range.min}
-                    max={range.max}
-                    step={range.step}
-                    value={value}
-                    aria-label={copy.priceSlider}
-                    aria-valuetext={valueText}
-                    onValueChange={onValueChange}
-                    className="relative"
-                />
+        <div data-offer-track className="flex flex-col gap-2">
+            <p className={SECTION_LABEL}>{copy.priceSlider}</p>
+            <div className={cn(crowded && 'pt-5')}>
+                <div className="relative">
+                    <span aria-hidden="true" className="pointer-events-none absolute inset-x-[11px] inset-y-0">
+                        {[breakEven, price].map((position, index) => (
+                            <span key={index} className="absolute top-1/2 h-3.5 w-0.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-muted-foreground" style={{ left: `${position}%` }} />
+                        ))}
+                    </span>
+                    <RangeSlider
+                        min={range.min}
+                        max={range.max}
+                        step={range.step}
+                        value={value}
+                        aria-label={copy.priceSlider}
+                        aria-valuetext={valueText}
+                        onValueChange={onValueChange}
+                        className="relative"
+                    />
+                </div>
+                <div aria-hidden="true" className="relative mx-[11px] h-5">
+                    <span ref={breakEvenRef} className={cn(name, 'top-0')} style={label(breakEven)}>
+                        {copy.legendBreakEven} <span className="font-semibold text-ink tabular-nums">{rupees(base.breakEvenPricePerM)}</span>
+                    </span>
+                    <span ref={priceRef} className={cn(name, crowded ? 'bottom-[calc(100%+34px)]' : 'top-0')} style={label(price)}>
+                        {copy.legendPrice} <span className="font-semibold text-ink tabular-nums">{rupees(base.sellingPricePerM)}</span>
+                    </span>
+                </div>
+                <p className="sr-only">
+                    {copy.rulerLabel}: {copy.legendBreakEven} {rupees(base.breakEvenPricePerM)}, {copy.legendPrice} {rupees(base.sellingPricePerM)}.
+                </p>
             </div>
-            <div aria-hidden="true" className="relative mx-[11px] h-5">
-                <span ref={breakEvenRef} className={cn(name, 'top-0')} style={label(breakEven)}>
-                    {copy.legendBreakEven} <span className="font-semibold text-ink tabular-nums">{rupees(base.breakEvenPricePerM)}</span>
-                </span>
-                <span ref={priceRef} className={cn(name, crowded ? 'bottom-[calc(100%+34px)]' : 'top-0')} style={label(price)}>
-                    {copy.legendPrice} <span className="font-semibold text-ink tabular-nums">{rupees(base.sellingPricePerM)}</span>
-                </span>
-            </div>
-            <p className="sr-only">
-                {copy.rulerLabel}: {copy.legendBreakEven} {rupees(base.breakEvenPricePerM)}, {copy.legendPrice} {rupees(base.sellingPricePerM)}.
-            </p>
         </div>
     )
 }
@@ -130,8 +133,8 @@ export function OfferPriceTrack({
 export function Line({ label, value, strong, tone }: { label: string; value: string; strong?: boolean; tone?: string }) {
     return (
         <div className={cn('flex items-baseline justify-between gap-4 py-1.5', strong && 'mt-1 border-t border-hairline pt-3')}>
-            <dt className={cn('text-sm', strong ? 'font-semibold text-ink' : 'text-body')}>{label}</dt>
-            <dd className={cn('text-sm tabular-nums', strong ? 'text-base font-semibold' : 'font-medium', tone ?? 'text-ink')}>{value}</dd>
+            <dt className={cn('text-[15px]', strong ? 'font-semibold text-ink' : 'text-body')}>{label}</dt>
+            <dd className={cn('shrink-0 text-[15px] tabular-nums', strong ? 'font-semibold' : 'font-medium', tone ?? 'text-ink')}>{value}</dd>
         </div>
     )
 }
@@ -147,34 +150,34 @@ function OfferHeadline({ evaluation, copy }: AnswerProps) {
     const losing = evaluation.profitPerM < 0
     const order = evaluation.order
     return (
-        <div className="grid gap-6 @2xl:grid-cols-[minmax(0,1fr)_minmax(15rem,0.62fr)] @2xl:gap-8">
+        <div className="grid gap-5 rounded-xl bg-surface-soft/45 p-5 @2xl:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)] @2xl:gap-7 @2xl:p-6">
             <div aria-live="polite">
                 <p className={SECTION_LABEL}>{losing ? copy.lose : copy.keep}</p>
                 <p className={cn('mt-2 text-5xl font-semibold leading-none tracking-[-0.035em] tabular-nums', losing ? LOSS_TEXT : 'text-ink')} data-offer-profit>
-                    {rupees(Math.abs(evaluation.profitPerM))}<span className="ml-1.5 text-base font-medium tracking-normal text-muted-foreground">{copy.perMetre}</span>
+                    {rupees(Math.abs(evaluation.profitPerM))}<span className="ml-1.5 text-[16px] font-medium tracking-normal text-muted-foreground">{copy.perMetre}</span>
                 </p>
-                <p className="mt-3 text-sm tabular-nums">
+                <p className="mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-[14px] tabular-nums">
                     <span className={cn('font-semibold', marginTone(evaluation.marginPct))}>{fillCopy(copy.margin, { pct: percent(evaluation.marginPct) })}</span>
-                    <span aria-hidden="true" className="text-muted-foreground"> · </span>
+                    <span aria-hidden="true" className="text-muted-foreground">·</span>
                     <span className="text-body">{versusPriceCopy(copy, evaluation.versusPrice.differencePerM)}</span>
                 </p>
             </div>
 
-            <section aria-labelledby="offer-order" className="border-t border-hairline pt-5 @2xl:border-l @2xl:border-t-0 @2xl:pl-8 @2xl:pt-0">
+            <section aria-labelledby="offer-order" className="border-t border-hairline pt-5 @2xl:border-l @2xl:border-t-0 @2xl:pl-7 @2xl:pt-0">
                 <h2 id="offer-order" className={SECTION_LABEL}>{copy.orderTitle}</h2>
                 {order ? (
                     <>
                         <p className={cn('mt-2 text-4xl font-semibold leading-none tracking-[-0.03em] tabular-nums', order.profit < 0 ? LOSS_TEXT : 'text-ink')} data-offer-order-profit>
                             {orderRupees(Math.abs(order.profit))}
                         </p>
-                        <p className="mt-3 text-sm text-body tabular-nums">{fillCopy(order.profit < 0 ? copy.orderLoss : copy.orderProfit, { m: metres(order.quantityM) })}</p>
-                        <dl className="mt-3 border-t border-hairline pt-1.5">
+                        <p className="mt-2 text-[14px] text-body tabular-nums">{fillCopy(order.profit < 0 ? copy.orderLoss : copy.orderProfit, { m: metres(order.quantityM) })}</p>
+                        <dl className="mt-3">
                             <Line label={copy.orderValue} value={orderRupees(order.value)} />
                             <Line label={copy.orderCost} value={orderRupees(order.cost)} />
                         </dl>
                     </>
                 ) : (
-                    <p className="mt-2 max-w-xs text-sm leading-relaxed text-muted-foreground">{copy.orderPrompt}</p>
+                    <p className="mt-2 max-w-xs text-[15px] leading-relaxed text-muted-foreground">{copy.orderPrompt}</p>
                 )}
             </section>
         </div>
@@ -193,7 +196,7 @@ function OfferDetails({ base, evaluation, copy, hasQuantity }: AnswerProps & { h
     const showWhatIf = !base.stress.available || cases.length > 0
 
     return (
-        <div className={cn('grid gap-8', showWhatIf && '@3xl:grid-cols-2 @3xl:gap-12')}>
+        <div className={cn('grid gap-5', showWhatIf && '@2xl:grid-cols-2 @2xl:gap-7')}>
             <section aria-labelledby="offer-lines">
                 <h2 id="offer-lines" className={SECTION_LABEL}>{copy.linesTitle}</h2>
                 <dl className="mt-2">
@@ -206,33 +209,28 @@ function OfferDetails({ base, evaluation, copy, hasQuantity }: AnswerProps & { h
             </section>
 
             {showWhatIf && (
-                <section aria-labelledby="offer-whatif" className="border-t border-hairline pt-6 @3xl:border-t-0 @3xl:pt-0">
+                <section aria-labelledby="offer-whatif" className="border-t border-hairline pt-5 @2xl:border-l @2xl:border-t-0 @2xl:pl-7 @2xl:pt-0">
                     <h2 id="offer-whatif" className={SECTION_LABEL}>{copy.whatIfTitle}</h2>
                     {base.stress.available ? (
                         <>
-                            <p className="mt-1 text-[13px] text-muted-foreground">{copy.whatIfIntro}</p>
                             <ul className="mt-2 divide-y divide-hairline">
                                 {cases.map(stress => (
-                                    <li key={stress.id} className="py-2.5">
+                                    <li key={stress.id} className="py-2.5" title={[
+                                        fillCopy(copy.caseCost, { cost: stress.productionCostPerM.toFixed(2) }),
+                                        hasQuantity && stress.orderProfit != null ? fillCopy(stress.orderProfit < 0 ? copy.caseOrderLoss : copy.caseOrderProfit, { amount: orderRupees(Math.abs(stress.orderProfit)) }) : '',
+                                    ].filter(Boolean).join(' · ')}>
                                         <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5">
-                                            <p className="text-sm text-body">{stressLabels[stress.id]}</p>
-                                            <p className={cn('text-sm font-semibold tabular-nums', marginTone(stress.marginPct))}>
+                                            <p className="text-[15px] text-body">{stressLabels[stress.id]}</p>
+                                            <p className={cn('text-[14px] font-semibold tabular-nums', marginTone(stress.marginPct))}>
                                                 {fillCopy(stress.profitPerM < 0 ? copy.caseLose : copy.caseKeep, { amount: Math.abs(stress.profitPerM).toFixed(2), pct: percent(stress.marginPct) })}
                                             </p>
                                         </div>
-                                        <p className="mt-0.5 text-[13px] text-muted-foreground tabular-nums">
-                                            {fillCopy(copy.caseCost, { cost: stress.productionCostPerM.toFixed(2) })}
-                                            {' '}({stress.costChangePerM >= 0 ? '+' : '−'}₹{Math.abs(stress.costChangePerM).toFixed(2)})
-                                            {hasQuantity && stress.orderProfit != null && (
-                                                <> · {fillCopy(stress.orderProfit < 0 ? copy.caseOrderLoss : copy.caseOrderProfit, { amount: orderRupees(Math.abs(stress.orderProfit)) })}</>
-                                            )}
-                                        </p>
                                     </li>
                                 ))}
                             </ul>
                         </>
                     ) : (
-                        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">{copy.whatIfUnavailable}</p>
+                        <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted-foreground">{copy.whatIfUnavailable}</p>
                     )}
                 </section>
             )}
@@ -263,16 +261,16 @@ export function OfferCheckResult({
 }) {
     return (
         <>
-            <div className="space-y-6 p-5 sm:p-6 lg:p-8">
+            <div className="flex flex-col gap-5 px-5 pb-5 sm:px-7">
                 {evaluation ? (
                     <OfferHeadline base={base} evaluation={evaluation} copy={copy} />
                 ) : (
-                    <p className="text-sm text-muted-foreground">{copy.prompt}</p>
+                    <p className="rounded-xl bg-surface-soft/45 px-5 py-6 text-[15px] leading-relaxed text-body">{copy.prompt}</p>
                 )}
                 {track}
             </div>
             {evaluation ? (
-                <div className="border-t border-hairline p-5 sm:p-6 lg:p-8">
+                <div className="border-t border-hairline px-5 py-5 sm:px-7">
                     <OfferDetails base={base} evaluation={evaluation} copy={copy} hasQuantity={hasQuantity} />
                 </div>
             ) : null}

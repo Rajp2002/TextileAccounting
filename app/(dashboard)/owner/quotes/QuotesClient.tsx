@@ -96,6 +96,7 @@ import { costingCatalogueText } from '@/lib/i18n/costing-catalogue'
 import { fillCopy } from '@/lib/i18n/fill'
 import { costingMarginText } from '@/lib/i18n/costing-margin'
 import { offerCheckText } from '@/lib/i18n/offer-check'
+import { listOfferCandidates } from '@/lib/offer-check'
 import { CostingMarginScope, marginTone, type MarginReadOnlyReason } from '@/components/estimator/SavedCostingMargin'
 import { SavedCostingFormula } from '@/components/estimator/SavedCostingFormula'
 import { buildSavedCostingFormula } from '@/lib/saved-costing-formula'
@@ -103,6 +104,11 @@ import { savedCostingFormulaText } from '@/lib/i18n/saved-costing-formula'
 
 const CostingExportDialog = dynamic(
     () => import('@/components/estimator/CostingExportDialog').then(module => module.CostingExportDialog),
+    { ssr: false, loading: () => null },
+)
+
+const OfferCheckDialog = dynamic(
+    () => import('@/components/estimator/OfferCheckDialog').then(module => module.OfferCheckDialog),
     { ssr: false, loading: () => null },
 )
 
@@ -328,6 +334,7 @@ function SavedQualityLibraryView({
     onDeleteSample,
     rateUpdatesById,
     onReviewRates,
+    onCheckOffer,
 }: {
     groups: SavedQualityGroup[]
     canUseProductionPipeline: boolean
@@ -354,6 +361,7 @@ function SavedQualityLibraryView({
     onDeleteSample?: () => void
     rateUpdatesById?: ReadonlyMap<string, RateBookDriftItem>
     onReviewRates?: (costingId: string) => void
+    onCheckOffer?: (costingId: string, trigger: HTMLButtonElement) => void
 }) {
     const { t, tx, language } = useTranslation()
     const copy = costingCatalogueText[language]
@@ -602,10 +610,15 @@ function SavedQualityLibraryView({
                                 </Button>
                             )}
                             {latest && canReuseLatest && !costNotSaved && !tourStep && !isSampleRecordId(group.key) && getCostingStatus(latest) === 'verified' && (
-                                <Button asChild variant="ghost" className={ghostAction}>
-                                    <Link href={`/owner/quotes/offer?costing=${latest.id}`} aria-label={fillCopy(offerCopy.cardActionLabel, { name: group.name })}>
-                                        <Handshake className="h-4 w-4" aria-hidden="true" /> {offerCopy.cardAction}
-                                    </Link>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    className={ghostAction}
+                                    aria-haspopup="dialog"
+                                    aria-label={fillCopy(offerCopy.cardActionLabel, { name: group.name })}
+                                    onClick={event => onCheckOffer?.(latest.id, event.currentTarget)}
+                                >
+                                    <Handshake data-icon="inline-start" aria-hidden="true" /> {offerCopy.cardAction}
                                 </Button>
                             )}
                             {latest && (
@@ -824,7 +837,7 @@ function SavedQualityLibraryView({
     )
 }
 
-export default function QuotesClient({ initialQuotes, initialTemplates, initialProfile, initialWorkers, initialStatus, orgId, userId, canUseProductionPipeline, organizationName, userMetadata, tourUnavailable = false, loadError = false }: { initialQuotes: QuoteRow[], initialTemplates: SavedQuality[], initialProfile?: SavedQualityFactoryProfile, initialWorkers: SavedQualityFixedWorker[], initialStatus?: string, orgId: string, userId: string, canUseProductionPipeline: boolean, organizationName: string; userMetadata?: Record<string, unknown>; tourUnavailable?: boolean; loadError?: boolean }) {
+export default function QuotesClient({ initialQuotes, initialTemplates, initialProfile, initialWorkers, initialStatus, initialOffer, orgId, userId, canUseProductionPipeline, organizationName, userMetadata, tourUnavailable = false, loadError = false }: { initialQuotes: QuoteRow[], initialTemplates: SavedQuality[], initialProfile?: SavedQualityFactoryProfile, initialWorkers: SavedQualityFixedWorker[], initialStatus?: string, initialOffer?: string, orgId: string, userId: string, canUseProductionPipeline: boolean, organizationName: string; userMetadata?: Record<string, unknown>; tourUnavailable?: boolean; loadError?: boolean }) {
     const { t, tx } = useTranslation()
     const { language } = useTranslation()
     const isLite = useOwnerPlan() === 'lite'
@@ -865,6 +878,22 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
 
     const router = useRouter()
     const [quotes, setQuotes] = useState<QuoteRow[]>(initialQuotes)
+    const [offerRequest, setOfferRequest] = useState<{ costingId: string | null; trigger: HTMLElement | null } | null>(
+        () => initialOffer !== undefined ? { costingId: initialOffer === 'choose' ? null : initialOffer, trigger: null } : null,
+    )
+    const offerOpen = offerRequest !== null
+    const offerCandidates = useMemo(
+        () => offerOpen ? listOfferCandidates(quotes, initialTemplates) : [],
+        [quotes, initialTemplates, offerOpen],
+    )
+    const closeOffer = () => {
+        setOfferRequest(null)
+        const url = new URL(window.location.href)
+        if (url.searchParams.has('offer')) {
+            url.searchParams.delete('offer')
+            window.history.replaceState(window.history.state, '', url)
+        }
+    }
     // A failed load is not an empty library: never offer the sample over it.
     const isDemoCostingActive = !loadError && (!demoCostingDeleted && quotes.length === 0 && initialTemplates.length === 0) || tourSampleActive
     const tourExamples = useMemo(() => isDemoCostingActive ? makeSavedCostingTourExamples() : [], [isDemoCostingActive])
@@ -1259,10 +1288,16 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 actions={<>
                     <SavedCostingsTutorial step={tourStep} onStepChange={setTourStep} onComplete={() => setShowCostingDeleteNudge(true)} production={canUseProductionPipeline} ending={savedCostingTourEnding(quotes.filter(quote => isStandaloneCosting(quote.record_kind)).length, tourUnavailable)} topics={[archivePolicyTopic]} userId={userId} orgId={orgId} userMetadata={userMetadata} />
                     {quotes.length > 0 && !tourStep && (
-                        <Button asChild variant="saffron" className="h-10 rounded-lg font-semibold max-md:min-h-[44px]">
-                            <Link href="/owner/quotes/offer" data-i18n-skip="true" lang={language}>
-                                <Handshake className="h-4 w-4" aria-hidden="true" /> {offerCheckText[language].cardAction}
-                            </Link>
+                        <Button
+                            type="button"
+                            variant="saffron"
+                            className="h-10 rounded-lg font-semibold max-md:min-h-[44px]"
+                            data-i18n-skip="true"
+                            lang={language}
+                            aria-haspopup="dialog"
+                            onClick={event => setOfferRequest({ costingId: null, trigger: event.currentTarget })}
+                        >
+                            <Handshake data-icon="inline-start" aria-hidden="true" /> {offerCheckText[language].cardAction}
                         </Button>
                     )}
                     <Button
@@ -1566,12 +1601,22 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                     onToggleFavorite={quote => { void handleLibraryState(quote, { isFavorite: !quote.is_favorite }) }}
                     onToggleArchived={requestArchiveState}
                     onEnsureDetail={ensureQuoteDetail}
+                    onCheckOffer={(costingId, trigger) => setOfferRequest({ costingId, trigger })}
                 />
             )}
             </div>
             )}
             </div>
 
+            {offerRequest && (
+                <OfferCheckDialog
+                    candidates={offerCandidates}
+                    loadError={loadError}
+                    costingId={offerRequest.costingId}
+                    onClose={closeOffer}
+                    returnFocusTo={offerRequest.trigger}
+                />
+            )}
             {tourSurface === 'export' && tourExport && <CostingExportDialog key={tourStep} open tutorialPreview onOpenChange={() => {}} model={tourExport} defaultMode={tourStep === 'internal' ? 'internal' : 'customer'} defaultBusinessName="Tour sample" defaultCustomerName="Sample customer" sourceRecordKind="costing" />}
             {quoteToExport && !tourStep && (
                 <CostingExportDialog

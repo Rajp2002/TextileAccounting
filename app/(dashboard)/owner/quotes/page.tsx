@@ -16,7 +16,7 @@ function readPreviousFreeGrant(orgId: string) {
     return getFreeGrant(orgId).then(freeGrant => freeGrant ? hasSavedFreeCostings(orgId, freeGrant.subjectId) : false)
 }
 
-export default async function QuotesPage(props: { searchParams: Promise<{ status?: string }> }) {
+export default async function QuotesPage(props: { searchParams: Promise<{ status?: string; offer?: string }> }) {
     // The grant and its count need only the org id, so they start with Proxy's
     // session hint while the identity is verified. The verified org reuses
     // them through the request cache; a read for another org is discarded.
@@ -63,6 +63,7 @@ export default async function QuotesPage(props: { searchParams: Promise<{ status
             initialProfile={undefined}
             initialWorkers={[]}
             initialStatus={status}
+            initialOffer={searchParams.offer}
             userId={user.id}
             userMetadata={{ tour_preferences: user.user_metadata?.tour_preferences }}
             orgId={profile.org_id}
