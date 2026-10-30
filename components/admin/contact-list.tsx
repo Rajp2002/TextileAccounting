@@ -1,5 +1,16 @@
 import Link from 'next/link'
 import type { ContactRow } from '@/lib/admin/growth-usage'
+import { indianPhoneLinks } from '@/lib/phone'
+
+/** Tap-to-call and WhatsApp for an owner's stored mobile, or a plain note when there is none. */
+export function PhoneLinks({ phone }: { phone: string | null }) {
+    const links = indianPhoneLinks(phone)
+    if (!links) return <p className="text-sm text-subtle">No mobile on file</p>
+    return <div className="flex flex-wrap gap-x-4">
+        <a href={links.tel} className="inline-flex min-h-11 items-center text-sm underline underline-offset-4">{links.display}</a>
+        <a href={links.whatsapp} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center text-sm underline underline-offset-4">WhatsApp</a>
+    </div>
+}
 
 /** One "Customers to contact" list on Today: who to phone, why, and how engaged they are. */
 export function ContactList({ title, rows, seeAllHref, empty }: { title: string; rows: ContactRow[]; seeAllHref: string; empty: string }) {
@@ -15,12 +26,7 @@ export function ContactList({ title, rows, seeAllHref, empty }: { title: string;
                     <p className="text-sm text-body">{row.ownerName ?? 'Owner name not on file'} · {row.detail}</p>
                     <p className="text-xs text-subtle">{row.minutesLast30} min in 30 days · {row.costingsSaved} {row.costingsSaved === 1 ? 'costing' : 'costings'} saved</p>
                 </div>
-                {row.phone
-                    ? <div className="flex flex-wrap gap-x-4">
-                        <a href={`tel:${row.phone}`} className="inline-flex min-h-11 items-center text-sm underline underline-offset-4">{row.phone}</a>
-                        <a href={`https://wa.me/${row.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center text-sm underline underline-offset-4">WhatsApp</a>
-                    </div>
-                    : <p className="text-sm text-subtle">No mobile on file</p>}
+                <PhoneLinks phone={row.phone}/>
             </li>)}
         </ul>}
     </section>

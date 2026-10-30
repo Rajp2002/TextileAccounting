@@ -44,8 +44,7 @@ describe('factory page', () => {
     it('shows the cohort control and tappable owner contact', () => {
         const src = readFileSync('app/(admin-console)/admin/factories/[orgId]/page.tsx', 'utf8')
         expect(src).toContain('<CohortControl')
-        expect(src).toContain('tel:')
-        expect(src).toContain('https://wa.me/')
+        expect(src).toContain('<PhoneLinks phone={factory.contact.ownerPhone}')
     })
     it('the cohort route delegates to setFactoryCohort', () => {
         const src = readFileSync('app/api/admin/factories/[orgId]/cohort/route.ts', 'utf8')

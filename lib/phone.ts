@@ -16,3 +16,10 @@ export function normalizeIndianPhone(value: string): string {
 export function isValidIndianPhone(value: string): boolean {
   return normalizeIndianPhone(value).length === 10
 }
+
+/** Call and WhatsApp links for a stored 10-digit mobile; both need the +91 country code. */
+export function indianPhoneLinks(value: string | null | undefined): { tel: string; whatsapp: string; display: string } | null {
+  const local = normalizeIndianPhone(value ?? '')
+  if (!local) return null
+  return { tel: `tel:+91${local}`, whatsapp: `https://wa.me/91${local}`, display: `+91 ${local.slice(0, 5)} ${local.slice(5)}` }
+}
