@@ -19,6 +19,8 @@ vi.mock('@/lib/billing-document-policy', () => ({ isGstInvoiceSupported: mocks.i
 vi.mock('@sentry/nextjs', () => ({ captureException: vi.fn(), captureMessage: vi.fn() }))
 // create-order now imports lib/subscription (Base gate); stub it so the server-only chain never loads.
 vi.mock('@/lib/subscription', () => ({ getOrgPlanAccess: vi.fn() }))
+// Paid plans are open in these tests; the pre-go-live gate is covered in paid-plans.test.ts.
+vi.mock('@/lib/paid-plans.server', () => ({ getPaidPlansState: async () => ({ live: true, goLiveAt: '2027-01-01T00:00:00Z', checkoutOpen: true }) }))
 
 import { POST as createOrder } from '@/app/api/billing/create-order/route'
 import { POST as verifyPayment } from '@/app/api/billing/verify-payment/route'

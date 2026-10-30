@@ -7,6 +7,8 @@ import { BillingAttemptStatus } from '@/components/billing/BillingAttemptStatus'
 import type { BillingAttemptRow } from '@/lib/billing-attempts'
 import { PlanChooserClient } from '@/components/plans/PlanChooserClient'
 import { ActivityTracker } from '@/components/analytics/ActivityTracker'
+import { PaidPlansProvider } from '@/components/billing/PaidPlansProvider'
+import { getPaidPlansState } from '@/lib/paid-plans.server'
 import type { UpgradePlan } from '@/lib/upgrade-wall'
 
 export const metadata = {
@@ -54,9 +56,10 @@ export default async function PlansPage(props: PlansPageProps) {
     .maybeSingle()
 
   const billingReadiness = getBillingReadiness()
+  const paidPlans = await getPaidPlansState(profile.org_id)
 
   return (
-    <>
+    <PaidPlansProvider checkoutOpen={paidPlans.checkoutOpen}>
     <ActivityTracker />
     <PlanChooserClient
       currentPlan={currentPlan}
@@ -72,6 +75,6 @@ export default async function PlansPage(props: PlansPageProps) {
         ) : undefined
       }
     />
-    </>
+    </PaidPlansProvider>
   )
 }

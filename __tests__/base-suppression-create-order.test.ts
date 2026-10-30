@@ -14,6 +14,8 @@ vi.mock('@/lib/supabase/admin', () => ({ createAdminClient: mocks.createAdmin })
 vi.mock('@/lib/razorpay', () => ({ getRazorpay: mocks.getRazorpay }))
 vi.mock('@/lib/subscription', () => ({ getOrgPlanAccess: mocks.getOrgPlanAccess }))
 vi.mock('@/lib/billing-readiness', () => ({ getBillingReadiness: mocks.getBillingReadiness }))
+// Paid plans are open in these tests; the pre-go-live gate is covered in paid-plans.test.ts.
+vi.mock('@/lib/paid-plans.server', () => ({ getPaidPlansState: async () => ({ live: true, goLiveAt: '2027-01-01T00:00:00Z', checkoutOpen: true }) }))
 vi.mock('@sentry/nextjs', () => ({ captureException: mocks.captureException }))
 
 import { POST as createOrder } from '@/app/api/billing/create-order/route'

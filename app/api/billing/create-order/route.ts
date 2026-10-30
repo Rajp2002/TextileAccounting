@@ -20,6 +20,7 @@ import {
     type BillingSubscriptionRow,
 } from '@/lib/billing-lifecycle'
 import { getBillingReadiness } from '@/lib/billing-readiness'
+import { getPaidPlansState } from '@/lib/paid-plans.server'
 import { getOrgPlanAccess } from '@/lib/subscription'
 
 export const dynamic = 'force-dynamic'
@@ -88,6 +89,15 @@ export async function POST(req: NextRequest) {
                 { status: 403 },
             )
         }
+    }
+
+    // No real payments before the founder goes live; test accounts may use test keys.
+    const paidPlans = await getPaidPlansState(orgId)
+    if (!paidPlans.checkoutOpen) {
+        return NextResponse.json(
+            { error: 'Paid plans are not open yet.', code: 'PAID_PLANS_NOT_OPEN' },
+            { status: 409 },
+        )
     }
 
     const billingReadiness = getBillingReadiness()

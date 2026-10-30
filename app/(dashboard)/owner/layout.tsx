@@ -13,6 +13,8 @@ import { hasOwnerArchiveAccess } from '@/lib/subscription-access'
 import { OwnerPlanProvider } from '@/components/providers/owner-plan-provider'
 import { TrialNudge } from '@/components/billing/TrialNudge'
 import { ActivityTracker } from '@/components/analytics/ActivityTracker'
+import { PaidPlansProvider } from '@/components/billing/PaidPlansProvider'
+import { getPaidPlansState } from '@/lib/paid-plans.server'
 import { createSignInServerTimerFromCookie } from '@/lib/sign-in-telemetry.server'
 import { getRateReviewStatus } from '@/lib/cost-rates'
 import { getCachedOwnerOrganization, startOwnerShellReads } from '@/lib/owner-organization'
@@ -103,7 +105,7 @@ async function OwnerRouteBoundary({ children }: { children: React.ReactNode }) {
         organizationId: profile.org_id,
     })
 
-    const [organizationResult, planAccess] = await Promise.all([
+    const [organizationResult, planAccess, paidPlans] = await Promise.all([
         signInTelemetry.measure(
             'organization_query',
             () => perf.measure('profileOrgTier', () => getCachedOwnerOrganization(user.id, profile.org_id), 1),
@@ -112,6 +114,7 @@ async function OwnerRouteBoundary({ children }: { children: React.ReactNode }) {
             'tier_lookup',
             () => perf.measure('businessData', () => getCachedOrgPlanAccess(profile.org_id), 1),
         ),
+        getPaidPlansState(profile.org_id),
     ])
     const { data: organization, error: organizationError } = organizationResult
 
@@ -141,10 +144,12 @@ async function OwnerRouteBoundary({ children }: { children: React.ReactNode }) {
 
     return (
         <OwnerPlanProvider access={planAccess}>
-            <AuthBoundaryCleanup scope={cacheScope} />
-            <ActivityTracker />
-            {planAccess.trialEndsAt ? <TrialNudge endsAt={planAccess.trialEndsAt} /> : null}
-            {children}
+            <PaidPlansProvider checkoutOpen={paidPlans.checkoutOpen}>
+                <AuthBoundaryCleanup scope={cacheScope} />
+                <ActivityTracker />
+                {planAccess.trialEndsAt ? <TrialNudge endsAt={planAccess.trialEndsAt} /> : null}
+                {children}
+            </PaidPlansProvider>
         </OwnerPlanProvider>
     )
 }
