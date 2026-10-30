@@ -26,6 +26,33 @@ export type BillingReadiness = {
 const value = (input: string | undefined) => input?.trim() ?? ''
 const validGstin = (gstin: string) => /^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[A-Z0-9]$/.test(gstin)
 
+/** Company, GST and document requirements for live checkout, whatever keys are configured. */
+function liveSupplierGaps(env: BillingEnvironment, documentState: BillingDocumentState): string[] {
+  const gstin = value(env.BILLING_SUPPLIER_GSTIN).toUpperCase()
+  const stateCode = value(env.BILLING_SUPPLIER_STATE_CODE)
+  return [
+    documentState === 'supported' ? null : 'billing document policy approval',
+    env.BILLING_GST_INVOICE_ENABLED === 'true' ? null : 'GST invoice feature flag',
+    value(env.BILLING_SUPPLIER_LEGAL_NAME).length >= 2 ? null : 'supplier legal name',
+    validGstin(gstin) ? null : 'valid supplier GSTIN',
+    value(env.BILLING_SUPPLIER_ADDRESS).length >= 5 ? null : 'supplier address',
+    value(env.BILLING_SUPPLIER_STATE).length >= 2 ? null : 'supplier state',
+    /^\d{2}$/.test(stateCode) && gstin.startsWith(stateCode) ? null : 'matching supplier state code',
+    /^[1-9]\d{5}$/.test(value(env.BILLING_SUPPLIER_POSTAL_CODE)) ? null : 'supplier postal code',
+    /^\d{6}$/.test(value(env.BILLING_SUPPLIER_SAC)) ? null : 'six-digit service accounting code',
+  ].filter((item): item is string => item !== null)
+}
+
+/**
+ * Everything still needed before real payments can open (the founder's Go live checklist).
+ * Unlike evaluateBillingReadiness, test keys do not short-circuit this list.
+ */
+export function liveReadinessGaps(env: BillingEnvironment, documentState: BillingDocumentState = BILLING_DOCUMENT_POLICY.state): string[] {
+  const privateKeyId = value(env.RAZORPAY_KEY_ID)
+  const liveKeys = privateKeyId.startsWith('rzp_live_') && privateKeyId === value(env.NEXT_PUBLIC_RAZORPAY_KEY_ID) && value(env.RAZORPAY_KEY_SECRET).length > 0
+  return [...(liveKeys ? [] : ['live Razorpay keys']), ...liveSupplierGaps(env, documentState)]
+}
+
 export function evaluateBillingReadiness(
   env: BillingEnvironment,
   documentState: BillingDocumentState = BILLING_DOCUMENT_POLICY.state,
@@ -55,19 +82,7 @@ export function evaluateBillingReadiness(
     }
   }
 
-  const gstin = value(env.BILLING_SUPPLIER_GSTIN).toUpperCase()
-  const stateCode = value(env.BILLING_SUPPLIER_STATE_CODE)
-  const missing = [
-    documentState === 'supported' ? null : 'billing document policy approval',
-    env.BILLING_GST_INVOICE_ENABLED === 'true' ? null : 'GST invoice feature flag',
-    value(env.BILLING_SUPPLIER_LEGAL_NAME).length >= 2 ? null : 'supplier legal name',
-    validGstin(gstin) ? null : 'valid supplier GSTIN',
-    value(env.BILLING_SUPPLIER_ADDRESS).length >= 5 ? null : 'supplier address',
-    value(env.BILLING_SUPPLIER_STATE).length >= 2 ? null : 'supplier state',
-    /^\d{2}$/.test(stateCode) && gstin.startsWith(stateCode) ? null : 'matching supplier state code',
-    /^[1-9]\d{5}$/.test(value(env.BILLING_SUPPLIER_POSTAL_CODE)) ? null : 'supplier postal code',
-    /^\d{6}$/.test(value(env.BILLING_SUPPLIER_SAC)) ? null : 'six-digit service accounting code',
-  ].filter((item): item is string => item !== null)
+  const missing = liveSupplierGaps(env, documentState)
 
   if (missing.length > 0) {
     return {
@@ -88,8 +103,8 @@ export function evaluateBillingReadiness(
   }
 }
 
-export function getBillingReadiness() {
-  return evaluateBillingReadiness({
+function billingEnvironment(): BillingEnvironment {
+  return {
     RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,
     RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET,
     NEXT_PUBLIC_RAZORPAY_KEY_ID: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
@@ -101,5 +116,13 @@ export function getBillingReadiness() {
     BILLING_SUPPLIER_STATE_CODE: process.env.BILLING_SUPPLIER_STATE_CODE,
     BILLING_SUPPLIER_POSTAL_CODE: process.env.BILLING_SUPPLIER_POSTAL_CODE,
     BILLING_SUPPLIER_SAC: process.env.BILLING_SUPPLIER_SAC,
-  })
+  }
+}
+
+export function getBillingReadiness() {
+  return evaluateBillingReadiness(billingEnvironment())
+}
+
+export function getLiveReadinessGaps(): string[] {
+  return liveReadinessGaps(billingEnvironment())
 }

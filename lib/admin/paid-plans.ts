@@ -2,7 +2,7 @@ import 'server-only'
 import { randomUUID } from 'node:crypto'
 import { z } from 'zod'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { getBillingReadiness } from '@/lib/billing-readiness'
+import { getBillingReadiness, getLiveReadinessGaps } from '@/lib/billing-readiness'
 import { requireFounder } from './founder'
 import { AdminError } from './errors'
 
@@ -21,8 +21,8 @@ export async function getPaidPlansAdmin(): Promise<PaidPlansAdmin> {
     const { data, error } = await createAdminClient().rpc('admin_paid_plans_summary', { p_actor_id: principal.userId, p_session_id: principal.sessionId })
     const parsed = summarySchema.safeParse(data)
     if (error || !parsed.success) throw new AdminError('SOURCE_UNAVAILABLE', 503, 'Paid plan status is unavailable.')
-    const readiness = getBillingReadiness()
-    return { ...parsed.data, readiness: { mode: readiness.mode, missing: readiness.missing } }
+    // The checklist lists live requirements even on test keys, which otherwise report nothing missing.
+    return { ...parsed.data, readiness: { mode: getBillingReadiness().mode, missing: getLiveReadinessGaps() } }
 }
 
 const extendSchema = z.object({

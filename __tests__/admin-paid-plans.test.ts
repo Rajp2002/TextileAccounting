@@ -3,10 +3,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { resolveOrgAccessFromRows } from '@/lib/subscription-access'
 
 vi.mock('server-only', () => ({}))
-const mocks = vi.hoisted(() => ({ requireFounder: vi.fn(), rpc: vi.fn(), readiness: vi.fn() }))
+const mocks = vi.hoisted(() => ({ requireFounder: vi.fn(), rpc: vi.fn(), readiness: vi.fn(), gaps: vi.fn() }))
 vi.mock('@/lib/admin/founder', () => ({ requireFounder: mocks.requireFounder }))
 vi.mock('@/lib/supabase/admin', () => ({ createAdminClient: () => ({ rpc: mocks.rpc }) }))
-vi.mock('@/lib/billing-readiness', () => ({ getBillingReadiness: mocks.readiness }))
+vi.mock('@/lib/billing-readiness', () => ({ getBillingReadiness: mocks.readiness, getLiveReadinessGaps: mocks.gaps }))
 
 import { extendTrials, getPaidPlansAdmin, goLive } from '@/lib/admin/paid-plans'
 
@@ -16,7 +16,9 @@ const DAY = 86_400_000
 beforeEach(() => {
     vi.clearAllMocks()
     mocks.requireFounder.mockResolvedValue(principal)
-    mocks.readiness.mockReturnValue({ mode: 'test', missing: ['matching Razorpay key ID and secret'] })
+    // Production today: test keys, which report nothing missing for test checkout.
+    mocks.readiness.mockReturnValue({ mode: 'test', missing: [] })
+    mocks.gaps.mockReturnValue(['live Razorpay keys', 'valid supplier GSTIN'])
 })
 
 describe('goLive', () => {
@@ -56,9 +58,9 @@ describe('extendTrials', () => {
 })
 
 describe('getPaidPlansAdmin', () => {
-    it('combines the summary with the readiness checklist', async () => {
+    it('shows the live-only checklist even on test keys, never a false All set', async () => {
         mocks.rpc.mockResolvedValueOnce({ data: { goLiveAt: null, endingIn14Days: 2, endingIn30Days: 5, alreadyEnded: 1 }, error: null })
-        expect(await getPaidPlansAdmin()).toEqual({ goLiveAt: null, endingIn14Days: 2, endingIn30Days: 5, alreadyEnded: 1, readiness: { mode: 'test', missing: ['matching Razorpay key ID and secret'] } })
+        expect(await getPaidPlansAdmin()).toEqual({ goLiveAt: null, endingIn14Days: 2, endingIn30Days: 5, alreadyEnded: 1, readiness: { mode: 'test', missing: ['live Razorpay keys', 'valid supplier GSTIN'] } })
     })
 })
 

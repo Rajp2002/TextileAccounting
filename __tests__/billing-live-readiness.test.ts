@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { evaluateBillingReadiness } from '../lib/billing-readiness'
+import { evaluateBillingReadiness, liveReadinessGaps } from '../lib/billing-readiness'
 import { BILLING_DOCUMENT_POLICY } from '../lib/billing-document-policy'
 
 const root = process.cwd()
@@ -20,6 +20,19 @@ const liveEnvironment = {
     BILLING_SUPPLIER_POSTAL_CODE: '395008',
     BILLING_SUPPLIER_SAC: '998314',
 }
+
+describe('go-live checklist', () => {
+    it('lists every live requirement on test keys, instead of reporting nothing missing', () => {
+        const testKeys = { RAZORPAY_KEY_ID: 'rzp_test_x', NEXT_PUBLIC_RAZORPAY_KEY_ID: 'rzp_test_x', RAZORPAY_KEY_SECRET: 'secret' }
+        const gaps = liveReadinessGaps(testKeys, 'not_supported')
+        expect(gaps[0]).toBe('live Razorpay keys')
+        expect(gaps).toEqual(expect.arrayContaining(['billing document policy approval', 'GST invoice feature flag', 'valid supplier GSTIN', 'supplier legal name']))
+    })
+    it('lists the key gap when keys are missing, and nothing once live is fully configured', () => {
+        expect(liveReadinessGaps({}, 'not_supported')[0]).toBe('live Razorpay keys')
+        expect(liveReadinessGaps(liveEnvironment, 'supported')).toEqual([])
+    })
+})
 
 describe('live billing readiness gate', () => {
     it('allows matching Razorpay test credentials without pretending GST invoicing is live', () => {
