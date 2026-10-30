@@ -1,6 +1,6 @@
 import {describe,it,expect,vi,beforeEach,afterEach} from 'vitest'
 vi.mock('server-only',()=>({}))
-const mocks=vi.hoisted(()=>({set:vi.fn(),redis:vi.fn(),plan:vi.fn(),capture:vi.fn(),ticket:vi.fn(),message:vi.fn(),org:vi.fn()}))
+const mocks=vi.hoisted(()=>({set:vi.fn(),del:vi.fn(),redis:vi.fn(),plan:vi.fn(),capture:vi.fn(),ticket:vi.fn(),message:vi.fn(),org:vi.fn()}))
 vi.mock('@/lib/rate-limit',()=>({getRedis:mocks.redis}))
 vi.mock('@/lib/subscription',()=>({getOrgPlanAccess:mocks.plan}))
 vi.mock('@sentry/nextjs',()=>({captureException:mocks.capture}))
@@ -17,7 +17,7 @@ beforeEach(()=>{
  vi.clearAllMocks();vi.stubGlobal('fetch',fetchMock);vi.stubEnv('RESEND_API_KEY','test-key');vi.stubEnv('NEXT_PUBLIC_SITE_URL','https://textile-accounting.vercel.app')
  vi.spyOn(console,'error').mockImplementation(()=>{})
  fetchMock.mockResolvedValue({ok:true,status:200})
- mocks.set.mockResolvedValue('OK');mocks.redis.mockReturnValue({set:mocks.set})
+ mocks.set.mockResolvedValue('OK');mocks.del.mockResolvedValue(1);mocks.redis.mockReturnValue({set:mocks.set,del:mocks.del})
  mocks.plan.mockResolvedValue({effectiveTier:'lite'})
  mocks.ticket.mockResolvedValue({data:{subject:'Rate book not saving',category:'costing',org_id:org},error:null})
  mocks.message.mockResolvedValue({data:{body:'The rate book shows an error.\nPlease help.'},error:null})
@@ -68,4 +68,11 @@ describe('founder support email',()=>{
   await expect(notifyFounderOfCustomerMessage({kind:'created',ticketId,requestId})).resolves.toBeUndefined()
   expect(fetchMock).not.toHaveBeenCalled();expect(mocks.capture).toHaveBeenCalledTimes(1)
  })
+ it('releases the dedupe key when the send fails so a retry can email',async()=>{
+  fetchMock.mockResolvedValueOnce({ok:false,status:503})
+  await notifyFounderOfCustomerMessage({kind:'created',ticketId,requestId})
+  expect(mocks.del).toHaveBeenCalledWith(`support-email:${requestId}`)
+  await notifyFounderOfCustomerMessage({kind:'created',ticketId,requestId});expect(fetchMock).toHaveBeenCalledTimes(2)
+ })
+ it('keeps the key after a successful send',async()=>{await notifyFounderOfCustomerMessage({kind:'created',ticketId,requestId});expect(mocks.del).not.toHaveBeenCalled()})
 })

@@ -2,8 +2,8 @@ import React from 'react'
 import {readFileSync} from 'node:fs'
 import {renderToStaticMarkup} from 'react-dom/server'
 import {describe,it,expect,vi,afterEach} from 'vitest'
-import {founderReplySchema,validateTicketState,type FounderTicketDetail,type Ticket} from '@/lib/support/contracts'
-import {founderReplyPayload,founderTabQuery,founderTabFromQuery} from '@/lib/support/founder-reply'
+import {founderReplySchema,patchTicketSchema,validateTicketState,type FounderTicketDetail,type Ticket} from '@/lib/support/contracts'
+import {founderReplyPayload,founderPrivateResolvePayload,founderTabQuery,founderTabFromQuery} from '@/lib/support/founder-reply'
 import {SupportThread,FounderInboxTabs,FounderTicketRow,SupportListError,fetchSupportJson} from '@/components/support/support-workspace'
 
 const id='33333333-3333-4333-8333-333333333333',org='22222222-2222-4222-8222-222222222222',key='44444444-4444-4444-8444-444444444444'
@@ -25,6 +25,21 @@ describe('founder reply payload',()=>{
  it('marks the old promise fulfilled when the ticket has one',()=>{
   for(const resolve of [false,true])expect(founderReplyPayload({body:'Update',resolve,ticket:{version:2,nextUpdateDueAt:'2026-10-05T10:00:00Z'},clientRequestId:key}).promiseFulfilled).toBe(true)
  })
+})
+
+describe('internal-only tickets',()=>{
+ it('resolve privately records an outcome without a public reply',()=>{
+  const payload=founderPrivateResolvePayload({summary:'Explained on the phone.',ticket:{version:3,category:'costing',priority:'normal'},clientRequestId:key})
+  expect(payload).toMatchObject({expectedVersion:3,status:'resolved',nextAction:'Resolved',resolutionCode:'explained_behavior',resolutionSummary:'Explained on the phone.',category:'costing',priority:'normal',nextUpdateDueAt:null,followUpDueAt:null,externalReference:null})
+  const parsed=patchTicketSchema.parse(payload);expect(validateTicketState(parsed,false,false)).toBeNull()
+ })
+ it('the thread offers resolve privately for an open internal-only ticket and no reply box',()=>{
+  const html=renderToStaticMarkup(<SupportThread founder id={id} initialDetail={{...detail,messages:[],ticket:{...ticket,requesterBound:false}}}/>)
+  expect(html).toContain('Resolve privately (not delivered)');expect(html).toMatch(/<details open=""/);expect(html).not.toContain('Send and resolve')
+  const resolved=renderToStaticMarkup(<SupportThread founder id={id} initialDetail={{...detail,messages:[],ticket:{...ticket,requesterBound:false,status:'resolved'}}}/>)
+  expect(resolved).not.toContain('Resolve privately')
+ })
+ it('customer-bound tickets do not offer resolve privately',()=>{expect(renderToStaticMarkup(<SupportThread founder id={id} initialDetail={detail}/>)).not.toContain('Resolve privately')})
 })
 
 describe('founder thread screen',()=>{

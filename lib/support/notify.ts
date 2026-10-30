@@ -55,13 +55,23 @@ export function buildFounderEmail(input: { kind: Kind; ticketId: string; subject
 
 // The first delivery of a request id claims the key; a retried request that returns
 // the stored RPC result does not email twice. Without Redis, send anyway.
+const dedupeKey = (requestId: string) => `support-email:${requestId}`
 async function firstDelivery(requestId: string) {
     const redis = getRedis()
     if (!redis) return true
     try {
-        return (await redis.set(`support-email:${requestId}`, '1', { nx: true, ex: DEDUPE_SECONDS })) !== null
+        return (await redis.set(dedupeKey(requestId), '1', { nx: true, ex: DEDUPE_SECONDS })) !== null
     } catch {
         return true
+    }
+}
+
+// A failed send gives the claim back, so a retried request can still email (a duplicate beats a miss).
+async function releaseDelivery(requestId: string) {
+    try {
+        await getRedis()?.del(dedupeKey(requestId))
+    } catch {
+        // The key expires on its own.
     }
 }
 
@@ -84,8 +94,10 @@ async function readContext(ticketId: string) {
 }
 
 export async function notifyFounderOfCustomerMessage(input: { kind: Kind; ticketId: string; requestId: string }): Promise<void> {
+    let claimed = false
     try {
         if (!(await firstDelivery(input.requestId))) return
+        claimed = true
         const apiKey = process.env.RESEND_API_KEY
         if (!apiKey) throw new Error('RESEND_API_KEY is not set; founder support email not sent.')
         const context = await readContext(input.ticketId)
@@ -98,6 +110,7 @@ export async function notifyFounderOfCustomerMessage(input: { kind: Kind; ticket
         })
         if (!response.ok) throw new Error(`Resend rejected the founder support email: ${response.status}`)
     } catch (error) {
+        if (claimed) await releaseDelivery(input.requestId)
         console.error('[support] founder email failed', error)
         Sentry.captureException(error, { tags: { support_email: true } })
     }

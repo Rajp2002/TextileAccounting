@@ -17,6 +17,22 @@ export function founderReplyPayload(input: { body: string; resolve: boolean; tic
     }
 }
 
+// Internal-only tickets (no requester) cannot take a public reply, so they are closed with a
+// private outcome through the ticket PATCH. Nothing is delivered to anyone.
+export function founderPrivateResolvePayload(input: { summary: string; ticket: { version: number; category: string; priority: string }; clientRequestId: string }): Record<string, unknown> {
+    return {
+        expectedVersion: input.ticket.version,
+        clientRequestId: input.clientRequestId,
+        ...FOUNDER_RESOLVE,
+        resolutionSummary: input.summary,
+        category: input.ticket.category,
+        priority: input.ticket.priority,
+        nextUpdateDueAt: null,
+        followUpDueAt: null,
+        externalReference: null,
+    }
+}
+
 export const founderTabs = ['needs_reply', 'answered', 'resolved'] as const
 export type FounderTab = typeof founderTabs[number]
 export const founderTabLabels: Record<FounderTab, string> = { needs_reply: 'Needs reply', answered: 'Answered', resolved: 'Resolved' }
