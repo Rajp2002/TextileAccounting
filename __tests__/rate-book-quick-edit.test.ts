@@ -51,7 +51,7 @@ describe('Rate Book P3: Quick Rate Edit Dialog in RatesClient.tsx', () => {
 
         it('renders the "Edit rate" trigger once, in the one yarn card every width shares', () => {
             expect((client.match(/data-ratebook-field="quickEditAction"/g) || []).length).toBe(1)
-            expect(client).toContain('<Pencil className="size-3.5" aria-hidden="true" /><span className={pillLabel}>{tx(\'Edit rate\')}</span>')
+            expect(client).toContain('<Pencil className="size-3.5" aria-hidden="true" /><span>{tx(\'Edit rate\')}</span>')
         })
 
         it('opens the quick edit dialog from the card button and blocks closing while a save is pending', () => {

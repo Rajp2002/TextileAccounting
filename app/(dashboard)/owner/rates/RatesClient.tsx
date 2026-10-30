@@ -52,8 +52,6 @@ import {
     type CostRateInput,
     type CostRateUnit,
 } from './actions'
-import { getYarnRatePropagationCounts } from './propagation-actions'
-import { PropagateYarnRateDialog } from '@/components/rates/PropagateYarnRateDialog'
 import { RateReviewDialog } from '@/components/rates/RateReviewDialog'
 import {
     COST_RATE_CATEGORY_LABELS,
@@ -704,16 +702,6 @@ export default function RatesClient({
     const [searchQuery, setSearchQuery] = useState('')
     const [showArchived, setShowArchived] = useState(false)
     const [tourStep, setTourStep] = useState<RateBookStep | null>(null)
-    // Saved costings each yarn would re-cost; the Propagate pill shows while a yarn has any.
-    const [propagationCounts, setPropagationCounts] = useState<Record<string, number>>({})
-    const [propagateRate, setPropagateRate] = useState<CostRateRow | null>(null)
-    const refreshPropagationCounts = useCallback(() => {
-        // Secondary read: without it there is simply no pill.
-        void getYarnRatePropagationCounts()
-            .then(result => { if (result.data) setPropagationCounts(result.data) })
-            .catch(() => {})
-    }, [])
-    useEffect(() => { refreshPropagationCounts() }, [refreshPropagationCounts])
     const searchRef = useRef<HTMLInputElement>(null)
     const boardRef = useRef<HTMLDivElement>(null)
 
@@ -945,7 +933,6 @@ export default function RatesClient({
                 } else {
                     toast.success(tx(target.id ? 'Rate updated. Costings you already saved did not change.' : 'Rate added for future estimates.'))
                 }
-                refreshPropagationCounts()
                 void trackPlanEvent('rate_book_action', {
                     action: target.id ? 'update' : 'save',
                     category: target.category,
@@ -1042,7 +1029,6 @@ export default function RatesClient({
                 } else {
                     toast.success(tx('Rate updated. Costings you already saved did not change.'))
                 }
-                refreshPropagationCounts()
                 void trackPlanEvent('rate_book_action', {
                     action: 'update',
                     category: target.category,
@@ -1382,10 +1368,6 @@ export default function RatesClient({
         // Outside the tour the sample card says what it is instead of a review status, and offers only its removal.
         const quietSample = sample && tourStep === null
         const actionKind = pendingAction?.id === rate.id ? pendingAction.kind : null
-        // A price due for a check is confirmed before it re-costs saved costings.
-        const propagateCount = !due && !archived ? propagationCounts[rate.id] ?? 0 : 0
-        // The three pills need about 285px; below that, beside Propagate, Edit rate and Activity show only their icons.
-        const pillLabel = propagateCount > 0 ? 'hidden @min-[285px]:inline' : undefined
         const { amount, suffix } = ratePriceParts(rate.current_value, rate.unit)
         const trail = archived ? null : priceTrail(rate.price_points ?? [], Number(rate.current_value), todayDate)
         const status = archived
@@ -1430,39 +1412,15 @@ export default function RatesClient({
                     : <div data-ratebook-field="linkedQualitiesPopover"><YarnUsage rate={rate} loading={usageLoading} copy={copy} /></div>}
                 {rate.apply_as_default && <p className="-mt-2 text-[13px] font-medium text-success">{copy.defaultForNew}</p>}
                 <div className="mt-auto border-t border-hairline pt-4">
-                {/* Saved costings keep the old price until the owner propagates it, so the card says so above the pill. */}
-                {propagateCount > 0 && (
-                    <p
-                        role="status"
-                        data-ratebook-field="propagateNotice"
-                        className="relative mb-3 flex items-start gap-2 rounded-lg border border-[var(--wv-saffron-200)] bg-[var(--wv-saffron-100)] px-3 py-2 text-[13px] font-medium leading-snug text-saffron-deep shadow-xs animate-in fade-in slide-in-from-bottom-1 duration-300 motion-reduce:animate-none"
-                    >
-                        <AlertTriangle className="mt-px h-4 w-4 shrink-0" aria-hidden="true" />
-                        {propagateCount === 1 ? copy.oldPriceOne : fillCopy(copy.oldPrice, { n: propagateCount })}
-                        <span aria-hidden="true" className="absolute -bottom-[6px] left-12 h-2.5 w-2.5 rotate-45 border-b border-r border-[var(--wv-saffron-200)] bg-[var(--wv-saffron-100)]" />
-                    </p>
-                )}
                 {/* Pills wrap among themselves so the delete icon stays on their first row instead of dropping to a line of its own. */}
                 <div className="flex items-start gap-1.5" role="group" aria-label={tx('Actions')}>
-                    {/* A container, so a card too narrow for every label keeps Edit rate and Activity as icons beside Propagate. */}
+                    {/* Keep the yarn's editing and history actions together. */}
                     <div className="@container flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
                     {quietSample ? (
                         <Button variant="outline" onClick={handleDeleteDemoYarn} className={secondaryAction}>
                             <Trash2 className="h-4 w-4" aria-hidden="true" />{tx('Delete sample yarn')}
                         </Button>
                     ) : <>
-                        {propagateCount > 0 && (
-                            <Button
-                                data-ratebook-field="propagateAction"
-                                variant="saffron"
-                                disabled={isPending}
-                                onClick={() => setPropagateRate(rate)}
-                                aria-label={`Propagate ${rate.name} to ${propagateCount} saved costings`}
-                                className={cardAction}
-                            >
-                                {tx(`Propagate · ${propagateCount}`)}
-                            </Button>
-                        )}
                         {archived ? (
                             <Button
                                 onClick={() => { setArchiveError(null); setArchiveRate(rate) }}
@@ -1482,12 +1440,12 @@ export default function RatesClient({
                                 className={cardAction}
                                 title={tx('Edit rate')}
                             >
-                                <Pencil className="size-3.5" aria-hidden="true" /><span className={pillLabel}>{tx('Edit rate')}</span>
+                                <Pencil className="size-3.5" aria-hidden="true" /><span>{tx('Edit rate')}</span>
                             </Button>
                         )}
                         {/* Activity opens the price-history chart; its Full activity button switches to the audit list. */}
                         <Button onClick={() => openHistory(rate, 'trend')} className={cardAction} aria-label={tx('Activity')} title={tx('Activity')}>
-                            <History className="size-3.5" aria-hidden="true" /><span className={pillLabel}>{tx('Activity')}</span>
+                            <History className="size-3.5" aria-hidden="true" /><span>{tx('Activity')}</span>
                         </Button>
                     </>}
                     </div>
@@ -1905,15 +1863,6 @@ export default function RatesClient({
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-
-            <PropagateYarnRateDialog
-                rate={propagateRate}
-                onOpenChange={open => { if (!open) setPropagateRate(null) }}
-                onApplied={(rateId, resolvedCount) => setPropagationCounts(current => {
-                    const remaining = Math.max(0, (current[rateId] ?? 0) - resolvedCount)
-                    return { ...current, [rateId]: remaining }
-                })}
-            />
 
             <QuickRateEditDialog
                 rate={quickEditRate}

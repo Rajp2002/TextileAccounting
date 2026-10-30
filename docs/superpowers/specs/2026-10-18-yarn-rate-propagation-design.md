@@ -1,5 +1,7 @@
 # Yarn rate propagation: design
 
+Update, 2026-10-30: the Rate Book per-yarn Propagate pill described below is superseded by **Update yarn rates** on each affected Saved Costings card. Its review pulls every changed active warp and weft yarn rate used in that costing and creates one new version for the combined changes. Costings already at current rates have no update pill. The existing library-level Review still supports several costings at once. Both entry points use `getCostingsBehindRateBook` and `updateCostingsToRateBook`; earlier versions and archived costings remain unchanged. The original per-yarn design below is retained as historical context.
+
 Date: 2026-10-18. Status: design agreed with the owner in conversation, awaiting spec review.
 Applies to: Lite and Base Rate Book (`app/(dashboard)/owner/rates/`) and the saved-costing revision path in `app/(dashboard)/owner/estimator/actions.ts`. Free has no Rate Book and is unchanged.
 

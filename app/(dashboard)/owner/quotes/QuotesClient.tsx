@@ -326,6 +326,8 @@ function SavedQualityLibraryView({
     onSelectRecord,
     onSaveMargin,
     onDeleteSample,
+    rateUpdatesById,
+    onReviewRates,
 }: {
     groups: SavedQualityGroup[]
     canUseProductionPipeline: boolean
@@ -350,6 +352,8 @@ function SavedQualityLibraryView({
     tourStep?: SavedCostingStep | null
     /** Removes the sample costing; the sample card offers it outside the tour, as the sample yarn card does. */
     onDeleteSample?: () => void
+    rateUpdatesById?: ReadonlyMap<string, RateBookDriftItem>
+    onReviewRates?: (costingId: string) => void
 }) {
     const { t, tx, language } = useTranslation()
     const copy = costingCatalogueText[language]
@@ -562,6 +566,20 @@ function SavedQualityLibraryView({
                         )}
 
                         <div className="mt-auto flex flex-wrap items-center gap-2 border-t border-hairline pt-4">
+                            {latest && canReuseLatest && !tourStep && !isSampleRecordId(group.key) && rateUpdatesById?.has(latest.id) && onReviewRates && (
+                                <Button
+                                    type="button"
+                                    variant="saffron"
+                                    data-costing-field="updateYarnRates"
+                                    onClick={() => onReviewRates(latest.id)}
+                                    disabled={updatingId === latest.id}
+                                    aria-haspopup="dialog"
+                                    aria-label={fillCopy(copy.updateRatesLabel, { name: group.name })}
+                                    className="h-10 rounded-lg font-semibold max-md:min-h-[44px]"
+                                >
+                                    <RefreshCw data-icon="inline-start" aria-hidden="true" /> {copy.updateRates}
+                                </Button>
+                            )}
                             <Button
                                 type="button"
                                 variant="outline"
@@ -1197,13 +1215,16 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
     const showLibraryBand = !tourSampleActive && !loadError && !showArchived && libraryLatest.length > 0
     // Costings behind today's Rate Book yarn rates. A secondary read: without it the band shows the saved count instead.
     const [rateBookDrift, setRateBookDrift] = useState<'loading' | 'unavailable' | { yarnCount: number; items: RateBookDriftItem[] }>('loading')
-    const [rateBookReviewOpen, setRateBookReviewOpen] = useState(false)
+    const [rateBookReview, setRateBookReview] = useState<string | null>(null)
     const refreshRateBookDrift = useCallback(() => {
         void getCostingsBehindRateBook()
             .then(result => setRateBookDrift(result.data ? { yarnCount: result.data.yarnCount, items: result.data.items } : 'unavailable'))
             .catch(() => setRateBookDrift('unavailable'))
     }, [])
-    useEffect(() => { if (showLibraryBand) refreshRateBookDrift() }, [showLibraryBand, refreshRateBookDrift])
+    useEffect(() => { if (showLibraryBand) refreshRateBookDrift() }, [showLibraryBand, quotes, refreshRateBookDrift])
+    const rateUpdatesById = useMemo(() => new Map(
+        typeof rateBookDrift === 'string' ? [] : rateBookDrift.items.map(item => [item.id, item]),
+    ), [rateBookDrift])
     const savedMarginById = useMemo(() => new Map(quotes.map(quote => [quote.id, getSavedCostingMetrics(quote).actualMarginPct])), [quotes])
     const bandStatusLine = (() => {
         if (rateBookDrift === 'loading') return null
@@ -1335,7 +1356,7 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                         {rateBookDrift !== 'loading' && rateBookDrift !== 'unavailable' && rateBookDrift.items.length > 0 && (
                             <Button
                                 data-costing-field="rateBookReviewAction"
-                                onClick={() => setRateBookReviewOpen(true)}
+                                onClick={() => setRateBookReview('all')}
                                 className={cn(railPrimaryAction, 'h-11 shrink-0 px-5 max-sm:w-full')}
                             >
                                 {catalogue.review}
@@ -1346,12 +1367,13 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 </section>
             )}
             <RateBookUpdateDialog
-                open={rateBookReviewOpen}
+                open={rateBookReview !== null}
+                costingId={rateBookReview === 'all' ? null : rateBookReview}
                 copy={catalogue}
                 warpLabel={catalogue.warp}
                 weftLabel={catalogue.weft}
                 savedMarginById={savedMarginById}
-                onOpenChange={setRateBookReviewOpen}
+                onOpenChange={open => { if (!open) setRateBookReview(null) }}
                 onSaved={reloadAfterRateBookUpdate}
             />
             <div data-costing-tour="filters" className="space-y-3">
@@ -1524,6 +1546,8 @@ export default function QuotesClient({ initialQuotes, initialTemplates, initialP
                 <SavedQualityLibraryView
                     selectedRecordIdByGroup={selectedRecordIdByGroup} onSelectRecord={selectRecord} onSaveMargin={saveCostingMargin}
                     groups={qualityGroups}
+                    rateUpdatesById={rateUpdatesById}
+                    onReviewRates={setRateBookReview}
                     canUseProductionPipeline={canUseProductionPipeline}
                     openKey={openQualityKey}
                     updatingId={updatingId}

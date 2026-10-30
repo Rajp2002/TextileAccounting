@@ -27,7 +27,7 @@ export const rateBookHelpCopy = {
       },
       "propagate": {
         "title": "Bring saved costings up to a new yarn price",
-        "description": "After you change a yarn’s rate, a Propagate pill appears on its card with the number of saved costings still using the old rate. It opens a review of those costings with their cost before and after. Confirm to save a new version of each; earlier versions keep their own numbers. Archived costings are left out."
+        "description": "After changing your supplier prices here, open Saved Costings and choose Update yarn rates on an affected costing. Review all changed warp and weft rates together, then confirm to create one new version of that costing. The page’s Review action can update several costings together. Earlier versions stay as saved; archived costings are left out."
       },
       "rateDrawerFields": {
         "title": "Use {advancedEdit} for full details",
@@ -65,7 +65,7 @@ export const rateBookHelpCopy = {
       },
       "propagate": {
         "title": "सेव की गई कॉस्टिंग को नए यार्न भाव पर लाएँ",
-        "description": "यार्न का रेट बदलने के बाद उसके कार्ड पर ‘कॉस्टिंग में लागू करें’ बटन दिखता है, जिसमें बताया जाता है कि कितनी सेव की गई कॉस्टिंग अब भी पुराने रेट पर हैं। इसमें हर कॉस्टिंग की पहले और बाद की लागत दिखती है। पुष्टि करने पर हर कॉस्टिंग का नया वर्ज़न बनता है; पुराने वर्ज़न के आंकड़े वैसे ही रहते हैं। आर्काइव की गई कॉस्टिंग शामिल नहीं होतीं।"
+        "description": "यहाँ सप्लायर के भाव बदलने के बाद सेव की गई कॉस्टिंग खोलें और संबंधित कॉस्टिंग पर ‘धागा रेट बदलें’ चुनें। ताना और बाना के सभी बदले हुए रेट एक साथ जाँचकर पुष्टि करें; उस कॉस्टिंग का एक नया वर्ज़न बनेगा। पेज पर ‘देखें’ से कई कॉस्टिंग एक साथ अपडेट कर सकते हैं। पुराने वर्ज़न जैसे थे वैसे रहेंगे; आर्काइव की गई कॉस्टिंग शामिल नहीं होतीं।"
       },
       "rateDrawerFields": {
         "title": "पूरा विवरण {advancedEdit} में देखें",
@@ -103,7 +103,7 @@ export const rateBookHelpCopy = {
       },
       "propagate": {
         "title": "સાચવેલી કોસ્ટિંગને નવા યાર્ન ભાવ પર લાવો",
-        "description": "યાર્નનો ભાવ બદલ્યા પછી તેના કાર્ડ પર ‘કોસ્ટિંગમાં લાગુ કરો’ બટન દેખાય છે, જેમાં કેટલી સાચવેલી કોસ્ટિંગ હજી જૂના ભાવે છે તે જણાવાય છે. તેમાં દરેક કોસ્ટિંગનો પહેલાંનો અને પછીનો ખર્ચ દેખાય છે. પુષ્ટિ કરતાં દરેક કોસ્ટિંગનું નવું વર્ઝન બને છે; જૂના વર્ઝનના આંકડા જેમ છે તેમ રહે છે. આર્કાઇવ કરેલી કોસ્ટિંગ સામેલ થતી નથી."
+        "description": "અહીં સપ્લાયરના ભાવ બદલ્યા પછી સાચવેલી કોસ્ટિંગ ખોલો અને સંબંધિત કોસ્ટિંગ પર ‘યાર્ન ભાવ અપડેટ કરો’ પસંદ કરો. તાણા અને ભરણના બધા બદલાયેલા ભાવ એકસાથે તપાસીને પુષ્ટિ કરો; તે કોસ્ટિંગનું એક નવું વર્ઝન બનશે. પેજ પર ‘જુઓ’થી ઘણી કોસ્ટિંગ એકસાથે અપડેટ કરી શકો છો. જૂનાં વર્ઝન જેમ છે તેમ રહેશે; આર્કાઇવ કરેલી કોસ્ટિંગ સામેલ થતી નથી."
       },
       "rateDrawerFields": {
         "title": "{advancedEdit}માં પૂરી વિગતો જુઓ",

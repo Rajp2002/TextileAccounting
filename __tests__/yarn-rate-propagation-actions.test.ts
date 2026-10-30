@@ -408,6 +408,85 @@ describe('getCostingsBehindRateBook', () => {
 })
 
 describe('updateCostingsToRateBook', () => {
+    it('updates all relevant warp and weft rates in one version per costing after a supplier-wide price change', async () => {
+        const originals = Array.from({ length: 10 }, (_, index) => costing(`q${index}`, `g${index}`, 1, {
+            warp_rows: [yarnRow('warp', `Warp ${index % 5}`, 100)],
+            weft_rows: [yarnRow('weft', `Weft ${index % 5}`, 90)],
+        }))
+        seed(structuredClone(originals))
+        state.tables.cost_rate_book = Array.from({ length: 15 }, (_, index) => ({
+            id: `rate-${index}`,
+            org_id: 'org-1',
+            name: index < 5 ? `Warp ${index}` : index < 10 ? `Weft ${index - 5}` : `Unused ${index}`,
+            category: index < 5 ? 'yarn_warp' : 'yarn_weft',
+            current_value: index < 5 ? 120 + index : 110 + index,
+            updated_at: RATE_UPDATED_AT,
+            is_active: true,
+        }))
+        const review = (await getCostingsBehindRateBook()).data!
+        expect(review.yarnCount).toBe(15)
+        expect(review.items).toHaveLength(10)
+        expect(review.items.every(item => item.changes.length === 2)).toBe(true)
+
+        // Model committed revisions so the following preview reads the new latest versions.
+        state.saveEstimatorQuoteV3.mockImplementation(async params => {
+            const source = state.tables.estimator_quotes.find(row => row.id === params.sourceQuoteId)!
+            const revision = {
+                ...source,
+                id: `${source.id}-v2`,
+                version_number: 2,
+                created_at: '2026-10-30T10:00:00Z',
+                updated_at: '2026-10-30T10:00:00Z',
+                warp_rows: params.estimate.warpRows,
+                weft_rows: params.estimate.weftRows,
+                production_cost_per_meter: params.totalProductionCostPerM,
+                quote_price_per_meter: params.quotePricePerM,
+                client_request_id: params.clientRequestId,
+            }
+            state.tables.estimator_quotes.push(revision)
+            return { success: true, quoteId: revision.id, versionNumber: 2 }
+        })
+
+        // Update each costing independently from its own card, using the reviewed snapshot.
+        for (const item of review.items) {
+            const result = await updateCostingsToRateBook({
+                ratesKey: review.ratesKey,
+                costings: [{ id: item.id, expectedUpdatedAt: item.updatedAt }],
+            })
+            expect(result.error).toBeUndefined()
+            expect(result.data?.outcomes).toEqual([{ id: item.id, status: 'created', versionNumber: 2, quoteId: `${item.id}-v2` }])
+            const params = state.saveEstimatorQuoteV3.mock.lastCall![0]
+            const index = Number(item.id.slice(1)) % 5
+            expect(params.estimate.warpRows[0].yarnRate).toBe(120 + index)
+            expect(params.estimate.weftRows[0].yarnRate).toBe(115 + index)
+            expect(params.clientRequestId).toBe(buildRateBookUpdateRequestId(item.id, item.changes))
+        }
+        expect(state.saveEstimatorQuoteV3).toHaveBeenCalledTimes(10)
+        expect(state.tables.estimator_quotes.filter(row => row.version_number === 1)).toEqual(originals)
+        expect((await getCostingsBehindRateBook()).data?.items).toEqual([])
+
+        // Reapplying to a current version cannot manufacture another revision.
+        const again = await updateCostingsToRateBook({
+            ratesKey: review.ratesKey,
+            costings: [{ id: 'q0-v2', expectedUpdatedAt: '2026-10-30T10:00:00Z' }],
+        })
+        expect(again.data?.outcomes).toEqual([{ id: 'q0-v2', status: 'unchanged' }])
+        expect(state.saveEstimatorQuoteV3).toHaveBeenCalledTimes(10)
+    })
+
+    it('requires a new review if another relevant yarn changes before saving', async () => {
+        seed([costing('a1', 'g1', 1)])
+        state.tables.cost_rate_book[1].name = '75D Poly'
+        const { data } = await getCostingsBehindRateBook()
+        state.tables.cost_rate_book[1].current_value = 140
+        const result = await updateCostingsToRateBook({
+            ratesKey: data!.ratesKey,
+            costings: [{ id: 'a1', expectedUpdatedAt: '2026-10-01T01:00:00Z' }],
+        })
+        expect(result.error).toBe('Yarn rates changed since you opened the review. Reopen it.')
+        expect(state.saveEstimatorQuoteV3).not.toHaveBeenCalled()
+    })
+
     it('refuses when a yarn rate changed since the review, and saves nothing', async () => {
         seed([costing('a1', 'g1', 1)])
         const result = await updateCostingsToRateBook({ ratesKey: 'stale', costings: [{ id: 'a1', expectedUpdatedAt: '2026-10-01T01:00:00Z' }] })

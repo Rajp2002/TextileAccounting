@@ -30,8 +30,10 @@ const pct = (value: number) => `${value.toFixed(1)}%`
  * saves a new version of each ticked costing at today's yarn rates, ten at a
  * time. Earlier versions are never edited.
  */
-export function RateBookUpdateDialog({ open, copy, warpLabel, weftLabel, savedMarginById, onOpenChange, onSaved }: {
+export function RateBookUpdateDialog({ open, costingId = null, copy, warpLabel, weftLabel, savedMarginById, onOpenChange, onSaved }: {
     open: boolean
+    /** A card reviews only this costing; null reviews the whole library. */
+    costingId?: string | null
     copy: Copy
     warpLabel: string
     weftLabel: string
@@ -52,28 +54,37 @@ export function RateBookUpdateDialog({ open, copy, warpLabel, weftLabel, savedMa
     const [saveError, setSaveError] = useState<string | null>(null)
     // Costings the owner unticked; a reload (Retry) keeps them out.
     const untickedRef = useRef<Set<string>>(new Set())
+    const loadSequence = useRef(0)
 
     const load = useCallback(async () => {
+        const sequence = ++loadSequence.current
         setLoading(true)
         setLoadError(null)
         setSaveError(null)
         setProblems([])
         try {
             const result = await getCostingsBehindRateBook()
+            if (sequence !== loadSequence.current) return
             if (result.error || !result.data) {
                 setLoadError(result.error ?? copy.loadFailed)
                 setReview(null)
                 return
             }
-            setReview(result.data)
-            setTicked(tickedAfterReload(result.data.items.map(item => item.id), untickedRef.current))
+            const scoped = costingId ? {
+                ...result.data,
+                items: result.data.items.filter(item => item.id === costingId),
+                skipped: result.data.skipped.filter(item => item.id === costingId),
+            } : result.data
+            setReview(scoped)
+            setTicked(tickedAfterReload(scoped.items.map(item => item.id), untickedRef.current))
         } catch (error) {
+            if (sequence !== loadSequence.current) return
             setLoadError(userFacingError(error, copy.loadFailed))
             setReview(null)
         } finally {
-            setLoading(false)
+            if (sequence === loadSequence.current) setLoading(false)
         }
-    }, [copy.loadFailed])
+    }, [copy.loadFailed, costingId])
 
     useEffect(() => {
         if (!open) {
@@ -83,6 +94,7 @@ export function RateBookUpdateDialog({ open, copy, warpLabel, weftLabel, savedMa
         }
         untickedRef.current = new Set()
         void load()
+        return () => { loadSequence.current += 1 }
     }, [open, load])
 
     const tickedItems = useMemo(() => review?.items.filter(item => ticked.has(item.id)) ?? [], [review, ticked])
@@ -158,7 +170,7 @@ export function RateBookUpdateDialog({ open, copy, warpLabel, weftLabel, savedMa
         <Dialog open={open} onOpenChange={next => { if (!saving) onOpenChange(next) }}>
             <DialogContent data-costing-field="rateBookReview" className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
                 <DialogHeader className="pr-9">
-                    <DialogTitle>{copy.reviewTitle}</DialogTitle>
+                    <DialogTitle>{costingId ? copy.reviewTitleOne : copy.reviewTitle}</DialogTitle>
                     <DialogDescription>{copy.reviewNote}</DialogDescription>
                 </DialogHeader>
 
@@ -177,7 +189,7 @@ export function RateBookUpdateDialog({ open, copy, warpLabel, weftLabel, savedMa
                 )}
 
                 {!loading && !loadError && review && review.items.length === 0 && review.skipped.length === 0 && (
-                    <p className="text-sm text-body">{copy.current}</p>
+                    <p className="text-sm text-body">{costingId ? copy.noUpdatesForVersion : copy.current}</p>
                 )}
 
                 {!loading && !loadError && review && review.items.length > 0 && (

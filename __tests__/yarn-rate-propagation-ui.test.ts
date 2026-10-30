@@ -7,40 +7,43 @@ const root = process.cwd()
 const read = (path: string) => readFileSync(join(root, path), 'utf8')
 
 const client = read('app/(dashboard)/owner/rates/RatesClient.tsx')
-const dialog = read('components/rates/PropagateYarnRateDialog.tsx')
+const costings = read('app/(dashboard)/owner/quotes/QuotesClient.tsx')
+const dialog = read('components/estimator/RateBookUpdateDialog.tsx')
 const actions = read('app/(dashboard)/owner/rates/propagation-actions.ts')
 
-describe('Rate Book Propagate pill', () => {
-    it('shows the pill only on active, non-due cards that have costings to propagate', () => {
-        expect(client).toContain('data-ratebook-field="propagateAction"')
-        expect(client).toMatch(/const propagateCount = !due && !archived \? propagationCounts\[rate\.id\] \?\? 0 : 0/)
-        expect(client).toMatch(/propagateCount > 0 &&/)
+describe('Saved Costings yarn-rate update pill', () => {
+    it('offers updates on an eligible costing rather than on each yarn', () => {
+        expect(client).not.toContain('data-ratebook-field="propagateAction"')
+        expect(client).not.toContain('PropagateYarnRateDialog')
+        expect(costings).toContain('data-costing-field="updateYarnRates"')
+        expect(costings).toContain('latest && canReuseLatest && !tourStep && !isSampleRecordId(group.key) && rateUpdatesById?.has(latest.id)')
     })
 
     it('is an explicit button that opens the review, not a row click or a menu item', () => {
-        const start = client.indexOf('data-ratebook-field="propagateAction"')
-        const button = client.slice(client.lastIndexOf('<Button', start), client.indexOf('</Button>', start))
-        expect(button).toContain('onClick={() => setPropagateRate(rate)}')
+        const start = costings.indexOf('data-costing-field="updateYarnRates"')
+        const button = costings.slice(costings.lastIndexOf('<Button', start), costings.indexOf('</Button>', start))
+        expect(button).toContain('onClick={() => onReviewRates(latest.id)}')
         expect(button).toContain('variant="saffron"')
         expect(button).not.toContain('DropdownMenu')
     })
 
-    it('reads the counts with the usage effect and again after every successful rate save', () => {
-        expect(client).toContain('getYarnRatePropagationCounts')
-        expect(client.match(/refreshPropagationCounts\(\)/g)?.length ?? 0).toBeGreaterThanOrEqual(3)
+    it('refreshes affected costings when the saved library changes', () => {
+        expect(costings).toContain('getCostingsBehindRateBook()')
+        expect(costings).toContain('[showLibraryBand, quotes, refreshRateBookDrift]')
     })
 
     it('keeps the existing save toast copy', () => {
         expect(client).toContain('Costings you already saved did not change.')
     })
 
-    it('mounts the review dialog once and lowers the card count when it finishes', () => {
-        expect(client.match(/<PropagateYarnRateDialog/g)?.length).toBe(1)
-        expect(client).toContain('onApplied')
+    it('shares one review for a costing card and the bulk review', () => {
+        expect(costings.match(/<RateBookUpdateDialog/g)?.length).toBe(1)
+        expect(costings).toContain("costingId={rateBookReview === 'all' ? null : rateBookReview}")
+        expect(costings).toContain('onSaved={reloadAfterRateBookUpdate}')
     })
 })
 
-describe('PropagateYarnRateDialog', () => {
+describe('RateBookUpdateDialog', () => {
     it('is a shared Dialog with a footer, not a popover or a row menu', () => {
         expect(dialog).toContain('<Dialog ')
         expect(dialog).toContain('<DialogFooter')
@@ -51,17 +54,17 @@ describe('PropagateYarnRateDialog', () => {
     it('saves in batches of PROPAGATION_BATCH_SIZE and only the ticked costings', () => {
         expect(dialog).toContain('chunkIds(')
         expect(dialog).toContain('PROPAGATION_BATCH_SIZE')
-        expect(dialog).toContain('applyYarnRatePropagation(')
-        expect(dialog).toContain('expectedRateUpdatedAt')
+        expect(dialog).toContain('updateCostingsToRateBook(')
+        expect(dialog).toContain('ratesKey: review.ratesKey')
         expect(dialog).toContain('summarizeOutcomes(')
     })
 
     it('has the loading, empty, error, skipped and retry states', () => {
         expect(dialog).toContain('Loader2')
-        expect(dialog).toContain('Nothing to propagate: every costing already uses this rate')
-        expect(dialog).toContain('Skipped')
-        expect(dialog).toContain('Retry')
-        expect(dialog).toContain('Review before saving')
+        expect(dialog).toContain('copy.noUpdatesForVersion')
+        expect(dialog).toContain('copy.skipped')
+        expect(dialog).toContain('copy.retry')
+        expect(dialog).toContain('copy.reviewNote')
     })
 
     it('keeps long Hindi and Gujarati copy readable on a phone', () => {
@@ -77,7 +80,7 @@ describe('PropagateYarnRateDialog', () => {
     it('offers Retry when a save ends with an error, not only when rows failed', () => {
         const start = dialog.indexOf('{saveError && ')
         expect(start).toBeGreaterThan(-1)
-        expect(dialog.slice(start, dialog.indexOf('<DialogFooter', start))).toContain("{tx('Retry')}")
+        expect(dialog.slice(start, dialog.indexOf('<DialogFooter', start))).toContain('{copy.retry}')
     })
 
     it('takes the costings that were saved out of the list after a run', () => {
