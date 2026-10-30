@@ -15,6 +15,18 @@ describe('Base Settings cold-load regression', () => {
         expect(settings).toContain('initialDefaults={costProfileData')
     })
 
+    it('opens with the costing defaults and account email read on the server', () => {
+        const layout = read('app/(dashboard)/owner/settings/layout.tsx')
+        // Read alongside the organization row; a failed read leaves the page to request them.
+        expect(layout).toContain('getFactoryCostProfile({ createIfMissing: false }).catch(() => null)')
+        // Started ahead of the access gate, so it overlaps the identity check.
+        expect(layout.indexOf('getFactoryCostProfile({')).toBeLessThan(layout.indexOf('<AccessGate'))
+        expect(layout).toContain('emailVerified: Boolean(user.email_confirmed_at)')
+        // The defaults card keeps its first values, so they must be there on the first render.
+        expect(settings).toContain('initialData: settingsBootstrap?.costProfile')
+        expect(settings).toContain('enabled: !bootstrapAccount')
+    })
+
     it('persists the first baseline and hydrates it into the Estimator', () => {
         expect(actions).toContain('is_configured: data.is_configured ?? true')
         expect(estimator).toContain('monthlyOutputM: Number(profile.monthly_output_m ?? base.monthlyOutputM)')

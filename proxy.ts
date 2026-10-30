@@ -105,6 +105,19 @@ function isPublicRoute(pathname: string): boolean {
     )
 }
 
+// Next merges a cookie Proxy writes into a Server Action's own cookies, where
+// it counts as the action changing cookies: Next then re-renders the whole
+// page into the action's response and the browser drops its router cache.
+// A Server Action therefore renews a recent inactivity timestamp only once it
+// is this old. The session can only time out sooner than an hour, never later.
+const SERVER_ACTION_ACTIVITY_RENEWAL_MS = 5 * 60 * 1000
+
+function shouldRenewLastActivity(request: NextRequest, lastActivity: string | undefined, now: number): boolean {
+    if (request.method !== 'POST' || !request.headers.has('next-action')) return true
+    const age = now - Number(lastActivity)
+    return !(Number.isFinite(age) && age >= 0 && age < SERVER_ACTION_ACTIVITY_RENEWAL_MS)
+}
+
 function logProxyPhase(phase: string, pathname: string, startedAt: number) {
     if (process.env.WEAVLY_PERF_LOGS !== 'true') return
     const configuredRate = Number(process.env.WEAVLY_PERF_SAMPLE_RATE ?? '0.1')
@@ -180,7 +193,10 @@ export async function updateSession(request: NextRequest) {
 
     // Auth mutations manage their own cookie lifecycle. Let them run directly
     // instead of validating or redirecting the session before their handlers run.
-    const isLoginActionRequest = request.method === 'POST' && (pathname === '/login' || isFounderAuthRoute(pathname))
+    // /auth/signin is the login form's request. A /login post can only be a
+    // Server Action from a tab opened before that; it still skips session work.
+    const isLoginActionRequest = request.method === 'POST'
+        && (pathname === '/login' || pathname === '/auth/signin' || isFounderAuthRoute(pathname))
     if (isLoginActionRequest || isSignOutRequest) {
         return response
     }
@@ -309,6 +325,7 @@ export async function updateSession(request: NextRequest) {
     // ── Inactivity Timeout (1 hour) ───────────────────────────────────────
     const lastActivity = request.cookies.get('last_activity')?.value
     const now = Date.now()
+    const renewLastActivity = shouldRenewLastActivity(request, lastActivity, now)
 
     // Founder inactivity is authoritative server state (15 minutes), not this
     // customer routing cookie. Polling cannot renew that server state.
@@ -373,7 +390,7 @@ export async function updateSession(request: NextRequest) {
         applySessionCookies.forEach(applyCookie => applyCookie(response))
     }
 
-    if (userId) {
+    if (userId && renewLastActivity) {
         response.cookies.set('last_activity', now.toString(), {
             path: '/',
             // Keep the timestamp longer than the inactivity window. If this
@@ -422,6 +439,7 @@ export async function updateSession(request: NextRequest) {
 
     const applyAuthenticatedResponseCookies = (target: NextResponse) => {
         applySessionCookies.forEach(applyCookie => applyCookie(target))
+        if (!renewLastActivity) return
         target.cookies.set('last_activity', now.toString(), {
             path: '/',
             maxAge: 7 * 24 * 60 * 60,

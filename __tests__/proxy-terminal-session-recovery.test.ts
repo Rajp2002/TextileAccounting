@@ -156,6 +156,54 @@ describe('Proxy post-login session handling', () => {
         expect(Number(response.cookies.get('last_activity')?.value)).toBeGreaterThanOrEqual(loginActivity)
     })
 
+    describe('server actions and the inactivity timestamp', () => {
+        const ownerClaims = { data: { claims: { sub: 'owner-user-id', app_metadata: { role: 'owner', onboarding_complete: true } } }, error: null }
+        const actionRequest = (lastActivity: number) => {
+            const request = requestFor('/owner/estimator', 'POST', lastActivity.toString())
+            request.headers.set('next-action', 'synthetic-action-id')
+            return request
+        }
+
+        // A cookie Proxy writes reaches the action as a cookie change, which makes
+        // Next re-render the whole page into the action's response.
+        it('does not rewrite a recent timestamp for a server action', async () => {
+            authMock.getClaims.mockResolvedValue(ownerClaims)
+
+            const response = await updateSession(actionRequest(Date.now() - 60_000))
+
+            expect(response.status).toBe(200)
+            expect(authMock.signOut).not.toHaveBeenCalled()
+            expect(response.cookies.get('last_activity')).toBeUndefined()
+        })
+
+        it('renews a timestamp older than five minutes for a server action', async () => {
+            authMock.getClaims.mockResolvedValue(ownerClaims)
+            const before = Date.now()
+
+            const response = await updateSession(actionRequest(before - 6 * 60_000))
+
+            expect(Number(response.cookies.get('last_activity')?.value)).toBeGreaterThanOrEqual(before)
+        })
+
+        it('still renews a recent timestamp on page requests', async () => {
+            authMock.getClaims.mockResolvedValue(ownerClaims)
+            const before = Date.now()
+
+            const response = await updateSession(requestFor('/owner/estimator', 'GET', (before - 60_000).toString()))
+
+            expect(Number(response.cookies.get('last_activity')?.value)).toBeGreaterThanOrEqual(before)
+        })
+
+        it('still signs out a server action after an hour without activity', async () => {
+            authMock.getClaims.mockResolvedValue(ownerClaims)
+
+            const response = await updateSession(actionRequest(Date.now() - 3_700_000))
+
+            expect(authMock.signOut).toHaveBeenCalled()
+            expect(response.cookies.get('last_activity')?.value).toBe('')
+        })
+    })
+
     it('allows /owner/assignments directly for an owner before onboarding completion', async () => {
         const loginActivity = Date.now()
         authMock.getClaims.mockResolvedValue({

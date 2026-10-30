@@ -9,7 +9,6 @@ import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { Loader2, ArrowRight, Eye, EyeOff } from 'lucide-react'
 import AuthLayout from '@/components/auth/auth-layout'
-import { signIn } from '@/app/(auth)/actions/auth'
 import { AuthTransition } from '@/components/auth/auth-transition'
 import { captureAuthHandoff } from '@/components/auth/auth-handoff'
 import { SIGN_IN_TRACE_STORAGE_KEY } from '@/lib/sign-in-trace'
@@ -19,6 +18,31 @@ function createTraceId() {
 
     const bytes = crypto.getRandomValues(new Uint8Array(16))
     return Array.from(bytes, (value) => value.toString(16).padStart(2, '0')).join('')
+}
+
+type SignInResult = { redirectTo: string } | { error: string }
+
+// A plain same-origin POST rather than a Server Action: the response carries
+// only the session cookies and the destination (app/auth/signin/route.ts).
+async function requestSignIn(input: { email: string; password: string; traceId: string }): Promise<SignInResult> {
+    const response = await fetch('/auth/signin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+        credentials: 'same-origin',
+        cache: 'no-store',
+        redirect: 'manual',
+    })
+    const result: unknown = await response.json().catch(() => null)
+    if (result && typeof result === 'object') {
+        if ('error' in result && typeof result.error === 'string') return { error: result.error }
+        if (response.ok && 'redirectTo' in result && typeof result.redirectTo === 'string'
+            && result.redirectTo.startsWith('/') && !result.redirectTo.startsWith('//')) {
+            return { redirectTo: result.redirectTo }
+        }
+    }
+    // Throttled by Proxy, an error page, or anything else unexpected.
+    throw new Error(`Sign-in request failed (${response.status})`)
 }
 
 let workspaceCodeRequested = false
@@ -96,7 +120,7 @@ export default function LoginForm({ recoveryDestination }: { recoveryDestination
         let authRoundTripMs = 0
 
         try {
-            const signInPromise = signIn({ email: email.trim(), password, traceId }).finally(() => {
+            const signInPromise = requestSignIn({ email: email.trim(), password, traceId }).finally(() => {
                 authRoundTripMs = performance.now() - authStartedAt
             })
             const result = await signInPromise

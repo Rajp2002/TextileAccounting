@@ -19,9 +19,29 @@ export type SettingsBootstrapOrganization = {
     production_mode: ProductionMode | null
 }
 
+/** The factory cost profile columns Settings shows as costing defaults. */
+export type SettingsBootstrapCostProfile = {
+    yarn_shortage_pct: number | string | null
+    default_margin_pct: number | string | null
+    overhead_mode: string | null
+    warping_mode: string | null
+    default_warping_mode: string | null
+    sizing_mode: string | null
+    default_sizing_mode: string | null
+    updated_at: string | null
+}
+
+export type SettingsBootstrapAccount = {
+    email: string
+    emailVerified: boolean
+}
+
 type SettingsBootstrapValue = {
     profile: SettingsBootstrapProfile
     organization: SettingsBootstrapOrganization
+    /** null when no profile row exists; absent when the read failed. */
+    costProfile?: SettingsBootstrapCostProfile | null
+    account?: SettingsBootstrapAccount
 }
 
 const SettingsBootstrapContext = createContext<SettingsBootstrapValue | null>(null)
@@ -29,10 +49,12 @@ const SettingsBootstrapContext = createContext<SettingsBootstrapValue | null>(nu
 export function SettingsBootstrapProvider({
     profile,
     organization,
+    costProfile,
+    account,
     children,
 }: SettingsBootstrapValue & { children: React.ReactNode }) {
     return (
-        <SettingsBootstrapContext.Provider value={{ profile, organization }}>
+        <SettingsBootstrapContext.Provider value={{ profile, organization, costProfile, account }}>
             {children}
         </SettingsBootstrapContext.Provider>
     )

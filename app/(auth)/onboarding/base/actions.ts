@@ -251,6 +251,8 @@ export async function saveBaseOnboardingDraftAction(draft: Partial<BaseOnboardin
             return { success: true }
         }
 
+        // The wizard opens from the saved draft; a page the browser kept must not show an older one.
+        revalidatePath('/onboarding/base')
         return { success: true }
     } catch (err: unknown) {
         return { error: err instanceof Error ? err.message : 'Failed to save draft' }
@@ -288,6 +290,7 @@ export async function saveBaseOnboardingFactoryAction(input: { name: string; own
                 .is('full_name', null)
         }
 
+        revalidatePath('/onboarding/base')
         return { success: true }
     } catch (err: unknown) {
         return { error: err instanceof Error ? err.message : 'Unable to save factory context' }

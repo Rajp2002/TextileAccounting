@@ -1,17 +1,16 @@
 'use client'
 
 import React, { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react'
+import dynamic from 'next/dynamic'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { useTranslation } from '@/lib/i18n/context'
 import type { SubscriptionTier } from '@/lib/subscription-access'
 import { PersonalInformationCard } from './personal-information-card'
 import { FactoryDetailsCard } from './factory-details-card'
 import { CostingDefaultsCard, type CostingDefaultsData } from './costing-defaults-card'
-import { PayrollCycleSettingsCard } from '../payroll/PayrollCycleSettingsCard'
 import { type PayrollCycleConfig } from '@/lib/payroll-cycle-engine'
 import { SecurityCard } from './security-card'
 import { DeletionReviewCard } from './deletion-review-card'
-import { SupervisorAccessCard } from '../supervisors/SupervisorAccessCard'
 import { CompanyProfileCard } from './company-profile-card'
 import { brandingText } from '@/lib/i18n/document-branding'
 import { useUnloadProtection } from './unsaved-changes-dialog'
@@ -26,6 +25,10 @@ import {
     DEFAULT_STARTUP_INTRO_PREFERENCE, readStartupIntroPreference, saveStartupIntroPreference, STARTUP_INTRO_CHANGE_EVENT,
     type StartupIntroPreference,
 } from '@/lib/intro/startup-preference'
+
+// Base-only cards: Free and Lite settings never download them.
+const PayrollCycleSettingsCard = dynamic(() => import('../payroll/PayrollCycleSettingsCard').then(module => module.PayrollCycleSettingsCard))
+const SupervisorAccessCard = dynamic(() => import('../supervisors/SupervisorAccessCard').then(module => module.SupervisorAccessCard))
 
 function subscribeStartupPreference(onChange: () => void) {
     window.addEventListener('storage', onChange)

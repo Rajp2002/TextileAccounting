@@ -5,7 +5,7 @@ import { liteRecordsCopy } from '@/lib/i18n/lite-records'
 
 const fixture = vi.hoisted(() => ({ grant: true, tier: 'lite', saved: true }))
 vi.mock('@/lib/free-account', () => ({ getFreeGrant: async () => fixture.grant ? { subjectId: 'synthetic-subject', org_id: 'synthetic-org' } : null, hasSavedFreeCostings: async () => fixture.saved }))
-vi.mock('@/lib/auth', () => ({ getAuthenticatedUser: async () => ({ user: { id: 'synthetic-owner', user_metadata: {} }, profile: { org_id: 'synthetic-org' } }) }))
+vi.mock('@/lib/auth', () => ({ getSessionHint: async () => null, getAuthenticatedUser: async () => ({ user: { id: 'synthetic-owner', user_metadata: {} }, profile: { org_id: 'synthetic-org' } }) }))
 vi.mock('@/lib/subscription', () => ({ getCachedOrgPlanAccess: async () => ({ effectiveTier: fixture.tier, subscriptionTier: fixture.tier }) }))
 vi.mock('@/lib/owner-organization', () => ({ getCachedOwnerOrganization: async () => ({ data: { name: 'Synthetic factory' } }) }))
 vi.mock('@/app/(dashboard)/owner/estimator/actions', () => ({ getEstimatorQuotes: async () => ({ data: [] }), getEstimatorTemplates: async () => ({ data: [] }) }))

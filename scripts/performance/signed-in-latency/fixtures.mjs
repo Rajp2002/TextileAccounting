@@ -1,11 +1,12 @@
-// Three synthetic owners (Lite, Base, Free) with just enough rows for the
-// owner and Free shells to resolve. Tables without rows answer [] so pages
+// Synthetic owners (Lite, Base, Free, and a Lite trial, which is how new
+// accounts start) with just enough rows for the owner and Free shells to resolve. Tables without rows answer [] so pages
 // render their empty states; the harness measures waiting, not content.
 const LITE = { userId: '11111111-1111-4111-8111-111111111111', orgId: 'aaaaaaaa-1111-4111-8111-111111111111' }
 const BASE = { userId: '22222222-2222-4222-8222-222222222222', orgId: 'bbbbbbbb-2222-4222-8222-222222222222' }
 const FREE = { userId: '33333333-3333-4333-8333-333333333333', orgId: 'cccccccc-3333-4333-8333-333333333333' }
+const TRIAL = { userId: '44444444-4444-4444-8444-444444444444', orgId: 'eeeeeeee-4444-4444-8444-444444444444' }
 
-export const ACCOUNTS = { lite: LITE, base: BASE, free: FREE }
+export const ACCOUNTS = { lite: LITE, base: BASE, free: FREE, trial: TRIAL }
 
 const iso = offsetDays => new Date(Date.now() + offsetDays * 86_400_000).toISOString()
 const day = offsetDays => iso(offsetDays).slice(0, 10)
@@ -44,6 +45,8 @@ function subscription(orgId, tier) {
 export function buildFixtures() {
     const liteSub = subscription(LITE.orgId, 'lite')
     const baseSub = subscription(BASE.orgId, 'base')
+    // A new account's three-month Lite trial: entitlement only, no payment.
+    const trialSub = { ...subscription(TRIAL.orgId, 'lite'), current_start: iso(-10), current_end: iso(80), razorpay_payment_id: null, razorpay_order_id: null, paid_count: 0, is_trial: true }
     // A Free grant's subject is the owner's own user id.
     const freeSubject = FREE.userId
     const costProfile = orgId => ({
@@ -59,21 +62,26 @@ export function buildFixtures() {
             [LITE.userId]: authUser(LITE, 'lite'),
             [BASE.userId]: authUser(BASE, 'base'),
             [FREE.userId]: authUser(FREE, 'free', { free_signup: true }),
+            [TRIAL.userId]: authUser(TRIAL, 'trial'),
         },
         tables: {
-            profiles: [LITE, BASE, FREE].map(({ userId, orgId }, index) => ({
-                id: userId, role: 'owner', org_id: orgId, full_name: ['Lite', 'Base', 'Free'][index] + ' owner',
+            profiles: [LITE, BASE, FREE, TRIAL].map(({ userId, orgId }, index) => ({
+                id: userId, role: 'owner', org_id: orgId, full_name: ['Lite', 'Base', 'Free', 'Trial'][index] + ' owner',
                 phone: null, whatsapp_number: null, whatsapp_opted_in: false, access_revoked_at: null,
             })),
             organizations: [
                 organization(LITE, 'Lite Weaving Works', { org_subscriptions: [liteSub] }),
                 organization(BASE, 'Base Weaving Works', { org_subscriptions: [baseSub] }),
                 organization(FREE, 'Free Weaving Works', { lite_trial_eligible: false }),
+                organization(TRIAL, 'Trial Weaving Works', { lite_trial_eligible: true, base_plan_visible: false, org_subscriptions: [trialSub] }),
             ],
-            org_subscriptions: [liteSub, baseSub],
-            factory_cost_profile: [costProfile(LITE.orgId), costProfile(BASE.orgId)],
-            free_account_grants: [{ org_id: FREE.orgId, subject_id: freeSubject, revoked_at: null, free_account_subjects: { active: true, verified_at: iso(-100), beta_allowed: true } }],
-            free_account_subjects: [{ id: freeSubject, active: true, verified_at: iso(-100), beta_allowed: true }],
+            org_subscriptions: [liteSub, baseSub, trialSub],
+            factory_cost_profile: [costProfile(LITE.orgId), costProfile(BASE.orgId), costProfile(TRIAL.orgId)],
+            // One saved quality, so the estimator's saved-quality read also reads its latest costing.
+            estimator_templates: [{ id: 'ffffffff-1111-4111-8111-111111111111', org_id: LITE.orgId, name: 'Harness poplin', is_active: true, created_at: iso(-20), updated_at: iso(-20), warp_rows: [], weft_rows: [] }],
+            // The trial carries the dormant Free grant every new account gets.
+            free_account_grants: [FREE, TRIAL].map(({ userId, orgId }) => ({ org_id: orgId, subject_id: userId, revoked_at: null, free_account_subjects: { active: true, verified_at: iso(-100), beta_allowed: true } })),
+            free_account_subjects: [freeSubject, TRIAL.userId].map(id => ({ id, active: true, verified_at: iso(-100), beta_allowed: true })),
             free_rollout: [{ singleton: true, enrollment_enabled: true, estimation_enabled: true, tour_enabled: false, free_quota_policies: { id: 'policy', version: 1, monthly_limit: 10, period: 'month', receipt_retention_days: 30 } }],
             base_payroll_cycle_configs: [{ id: 'cycle-base', org_id: BASE.orgId, cycle_type: 'monthly', cycle_start_day: 1, pay_day: 5, effective_from: day(-200), effective_until: null, created_at: iso(-200) }],
         },
@@ -83,6 +91,8 @@ export function buildFixtures() {
             complete_free_saved_costing: () => ({ used: 1, allowance: 10, remaining: 9, savedCostingId: 'dddddddd-3333-4333-8333-333333333333', editWindow: null, costingsUsed: 1 }),
             get_quality_stock_board: { qualities: [], movements: [] },
             get_supervisor_display_names: [],
+            // Log out revokes founder sessions for every account; owners have none.
+            admin_founder_session: { allowed: true, revoked: false },
         },
     }
 }

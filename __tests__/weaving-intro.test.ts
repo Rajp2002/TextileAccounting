@@ -580,6 +580,18 @@ describe('woven intro integration contracts', () => {
         expect(runtime).not.toMatch(/cloneBox\.style\.transform/)
     })
 
+    it('starts the weave without waiting on the network for the page logo, and holds before the handoff until it has', () => {
+        const runtime = read('components/intro/weaving-intro-runtime.ts')
+        // Only the cached, preloaded mask source gates the first frame.
+        expect(runtime).toContain('const logo = await loadImage(LOGO_SOURCE.src)')
+        expect(runtime).not.toMatch(/await Promise\.all\(\[\s*loadImage/)
+        expect(runtime).toContain('.then(() => { logosReady = true })')
+        expect(runtime).toContain('if (!logosReady && !skip) t = Math.min(t, HANDOFF_START)')
+        // The clone takes the logo's own candidate, never next/image's largest fallback src.
+        expect(runtime).toContain('img.srcset = target.srcset')
+        expect(runtime).toContain('img.sizes = target.sizes')
+    })
+
     it('translates the Skip control', () => {
         const legacy = read('lib/i18n/legacy.ts')
         expect(legacy).toContain('"Skip intro": "इंट्रो छोड़ें"')

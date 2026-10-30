@@ -1,0 +1,279 @@
+{
+  "generatedAt": "2026-10-29T20:25:49.879Z",
+  "buildId": "I6rRbyTBwIhGtPDAa6I6-",
+  "method": "next start (production build, isolated env) against a fake Supabase/Upstash backend; each Supabase call waits 30 ms, each Redis call 10 ms. Browser: headless Chromium, service worker blocked, 0 ms added per request, 5 runs after one warm-up, times from the form submit. Request: the browser's auth request replayed 9 times after two warm-ups. Medians reported.",
+  "supabaseDelayMs": 30,
+  "rttMs": 0,
+  "iterations": 9,
+  "browserRuns": 5,
+  "results": [
+    {
+      "flow": "sign-in",
+      "account": "lite",
+      "authRequest": {
+        "method": "POST",
+        "path": "/auth/signin",
+        "serverAction": false
+      },
+      "browser": {
+        "runs": 5,
+        "handoff": 5,
+        "nextDocumentMs": 107.4,
+        "loadedMs": 350.7,
+        "overlayGoneMs": 1789.4
+      },
+      "browserRuns": [
+        {
+          "at": "/owner/estimator",
+          "handoff": true,
+          "nextDocumentMs": 114.300048828125,
+          "loadedMs": 371.10009765625,
+          "overlayGoneMs": 1792.699951171875
+        },
+        {
+          "at": "/owner/estimator",
+          "handoff": true,
+          "nextDocumentMs": 107.400146484375,
+          "loadedMs": 342.2001953125,
+          "overlayGoneMs": 1793.400146484375
+        },
+        {
+          "at": "/owner/estimator",
+          "handoff": true,
+          "nextDocumentMs": 101,
+          "loadedMs": 350.699951171875,
+          "overlayGoneMs": 1787.10009765625
+        },
+        {
+          "at": "/owner/estimator",
+          "handoff": true,
+          "nextDocumentMs": 99.69970703125,
+          "loadedMs": 305.7998046875,
+          "overlayGoneMs": 1789.399658203125
+        },
+        {
+          "at": "/owner/estimator",
+          "handoff": true,
+          "nextDocumentMs": 110.400146484375,
+          "loadedMs": 374.300048828125,
+          "overlayGoneMs": 1787.900146484375
+        }
+      ],
+      "request": {
+        "status": 200,
+        "totalMs": 103.1,
+        "responseBytes": 33,
+        "backendCalls": 3,
+        "sequentialWaits": 3,
+        "callTimeline": [
+          {
+            "kind": "redis",
+            "method": "POST",
+            "target": "redis [[\"evalsha\",\"977fb636fb5ceb7e98a96d1b3a1",
+            "startMs": 0,
+            "endMs": 10.6
+          },
+          {
+            "kind": "auth",
+            "method": "POST",
+            "target": "/auth/v1/token",
+            "startMs": 18.4,
+            "endMs": 49.8
+          },
+          {
+            "kind": "rest",
+            "method": "GET",
+            "target": "organizations?select=base_plan_visible,lite_trial_eligible,org_subscriptions(stat",
+            "startMs": 53,
+            "endMs": 83.4
+          }
+        ]
+      }
+    },
+    {
+      "flow": "sign-in",
+      "account": "free",
+      "authRequest": {
+        "method": "POST",
+        "path": "/auth/signin",
+        "serverAction": false
+      },
+      "browser": {
+        "runs": 5,
+        "handoff": 5,
+        "nextDocumentMs": 107.3,
+        "loadedMs": 418.5,
+        "overlayGoneMs": 1788.8
+      },
+      "browserRuns": [
+        {
+          "at": "/free",
+          "handoff": true,
+          "nextDocumentMs": 100.300048828125,
+          "loadedMs": 434.800048828125,
+          "overlayGoneMs": 1787.900146484375
+        },
+        {
+          "at": "/free",
+          "handoff": true,
+          "nextDocumentMs": 107.2998046875,
+          "loadedMs": 394.89990234375,
+          "overlayGoneMs": 1787.099853515625
+        },
+        {
+          "at": "/free",
+          "handoff": true,
+          "nextDocumentMs": 111.30029296875,
+          "loadedMs": 417.80029296875,
+          "overlayGoneMs": 1789.500244140625
+        },
+        {
+          "at": "/free",
+          "handoff": true,
+          "nextDocumentMs": 115.199951171875,
+          "loadedMs": 472.800048828125,
+          "overlayGoneMs": 1788.800048828125
+        },
+        {
+          "at": "/free",
+          "handoff": true,
+          "nextDocumentMs": 103,
+          "loadedMs": 418.5,
+          "overlayGoneMs": 1793.199951171875
+        }
+      ],
+      "request": {
+        "status": 200,
+        "totalMs": 95,
+        "responseBytes": 22,
+        "backendCalls": 4,
+        "sequentialWaits": 3,
+        "callTimeline": [
+          {
+            "kind": "redis",
+            "method": "POST",
+            "target": "redis [[\"evalsha\",\"977fb636fb5ceb7e98a96d1b3a1",
+            "startMs": 0,
+            "endMs": 10.9
+          },
+          {
+            "kind": "auth",
+            "method": "POST",
+            "target": "/auth/v1/token",
+            "startMs": 15.8,
+            "endMs": 46.9
+          },
+          {
+            "kind": "rest",
+            "method": "GET",
+            "target": "free_account_grants?select=subject_id,revoked_at,free_account_subjects(active,verified_",
+            "startMs": 49.4,
+            "endMs": 80.4
+          },
+          {
+            "kind": "rest",
+            "method": "GET",
+            "target": "organizations?select=base_plan_visible,lite_trial_eligible,org_subscriptions(stat",
+            "startMs": 49.6,
+            "endMs": 80.5
+          }
+        ]
+      }
+    },
+    {
+      "flow": "log out",
+      "account": "lite",
+      "authRequest": {
+        "method": "POST",
+        "path": "/auth/signout",
+        "serverAction": false
+      },
+      "browser": {
+        "runs": 5,
+        "handoff": 5,
+        "nextDocumentMs": 94.7,
+        "loadedMs": 233,
+        "overlayGoneMs": 1792.2
+      },
+      "browserRuns": [
+        {
+          "at": "/login",
+          "handoff": true,
+          "nextDocumentMs": 98.60009765625,
+          "loadedMs": 225.60009765625,
+          "overlayGoneMs": 1791.10009765625
+        },
+        {
+          "at": "/login",
+          "handoff": true,
+          "nextDocumentMs": 97.699951171875,
+          "loadedMs": 238.099853515625,
+          "overlayGoneMs": 1792.199951171875
+        },
+        {
+          "at": "/login",
+          "handoff": true,
+          "nextDocumentMs": 94.699951171875,
+          "loadedMs": 233,
+          "overlayGoneMs": 1793.699951171875
+        },
+        {
+          "at": "/login",
+          "handoff": true,
+          "nextDocumentMs": 85.300048828125,
+          "loadedMs": 199.699951171875,
+          "overlayGoneMs": 1788.800048828125
+        },
+        {
+          "at": "/login",
+          "handoff": true,
+          "nextDocumentMs": 90.300048828125,
+          "loadedMs": 250.10009765625,
+          "overlayGoneMs": 1792.60009765625
+        }
+      ],
+      "request": {
+        "status": 303,
+        "totalMs": 81.1,
+        "responseBytes": 0,
+        "backendCalls": 3,
+        "sequentialWaits": 2,
+        "callTimeline": [
+          {
+            "kind": "auth",
+            "method": "GET",
+            "target": "/auth/v1/user",
+            "startMs": 0,
+            "endMs": 31.2
+          },
+          {
+            "kind": "auth",
+            "method": "POST",
+            "target": "/auth/v1/logout",
+            "startMs": 35.6,
+            "endMs": 65.8
+          },
+          {
+            "kind": "rest",
+            "method": "POST",
+            "target": "rpc/admin_founder_session",
+            "startMs": 37.1,
+            "endMs": 68.4
+          }
+        ]
+      }
+    }
+  ],
+  "serverErrors": [
+    "Error: aborted",
+    "⨯ uncaughtException:  Error: aborted",
+    "Error: aborted",
+    "⨯ uncaughtException:  Error: aborted",
+    "Error: aborted",
+    "⨯ uncaughtException:  Error: aborted",
+    "Error: aborted",
+    "⨯ uncaughtException:  Error: aborted",
+    "Error: aborted",
+    "⨯ uncaughtException:  Error: aborted"
+  ]
+}

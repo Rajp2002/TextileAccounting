@@ -152,13 +152,30 @@ export async function touchFounderSession(): Promise<void> {
  * can be revoked or unavailable while an existing founder session still needs
  * invalidating. Fresh Auth identity plus verified claims bind the actor. */
 export async function revokeFounderSession(): Promise<'revoked' | 'not_applicable'> {
-    const supabase = await createClient()
-    const { data: identity, error: identityError } = await supabase.auth.getUser()
+    return revokeFounderSessionsOf(await verifyFounderRevocationActor())
+}
+
+/** The actor a revocation binds to, from a fresh Auth identity and verified
+ * claims; null when there is no signed-in user. Only a live provider session
+ * verifies, so log out finishes this before it ends that session. Log out
+ * passes its own client so the session is read and refreshed once. */
+export async function verifyFounderRevocationActor(
+    supabase?: Awaited<ReturnType<typeof createClient>>,
+): Promise<FounderCandidate | null> {
+    const client = supabase ?? await createClient()
+    const { data: identity, error: identityError } = await client.auth.getUser()
     if (identityError) throw new AdminError('SIGNOUT_UNAVAILABLE',503,'Sign-out verification is unavailable.')
-    if (!identity.user) return 'not_applicable'
-    const { data: token, error: tokenError } = await supabase.auth.getClaims()
+    if (!identity.user) return null
+    const { data: token, error: tokenError } = await client.auth.getClaims()
     if (tokenError || !token?.claims) throw new AdminError('SIGNOUT_UNAVAILABLE',503,'Sign-out verification is unavailable.')
-    const candidate = validateFounderClaims(token.claims, identity.user.id, process.env.NEXT_PUBLIC_SUPABASE_URL ?? '')
+    return validateFounderClaims(token.claims, identity.user.id, process.env.NEXT_PUBLIC_SUPABASE_URL ?? '')
+}
+
+/** Revokes every founder session of a verified actor. The database marks them
+ * by user id and never reads the provider session, so log out runs this
+ * alongside its provider sign-out. */
+export async function revokeFounderSessionsOf(candidate: FounderCandidate | null): Promise<'revoked' | 'not_applicable'> {
+    if (!candidate) return 'not_applicable'
     const { data, error } = await createAdminClient().rpc('admin_founder_session', {
         p_user_id: candidate.userId, p_session_id: candidate.sessionId, p_operation: 'revoke',
     })

@@ -101,9 +101,16 @@ export function createFakeBackend({ supabaseDelayMs = 30, redisDelayMs = 10 } = 
         return respondJson(res, 200, rows, headers)
     }
 
-    function handleAuth(req, res, url) {
+    function handleAuth(req, res, url, body) {
         const path = url.pathname.replace(/^\/auth\/v1/, '')
         if (path === '/.well-known/jwks.json') return respondJson(res, 200, { keys: [jwk] })
+        if (path === '/token' && url.searchParams.get('grant_type') === 'password') {
+            // Sign-in (auth.mjs): any password works for a fixture owner's email.
+            const { email } = body ? JSON.parse(body) : {}
+            const user = Object.values(fixtures.authUsers).find(candidate => candidate.email === email)
+            if (!user) return respondJson(res, 400, { code: 'invalid_credentials', message: 'Invalid login credentials' })
+            return respondJson(res, 200, sessionFor({ userId: user.id }, 'http://127.0.0.1:9/auth/v1'))
+        }
         if (path === '/user') {
             const user = userFromAuthorization(req.headers.authorization)
             return user ? respondJson(res, 200, user) : respondJson(res, 401, { code: 'bad_jwt', message: 'invalid JWT' })
@@ -115,10 +122,12 @@ export function createFakeBackend({ supabaseDelayMs = 30, redisDelayMs = 10 } = 
     function handleRedis(req, res, url, body) {
         // @upstash/redis sends ["COMMAND", ...args] to "/" and arrays of them to "/pipeline".
         const parsed = body ? JSON.parse(body) : []
+        // @upstash/ratelimit's sliding window script answers [current, previous, success].
+        const result = command => ['EVALSHA', 'EVAL'].includes(String(command?.[0]).toUpperCase()) ? [1, 0, 1] : null
         if (url.pathname.startsWith('/pipeline') || url.pathname.startsWith('/multi-exec')) {
-            return respondJson(res, 200, parsed.map(() => ({ result: null })))
+            return respondJson(res, 200, parsed.map(command => ({ result: result(command) })))
         }
-        return respondJson(res, 200, { result: null })
+        return respondJson(res, 200, { result: result(parsed) })
     }
 
     const server = createServer((req, res) => {
@@ -145,7 +154,7 @@ export function createFakeBackend({ supabaseDelayMs = 30, redisDelayMs = 10 } = 
                 try {
                     if (kind === 'rest' && api.failRest?.(url)) return respondJson(res, 500, { code: 'XX000', message: 'harness: failing this read on purpose' })
                     if (kind === 'rest') return handleRest(req, res, url, body)
-                    if (kind === 'auth') return handleAuth(req, res, url)
+                    if (kind === 'auth') return handleAuth(req, res, url, body)
                     if (kind === 'redis') return handleRedis(req, res, url, body)
                     // Sentry envelopes (with --sentry) and anything else: hand to a listener.
                     if (api.onOther) { api.onOther(req, body); return respondJson(res, 200, {}) }
