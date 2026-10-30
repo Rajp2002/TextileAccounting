@@ -70,7 +70,7 @@ describe('Base suppression: plan chooser', () => {
   it('PlanChooserClient uses a two-column grid when Base is hidden and keeps the three-column grid otherwise', () => {
     const client = read('components/plans/PlanChooserClient.tsx')
     // The grid fills the page width (25px gutters come from the layout), so neither variant carries a max width.
-    expect(client).toContain('baseVisible ? "lg:grid-cols-3" : "lg:grid-cols-2"')
+    expect(client).toContain('baseVisible ? "lg:grid-cols-[repeat(3,minmax(0,500px))]" : "lg:grid-cols-[repeat(2,minmax(0,600px))]"')
   })
 
   it('the feature preview modal receives baseVisible and drops the Base note for hidden orgs', () => {
@@ -87,13 +87,13 @@ describe('Base suppression: plan chooser', () => {
     const hidden = renderToStaticMarkup(createElement(PlanChooserClient, { ...base, baseVisible: false }))
     expect(hidden).not.toMatch(BASE_WORD)
     expect(hidden).not.toContain('Costing, production and payroll')
-    expect(hidden).toContain('lg:grid-cols-2')
-    expect(hidden).not.toContain('lg:grid-cols-3')
+    expect(hidden).toContain('lg:grid-cols-[repeat(2,minmax(0,600px))]')
+    expect(hidden).not.toContain('lg:grid-cols-[repeat(3,minmax(0,500px))]')
 
     const visible = renderToStaticMarkup(createElement(PlanChooserClient, { ...base, baseVisible: true }))
     expect(visible).toMatch(BASE_WORD)
     expect(visible).toContain('Costing, production and payroll')
-    expect(visible).toContain('lg:grid-cols-3')
+    expect(visible).toContain('lg:grid-cols-[repeat(3,minmax(0,500px))]')
   })
 })
 

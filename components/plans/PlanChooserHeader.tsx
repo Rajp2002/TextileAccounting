@@ -47,16 +47,18 @@ export function PlanChooserHeader({ effectiveTier = 'unassigned', isUnassigned =
   }
 
   return (
-    <header className={cn("flex flex-wrap items-center justify-between gap-3 py-4 border-b border-hairline/60", mobileCompact && "max-sm:gap-2 max-sm:py-2")}>
+    // No bar: the logo sits in the top-left corner and the account actions in the top-right.
+    // On desktop it floats over the page's top corners so it costs the plan cards no height.
+    <header className={cn("flex flex-wrap items-center justify-between gap-3 pt-5 sm:items-start pb-2 lg:absolute lg:inset-x-[25px] lg:top-0 lg:z-20 lg:pb-0", mobileCompact && "max-sm:gap-2 max-sm:pt-2 max-sm:pb-0")}>
       <div className={cn("flex items-center gap-4", mobileCompact && "max-sm:hidden")}>
         <Link href={backHref ?? '/'} className="flex min-h-[44px] items-center gap-2 group focus:outline-none focus-visible:ring-2 focus-visible:ring-saffron rounded-lg">
           <Image
             src="/images/WeavlyLogo.png"
             alt="Weavly"
-            width={130}
-            height={60}
+            width={278}
+            height={128}
             priority
-            className="h-10 w-auto object-contain transition-opacity group-hover:opacity-90"
+            className="h-[80px] w-auto lg:h-[128px] object-contain transition-opacity group-hover:opacity-90"
           />
         </Link>
       </div>

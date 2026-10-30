@@ -13,8 +13,9 @@ function placeholders(text: string) {
 }
 
 describe('Lite trial localization', () => {
-  it('defines exactly the twelve trial copy keys', () => {
+  it('defines exactly the thirteen trial copy keys', () => {
     expect([...keys].sort()).toEqual([
+      'freeForThreeMonths',
       'startTrial',
       'trialPayNow',
       'trialDisclosure',
@@ -31,6 +32,7 @@ describe('Lite trial localization', () => {
   })
 
   it('keeps the English copy from the brief word for word', () => {
+    expect(liteTrialPhrases.freeForThreeMonths[EN]).toBe('Free for 3 months')
     expect(liteTrialPhrases.startTrial[EN]).toBe('Start 3-month free trial')
     expect(liteTrialPhrases.trialPayNow[EN]).toBe('Or pay now: ₹2,999 for the first year')
     expect(liteTrialPhrases.trialDisclosure[EN]).toBe(

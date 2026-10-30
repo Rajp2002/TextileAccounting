@@ -82,18 +82,13 @@ export function PlanChooserClient({
   }
 
   return (
-    <div className={cn("space-y-10 pb-16 pt-4 lg:space-y-6 lg:pb-8 lg:pt-2", mobileCompact && "max-md:space-y-5 max-md:pb-6 max-md:pt-3")}>
-      {/* Title & Subheading */}
-      <div className={cn("mx-auto max-w-2xl text-center space-y-3 lg:space-y-2", mobileCompact && "max-md:space-y-2 max-md:text-left")}>
-        <p className={cn("text-sm font-medium text-subtle", mobileCompact && "max-md:hidden")}>
-          {tx('Clear pricing, no hidden fees')}
-        </p>
-        <h1 className={cn("text-3xl font-extrabold tracking-tight text-ink sm:text-4xl md:text-5xl", mobileCompact && "max-md:text-2xl")}>
+    <div className={cn("space-y-10 pb-16 pt-4 lg:space-y-4 lg:pb-0 lg:pt-0", mobileCompact && "max-md:space-y-5 max-md:pb-6 max-md:pt-3")}>
+      {/* Title. On desktop it shares a band with the floating header, centred beside the logo, so the
+          cards always start below the logo whatever the screen width. */}
+      <div className={cn("mx-auto max-w-2xl text-center space-y-3 lg:flex lg:min-h-[148px] lg:items-center lg:justify-center lg:space-y-0", mobileCompact && "max-md:space-y-2 max-md:text-left")}>
+        <h1 className={cn("text-3xl font-extrabold tracking-tight text-ink sm:text-4xl md:text-5xl lg:text-4xl", mobileCompact && "max-md:text-2xl")}>
           {upgradeText(language, 'title')}
         </h1>
-        <p className="text-sm leading-relaxed text-body sm:text-base">
-          {upgradeText(language, 'upgradeSubtitle')}
-        </p>
       </div>
 
       {/* Payment Recovery / In-progress notice */}
@@ -122,8 +117,9 @@ export function PlanChooserClient({
         </div>
       )}
 
-      {/* Pricing grid: fills the page width; three columns when Base is visible, otherwise Free and Lite only */}
-      <div className={cn("grid grid-cols-1 gap-6", baseVisible ? "lg:grid-cols-3" : "lg:grid-cols-2", mobileCompact && "max-md:gap-4")}>
+      {/* Pricing grid: each plan keeps a readable width, and the spare width becomes equal gaps
+          before, between and after the cards. Three columns when Base is visible. */}
+      <div className={cn("grid grid-cols-1 gap-6 lg:justify-evenly", baseVisible ? "lg:grid-cols-[repeat(3,minmax(0,500px))]" : "lg:grid-cols-[repeat(2,minmax(0,600px))]", mobileCompact && "max-md:gap-4")}>
         <PlanCard
           planTier="free"
           currentPlan={currentPlan}

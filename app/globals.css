@@ -2184,6 +2184,42 @@ button[aria-expanded="true"] .nav-chevron {
   }
 }
 
+/* ── Peeking billing tiles ─────────────────────────────────────────
+ * Desktop pins the plan page's billing tiles (components/plans/PlanTrustTiles.tsx) to the bottom
+ * of the viewport with only their top half showing; hover or keyboard focus slides a tile up into
+ * full view. Below lg they stay in the page flow.
+ */
+@layer components {
+  @media (min-width: 1024px) {
+    .plan-trust-peek-row {
+      position: fixed;
+      /* Three quarters of the page width, centred. */
+      inset-inline: 12.5%;
+      bottom: 0;
+      z-index: 30;
+      align-items: end;
+      pointer-events: none;
+    }
+
+    .plan-trust-peek-row .plan-trust-peek {
+      --plan-trust-peek: 56px;
+      pointer-events: auto;
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+      translate: 0 calc(100% - var(--plan-trust-peek));
+    }
+
+    .plan-trust-peek-row .plan-trust-peek:hover,
+    .plan-trust-peek-row .plan-trust-peek:focus-visible {
+      translate: 0 0;
+    }
+
+    .plan-trust-peek-row .plan-trust-peek::after {
+      opacity: 1;
+    }
+  }
+}
+
 /* Spring pop shared by every modal (Dialog): scale + slight tilt on enter, quick shrink on exit.
    Uses the individual `scale`/`rotate` properties so the centring `translate` is untouched. */
 @keyframes modal-spring-in {
