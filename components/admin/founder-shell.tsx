@@ -2,11 +2,12 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Activity, ClipboardList, Factory, LayoutDashboard, LifeBuoy, LogOut, ShieldCheck, Wallet } from 'lucide-react'
+import { Activity, BarChart3, ClipboardList, Factory, LayoutDashboard, LifeBuoy, LogOut, ShieldCheck, Wallet } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const destinations = [
     { href: '/admin', label: 'Today', icon: LayoutDashboard },
+    { href: '/admin/metrics', label: 'Metrics', icon: BarChart3 },
     { href: '/admin/factories', label: 'Factories', icon: Factory },
     { href: '/admin/support', label: 'Support', icon: LifeBuoy },
     { href: '/admin/payments', label: 'Payments', icon: Wallet },
@@ -15,7 +16,7 @@ const destinations = [
 
 function FounderNavigation({ mobile = false }: { mobile?: boolean }) {
     const pathname = usePathname()
-    return <nav aria-label="Founder console" className={cn(mobile ? 'grid grid-cols-3 gap-1 min-[400px]:grid-cols-5' : 'space-y-1')}>
+    return <nav aria-label="Founder console" className={cn(mobile ? 'grid grid-cols-3 gap-1 min-[400px]:grid-cols-6' : 'space-y-1')}>
         {destinations.map(({ href, label, icon: Icon }) => {
             const active = href === '/admin' ? pathname === href : pathname === href || pathname.startsWith(`${href}/`)
             return <Link key={href} href={href} prefetch={false} aria-current={active ? 'page' : undefined} className={cn('flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron', mobile && 'flex-col justify-center gap-1 px-2 py-2 text-xs', active ? 'bg-surface text-ink' : mobile ? 'text-body hover:bg-surface' : 'text-wv-text-inverse-secondary hover:bg-loom-elevated hover:text-white')}>
