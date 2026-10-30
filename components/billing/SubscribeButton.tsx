@@ -10,6 +10,9 @@ import { cn } from '@/lib/utils'
 import { BILLING_SELF_SERVE_DEFAULT_TIER, type BillingPurchaseType, type PurchasablePlanTier } from '@/lib/billing-constants'
 import { useTranslation } from '@/lib/i18n/context'
 import { trackPlanEvent } from '@/lib/plan-analytics'
+import type { PaidPlanInterestSource } from '@/lib/paid-plans'
+import { usePaidPlans } from './PaidPlansProvider'
+import { NotifyMeButton } from './NotifyMeButton'
 
 type RazorpayCheckoutOptions = {
     key: string
@@ -89,13 +92,16 @@ interface SubscribeButtonProps {
      * unmounts the owner's inputs. The caller verifies access itself.
      */
     deferRefresh?: boolean
+    /** Where this button sits, recorded when the owner taps "Notify me" before paid plans open. */
+    interestSource?: PaidPlanInterestSource
 }
 
-export function SubscribeButton({ planTier = BILLING_SELF_SERVE_DEFAULT_TIER, tierName, displayAmount, buttonLabel, onSuccess, successHref, successLabel, className, deferRefresh = false }: SubscribeButtonProps) {
+export function SubscribeButton({ planTier = BILLING_SELF_SERVE_DEFAULT_TIER, tierName, displayAmount, buttonLabel, onSuccess, successHref, successLabel, className, deferRefresh = false, interestSource = 'billing' }: SubscribeButtonProps) {
     const [loading, setLoading] = useState(false)
     const [outcome, setOutcome] = useState<PaymentOutcome | null>(null)
     const router = useRouter()
     const { t, tx } = useTranslation()
+    const { checkoutOpen } = usePaidPlans()
 
     const tryLoadScript = (url: string): Promise<boolean> => new Promise((resolve) => {
         const script = document.createElement('script')
@@ -243,6 +249,9 @@ export function SubscribeButton({ planTier = BILLING_SELF_SERVE_DEFAULT_TIER, ti
         : outcome?.state === 'retryable'
             ? 'border-[var(--wv-madder-200)] bg-[var(--wv-madder-50)] text-[var(--wv-madder-600)]'
             : 'border-[var(--wv-lagoon-200)] bg-[var(--wv-lagoon-50)] text-[var(--wv-lagoon-700)]'
+
+    // No real payments before go-live (spec 2026-10-30 C2); the server refuses checkout too.
+    if (!checkoutOpen) return <NotifyMeButton source={interestSource} className={className} />
 
     return (
         <div className="space-y-3">
