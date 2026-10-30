@@ -59,6 +59,12 @@ describe('AD05 support transactional requester boundary',()=>{
   const cursor={id:first.items[0].id,updatedAt:first.items[0].updatedAt,rank:first.items[0].sortRank,asOf:first.asOf}
   const page2=await db.query("SELECT public.admin_support_read($1,$2,'list',NULL,$3) AS result",[founder,session,{limit:100,cursor}]);expect(page2.rows[0].result.items[0].id).toBe(overdue.id);expect(page2.rows[0].result.items.some((t:{id:string})=>t.id===critical.id)).toBe(false);expect(page2.rows[0].result.items.some((t:{id:string})=>t.id===normal.id)).toBe(true)
  })
+ it('answered queue holds tickets after a founder reply and drops them after a customer reply',async()=>{
+  const list=async(queue:string)=>((await db.query("SELECT public.admin_support_read($1,$2,'list',NULL,$3) AS result",[founder,session,{queue,limit:100}])).rows[0].result.items as Array<{id:string}>).map(item=>item.id)
+  let t=await rpc('create',intake);expect(await list('answered')).not.toContain(t.id)
+  t=await rpc('reply',{...fields(t.version),body:'Looking into it',promiseFulfilled:false},t.id,true);expect(await list('answered')).toContain(t.id);expect(await list('needs_reply')).not.toContain(t.id)
+  await rpc('reply',{body:'Any news?'},t.id);expect(await list('answered')).not.toContain(t.id);expect(await list('needs_reply')).toContain(t.id)
+ })
  it('overdue waiting-customer follow-up is actionable separately from a promised public update',async()=>{
   let t=await rpc('create',intake);t=await rpc('reply',{...fields(t.version,'waiting_on_customer'),body:'Please share the safe error reference',followUpDueAt:'2020-01-01T00:00:00Z',promiseFulfilled:false},t.id,true)
   const {rows}=await db.query("SELECT public.admin_support_read($1,$2,'summary') AS result",[founder,session]);const summary=rows[0].result
