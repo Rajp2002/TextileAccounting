@@ -12,10 +12,23 @@ test('founder sees separated public/private composers and stored markup stays te
 })
 test('requester thread has no private note or founder control; draft is memory-only and Enter does not send',async({page},info)=>{
  const posts:unknown[]=[];await page.route('**/api/support/**',route=>{if(route.request().method()==='POST')posts.push(route.request().postDataJSON());return route.fulfill({json:fixture(false)})})
- await page.goto(`/?ticket=${id}`);await expect(page.getByRole('heading',{name:'Public conversation'})).toBeVisible();await expect(page.getByText('Synthetic private diagnostic')).toHaveCount(0);await expect(page.getByRole('button',{name:'Add internal note'})).toHaveCount(0)
+ await page.goto(`/?ticket=${id}`);await expect(page.getByRole('heading',{name:'Conversation',exact:true})).toBeVisible();await expect(page.getByText('Synthetic private diagnostic')).toHaveCount(0);await expect(page.getByRole('button',{name:'Add internal note'})).toHaveCount(0)
  await page.getByRole('textbox',{name:'Message',exact:true}).fill('Synthetic private draft');await page.getByRole('textbox',{name:'Message',exact:true}).press('Enter');expect(posts).toHaveLength(0)
  const storage=await page.evaluate(()=>({local:{...localStorage},session:{...sessionStorage}}));expect(JSON.stringify(storage)).not.toContain('Synthetic private draft')
  await page.screenshot({path:`output/playwright/admin-console/support-fixtures/requester-${info.project.name}.png`,fullPage:true})
+})
+test('customer composer keeps an uncertain submission immutable after close and reopen',async({page})=>{
+ const posts:Array<Record<string,unknown>>=[]
+ await page.route('**/api/support?**',route=>route.fulfill({json:{items:[],totalMatching:0,nextCursor:null,asOf:'2026-10-31T04:00:00Z'}}))
+ await page.route('**/api/support',route=>{posts.push(route.request().postDataJSON());return posts.length===1?route.abort('failed'):route.fulfill({status:429,json:{message:'Please wait before trying again.'}})})
+ await page.goto('/');await page.getByRole('button',{name:'Create your first ticket'}).click()
+ const subject=page.getByRole('textbox',{name:'Subject',exact:true}),description=page.getByRole('textbox',{name:'Description',exact:true})
+ await expect(subject).toBeFocused();await expect(page.getByRole('button',{name:'Submit ticket',exact:true})).toBeDisabled()
+ await subject.fill('Help with my estimate');await description.fill('Synthetic request with no customer data.');await page.getByRole('button',{name:'Submit ticket',exact:true}).click()
+ await expect(page.getByRole('button',{name:'Retry original submission'})).toBeVisible();await expect(subject).toBeDisabled()
+ await page.getByRole('button',{name:'Close',exact:true}).last().click();await expect(page.getByRole('status')).toContainText('Draft on this page')
+ await page.getByRole('button',{name:'New ticket',exact:true}).click();await expect(subject).toHaveValue('Help with my estimate');await expect(subject).toBeDisabled()
+ await page.getByRole('button',{name:'Retry original submission'}).click();await expect(page.getByRole('alert')).toContainText('Please wait');expect(posts).toHaveLength(2);expect(posts[1]).toEqual(posts[0])
 })
 test('lost response then429and refresh retry the original immutable reply key and version',async({page})=>{
  const dto=fixture();const posts:Array<Record<string,unknown>>=[]
