@@ -67,16 +67,16 @@ export function PlanChooserHeader({ effectiveTier = 'unassigned', isUnassigned =
         {backHref ? (
           <Link
             href={backHref}
-            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-hairline bg-surface px-3 py-2 text-xs font-semibold text-body hover:border-saffron/40 hover:bg-surface-soft hover:text-ink transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
+            className="inline-flex min-h-[44px] sm:min-h-10 items-center gap-1.5 rounded-lg border border-hairline bg-surface px-3.5 py-2 text-sm font-semibold text-body hover:border-saffron/40 hover:bg-surface-soft hover:text-ink transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron"
           >
-            <ArrowLeft className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden="true" />
             <span>{backLabel}</span>
           </Link>
         ) : (
-          <LogoutButton variant="header" className="min-h-[44px] sm:h-8 px-2.5 text-xs text-subtle hover:text-ink" />
+          <LogoutButton variant="header" className="min-h-[44px] sm:h-10 sm:min-h-10 px-4 text-sm text-subtle hover:text-ink" />
         )}
 
-        <LanguageSwitcher align={mobileCompact ? "mobile-right" : "left"} placement="bottom" className="min-h-[44px] sm:min-h-0 bg-surface/90 border-hairline text-xs" />
+        <LanguageSwitcher align={mobileCompact ? "mobile-right" : "left"} placement="bottom" className="min-h-[44px] sm:min-h-10 border-hairline bg-surface/90 px-3.5 text-sm" />
       </div>
     </header>
   )
