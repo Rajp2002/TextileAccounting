@@ -50,6 +50,55 @@ describe('ActivityCounter', () => {
         expect(counter.takeFlush()).toBeNull()
     })
 
+    it('a 45-second visit counts one minute, because the first tick is 30 seconds after opening', () => {
+        const counter = new ActivityCounter()
+        counter.resume(0)
+        counter.recordInput(1_000)
+        counter.poll(29_999, ctx)
+        expect(counter.takeFlush()).toBeNull()
+        counter.poll(30_000, ctx)
+        expect(counter.takeFlush()?.minutes).toBe(1)
+    })
+
+    it('a 20-second visit counts nothing', () => {
+        const counter = new ActivityCounter()
+        counter.resume(0)
+        counter.recordInput(1_000)
+        counter.poll(20_000, ctx)
+        expect(counter.takeFlush()).toBeNull()
+    })
+
+    it('after the first tick, minutes count every 60 seconds', () => {
+        const counter = new ActivityCounter()
+        counter.resume(0)
+        counter.recordInput(0)
+        counter.poll(30_000, ctx)
+        counter.recordInput(80_000)
+        counter.poll(89_999, ctx)
+        counter.poll(90_000, ctx)
+        expect(counter.takeFlush()?.minutes).toBe(2)
+        expect(counter.msUntilNextTick(90_000)).toBe(60_000)
+    })
+
+    it('coming back to the app restarts the 30-second schedule', () => {
+        const counter = new ActivityCounter()
+        counter.resume(0)
+        counter.resume(500_000)
+        expect(counter.msUntilNextTick(500_000)).toBe(30_000)
+        counter.recordInput(500_000)
+        counter.poll(530_000, ctx)
+        expect(counter.takeFlush()?.minutes).toBe(1)
+    })
+
+    it('an overdue poll counts one minute, not a backlog', () => {
+        const counter = new ActivityCounter()
+        counter.resume(0)
+        counter.recordInput(200_000)
+        counter.poll(200_000, ctx)
+        expect(counter.takeFlush()?.minutes).toBe(1)
+        expect(counter.msUntilNextTick(200_000)).toBe(60_000)
+    })
+
     it('never builds a flush above 10 minutes', () => {
         const counter = new ActivityCounter()
         for (let i = 0; i < 15; i++) {

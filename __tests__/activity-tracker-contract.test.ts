@@ -21,6 +21,8 @@ describe('activity tracker component', () => {
         expect(src).toContain('/api/analytics/activity')
         expect(src).toContain('sendBeacon')
         expect(src).toContain('keepalive: true')
+        expect(src).toContain('counter.resume(Date.now())')
+        expect(src).toContain('counter.poll(')
         for (const banned of ['localStorage', 'sessionStorage', '@sentry', 'location.href', 'location.search', 'navigator.userAgent', 'innerText', 'textContent', 'FormData', '.target']) {
             expect(src).not.toContain(banned)
         }

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
-import { ACTIVITY_FLUSH_MS, ACTIVITY_TICK_MS, ActivityCounter, activityAreaForPath, activityDevice, type ActivityFlush } from '@/lib/activity-tracking'
+import { ACTIVITY_FLUSH_MS, ActivityCounter, activityAreaForPath, activityDevice, type ActivityFlush } from '@/lib/activity-tracking'
 
 const ENDPOINT = '/api/analytics/activity'
 const INPUT_EVENTS = ['pointerdown', 'keydown', 'wheel', 'touchstart'] as const
@@ -38,14 +38,28 @@ export function ActivityTracker(): null {
             if (!flush) return
             try { navigator.sendBeacon(ENDPOINT, new Blob([body(flush)], { type: 'application/json' })) } catch { /* dropped */ }
         }
-        const onVisibility = () => { if (document.visibilityState === 'hidden') flushWithBeacon() }
+        // First tick 30 s after opening or returning, then every 60 s (see ActivityCounter.resume).
+        let tickTimer = 0
+        const schedule = () => {
+            window.clearTimeout(tickTimer)
+            tickTimer = window.setTimeout(() => {
+                counter.poll(Date.now(), {
+                    visible: document.visibilityState === 'visible',
+                    area: areaRef.current,
+                    device: activityDevice(window.innerWidth, coarse.matches),
+                    installed: standalone.matches,
+                })
+                schedule()
+            }, counter.msUntilNextTick(Date.now()))
+        }
+        const onVisibility = () => {
+            if (document.visibilityState === 'hidden') { flushWithBeacon(); return }
+            counter.resume(Date.now())
+            schedule()
+        }
 
-        const tick = window.setInterval(() => counter.tick(Date.now(), {
-            visible: document.visibilityState === 'visible',
-            area: areaRef.current,
-            device: activityDevice(window.innerWidth, coarse.matches),
-            installed: standalone.matches,
-        }), ACTIVITY_TICK_MS)
+        counter.resume(Date.now())
+        schedule()
         const flushTimer = window.setInterval(flushWithFetch, ACTIVITY_FLUSH_MS)
 
         for (const event of INPUT_EVENTS) window.addEventListener(event, onInput, { passive: true })
@@ -56,7 +70,7 @@ export function ActivityTracker(): null {
         return () => {
             // Leaving this layout (for example owner app to Support) keeps the minutes already counted.
             flushWithBeacon()
-            window.clearInterval(tick)
+            window.clearTimeout(tickTimer)
             window.clearInterval(flushTimer)
             for (const event of INPUT_EVENTS) window.removeEventListener(event, onInput)
             window.removeEventListener('scroll', onInput, { capture: true })

@@ -11,6 +11,8 @@ export type ActivityFlush = { minutes: number; areas: Partial<Record<ActivityAre
 
 export const ACTIVITY_TICK_MS = 60_000
 export const ACTIVITY_FLUSH_MS = 300_000
+/** First tick after opening or returning, so short visits round to the nearest minute instead of down. */
+export const ACTIVITY_FIRST_TICK_MS = 30_000
 /** The endpoint accepts at most this many minutes per flush. */
 const MAX_FLUSH_MINUTES = 10
 const INPUT_WINDOW_MS = 60_000
@@ -45,6 +47,7 @@ export function activityDevice(width: number, coarsePointer: boolean): ActivityD
 
 export class ActivityCounter {
     private lastInputAt: number | null = null
+    private nextTickAt: number | null = null
     private minutes = 0
     private areas: Partial<Record<ActivityArea, number>> = {}
     private device: ActivityDevice = 'desktop'
@@ -52,6 +55,22 @@ export class ActivityCounter {
 
     recordInput(at: number): void {
         this.lastInputAt = at
+    }
+
+    /** Start (or restart, on returning to the app) the tick schedule: first tick 30 s from now. */
+    resume(at: number): void {
+        this.nextTickAt = at + ACTIVITY_FIRST_TICK_MS
+    }
+
+    msUntilNextTick(at: number): number {
+        return this.nextTickAt === null ? ACTIVITY_FIRST_TICK_MS : Math.max(0, this.nextTickAt - at)
+    }
+
+    /** Tick when due. An overdue poll (a timer delayed while backgrounded) counts one minute, never a backlog. */
+    poll(at: number, context: { visible: boolean; area: ActivityArea; device: ActivityDevice; installed: boolean }): void {
+        if (this.nextTickAt === null || at < this.nextTickAt) return
+        this.tick(at, context)
+        this.nextTickAt = at - this.nextTickAt >= ACTIVITY_TICK_MS ? at + ACTIVITY_TICK_MS : this.nextTickAt + ACTIVITY_TICK_MS
     }
 
     tick(at: number, context: { visible: boolean; area: ActivityArea; device: ActivityDevice; installed: boolean }): void {
