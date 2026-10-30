@@ -4,25 +4,20 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { RateBookCostingReview } from '@/components/estimator/RateBookCostingReview'
 import { getCostingsBehindRateBook, updateCostingsToRateBook } from '@/app/(dashboard)/owner/rates/propagation-actions'
 import { toast, userFacingError } from '@/lib/app-notifications'
-import { marginAtSavedPrice } from '@/lib/costing-catalogue'
 import { useTranslation } from '@/lib/i18n/context'
 import { fillCopy } from '@/lib/i18n/fill'
 import type { costingCatalogueText } from '@/lib/i18n/costing-catalogue'
 import { chunkIds, PROPAGATION_BATCH_SIZE, summarizeOutcomes, tickedAfterReload, type PropagationOutcome } from '@/lib/yarn-rate-propagation-batch'
 import type { PropagationSkipped, RateBookDriftItem } from '@/lib/yarn-rate-propagation'
-import { marginTone } from '@/components/estimator/SavedCostingMargin'
-import { cn } from '@/lib/utils'
 
 type Copy = (typeof costingCatalogueText)[keyof typeof costingCatalogueText]
 type Review = { ratesKey: string; items: RateBookDriftItem[]; skipped: PropagationSkipped[] }
 
 const RATES_CHANGED = /rates changed since you opened the review/
-const dialogButton = 'min-h-[44px] whitespace-normal rounded-lg font-semibold'
-
-const money = (value: number) => `₹${value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-const pct = (value: number) => `${value.toFixed(1)}%`
+const dialogButton = 'h-auto min-h-[48px] whitespace-normal rounded-xl px-5 text-[16px] font-semibold'
 
 /**
  * Review before saving: every saved costing whose yarns cost something else in
@@ -164,18 +159,17 @@ export function RateBookUpdateDialog({ open, costingId = null, copy, warpLabel, 
         setProblems(unresolved)
     }
 
-    const labelFor = (item: RateBookDriftItem) => item.partyName ? `${item.qualityLabel} · ${item.partyName}` : item.qualityLabel
-
     return (
         <Dialog open={open} onOpenChange={next => { if (!saving) onOpenChange(next) }}>
-            <DialogContent data-costing-field="rateBookReview" className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
-                <DialogHeader className="pr-9">
-                    <DialogTitle>{costingId ? copy.reviewTitleOne : copy.reviewTitle}</DialogTitle>
-                    <DialogDescription>{copy.reviewNote}</DialogDescription>
+            <DialogContent data-costing-field="rateBookReview" className="flex max-h-[90dvh] w-[calc(100vw-2rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-[960px] sm:p-0">
+                <DialogHeader className="shrink-0 gap-2 border-b border-hairline px-5 py-5 pr-14 sm:px-8 sm:py-6 sm:pr-16">
+                    <DialogTitle className="text-[20px] sm:text-[24px]">{costingId ? copy.reviewTitleOne : copy.reviewTitle}</DialogTitle>
+                    <DialogDescription className="text-[15px] leading-relaxed">{costingId ? copy.reviewNoteOne : copy.reviewNote}</DialogDescription>
                 </DialogHeader>
 
+                <div className="flex min-h-0 flex-col gap-5 overflow-y-auto overscroll-contain px-5 py-5 sm:px-8 sm:py-6">
                 {loading && (
-                    <p className="flex items-center gap-2 text-sm text-subtle" role="status">
+                    <p className="flex items-center gap-2 text-[16px] text-subtle" role="status">
                         <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                         {copy.checking}
                     </p>
@@ -183,63 +177,39 @@ export function RateBookUpdateDialog({ open, costingId = null, copy, warpLabel, 
 
                 {!loading && loadError && (
                     <div className="space-y-3" role="alert">
-                        <p className="text-sm text-destructive">{tx(loadError)}</p>
+                        <p className="text-[14px] text-destructive">{tx(loadError)}</p>
                         <Button variant="outline" className={dialogButton} onClick={() => void load()}>{copy.retry}</Button>
                     </div>
                 )}
 
                 {!loading && !loadError && review && review.items.length === 0 && review.skipped.length === 0 && (
-                    <p className="text-sm text-body">{costingId ? copy.noUpdatesForVersion : copy.current}</p>
+                    <p className="text-[16px] text-body">{costingId ? copy.noUpdatesForVersion : copy.current}</p>
                 )}
 
                 {!loading && !loadError && review && review.items.length > 0 && (
-                    <ul className="divide-y divide-hairline rounded-xl border border-hairline">
-                        {review.items.map(item => {
-                            const savedMargin = savedMarginById.get(item.id) ?? null
-                            const marginToday = marginAtSavedPrice(savedMargin, item.before.sellingPricePerM, item.before.productionCostPerM, item.after.productionCostPerM)
-                            return (
-                                <li key={item.id}>
-                                    <label className="flex min-h-[44px] cursor-pointer items-start gap-3 p-3 sm:px-4">
-                                        <input
-                                            type="checkbox"
-                                            className="mt-1 h-5 w-5 shrink-0 accent-ink"
-                                            checked={ticked.has(item.id)}
-                                            disabled={saving}
-                                            onChange={() => toggle(item.id)}
-                                        />
-                                        <span className="min-w-0 flex-1 space-y-1.5">
-                                            <span className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                                                <span className="break-words text-sm font-semibold text-ink">{labelFor(item)}</span>
-                                                <span className="text-xs font-semibold text-subtle tabular-nums">{`v${item.versionNumber} → v${item.versionNumber + 1}`}</span>
-                                            </span>
-                                            <span className="block text-xs text-muted-foreground tabular-nums">
-                                                {item.changes.map(change => `${change.layer === 'warp' ? warpLabel : weftLabel} ${change.index + 1} ${change.name}: ${money(change.from)} → ${money(change.to)}`).join(' · ')}
-                                            </span>
-                                            <span className="grid gap-x-4 gap-y-0.5 text-xs text-body tabular-nums sm:grid-cols-2">
-                                                <span>{copy.cost}: {money(item.before.productionCostPerM)} → <strong className="font-semibold text-ink">{money(item.after.productionCostPerM)}</strong>/m</span>
-                                                {savedMargin != null && marginToday != null && (
-                                                    <span>
-                                                        {fillCopy(copy.marginAtPrice, { price: `${money(item.before.sellingPricePerM)}/m` })}: {pct(savedMargin)} → <strong className={cn('font-semibold', marginTone(marginToday))}>{pct(marginToday)}</strong>
-                                                    </span>
-                                                )}
-                                            </span>
-                                            {savedMargin != null && (
-                                                <span className="block text-xs text-body tabular-nums">
-                                                    {fillCopy(copy.keepMargin, { pct: pct(savedMargin), price: `${money(item.after.sellingPricePerM)}/m` })}
-                                                </span>
-                                            )}
-                                        </span>
-                                    </label>
-                                </li>
-                            )
-                        })}
+                    <ul className="flex flex-col gap-6 divide-y divide-hairline sm:gap-8">
+                        {review.items.map(item => (
+                            <li key={item.id} className="min-w-0 pt-6 first:pt-0 sm:pt-8">
+                                <RateBookCostingReview
+                                    item={item}
+                                    copy={copy}
+                                    warpLabel={warpLabel}
+                                    weftLabel={weftLabel}
+                                    savedMargin={savedMarginById.get(item.id) ?? null}
+                                    selectable={!costingId}
+                                    selected={ticked.has(item.id)}
+                                    disabled={saving}
+                                    onToggle={() => toggle(item.id)}
+                                />
+                            </li>
+                        ))}
                     </ul>
                 )}
 
                 {!loading && review && review.skipped.length > 0 && (
                     <section className="space-y-2" aria-label={copy.skipped}>
-                        <h3 className="text-sm font-semibold text-ink">{copy.skipped}</h3>
-                        <ul className="space-y-1 text-xs text-body">
+                        <h3 className="text-[14px] font-semibold text-ink">{copy.skipped}</h3>
+                        <ul className="space-y-2 text-[14px] leading-relaxed text-body">
                             {review.skipped.map(entry => (
                                 <li key={entry.id}><span className="font-semibold text-ink">{entry.qualityLabel}</span>: {copy.cantPrice}</li>
                             ))}
@@ -249,7 +219,7 @@ export function RateBookUpdateDialog({ open, costingId = null, copy, warpLabel, 
 
                 {problems.length > 0 && (
                     <div className="space-y-2 rounded-xl border border-warning/25 p-3" role="alert">
-                        <ul className="space-y-1 text-xs text-body">
+                        <ul className="space-y-2 text-[14px] leading-relaxed text-body">
                             {problems.map(problem => (
                                 <li key={problem.id}>{review?.items.find(item => item.id === problem.id)?.qualityLabel ?? problem.id}: {problem.message ? tx(problem.message) : copy.couldNotSave}</li>
                             ))}
@@ -260,17 +230,18 @@ export function RateBookUpdateDialog({ open, costingId = null, copy, warpLabel, 
 
                 {saveError && problems.length === 0 && (
                     <div className="space-y-3" role="alert">
-                        <p className="text-sm text-destructive">{tx(saveError)}</p>
+                        <p className="text-[14px] text-destructive">{tx(saveError)}</p>
                         <Button variant="outline" className={dialogButton} onClick={() => void load()}>{copy.retry}</Button>
                     </div>
                 )}
 
-                <DialogFooter className="gap-2 sm:gap-2">
+                </div>
+                <DialogFooter className="shrink-0 gap-2 border-t border-hairline px-5 py-4 sm:gap-3 sm:px-8 sm:py-5">
                     <Button variant="outline" className={dialogButton} disabled={saving} onClick={() => onOpenChange(false)}>
                         {copy.cancel}
                     </Button>
                     {review && review.items.length > 0 && (
-                        <Button className={dialogButton} disabled={saving || tickedItems.length === 0} onClick={() => void save()}>
+                        <Button className={dialogButton} disabled={loading || saving || tickedItems.length === 0} onClick={() => void save()}>
                             {saving && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
                             {saving && progress
                                 ? fillCopy(copy.savingProgress, { done: progress.done, total: progress.total })

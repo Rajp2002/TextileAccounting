@@ -68,7 +68,7 @@ describe('RateBookUpdateDialog', () => {
     })
 
     it('keeps long Hindi and Gujarati copy readable on a phone', () => {
-        expect(dialog).toContain('min-h-[44px]')
+        expect(dialog).toContain('min-h-[48px]')
         expect(dialog).toContain('whitespace-normal')
     })
 
