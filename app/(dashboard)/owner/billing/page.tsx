@@ -7,12 +7,10 @@ import { BillingAttemptStatus } from '@/components/billing/BillingAttemptStatus'
 import { getBillingAttemptPresentation } from '@/lib/billing-attempts'
 import { BillingGuide } from '@/components/billing/BillingDocumentNotice'
 import { PaymentHistoryList, type BillingHistoryEntry, type BillingHistoryStatus } from '@/components/billing/PaymentHistoryDialog'
+import { PlanIncludesTiles } from '@/components/billing/PlanIncludesTiles'
 import { ReferralCard } from '@/components/billing/ReferralCard'
 import { getReferralStats } from '@/lib/referral'
-import {
-    AlertCircle, ArrowRight, Calculator, Clock, Factory, FileText, Layers, Lock, Star, Tag, Truck, Users, XCircle,
-    type LucideIcon,
-} from 'lucide-react'
+import { AlertCircle, ArrowRight, Clock, Lock, Star, XCircle } from 'lucide-react'
 import { railPrimaryAction } from '@/components/ui/rail'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -160,22 +158,6 @@ const DAY_MS = 24 * 60 * 60 * 1000
 function daysUntil(iso: string | null, now: Date): number | null {
     if (!iso) return null
     return Math.max(0, Math.ceil((new Date(iso).getTime() - now.getTime()) / DAY_MS))
-}
-
-/** What each plan gives the owner, in the words the plan chooser uses. */
-const PLAN_INCLUDES: Record<PurchasablePlanTier, readonly { icon: LucideIcon; title: string; text: string }[]> = {
-    lite: [
-        { icon: Calculator, title: 'Unlimited costings', text: 'Cost any fabric, as often as you need.' },
-        { icon: Layers, title: 'Saved qualities', text: 'Reuse a fabric construction for the next enquiry.' },
-        { icon: Tag, title: 'Yarn Rate Book', text: 'Keep yarn prices current across every costing.' },
-        { icon: FileText, title: 'Saved Costings and PDF export', text: 'Reopen, compare and share costings as PDF.' },
-    ],
-    base: [
-        { icon: Calculator, title: 'Everything in Lite', text: 'The complete costing desk.' },
-        { icon: Factory, title: 'Production and looms', text: 'Daily metres by quality, loom and shift.' },
-        { icon: Users, title: 'Workers and payroll', text: 'Piece-rate and fixed-salary pay cycles.' },
-        { icon: Truck, title: 'Fabric stock and challans', text: 'Godown stock and dispatch challans.' },
-    ],
 }
 
 function AccessStateCallout({
@@ -538,19 +520,7 @@ export default async function BillingPage() {
                             {shownTier ? (
                                 <>
                                     <p className="text-[13px] font-medium text-muted-foreground">{shownTier === 'base' ? 'Included in Base' : 'Included in Lite'}</p>
-                                    <ul className="mt-3 grid flex-1 auto-rows-fr gap-3 sm:grid-cols-2 sm:gap-4">
-                                        {PLAN_INCLUDES[shownTier].map(({ icon: Icon, title, text }) => (
-                                            <li key={title} className="flex min-h-[112px] items-center gap-4 rounded-xl border border-hairline bg-surface p-5 sm:gap-5 sm:p-6">
-                                                <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-saffron-soft text-saffron-deep">
-                                                    <Icon className="size-6" aria-hidden="true" />
-                                                </span>
-                                                <span className="min-w-0">
-                                                    <span className="block text-base font-semibold text-ink sm:text-lg">{title}</span>
-                                                    <span className="mt-1 block text-sm leading-relaxed text-body sm:text-[15px]">{text}</span>
-                                                </span>
-                                            </li>
-                                        ))}
-                                    </ul>
+                                    <PlanIncludesTiles tier={shownTier} />
                                 </>
                             ) : (
                                 <p className="text-sm text-body">Your saved costings stay in your account; you may need a paid plan to open them.</p>

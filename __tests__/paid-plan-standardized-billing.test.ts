@@ -21,7 +21,8 @@ describe('Paid plan subscription and billing pages', () => {
         expect(ownerBilling).toContain('Your plan')
         expect(ownerBilling).toContain("label: 'Access until'")
         expect(ownerBilling).toContain("label: 'Renewal price'")
-        expect(ownerBilling).toContain('PLAN_INCLUDES[shownTier]')
+        expect(ownerBilling).toContain('<PlanIncludesTiles tier={shownTier} />')
+        expect(readFileSync(join(process.cwd(), 'components/billing/PlanIncludesTiles.tsx'), 'utf8')).toContain('PLAN_INCLUDES[tier]')
 
         // Payments are listed in place with their receipts
         expect(ownerBilling).toContain('Annual renewals are manual')
