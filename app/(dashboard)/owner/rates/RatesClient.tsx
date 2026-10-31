@@ -363,7 +363,7 @@ function PriceChange({ rate, copy, language }: { rate: CostRateRow; copy: RateBo
     const percent = delta.percentChange == null ? '' : ` · ${Math.abs(delta.percentChange).toFixed(1)}%`
     return (
         <>
-            <span className={cn('font-semibold', rose ? 'text-destructive' : 'text-info')}>
+            <span className={cn('font-bold', rose ? 'text-destructive' : 'text-[#1D4ED8]')}>
                 {rose ? '↑' : '↓'} ₹{Math.abs(delta.difference).toFixed(2)}{percent}
             </span>
             <span className="text-muted-foreground"> {fillCopy(copy.changedOn, { date: rateDateLabel(rate.effective_date, language) })}</span>

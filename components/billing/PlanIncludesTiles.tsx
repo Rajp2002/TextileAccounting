@@ -44,7 +44,7 @@ export function PlanIncludesTiles({ tier }: { tier: PurchasablePlanTier }) {
         {PLAN_INCLUDES[tier].map(({ icon: Icon, title, text, demo }) => {
           const content = (
             <>
-              <span className={cn('flex size-12 shrink-0 items-center justify-center rounded-xl bg-saffron-soft text-saffron-deep', demo && 'transition-transform duration-200 ease-out group-hover:scale-105 group-focus-visible:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100')}>
+              <span className={cn('flex size-12 shrink-0 items-center justify-center rounded-xl bg-saffron-soft text-saffron-deep', demo && 'transition-transform duration-300 ease-out group-hover:scale-110 group-focus-visible:scale-110 motion-reduce:transition-none motion-reduce:group-hover:scale-100')}>
                 <Icon className="size-6" aria-hidden="true" />
               </span>
               <span className="min-w-0 flex-1">
@@ -68,10 +68,11 @@ export function PlanIncludesTiles({ tier }: { tier: PurchasablePlanTier }) {
                   onClick={event => { setTrigger(event.currentTarget); setFeature(demo) }}
                   className={cn(
                     tileBase,
-                    'group w-full cursor-pointer text-left shadow-sm transition-[transform,box-shadow,border-color] duration-200 ease-out',
-                    'hover:-translate-y-0.5 hover:border-hairline-strong hover:shadow-md focus-visible:-translate-y-0.5 focus-visible:border-hairline-strong focus-visible:shadow-md',
-                    'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron-deep active:translate-y-0 active:shadow-sm',
-                    'motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:focus-visible:translate-y-0',
+                    'group relative w-full cursor-pointer text-left shadow-sm transition-[transform,box-shadow,border-color] duration-300 ease-out',
+                    'hover:z-10 hover:-translate-y-1.5 hover:scale-[1.02] hover:border-[var(--wv-saffron-200)] hover:shadow-[0_18px_32px_-14px_rgba(22,33,62,0.4)]',
+                    'focus-visible:z-10 focus-visible:-translate-y-1.5 focus-visible:scale-[1.02] focus-visible:border-[var(--wv-saffron-200)] focus-visible:shadow-[0_18px_32px_-14px_rgba(22,33,62,0.4)]',
+                    'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron-deep active:translate-y-0 active:scale-100 active:shadow-sm',
+                    'motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:hover:scale-100 motion-reduce:focus-visible:translate-y-0 motion-reduce:focus-visible:scale-100',
                   )}
                 >
                   {content}
