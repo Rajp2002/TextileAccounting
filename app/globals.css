@@ -8,11 +8,10 @@
   min-height: 44px;
 }
 
-/* An empty required estimator field is a to-do, not an error: an ochre outline beside its
-   "Required" line, like the calm states on Saved Costings and the Rate Book. Focus keeps the
-   input's own ring. */
+/* An empty required estimator field gets a red outline beside its red "Required" line, matching
+   the "!" badge on its section header. Focus keeps the input's own ring. */
 .estimator-mobile-form [data-slot="input"][aria-invalid="true"]:not(:focus) {
-  border-color: var(--wv-ochre-400);
+  border-color: var(--wv-madder-600);
   box-shadow: none;
 }
 

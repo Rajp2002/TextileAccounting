@@ -756,7 +756,7 @@ function ComponentCountField({
                         }
                     }}
                     onBlur={() => commitValue(draftValue)}
-                    className={`h-11 rounded-[9px] border bg-[var(--color-canvas-white)] px-24 text-center text-xs sm:text-sm font-mono font-semibold text-[var(--color-ink)] shadow-xs transition-all placeholder:text-[var(--color-placeholder)] placeholder:font-normal focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${hasInvalidDraft ? 'bg-[var(--color-canvas-white)] border-[var(--wv-ochre-400)]' : 'border-[var(--color-hairline)] hover:border-[var(--color-hairline-strong)]'}`}
+                    className={`h-11 rounded-[9px] border bg-[var(--color-canvas-white)] px-24 text-center text-xs sm:text-sm font-mono font-semibold text-[var(--color-ink)] shadow-xs transition-all placeholder:text-[var(--color-placeholder)] placeholder:font-normal focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${hasInvalidDraft ? 'bg-[var(--color-canvas-white)] border-[var(--wv-madder-600)]' : 'border-[var(--color-hairline)] hover:border-[var(--color-hairline-strong)]'}`}
                 />
                 <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-[var(--color-muted)]">
                     {unit}
@@ -1073,7 +1073,7 @@ function NumField({
                         onChange(val)
                     }}
                     className={`h-11 text-xs sm:text-sm font-mono font-semibold text-center ${unit ? 'px-10 sm:px-14' : 'px-3'} border ${placeholderClass} focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-[9px] text-[var(--color-ink)] shadow-xs ${
-                        isEmpty ? 'bg-[var(--color-canvas-white)] border-[var(--wv-ochre-400)]'
+                        isEmpty ? 'bg-[var(--color-canvas-white)] border-[var(--wv-madder-600)]'
                             : unusualValue ? 'bg-[var(--color-canvas-white)] border-[var(--color-warning-amber)]'
                             : 'bg-[var(--color-canvas-white)] border-[var(--color-hairline)] hover:border-[var(--color-hairline-strong)]'
                     }`}
@@ -1084,7 +1084,7 @@ function NumField({
                     </span>
                 )}
             </div>
-            {isEmpty && <p id={`${inputId}-help`} className="text-xs font-semibold text-[var(--color-warning-amber)]">Required</p>}
+            {isEmpty && <p id={`${inputId}-help`} className="text-xs font-semibold text-[var(--wv-madder-600)]">Required</p>}
             {unusualValue ? (
                 <PlausibilityNudge
                     id={!isEmpty ? `${inputId}-help` : undefined}
@@ -1207,7 +1207,7 @@ function WidthField({
 
     return (
         <div data-estimator-field="effectiveCostingWidthCm" className="space-y-1.5 min-w-0">
-            <Label className={`flex items-end h-8 text-xs font-medium leading-tight ${isEmpty ? 'text-[var(--color-warning-amber)]' : 'text-[var(--color-body)]'}`}>
+            <Label className={`flex items-end h-8 text-xs font-medium leading-tight ${isEmpty ? 'text-[var(--wv-madder-600)]' : 'text-[var(--color-body)]'}`}>
                 <FieldLabelText label={label} />
             </Label>
             <div className="relative group" data-estimator-unit-field={unit} style={{ '--estimator-unit-length': Math.max(4, unit.length) } as React.CSSProperties}>
@@ -1235,14 +1235,14 @@ function WidthField({
                         }
                     }}
                     aria-invalid={isEmpty || undefined}
-                    className={`h-11 text-xs sm:text-sm font-mono font-semibold text-center px-12 sm:px-16 placeholder:text-[var(--color-placeholder)] placeholder:font-normal focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-xs group-hover:border-[var(--color-hairline-strong)] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-[9px] text-[var(--color-ink)] ${isEmpty ? 'bg-[var(--color-canvas-white)] border-[var(--wv-ochre-400)]' : 'bg-white border-[var(--color-hairline)]'}`}
+                    className={`h-11 text-xs sm:text-sm font-mono font-semibold text-center px-12 sm:px-16 placeholder:text-[var(--color-placeholder)] placeholder:font-normal focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-xs group-hover:border-[var(--color-hairline-strong)] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-[9px] text-[var(--color-ink)] ${isEmpty ? 'bg-[var(--color-canvas-white)] border-[var(--wv-madder-600)]' : 'bg-white border-[var(--color-hairline)]'}`}
                 />
                 <span className="absolute right-3.5 sm:right-4 top-1/2 -translate-y-1/2 text-xs text-[var(--wv-text-secondary)] font-bold pointer-events-none">
                     {unit}
                 </span>
             </div>
             <div className="flex flex-col gap-0.5 mt-1">
-                {isEmpty && <p className="text-xs font-semibold text-[var(--color-warning-amber)]">Required</p>}
+                {isEmpty && <p className="text-xs font-semibold text-[var(--wv-madder-600)]">Required</p>}
                 {value > 0 && (
                     <p className="text-xs text-[var(--color-factory-green)] font-semibold leading-tight flex items-center gap-1 bg-[var(--color-factory-green-soft)] py-0.5 px-2 rounded-md self-start border border-[var(--wv-moss-200)]">
                         {secondaryReadout}
@@ -2044,7 +2044,7 @@ export function EstimatorLiveCostActions({
 
 function InlineInputWarning({ show, children }: { show: boolean; children: React.ReactNode }) {
     if (!show) return null
-    return <p className="text-xs text-[var(--color-warning-amber)]">{children}</p>
+    return <p className="text-xs font-semibold text-[var(--wv-madder-600)]">{children}</p>
 }
 
 function LayerNameField({
@@ -2160,7 +2160,7 @@ function LayerNameField({
                     className={`h-11 rounded-[9px] border font-semibold placeholder:text-[var(--color-placeholder)] placeholder:font-normal focus:border-[var(--color-yarn-orange)] focus:ring-[var(--color-yarn-orange)]/10 ${
                         suggestions.length > 0 ? 'pr-8 ' : ''
                     }${
-                        value?.trim() ? 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)] text-[var(--color-ink)]' : 'bg-[var(--color-canvas-white)] border-[var(--wv-ochre-400)]'
+                        value?.trim() ? 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)] text-[var(--color-ink)]' : 'bg-[var(--color-canvas-white)] border-[var(--wv-madder-600)]'
                     }`}
                 />
                 {suggestions.length > 0 && (
@@ -2175,7 +2175,7 @@ function LayerNameField({
                     </button>
                 )}
             </div>
-            {!value?.trim() && <p className="text-xs text-[var(--color-warning-amber)]">Required</p>}
+            {!value?.trim() && <p className="text-xs font-semibold text-[var(--wv-madder-600)]">Required</p>}
 
             {isOpen && filteredOptions.length > 0 && (
                 <div
@@ -2587,7 +2587,7 @@ function WeftPickConventionField({
     const totalPicks = getTotalWeftPicks(weftRows)
     const formatPicks = (value: number) => Number.isInteger(value) ? String(value) : value.toFixed(2)
     return (
-        <div data-estimator-field="weftPickConvention" data-testid="weft-pick-convention" className={`space-y-3 rounded-[12px] border p-3 sm:p-4 ${convention === null ? 'bg-[var(--color-canvas-white)] border-[var(--wv-ochre-400)]' : 'border-[var(--color-hairline)] bg-[var(--color-surface-soft)]'}`}>
+        <div data-estimator-field="weftPickConvention" data-testid="weft-pick-convention" className={`space-y-3 rounded-[12px] border p-3 sm:p-4 ${convention === null ? 'bg-[var(--color-canvas-white)] border-[var(--wv-madder-600)]' : 'border-[var(--color-hairline)] bg-[var(--color-surface-soft)]'}`}>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
                     <p className="text-sm font-semibold text-[var(--color-ink)]">{tx('How are the picks entered?')}</p>
@@ -2641,7 +2641,7 @@ function WeftPickConventionField({
                                             onFocus={event => event.currentTarget.select()}
                                             onChange={event => dispatch({ type: 'SET_WEFT_PICK_RATIO', id: row.id, value: parseNumericInput(event.target.value, { min: 0 }) })}
                                             aria-invalid={!(Number(row.pickRatio) > 0) || undefined}
-                                            className={`h-11 rounded-[9px] px-2 text-center font-mono text-sm font-semibold text-[var(--color-ink)] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${Number(row.pickRatio) > 0 ? 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)]' : 'bg-[var(--color-canvas-white)] border-[var(--wv-ochre-400)]'}`}
+                                            className={`h-11 rounded-[9px] px-2 text-center font-mono text-sm font-semibold text-[var(--color-ink)] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${Number(row.pickRatio) > 0 ? 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)]' : 'bg-[var(--color-canvas-white)] border-[var(--wv-madder-600)]'}`}
                                         />
                                     </div>
                                 </Fragment>
@@ -2837,7 +2837,7 @@ function WeavingRateFields({
                             }}
                             onBlur={() => setRateFocused(false)}
                             aria-invalid={isRateEmpty || undefined}
-                            className={`h-11 rounded-[9px] border px-16 text-center text-xs font-semibold placeholder:text-[var(--color-placeholder)] placeholder:font-normal shadow-xs focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${isRateEmpty ? 'bg-[var(--color-canvas-white)] border-[var(--wv-ochre-400)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)] text-[var(--color-ink)]'}`}
+                            className={`h-11 rounded-[9px] border px-16 text-center text-xs font-semibold placeholder:text-[var(--color-placeholder)] placeholder:font-normal shadow-xs focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${isRateEmpty ? 'bg-[var(--color-canvas-white)] border-[var(--wv-madder-600)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)] text-[var(--color-ink)]'}`}
                         />
                         <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-[var(--color-muted)]">
                             {inputMode === 'perMeter' ? '₹/m' : 'paise/pick'}
@@ -3265,7 +3265,7 @@ function QuickCostingView({
                             {state.monthlyOutputM > 0 && <span className="font-mono text-xs font-normal text-[var(--color-muted)]">{state.monthlyOutputM.toLocaleString('en-IN')} m/mo</span>}
                         </Button>
                     )}
-                    {directRateMissing && <p className="text-xs font-semibold text-[var(--color-warning-amber)]">Enter a direct rate greater than ₹0/m before saving.</p>}
+                    {directRateMissing && <p className="text-xs font-semibold text-[var(--wv-madder-600)]">Enter a direct rate greater than ₹0/m before saving.</p>}
                     <div className="flex items-center justify-between rounded-[10px] bg-[var(--color-surface-soft)] px-3 py-2.5">
                         <div>
                             <p className="text-xs font-medium text-[var(--color-muted)]">Used in this costing</p>
@@ -6732,7 +6732,7 @@ export default function EstimatorClient({
                                                         onChange={e => dispatch({ type: 'SET', field: 'overheadOverridePerM', value: parseNonNegativeInput(e.target.value) })}
                                                         aria-label="Direct factory overhead per metre"
                                                         aria-invalid={state.overheadOverridePerM == null || state.overheadOverridePerM <= 0 || undefined}
-                                                        className={`h-10 w-full rounded-[9px] pl-8 pr-4 text-sm font-medium placeholder:text-[var(--color-placeholder)] placeholder:font-normal [appearance:textfield] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/30 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${state.overheadOverridePerM == null || state.overheadOverridePerM <= 0 ? 'bg-[var(--color-canvas-white)] border-[var(--wv-ochre-400)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)] text-[var(--color-ink)]'}`}
+                                                        className={`h-10 w-full rounded-[9px] pl-8 pr-4 text-sm font-medium placeholder:text-[var(--color-placeholder)] placeholder:font-normal [appearance:textfield] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/30 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${state.overheadOverridePerM == null || state.overheadOverridePerM <= 0 ? 'bg-[var(--color-canvas-white)] border-[var(--wv-madder-600)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)] text-[var(--color-ink)]'}`}
                                                     />
                                                 </div>
                                             </div>
@@ -6747,7 +6747,7 @@ export default function EstimatorClient({
                                             </div>
                                         )}
                                         {(state.overheadOverridePerM == null || state.overheadOverridePerM <= 0) && (
-                                            <p className="mt-2 text-xs font-semibold text-[var(--color-warning-amber)]">Enter a rate greater than ₹0/m before saving.</p>
+                                            <p className="mt-2 text-xs font-semibold text-[var(--wv-madder-600)]">Enter a rate greater than ₹0/m before saving.</p>
                                         )}
                                     </div>
                             ) : (
@@ -6895,7 +6895,7 @@ export default function EstimatorClient({
 
                                                 <div className="space-y-4 border-t border-[var(--color-hairline)] pt-4">
                                                     <div data-estimator-field="monthlyProductionM" className="space-y-1.5">
-                                                        <Label className={`text-xs font-medium ${state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) ? 'text-[var(--color-warning-amber)]' : 'text-[var(--color-body)]'}`}>Typical monthly production (m){state.overheadMode === 'monthly_expenses' && <span className="sr-only"> (required)</span>}</Label>
+                                                        <Label className={`text-xs font-medium ${state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) ? 'text-[var(--wv-madder-600)]' : 'text-[var(--color-body)]'}`}>Typical monthly production (m){state.overheadMode === 'monthly_expenses' && <span className="sr-only"> (required)</span>}</Label>
                                                         <div className="relative">
                                                             <Input
                                                                 enterKeyHint="next"
@@ -6904,13 +6904,13 @@ export default function EstimatorClient({
                                                                 placeholder="e.g. 90,000"
                                                                 onChange={e => dispatch({ type: 'SET', field: 'monthlyOutputM', value: parseNonNegativeInput(e.target.value) ?? 0 })}
                                                                 aria-invalid={state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) || undefined}
-                                                                className={`h-10 rounded-[9px] pr-9 text-center text-sm font-medium placeholder:text-[var(--color-placeholder)] placeholder:font-normal [appearance:textfield] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) ? 'bg-[var(--color-canvas-white)] border-[var(--wv-ochre-400)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)] text-[var(--color-ink)]'}`}
+                                                                className={`h-10 rounded-[9px] pr-9 text-center text-sm font-medium placeholder:text-[var(--color-placeholder)] placeholder:font-normal [appearance:textfield] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) ? 'bg-[var(--color-canvas-white)] border-[var(--wv-madder-600)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)] text-[var(--color-ink)]'}`}
                                                             />
                                                             <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-[var(--color-muted)] font-medium pointer-events-none">m/mo</span>
                                                         </div>
                                                         <p className="text-xs leading-relaxed text-[var(--color-muted)]">Use a normal, representative month. This is an owner estimate, not a machine-capacity calculation.</p>
                                                         {state.overheadMode === 'monthly_expenses' && (!state.monthlyOutputM || state.monthlyOutputM <= 0) && (
-                                                            <p className="text-xs font-semibold text-[var(--color-warning-amber)]">Required for monthly-expense overhead.</p>
+                                                            <p className="text-xs font-semibold text-[var(--wv-madder-600)]">Required for monthly-expense overhead.</p>
                                                         )}
                                                     </div>
 
