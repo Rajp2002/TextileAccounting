@@ -506,8 +506,8 @@ export default async function BillingPage() {
                                 {planStats.map(stat => (
                                     <div key={stat.label} className="min-w-0 px-5 py-5 sm:px-6 sm:py-6">
                                         <dt className="text-[13px] font-medium text-muted-foreground">{stat.label}</dt>
-                                        <dd className="mt-1.5 text-2xl font-semibold leading-tight tracking-[-0.02em] text-ink tabular-nums sm:text-[28px]">{stat.value}</dd>
-                                        {stat.note && <dd className="mt-0.5 text-[13px] text-body tabular-nums">{stat.note}</dd>}
+                                        <dd className="mt-1.5 text-center text-2xl font-semibold leading-tight tracking-[-0.02em] text-ink tabular-nums sm:text-[28px]">{stat.value}</dd>
+                                        {stat.note && <dd className="mt-0.5 text-center text-[13px] text-body tabular-nums">{stat.note}</dd>}
                                     </div>
                                 ))}
                             </dl>
