@@ -1386,7 +1386,7 @@ export default function RatesClient({
                         {rate.name}
                         {sample && <span data-ratebook-field="sampleBadge" className="ml-2 inline-flex translate-y-[-1px] items-center rounded-md bg-[var(--wv-saffron-100)] px-2 py-0.5 align-middle text-xs font-semibold text-saffron-deep ring-1 ring-inset ring-[var(--wv-saffron-200)]">{copy.example}</span>}
                     </h3>
-                    {!quietSample && <p data-ratebook-field="reviewStatusBadge" className={cn('shrink-0 text-[13px] tabular-nums', due ? 'font-semibold text-[var(--wv-ochre-800)]' : 'text-muted-foreground')}>{status}</p>}
+                    {!quietSample && <p data-ratebook-field="reviewStatusBadge" className={cn('shrink-0 text-[13px] tabular-nums', due ? 'font-semibold text-destructive' : 'text-muted-foreground')}>{status}</p>}
                 </div>
                 {/* The price opens this yarn in the Activity modal, where every yarn's chart lives. */}
                 <div data-ratebook-field="rateAndTrend" tabIndex={-1} className="flex items-end justify-between gap-4">
