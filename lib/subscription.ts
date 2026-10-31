@@ -47,7 +47,7 @@ export async function getOrgPlanAccess(
 
     const { data, error } = await admin
         .from('organizations')
-        .select('base_plan_visible, lite_trial_eligible, org_subscriptions(status, plan_tier, current_start, current_end, razorpay_payment_id, created_at, is_trial)')
+        .select('lite_trial_eligible, org_subscriptions(status, plan_tier, current_start, current_end, razorpay_payment_id, created_at, is_trial)')
         .eq('id', orgId)
         .maybeSingle()
 
@@ -56,7 +56,6 @@ export async function getOrgPlanAccess(
     const subscriptionRows = data?.org_subscriptions ?? []
     const access = resolveOrgAccessFromRows({
         rows: subscriptionRows,
-        baseFlag: data?.base_plan_visible,
         trialFlag: data?.lite_trial_eligible,
     })
     // Paid and trial organizations return here without the Free-grant query.

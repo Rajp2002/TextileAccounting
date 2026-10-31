@@ -341,17 +341,16 @@ describe('Base suppression: free billing and owner billing', () => {
     expect(page).toMatch(/<AccessStateCallout[\s\S]*?baseVisible=\{baseVisible\}/)
   })
 
-  it('the owner billing upgrade label offers Base only to a visible Lite org', () => {
+  it('the owner billing page never offers Base directly; View plans opens the visibility-filtered chooser', () => {
     const page = read('app/(dashboard)/owner/billing/page.tsx')
-    const gated = page.split("subscriptionTier === 'lite' && baseVisible ? 'Upgrade to Base'").length - 1
-    expect(gated).toBe(2)
-    expect(page).not.toContain("subscriptionTier === 'lite' ? 'Upgrade to Base'")
+    expect(page).not.toContain('Upgrade to Base')
+    expect(page).toMatch(/<Link href="\/plans\?from=billing">\s*<span>View plans<\/span>/)
   })
 })
 
 describe('Base suppression: existing Base organizations see no change', () => {
-  it('keeps the Base copy of the owner billing plan action for a visible Lite org', () => {
+  it('lists what Base includes for a Base organization', () => {
     const page = read('app/(dashboard)/owner/billing/page.tsx')
-    expect(page).toContain("Upgrade to Base' : subscriptionTier === 'base' ? 'Compare plans' : 'Explore plans'")
+    expect(page).toContain("{shownTier === 'base' ? 'Included in Base' : 'Included in Lite'}")
   })
 })

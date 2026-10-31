@@ -22,7 +22,7 @@ const ROUTE_TITLES: Array<[string, string]> = [
     ['/owner/rates', 'Yarn Rate Book'],
     ['/owner/quotes', 'Saved Costings'],
     ['/owner/settings', 'Settings'],
-    ['/owner/billing', 'Subscription & Billing'],
+    ['/owner/billing', 'Plan & Billing'],
 ]
 
 const ROUTE_TITLE_OVERRIDES: Array<[string, string]> = [

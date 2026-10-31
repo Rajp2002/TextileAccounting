@@ -191,14 +191,10 @@ describe('Standalone Plan Chooser & Upgrade Experience', () => {
   })
 
   describe('REG: Entry Points & Billing Integration', () => {
-    it('REG-01: owner billing page links its plan comparison card to /plans?from=billing', () => {
+    it('REG-01: owner billing page links View plans to /plans?from=billing', () => {
       const billing = read('app/(dashboard)/owner/billing/page.tsx')
-      expect(billing).toContain('id="view-plans-heading"')
-      expect(billing).toContain('Compare plan options')
       expect(billing).toContain('href="/plans?from=billing"')
-      expect(billing).toContain("subscriptionTier === 'lite' && baseVisible ? 'Upgrade to Base'")
-      expect(billing).toContain("subscriptionTier === 'base' ? 'Compare plans'")
-      expect(billing).toContain("'Explore plans'")
+      expect(billing).toContain('<span>View plans</span>')
     })
 
     it('REG-02: free billing page includes compare plans button pointing to /plans?from=billing', () => {

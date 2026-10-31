@@ -70,7 +70,7 @@ describe('a moved trial row resolves to Lite again', () => {
             status: 'active', plan_tier: 'lite', is_trial: true, current_start: new Date(Date.now() - 40 * DAY).toISOString(),
             current_end: new Date(Date.now() + 60 * DAY).toISOString(), razorpay_payment_id: null, created_at: new Date(Date.now() - 40 * DAY).toISOString(),
         }
-        expect(resolveOrgAccessFromRows({ rows: [moved], baseFlag: false, trialFlag: false })).toMatchObject({ effectiveTier: 'lite', trialEndsAt: moved.current_end })
+        expect(resolveOrgAccessFromRows({ rows: [moved], trialFlag: false })).toMatchObject({ effectiveTier: 'lite', trialEndsAt: moved.current_end })
     })
 })
 

@@ -217,12 +217,11 @@ function latestLapsedTrialEnd(rows: readonly SubscriptionAccessRow[], nowMs: num
 }
 
 /**
- * Resolves an organization's access from its subscription rows and org flags,
+ * Resolves an organization's access from its subscription rows and trial flag,
  * without any Free grant lookup. Pair with applyFreeGrantToAccess for Free.
  */
 export function resolveOrgAccessFromRows(input: {
   rows: readonly SubscriptionAccessRow[]
-  baseFlag: boolean | null | undefined
   trialFlag: boolean | null | undefined
   nowMs?: number
 }): OrgPlanAccess {
@@ -240,7 +239,6 @@ export function resolveOrgAccessFromRows(input: {
     trialEndsAt: winner && winner.is_trial === true ? winner.current_end : null,
     trialEndedAt: winner === null ? latestLapsedTrialEnd(rows, nowMs) : null,
     baseVisible: canViewBase({
-      flag: input.baseFlag,
       effectiveTier: access.effectiveTier,
       subscriptionRows: rows,
     }),

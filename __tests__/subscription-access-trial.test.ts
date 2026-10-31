@@ -39,7 +39,7 @@ const LAPSED_TRIAL_END = '2026-10-10T00:00:00.000Z'
 describe('trial-aware organization access', () => {
   it('an active trial row resolves to lite with trialEndsAt', () => {
     const rows = [trialRow()]
-    const access = resolveOrgAccessFromRows({ rows, baseFlag: false, trialFlag: true, nowMs: NOW })
+    const access = resolveOrgAccessFromRows({ rows, trialFlag: true, nowMs: NOW })
 
     expect(access.effectiveTier).toBe('lite')
     expect(access.subscriptionTier).toBe('lite')
@@ -52,7 +52,6 @@ describe('trial-aware organization access', () => {
     const oneMinuteAfterEnd = Date.parse(LAPSED_TRIAL_END) + 60 * 1000
     const lapsed = resolveOrgAccessFromRows({
       rows: [trialRow({ current_end: LAPSED_TRIAL_END })],
-      baseFlag: false,
       trialFlag: true,
       nowMs: oneMinuteAfterEnd,
     })
@@ -61,7 +60,6 @@ describe('trial-aware organization access', () => {
     // Exactly at the end the trial is still current; the boundary is inclusive.
     const atEnd = resolveOrgAccessFromRows({
       rows: [trialRow({ current_end: LAPSED_TRIAL_END })],
-      baseFlag: false,
       trialFlag: true,
       nowMs: Date.parse(LAPSED_TRIAL_END),
     })
@@ -70,7 +68,6 @@ describe('trial-aware organization access', () => {
     // Non-trial rows keep the 24 hour grace after the same one-minute overrun.
     const paidWithGrace = resolveOrgAccessFromRows({
       rows: [paidLiteRow({ current_end: LAPSED_TRIAL_END, is_trial: false })],
-      baseFlag: false,
       trialFlag: false,
       nowMs: oneMinuteAfterEnd,
     })
@@ -79,7 +76,7 @@ describe('trial-aware organization access', () => {
 
   it('a lapsed trial with a Free grant resolves to free and reports trialEndedAt', () => {
     const rows = [trialRow({ current_end: LAPSED_TRIAL_END })]
-    const access = resolveOrgAccessFromRows({ rows, baseFlag: false, trialFlag: true, nowMs: NOW })
+    const access = resolveOrgAccessFromRows({ rows, trialFlag: true, nowMs: NOW })
     expect(access.effectiveTier).toBe('none')
     expect(access.trialEndedAt).toBe(LAPSED_TRIAL_END)
 
@@ -92,7 +89,7 @@ describe('trial-aware organization access', () => {
 
   it('a lapsed trial without a Free grant resolves to none', () => {
     const rows = [trialRow({ current_end: LAPSED_TRIAL_END })]
-    const access = resolveOrgAccessFromRows({ rows, baseFlag: false, trialFlag: true, nowMs: NOW })
+    const access = resolveOrgAccessFromRows({ rows, trialFlag: true, nowMs: NOW })
 
     const ungranted = applyFreeGrantToAccess(access, rows, false)
     expect(ungranted.effectiveTier).toBe('none')
@@ -102,7 +99,7 @@ describe('trial-aware organization access', () => {
 
   it('a lapsed paid lite row with a Free grant stays none and freeAccount', () => {
     const rows = [paidLiteRow({ current_end: '2026-01-01T00:00:00.000Z' })]
-    const access = resolveOrgAccessFromRows({ rows, baseFlag: false, trialFlag: false, nowMs: NOW })
+    const access = resolveOrgAccessFromRows({ rows, trialFlag: false, nowMs: NOW })
     expect(access.effectiveTier).toBe('none')
     expect(access.trialEndedAt).toBeNull()
 
@@ -122,7 +119,7 @@ describe('trial-aware organization access', () => {
 
   it('a paid lite row created after the trial wins and trialEndsAt is null', () => {
     const rows = [trialRow(), paidLiteRow()]
-    const access = resolveOrgAccessFromRows({ rows, baseFlag: false, trialFlag: true, nowMs: NOW })
+    const access = resolveOrgAccessFromRows({ rows, trialFlag: true, nowMs: NOW })
 
     expect(access.effectiveTier).toBe('lite')
     expect(access.trialEndsAt).toBeNull()
@@ -131,15 +128,14 @@ describe('trial-aware organization access', () => {
   })
 
   it('liteTrialEligible is false when a trial row exists, when paid history exists, or when the flag is false', () => {
-    const fresh = resolveOrgAccessFromRows({ rows: [], baseFlag: false, trialFlag: true, nowMs: NOW })
+    const fresh = resolveOrgAccessFromRows({ rows: [], trialFlag: true, nowMs: NOW })
     expect(fresh.liteTrialEligible).toBe(true)
 
-    const activeTrial = resolveOrgAccessFromRows({ rows: [trialRow()], baseFlag: false, trialFlag: true, nowMs: NOW })
+    const activeTrial = resolveOrgAccessFromRows({ rows: [trialRow()], trialFlag: true, nowMs: NOW })
     expect(activeTrial.liteTrialEligible).toBe(false)
 
     const lapsedTrial = resolveOrgAccessFromRows({
       rows: [trialRow({ current_end: LAPSED_TRIAL_END })],
-      baseFlag: false,
       trialFlag: true,
       nowMs: NOW,
     })
@@ -147,14 +143,13 @@ describe('trial-aware organization access', () => {
 
     const lapsedPaid = resolveOrgAccessFromRows({
       rows: [paidLiteRow({ current_end: '2026-01-01T00:00:00.000Z' })],
-      baseFlag: false,
       trialFlag: true,
       nowMs: NOW,
     })
     expect(lapsedPaid.liteTrialEligible).toBe(false)
 
     for (const trialFlag of [false, null, undefined] as const) {
-      const flagged = resolveOrgAccessFromRows({ rows: [], baseFlag: false, trialFlag, nowMs: NOW })
+      const flagged = resolveOrgAccessFromRows({ rows: [], trialFlag, nowMs: NOW })
       expect(flagged.liteTrialEligible).toBe(false)
     }
   })

@@ -39,16 +39,17 @@ describe('getOrgPlanAccess trial-aware wiring', () => {
         )
     })
 
-    it('selects base_plan_visible and lite_trial_eligible from organizations with is_trial in the nested select', () => {
+    it('selects lite_trial_eligible (not the retired base_plan_visible grant) from organizations with is_trial in the nested select', () => {
         expect(planAccess).toContain(
-            "'base_plan_visible, lite_trial_eligible, org_subscriptions(status, plan_tier, current_start, current_end, razorpay_payment_id, created_at, is_trial)'",
+            "'lite_trial_eligible, org_subscriptions(status, plan_tier, current_start, current_end, razorpay_payment_id, created_at, is_trial)'",
         )
+        expect(planAccess).not.toContain('base_plan_visible')
     })
 
     it('reads the subscription rows once and composes access through resolveOrgAccessFromRows', () => {
         expect(planAccess).toContain('const subscriptionRows = data?.org_subscriptions ?? []')
         expect(planAccess).toMatch(
-            /resolveOrgAccessFromRows\(\{\s*rows:\s*subscriptionRows,\s*baseFlag:\s*data\?\.base_plan_visible,\s*trialFlag:\s*data\?\.lite_trial_eligible,?\s*\}\)/,
+            /resolveOrgAccessFromRows\(\{\s*rows:\s*subscriptionRows,\s*trialFlag:\s*data\?\.lite_trial_eligible,?\s*\}\)/,
         )
     })
 

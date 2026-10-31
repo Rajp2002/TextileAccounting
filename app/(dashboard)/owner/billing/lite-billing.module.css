@@ -1,23 +1,7 @@
 @media(max-width:767.98px){
- .root{padding-bottom:1rem;gap:1rem}
- .root>div{display:flex;flex-direction:column;gap:1rem}
- .root>div>*{margin-top:0;min-width:0}
- .root :global(.rail-inline-actions){display:none}
- .root :global(.billing-rail-action){display:none}
- .root :global(.billing-rail-top)>section{display:none}
- .root :global(.billing-right-rail){margin-top:1rem}
- .root [aria-labelledby="active-workspace-heading"]>div>div:first-child{padding:1rem;gap:.75rem}
- .root [aria-labelledby="active-workspace-heading"]>div>div:first-child>div:first-child>span{display:none}
- .root [aria-labelledby="view-plans-heading"]{padding:0}
+ .root{padding-bottom:1rem}
  .root h1{font-size:1.375rem}
- .root p,.root h2,.root h3{overflow-wrap:anywhere}
- .root a,.root button,.history a{min-height:44px;height:auto;white-space:normal;overflow-wrap:anywhere;max-width:100%}
+ .root p,.root h2,.root h3,.root li,.root dd{overflow-wrap:anywhere}
+ .root a,.root button{min-height:44px;height:auto;white-space:normal;overflow-wrap:anywhere;max-width:100%}
  .root button :global(.truncate){white-space:normal;overflow:visible;text-overflow:clip}
- .history a{min-width:44px}
- .history p,.history span,.history div{overflow-wrap:anywhere;min-width:0}
- .history [data-slot="button"],.history [data-slot="dialog-close"]{min-height:44px;min-width:44px;height:auto;white-space:normal;overflow-wrap:anywhere;max-width:100%}
- .history [data-slot="dialog-close"]{width:44px;height:44px}
- .history [data-slot="card"]>div>div>div:last-child{flex-wrap:wrap;padding-left:0;gap:.5rem}
- .primary{display:block;margin-top:.75rem}
 }
-@media(min-width:768px){.primary{display:none}}

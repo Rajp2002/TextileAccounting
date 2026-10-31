@@ -7,18 +7,18 @@ import type { SubscriptionTier } from './subscription-access'
 export const BASE_PLAN_OPEN_TO_NEW_ACCOUNTS = false
 
 /**
- * Whether an organization may see and buy Base. Existing organizations carry a
- * per-org flag (backfilled true); any Base history or current Base access also
- * counts, so a lapsed Base owner never loses sight of the plan they paid for.
+ * Whether an organization may see and buy Base. Until the launch switch opens,
+ * only organizations already on Base, or with any Base row (the owner's Base
+ * test accounts, a lapsed Base owner), see it. The per-org
+ * `organizations.base_plan_visible` flag was backfilled true for every
+ * pre-rollout account, so it no longer grants visibility on its own.
  */
 export function canViewBase(input: {
-  flag: boolean | null | undefined
   effectiveTier: SubscriptionTier
   subscriptionRows: readonly { plan_tier: string | null }[]
   openToAll?: boolean
 }): boolean {
   if (input.openToAll ?? BASE_PLAN_OPEN_TO_NEW_ACCOUNTS) return true
-  if (input.flag === true) return true
   if (input.effectiveTier === 'base') return true
   return input.subscriptionRows.some((row) => row.plan_tier === 'base')
 }

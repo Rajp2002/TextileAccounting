@@ -50,8 +50,8 @@ describe('P1 Billing Orders Static Analysis Tests', () => {
 
     it('verifies billing page contains the Lite and Base pricing descriptions', () => {
         const content = readProjectFile('app/(dashboard)/owner/billing/page.tsx')
-        expect(content).toContain('Weavly Lite')
-        expect(content).toContain('Weavly Base')
+        // Plan names come from the billing catalogue, so the page never spells a stale one.
+        expect(content).toContain('getBillingPlan(shownTier).name')
         expect(content).toContain('<UpgradeWall')
         expect(upgradeText('en', 'liteFit')).toBe('Your complete costing desk')
         expect(UPGRADE_PLAN_FEATURES.base).toEqual([...UPGRADE_PLAN_FEATURES.lite, 'production', 'payroll'])
@@ -59,7 +59,7 @@ describe('P1 Billing Orders Static Analysis Tests', () => {
         expect(content).toContain('activeRenewalPrice')
         expect(content).toContain("subscriptionTier === 'lite'")
         const history = readProjectFile('components/billing/PaymentHistoryDialog.tsx')
-        expect(content).toContain('<PaymentHistoryDialog entries={billingHistoryEntries}')
+        expect(content).toContain('<PaymentHistoryList entries={billingHistoryEntries}')
         expect(history).toContain('View payment history')
         expect(history).toContain('Download receipt')
         expect(content.toLowerCase()).not.toContain('₹2,360/month')

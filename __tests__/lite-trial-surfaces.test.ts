@@ -255,7 +255,9 @@ describe('Trial surfaces are wired from the server', () => {
     expect(page).toContain('const trialEndsAt = planAccess.trialEndsAt ?? null')
     expect(page).toMatch(/const accessTiming = trialEndsAt\s*\?\s*liteTrialText\('en', 'trialEndsOn', \{ date: formatShortDate\(trialEndsAt\) \}\)\s*:\s*paidAccessTiming/)
     expect(page).toContain("{trialEndsAt ? 'Free trial' : 'Annual access'}")
-    expect(page).toContain("{trialEndsAt ? null : ' · Annual renewals are manual.'}")
+    expect(page).toContain("label={isActive ? (trialEndsAt ? 'Free trial' : 'Active')")
+    // A trial shows its end and the price after it, never a renewal window.
+    expect(page).toMatch(/trialEndsAt && trialPrice\s*\?\s*\[\s*\{ label: 'Trial ends'/)
   })
 
   it('the billing page offers the Lite subscribe button at first-year pricing from the purchase decision', () => {

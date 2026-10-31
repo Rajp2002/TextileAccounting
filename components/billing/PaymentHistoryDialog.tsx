@@ -5,7 +5,7 @@ import { BillingAttemptStatus, type BillingAttemptRecovery } from './BillingAtte
 import { getBillingAttemptPresentation } from '@/lib/billing-attempts'
 import { useTranslation } from '@/lib/i18n/context'
 import { liteSupportingText } from '@/lib/i18n/lite-supporting'
-import { ArrowUpRight, CheckCircle2, Clock3, Download, ReceiptText, XCircle } from 'lucide-react'
+import { ArrowUpRight, Download, ReceiptText } from 'lucide-react'
 import {
     Dialog,
     DialogClose,
@@ -61,92 +61,79 @@ function getPurchaseTypeLabel(purchaseType: string | null | undefined): string {
     return 'Subscription payment'
 }
 
-function BillingHistoryRow({ entry, unconfirmedAttemptCopy = false, latestAttemptId }: { entry: BillingHistoryEntry; unconfirmedAttemptCopy?: boolean; latestAttemptId?: string }) {
+function BillingHistoryRow({ entry, unconfirmedAttemptCopy = false, latestAttemptId, inDialog = true }: { entry: BillingHistoryEntry; unconfirmedAttemptCopy?: boolean; latestAttemptId?: string; inDialog?: boolean }) {
     const { language } = useTranslation()
     const uncertain = unconfirmedAttemptCopy && entry.kind === 'attempt' && entry.status === 'incomplete'
     const statusPresentation = {
-        captured: {
-            label: 'Captured',
-            status: 'success',
-            icon: CheckCircle2,
-            className: 'border-success/25 bg-success-soft text-success',
-        },
-        failed: {
-            label: 'Failed',
-            status: 'failed',
-            icon: XCircle,
-            className: 'border-risk/25 bg-risk-soft text-risk',
-        },
-        incomplete: {
-            label: uncertain ? liteSupportingText(language, 'unconfirmed') : 'Incomplete',
-            status: 'pending',
-            icon: Clock3,
-            className: 'border-warning/25 bg-warning-soft text-warning',
-        },
-        refunded: {
-            label: 'Refunded',
-            status: 'cancelled',
-            icon: XCircle,
-            className: 'border-hairline bg-surface-soft text-subtle',
-        },
+        captured: { label: 'Paid', status: 'success' },
+        failed: { label: 'Failed', status: 'failed' },
+        incomplete: { label: uncertain ? liteSupportingText(language, 'unconfirmed') : 'Incomplete', status: 'pending' },
+        refunded: { label: 'Refunded', status: 'cancelled' },
     }[entry.status]
-    const Icon = statusPresentation.icon
+    const focusRecovery = () => requestAnimationFrame(() => document.getElementById('billing-attempt-recovery')?.querySelector<HTMLButtonElement>('button')?.focus())
+    const backToStatus = <Button type="button" variant="outline" onClick={focusRecovery}>{liteSupportingText(language, 'backPaymentStatus')}</Button>
 
     return (
-        <div className="flex flex-col gap-3 p-4 transition-colors hover:bg-surface-soft sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex min-w-0 items-start gap-3">
-                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border ${statusPresentation.className}`}>
-                    <Icon className="h-4 w-4" aria-hidden="true" />
+        <div className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+            <div className="min-w-0 space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-[15px] font-semibold text-ink">{getBillingPlanName(entry.planTier)}</p>
+                    <StatusBadge status={statusPresentation.status} label={statusPresentation.label} />
                 </div>
-                <div className="min-w-0 space-y-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-sm font-semibold tracking-tight text-ink">{getBillingPlanName(entry.planTier)}</p>
-                        <StatusBadge status={statusPresentation.status} label={statusPresentation.label} />
-                        {entry.receiptPaymentId && (
-                            <span className="inline-flex items-center gap-1 rounded-full border border-[var(--wv-moss-200)] bg-[var(--wv-moss-50)] px-2 py-1 text-xs font-semibold text-[var(--wv-moss-700)]">
-                                <ReceiptText className="h-3 w-3" aria-hidden="true" /> Receipt available
-                            </span>
-                        )}
-                    </div>
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium text-subtle">
-                        <span>{formatShortDate(entry.date)}</span>
-                        <span aria-hidden="true">·</span>
-                        <span>{getPurchaseTypeLabel(entry.purchaseType)}</span>
-                        {uncertain && entry.orderId && <><span aria-hidden="true">·</span><span>{liteSupportingText(language, 'order')} <span data-i18n-skip="true">{entry.orderId.slice(-8)} · {entry.attempt?.status}</span></span></>}
-                        {entry.method && (
-                            <>
-                                <span aria-hidden="true">·</span>
-                                <span className="capitalize">{entry.method.replaceAll('_', ' ')}</span>
-                            </>
-                        )}
-                        {entry.paymentId && (
-                            <>
-                                <span aria-hidden="true">·</span>
-                                <span>Ref. {entry.paymentId.slice(-8)}</span>
-                            </>
-                        )}
-                    </div>
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-muted-foreground">
+                    <span>{formatShortDate(entry.date)}</span>
+                    <span aria-hidden="true">·</span>
+                    <span>{getPurchaseTypeLabel(entry.purchaseType)}</span>
+                    {uncertain && entry.orderId && <><span aria-hidden="true">·</span><span>{liteSupportingText(language, 'order')} <span data-i18n-skip="true">{entry.orderId.slice(-8)} · {entry.attempt?.status}</span></span></>}
+                    {entry.method && (
+                        <>
+                            <span aria-hidden="true">·</span>
+                            <span className="capitalize">{entry.method.replaceAll('_', ' ')}</span>
+                        </>
+                    )}
+                    {entry.paymentId && (
+                        <>
+                            <span aria-hidden="true">·</span>
+                            <span>Ref. {entry.paymentId.slice(-8)}</span>
+                        </>
+                    )}
                 </div>
             </div>
-            <div className="flex items-center justify-between gap-4 pl-12 sm:block sm:pl-0 sm:text-right">
-                <p className={`text-lg font-bold tracking-tight ${entry.status === 'captured' ? 'text-ink' : 'text-body'}`}>
+            <div className="flex flex-wrap items-center justify-between gap-x-5 gap-y-2 sm:justify-end">
+                <p className={`text-lg font-semibold tabular-nums ${entry.status === 'captured' ? 'text-ink' : 'text-muted-foreground'}`}>
                     {entry.amountPaise !== null ? formatAmount(entry.amountPaise) : '—'}
                 </p>
                 {entry.receiptPaymentId ? (
-                    <Link
-                        href={`/api/billing/receipt/${entry.receiptPaymentId}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-saffron-deep hover:underline"
-                    >
-                        Download receipt <Download className="h-3.5 w-3.5" aria-hidden="true" />
-                    </Link>
+                    <Button asChild variant="outline" className="h-10 gap-1.5 px-3 text-sm font-semibold max-md:min-h-[44px]">
+                        <Link href={`/api/billing/receipt/${entry.receiptPaymentId}`} target="_blank" rel="noreferrer">
+                            <Download className="h-4 w-4" aria-hidden="true" />
+                            Download receipt
+                        </Link>
+                    </Button>
                 ) : (
-                    <div className="text-xs text-subtle">
-                        {uncertain ? <div className="space-y-2"><p>{liteSupportingText(language, 'noReceipt')}</p>{entry.attempt?.id === latestAttemptId ? <DialogClose asChild><Button type="button" variant="outline" onClick={()=>requestAnimationFrame(()=>document.getElementById('billing-attempt-recovery')?.querySelector<HTMLButtonElement>('button')?.focus())}>{liteSupportingText(language,'backPaymentStatus')}</Button></DialogClose> : entry.attempt && getBillingAttemptPresentation(entry.attempt.status).shouldCheck && entry.attempt.provider_order_id ? <BillingAttemptStatus attempt={entry.attempt} singleFlight /> : null}</div> : entry.status === 'incomplete' ? 'No payment captured' : entry.status === 'failed' ? 'Payment not completed' : 'No receipt'}
+                    <div className="text-[13px] text-muted-foreground">
+                        {uncertain ? <div className="space-y-2"><p>{liteSupportingText(language, 'noReceipt')}</p>{entry.attempt?.id === latestAttemptId ? (inDialog ? <DialogClose asChild>{backToStatus}</DialogClose> : backToStatus) : entry.attempt && getBillingAttemptPresentation(entry.attempt.status).shouldCheck && entry.attempt.provider_order_id ? <BillingAttemptStatus attempt={entry.attempt} singleFlight /> : null}</div> : entry.status === 'incomplete' ? 'No payment captured' : entry.status === 'failed' ? 'Payment not completed' : 'No receipt'}
                     </div>
                 )}
             </div>
+        </div>
+    )
+}
+
+/** The billing page's history, shown in place: few rows a year, and the receipt is what the owner comes for. */
+export function PaymentHistoryList({ entries, unconfirmedAttemptCopy = false, latestAttemptId }: { entries: BillingHistoryEntry[]; unconfirmedAttemptCopy?: boolean; latestAttemptId?: string }) {
+    if (entries.length === 0) {
+        return (
+            <div className="flex flex-col items-center rounded-2xl border border-dashed border-hairline bg-surface px-6 py-10 text-center">
+                <ReceiptText className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
+                <p className="mt-3 text-sm font-semibold text-ink">No payment history yet.</p>
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Successful payments and downloadable receipts will appear here.</p>
+            </div>
+        )
+    }
+    return (
+        <div className="divide-y divide-hairline overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs">
+            {entries.map((entry) => <BillingHistoryRow key={entry.id} entry={entry} unconfirmedAttemptCopy={unconfirmedAttemptCopy} latestAttemptId={latestAttemptId} inDialog={false} />)}
         </div>
     )
 }

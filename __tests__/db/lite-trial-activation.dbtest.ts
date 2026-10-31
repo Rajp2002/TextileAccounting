@@ -106,7 +106,7 @@ describe('a Lite trial converting to a paid first year', () => {
         // Read the way the app reads it: the paid row wins and the trial banner has nothing to show.
         const rows = await subscriptionRows(owner.orgId)
         const nowMs = Date.now()
-        const access = resolveOrgAccessFromRows({ rows, baseFlag: true, trialFlag: false, nowMs })
+        const access = resolveOrgAccessFromRows({ rows, trialFlag: false, nowMs })
         expect(access).toMatchObject({ effectiveTier: 'lite', trialEndsAt: null })
         expect(resolveEffectiveSubscription(rows, nowMs).subscription?.id).toBe(order.subscriptionId)
     })

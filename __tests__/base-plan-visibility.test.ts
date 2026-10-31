@@ -13,17 +13,16 @@ describe('canViewBase', () => {
     expect(BASE_PLAN_OPEN_TO_NEW_ACCOUNTS).toBe(false)
   })
 
-  it('shows Base when the organization visibility flag is set', () => {
+  it('hides Base from a pre-rollout Lite organization with no Base history', () => {
+    // base_plan_visible was backfilled true for every existing org; it no longer counts.
     expect(canViewBase({
-      flag: true,
       effectiveTier: 'lite',
       subscriptionRows: [{ plan_tier: 'lite' }],
-    })).toBe(true)
+    })).toBe(false)
   })
 
   it('shows Base to an organization whose effective tier is base', () => {
     expect(canViewBase({
-      flag: false,
       effectiveTier: 'base',
       subscriptionRows: [],
     })).toBe(true)
@@ -32,15 +31,13 @@ describe('canViewBase', () => {
   it('shows Base to any organization with a Base row, even an expired one', () => {
     // An expired Base period retains Lite as the effective tier.
     expect(canViewBase({
-      flag: false,
       effectiveTier: 'lite',
       subscriptionRows: [{ plan_tier: 'lite' }, { plan_tier: 'base' }],
     })).toBe(true)
   })
 
-  it('openToAll overrides the flag', () => {
+  it('openToAll shows Base to every organization', () => {
     expect(canViewBase({
-      flag: false,
       effectiveTier: 'free',
       subscriptionRows: [],
       openToAll: true,
@@ -49,17 +46,14 @@ describe('canViewBase', () => {
 
   it('hides Base from a fresh Lite or Free organization', () => {
     expect(canViewBase({
-      flag: false,
       effectiveTier: 'lite',
       subscriptionRows: [{ plan_tier: 'lite' }],
     })).toBe(false)
     expect(canViewBase({
-      flag: false,
       effectiveTier: 'free',
       subscriptionRows: [{ plan_tier: 'free' }],
     })).toBe(false)
     expect(canViewBase({
-      flag: undefined,
       effectiveTier: 'none',
       subscriptionRows: [],
     })).toBe(false)
