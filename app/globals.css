@@ -16,21 +16,35 @@
   box-shadow: none;
 }
 
-/* Estimator section numbers: a soft pastel tile per section, its number in a deeper shade of the
-   same hue. */
+/* Estimator section headers: a full-width soft pastel band per section, its number in a deeper
+   shade of the same hue. */
 .estimator-step-tile {
   background: var(--step-tile-bg);
   color: var(--step-tile-fg);
+  border-color: color-mix(in srgb, var(--step-tile-fg) 18%, transparent);
 }
-/* The Live cost checklist pills take the same colour as their section's tile. */
+/* The Live cost checklist pills keep their section's colour, but only the sections that still need
+   input are filled: a done section is a quiet white outline with a coloured tick, so the filled
+   pills with a solid alert badge are the ones that stand out. */
 .estimator-section-pill {
-  background: var(--step-tile-bg);
-  color: var(--step-tile-fg);
-  border-color: color-mix(in srgb, var(--step-tile-fg) 22%, transparent);
+  background: var(--color-canvas-white);
+  color: var(--color-muted);
+  border-color: color-mix(in srgb, var(--step-tile-fg) 25%, transparent);
 }
 .estimator-section-pill:hover { border-color: color-mix(in srgb, var(--step-tile-fg) 55%, transparent); }
+.estimator-section-pill .estimator-section-pill-icon { color: var(--step-tile-fg); }
 .estimator-section-pill[data-status="incomplete"],
-.estimator-section-pill[data-status="review"] { border-color: var(--step-tile-fg); }
+.estimator-section-pill[data-status="review"] {
+  background: var(--step-tile-bg);
+  color: var(--step-tile-fg);
+  border-color: var(--step-tile-fg);
+  font-weight: 600;
+}
+.estimator-section-pill[data-status="incomplete"] .estimator-section-pill-icon,
+.estimator-section-pill[data-status="review"] .estimator-section-pill-icon {
+  background: var(--step-tile-fg);
+  color: var(--color-canvas-white);
+}
 .estimator-step-tile[data-tone="1"], .estimator-section-pill[data-tone="1"] { --step-tile-bg: #ECE7FF; --step-tile-fg: #5B45B0; } /* lavender: quality basics */
 .estimator-step-tile[data-tone="2"], .estimator-section-pill[data-tone="2"] { --step-tile-bg: #DDEBFF; --step-tile-fg: #2C5FAE; } /* baby blue: warp */
 .estimator-step-tile[data-tone="3"], .estimator-section-pill[data-tone="3"] { --step-tile-bg: #D9F3E5; --step-tile-fg: #23764C; } /* mint: weft */

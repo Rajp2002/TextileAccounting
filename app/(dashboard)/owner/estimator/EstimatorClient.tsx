@@ -829,8 +829,8 @@ function YarnComponentCountFields({
     )
 }
 
-// Each section's number sits on a soft pastel tile (colours in app/globals.css, .estimator-step-tile),
-// one per section so they are easy to tell apart while the cards stay plain. The colour follows
+// Each section's header is a full-width soft pastel band (colours in app/globals.css, .estimator-step-tile),
+// one per section so they are easy to tell apart while the card bodies stay plain. The colour follows
 // the section, so warp is baby blue and weft mint in both Quick and Detailed modes.
 
 function SectionHeader({ title, icon: Icon, accent = 'warp', badgeContent, detail, step, tone = step, tutorialSection }: {
@@ -846,13 +846,13 @@ function SectionHeader({ title, icon: Icon, accent = 'warp', badgeContent, detai
 }) {
     const colorClass = getAccentStyles(accent)
     return (
-        <div data-tutorial-section={tutorialSection} className="flex items-stretch border-b border-[var(--color-hairline)] bg-[var(--color-canvas-white)]">
-            {/* Flush with the card's top, bottom and left edges (the card's own corner rounds it there); only the free right side curves. */}
+        <div
+            data-tutorial-section={tutorialSection}
+            data-tone={step != null ? tone ?? step : undefined}
+            className={`flex items-stretch border-b ${step != null ? 'estimator-step-tile' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)]'}`}
+        >
             {step != null && (
-                <span
-                    data-tone={tone ?? step}
-                    className="estimator-step-tile flex w-14 shrink-0 items-center justify-center rounded-r-2xl text-xl font-semibold tabular-nums sm:w-16 sm:text-2xl"
-                >
+                <span className="flex w-14 shrink-0 items-center justify-center text-xl font-semibold tabular-nums sm:w-16 sm:text-2xl">
                     {step}
                 </span>
             )}
@@ -1261,7 +1261,7 @@ function WidthField({
 function SectionCostPill({ value, valid = true }: { value: number; valid?: boolean }) {
     if (!valid) {
         return (
-            <span className="rounded-full border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-1 text-[13px] font-semibold text-[var(--color-muted)]">
+            <span className="rounded-full border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] px-3 py-1 text-[13px] font-semibold text-[var(--color-muted)]">
                 —
             </span>
         )
@@ -1280,21 +1280,6 @@ function SectionCostPill({ value, valid = true }: { value: number; valid?: boole
 
 function formatCalculatedMoney(value: number, valid: boolean, suffix = '') {
     return valid ? `₹${value.toFixed(2)}${suffix}` : '—'
-}
-
-function formatSignedRupees(value: number | null | undefined): string {
-    if (value == null || Math.abs(value) < 0.005) return '₹0.00'
-    return `${value > 0 ? '+' : '−'}₹${Math.abs(value).toFixed(2)}`
-}
-
-function assumptionSourceLabel(source: string): string {
-    switch (source) {
-        case 'direct_rate': return 'Direct rate entered'
-        case 'monthly_expenses': return 'Monthly expenses ÷ output'
-        case 'manual_input': return 'Entered in the estimate'
-        case 'not_set': return 'Not set'
-        default: return 'Saved costing'
-    }
 }
 
 function MobileLiveEstimateShortcut({
@@ -2980,7 +2965,7 @@ function QuickCostingView({
                     accent="warp"
                     step={2}
                     tutorialSection={3}
-                    detail={<p className="text-xs text-[var(--color-muted)]">{state.warpRows.length} component{state.warpRows.length === 1 ? '' : 's'} · crimp {state.warpCrimpPct || 0}% + waste {state.yarnShortagePct || 0}%</p>}
+                    detail={<p className="text-xs text-[var(--color-muted)]">{state.warpRows.length} component{state.warpRows.length === 1 ? '' : 's'}</p>}
                     badgeContent={<SectionCostPill value={totals.yarnBaseWarpPerM} valid={hasValidCostResult} />}
                 />
                 <CardContent className="space-y-4 p-4 sm:p-5">
@@ -3269,13 +3254,6 @@ function QuickCostingView({
                             {overheadReady && <p className="mt-0.5 text-xs text-[var(--color-muted)]">Included in the production cost as the active factory-overhead rate.</p>}
                         </div>
                         <span className={`font-mono text-base font-semibold ${overheadReady ? 'text-[var(--color-factory-green)]' : 'text-[var(--color-warning-amber)]'}`}>{formatCalculatedMoney(activeOverheadPerM, overheadReady, '/m')}</span>
-                    </div>
-                    <div className="rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-canvas)] px-3 py-2 text-xs text-[var(--color-muted)]">
-                        <span className="font-semibold text-[var(--color-body)]">Source:</span> {assumptionSourceLabel(state.overheadMode === 'direct' ? 'direct_rate' : 'monthly_expenses')}
-                        {' · '}
-                        <span className="font-semibold text-[var(--color-body)]">Reference:</span> {costingResult.overheadReferencePerM == null ? 'not entered' : `₹${costingResult.overheadReferencePerM.toFixed(2)}/m`}
-                        {' · '}
-                        <span className="font-semibold text-[var(--color-body)]">Impact:</span> {formatSignedRupees(costingResult.overheadPriceImpactPerM)}/m cost
                     </div>
                 </CardContent>
             </EstimatorCard>
@@ -7034,7 +7012,7 @@ export default function EstimatorClient({
                         detail={<p className="text-xs text-[var(--color-muted)]">{hasValidCostResult ? 'This breakdown makes up the final production cost.' : awaitingCalculation && estimatorValidation.valid ? freeText(language, 'resultAfterCalculation') : 'Complete the required inputs to calculate the final production cost.'}</p>}
                         badgeContent={hasValidCostResult
                             ? <SectionCostPill value={totals.audit.productionCostPerMeter} />
-                            : <span className="rounded-full border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-1 text-[13px] font-semibold text-[var(--color-muted)]">{costingReadiness.status === 'calculation_required' ? freeText(language, 'readyToCalculate') : 'Incomplete'}</span>}
+                            : <span className="rounded-full border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] px-3 py-1 text-[13px] font-semibold text-[var(--color-muted)]">{costingReadiness.status === 'calculation_required' ? freeText(language, 'readyToCalculate') : 'Incomplete'}</span>}
                     />
                     <CardContent className="p-5 sm:p-6 space-y-5">
                         {!hasValidCostResult ? (

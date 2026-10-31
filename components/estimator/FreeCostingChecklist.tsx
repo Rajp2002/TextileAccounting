@@ -1,6 +1,6 @@
 'use client'
 
-import { Check, CircleAlert } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { useTranslation } from '@/lib/i18n/context'
 import { freeText } from '@/lib/i18n/free-tier'
 import type { FreeCostingSection } from '@/lib/free-costing-sections'
@@ -21,8 +21,10 @@ export function FreeCostingChecklist({ sections, onSelect }: { sections: FreeCos
         const status = freeText(language, complete ? 'sectionComplete' : section.status === 'review' ? 'sectionReview' : 'sectionIncomplete')
         return <button key={section.id} type="button" data-free-section={section.id} data-status={section.status} data-tone={section.tone}
           aria-label={`${label}: ${status}`} onClick={() => onSelect(section)}
-          className="estimator-section-pill inline-flex min-h-[44px] max-w-full items-center gap-2 rounded-full border-[1.5px] px-3 py-2 text-left text-xs font-medium transition-[border-color] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2">
-          {complete ? <Check className="h-3.5 w-3.5 shrink-0" aria-hidden="true" /> : <CircleAlert className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />}
+          className="estimator-section-pill inline-flex min-h-[44px] max-w-full items-center gap-2 rounded-full border-[1.5px] px-3 py-2 text-left text-xs font-medium transition-[border-color,background-color] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2">
+          <span className="estimator-section-pill-icon flex h-5 w-5 shrink-0 items-center justify-center rounded-full" aria-hidden="true">
+            {complete ? <Check className="h-3.5 w-3.5" strokeWidth={2.5} /> : <span className="text-[13px] font-bold leading-none">!</span>}
+          </span>
           <span>{label}</span>
         </button>
       })}
