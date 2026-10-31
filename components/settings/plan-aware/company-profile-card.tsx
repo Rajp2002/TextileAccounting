@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils'
 import { useTranslation } from '@/lib/i18n/context'
 import { useSavedFlash } from '@/hooks/use-saved-flash'
 import { brandingErrorText, brandingText, type BrandingCopyKey } from '@/lib/i18n/document-branding'
+import { SettingsCardHeader } from './settings-card'
 import { LOGO_ACCEPTED_MIME_TYPES, LOGO_MAX_UPLOAD_BYTES } from '@/lib/document-branding/limits'
 import type { DocumentBrandingPreferences, DocumentBrandingSettingsView, LogoAssetView, LogoVariant } from '@/lib/document-branding/types'
 import {
@@ -90,15 +91,14 @@ export function CompanyProfileCard({ onDirtyChange }: { onDirtyChange?: (dirty: 
 
     return (
         <section id="company-profile" aria-labelledby="company-profile-heading" data-i18n-skip="true" className="scroll-mt-24 rounded-2xl border border-hairline bg-surface p-5 shadow-xs sm:p-6">
-            <div className="space-y-1 border-b border-hairline/80 pb-4">
-                <div className="flex items-center gap-2">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-saffron-soft text-saffron-deep">
-                        <Building2 className="h-4 w-4" aria-hidden="true" />
-                    </span>
-                    <h2 id="company-profile-heading" className="text-base font-semibold text-ink">{text('companyProfileTitle')}</h2>
-                </div>
-                <p className="text-sm leading-relaxed text-muted-foreground">{text('companyProfileSummary')}</p>
-            </div>
+            <SettingsCardHeader
+                icon={Building2}
+                titleId="company-profile-heading"
+                title={text('companyProfileTitle')}
+                description={text('companyProfileSummary')}
+                scope="factory"
+                className="border-b border-hairline px-0 pb-4 pt-0 sm:px-0"
+            />
 
             {!view && !loadFailed && (
                 <div className="mt-6 space-y-3" aria-busy="true" aria-label={text('loading')}>

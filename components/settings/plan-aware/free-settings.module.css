@@ -25,4 +25,9 @@
   .group > div > section [data-slot="input"] { height: auto; min-height: 44px; }
   .root .slot > section:not(.group) { padding: 1rem; }
   .root .slot > section button { min-height: 44px; white-space: normal; height: auto; }
+  /* Shared settings sections pad their own header, body and footer bands. */
+  .group > div > section[data-settings-card], .root .slot > section[data-settings-card]:not(.group) { padding: 0; }
+  /* Inside a fold the toggle already names the section; keep only the scope and description. */
+  .group > div > section [data-settings-card-icon] { display: none; }
+  .group > div > section [data-settings-card-title] { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 }

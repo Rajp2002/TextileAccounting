@@ -5,12 +5,12 @@ import { Calculator, CheckCircle2, Loader2, AlertCircle } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { LiquidSegmented } from '@/components/ui/liquid-segmented'
 import { toast, userFacingError } from '@/lib/app-notifications'
 import { useSavedFlash } from '@/hooks/use-saved-flash'
 import { useTranslation } from '@/lib/i18n/context'
 import { saveCostingDefaults, type CostingDefaultsInput } from '@/app/(dashboard)/owner/settings/actions'
+import { SettingsCardFooter, SettingsCardHeader, SettingsFieldGroupLabel, settingsCardBodyClassName, settingsCardClassName, settingsSaveButtonClassName } from './settings-card'
 
 export interface CostingDefaultsData {
     yarnShortagePct: number
@@ -157,37 +157,35 @@ export function CostingDefaultsCard({
     return (
         <section
             aria-labelledby="costing-defaults-heading"
-            className="rounded-2xl border border-hairline bg-surface p-5 shadow-xs sm:p-6"
+            data-settings-card="true"
+            className={settingsCardClassName}
         >
-            <div className="flex flex-wrap items-start justify-between gap-2 border-b border-hairline/80 pb-4">
-                <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-saffron-soft text-saffron-deep">
-                            <Calculator className="h-4 w-4" aria-hidden="true" />
-                        </span>
-                        <h2 id="costing-defaults-heading" className="text-base font-semibold text-ink">
-                            {tx('Costing defaults')}
-                        </h2>
-                    </div>
-                    <p className="text-sm leading-relaxed text-muted-foreground">
-                        {tx('Set the starting values for new costings. You can change them for each costing.')}
-                    </p>
-                </div>
-                <Badge variant="outline" className="text-xs font-medium text-muted-foreground">
-                    {tx('Costing defaults: Used as starting values for new costings in this factory.')}
-                </Badge>
-            </div>
+            <SettingsCardHeader
+                icon={Calculator}
+                titleId="costing-defaults-heading"
+                title={tx('Costing defaults')}
+                description={tx('Set the starting values for new costings. You can change them for each costing.')}
+                scope="factory"
+                className="border-b border-hairline"
+            />
 
-            {mobileFeedback && saveError && <p role="alert" className="mt-4 text-sm text-risk">{saveError}</p>}
-            {staleError && (
-                <div className="mt-4 flex items-center gap-2.5 rounded-xl border border-warning/30 bg-warning-soft p-3.5 text-sm text-ink" role="alert">
-                    <AlertCircle className="h-4 w-4 shrink-0 text-warning" aria-hidden="true" />
-                    <p>{staleError}</p>
+            {(mobileFeedback && saveError) || staleError ? (
+                <div className="space-y-3 px-4 pt-5 sm:px-6">
+                    {mobileFeedback && saveError && <p role="alert" className="text-sm text-risk">{saveError}</p>}
+                    {staleError && (
+                        <div className="flex items-center gap-2.5 rounded-xl border border-warning/30 bg-warning-soft p-3.5 text-sm text-ink" role="alert">
+                            <AlertCircle className="h-4 w-4 shrink-0 text-warning" aria-hidden="true" />
+                            <p>{staleError}</p>
+                        </div>
+                    )}
                 </div>
-            )}
+            ) : null}
 
-            <form onSubmit={handleSubmit} className="mt-6 space-y-6">
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <form onSubmit={handleSubmit} className="flex flex-1 flex-col">
+                <div className={`space-y-7 ${settingsCardBodyClassName}`}>
+                <div className="space-y-4">
+                <SettingsFieldGroupLabel>{tx('Starting values')}</SettingsFieldGroupLabel>
+                <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
                     {/* CD01: Default Yarn Wastage */}
                     <div className="space-y-2">
                         <Label htmlFor={wasteInputId} className="text-sm font-semibold text-ink">
@@ -204,7 +202,7 @@ export function CostingDefaultsCard({
                                 onChange={e => updateField('yarnShortagePct', Number(e.target.value))}
                                 disabled={isSubmitting}
                                 aria-invalid={!!fieldErrors.yarnShortagePct}
-                                className="h-11 rounded-xl border-hairline bg-surface pr-10 font-mono tabular-nums text-sm focus-visible:border-loom"
+                                className="h-11 rounded-xl border-hairline bg-surface pr-10 tabular-nums text-sm focus-visible:border-loom"
                                 placeholder="0"
                             />
                             <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
@@ -238,7 +236,7 @@ export function CostingDefaultsCard({
                                 onChange={e => updateField('defaultMarginPct', Number(e.target.value))}
                                 disabled={isSubmitting}
                                 aria-invalid={!!fieldErrors.defaultMarginPct}
-                                className="h-11 rounded-xl border-hairline bg-surface pr-10 font-mono tabular-nums text-sm focus-visible:border-loom"
+                                className="h-11 rounded-xl border-hairline bg-surface pr-10 tabular-nums text-sm focus-visible:border-loom"
                                 placeholder="10"
                             />
                             <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
@@ -256,6 +254,11 @@ export function CostingDefaultsCard({
                         )}
                     </div>
 
+                </div>
+                </div>
+                <div className="space-y-4 border-t border-hairline/70 pt-6">
+                <SettingsFieldGroupLabel>{tx('Cost methods')}</SettingsFieldGroupLabel>
+                <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-3">
                     {/* CD03: Default Overhead Method */}
                     <div className="space-y-2">
                         <Label className="text-sm font-semibold text-ink">
@@ -322,13 +325,11 @@ export function CostingDefaultsCard({
                         </p>
                     </div>
                 </div>
+                </div>
+                </div>
 
                 {/* Footer Note and Form Actions */}
-                <div className="flex flex-wrap items-center justify-between gap-4 border-t border-hairline/80 pt-4">
-                    <p className="text-xs font-medium text-muted-foreground">
-                        {tx('Changes apply to new costings. Existing costings are not changed.')}
-                    </p>
-                    <div className="flex items-center gap-3">
+                <SettingsCardFooter dirty={isDirty} note={tx('Changes apply to new costings. Existing costings are not changed.')}>
                         {isDirty && (
                             <Button
                                 type="button"
@@ -343,7 +344,7 @@ export function CostingDefaultsCard({
                         <Button
                             type="submit"
                             disabled={!isDirty || isSubmitting}
-                            className={`min-h-11 rounded-xl bg-loom px-5 font-bold text-white shadow-xs hover:bg-loom-elevated transition-colors ${justSaved && !isDirty ? 'disabled:opacity-100' : ''}`}
+                            className={settingsSaveButtonClassName(isDirty, justSaved)}
                         >
                             {isSubmitting ? (
                                 <>
@@ -359,8 +360,7 @@ export function CostingDefaultsCard({
                                 tx('Save costing defaults')
                             )}
                         </Button>
-                    </div>
-                </div>
+                </SettingsCardFooter>
             </form>
         </section>
     )

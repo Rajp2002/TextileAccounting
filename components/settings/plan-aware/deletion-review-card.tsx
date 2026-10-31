@@ -20,6 +20,7 @@ import { globalQueryClient } from '@/lib/query-client-registry'
 import { clearClientSessionState } from '@/lib/client-storage-cleanup'
 import { deleteAccountPermanently } from '@/app/(dashboard)/owner/settings/account-deletion'
 import { ACCOUNT_DELETION_CONFIRMATION_PHRASE } from '@/lib/account-deletion'
+import { SettingsCardHeader, settingsCardClassName } from './settings-card'
 
 interface DeletionReviewCardProps {
     organizationName: string
@@ -88,32 +89,28 @@ export function DeletionReviewCard({ organizationName, accountEmail, restoreMobi
 
     return (
         <>
-            {/* Small neutral card with restrained warning heading and Review deletion... button */}
+            {/* Neutral section with a restrained heading and the Review deletion… button */}
             <section
                 aria-labelledby="account-deletion-heading"
-                className="rounded-2xl border border-hairline bg-surface p-5 shadow-xs sm:p-6"
+                data-settings-card="true"
+                className={settingsCardClassName}
             >
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-soft text-subtle">
-                                <Trash2 className="h-4 w-4" aria-hidden="true" />
-                            </span>
-                            <h2 id="account-deletion-heading" className="text-base font-semibold text-ink">
-                                {tx('Account & factory deletion')}
-                            </h2>
-                        </div>
-                        <p className="text-xs leading-relaxed text-muted-foreground">
-                            {tx('Review the irreversible consequences of deleting this account and factory workspace.')}
-                        </p>
-                    </div>
+                <div className="flex flex-col gap-4 pr-4 sm:flex-row sm:items-center sm:justify-between sm:pr-6">
+                    <SettingsCardHeader
+                        icon={Trash2}
+                        tone="neutral"
+                        titleId="account-deletion-heading"
+                        title={tx('Account & factory deletion')}
+                        description={tx('Review the irreversible consequences of deleting this account and factory workspace.')}
+                        className="min-w-0 flex-1 max-sm:pb-0"
+                    />
 
                     <Button
                         ref={reviewTrigger}
                         type="button"
                         variant="outline"
                         onClick={() => setReviewOpen(true)}
-                        className="min-h-11 shrink-0 rounded-xl border border-hairline bg-surface px-4 text-xs font-semibold shadow-xs transition-colors hover:border-risk/40 hover:bg-risk-soft hover:text-risk"
+                        className="min-h-11 shrink-0 rounded-xl border border-hairline bg-surface px-4 font-semibold shadow-xs transition-colors hover:border-risk/40 hover:bg-risk-soft hover:text-risk max-sm:mb-5 max-sm:ml-4 max-sm:self-start"
                     >
                         {tx('Review deletion…')}
                     </Button>

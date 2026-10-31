@@ -2,7 +2,7 @@
 
 import React, { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react'
 import dynamic from 'next/dynamic'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { ChevronDown, ChevronUp, MonitorSmartphone } from 'lucide-react'
 import { useTranslation } from '@/lib/i18n/context'
 import type { SubscriptionTier } from '@/lib/subscription-access'
 import { PersonalInformationCard } from './personal-information-card'
@@ -14,6 +14,7 @@ import { DeletionReviewCard } from './deletion-review-card'
 import { CompanyProfileCard } from './company-profile-card'
 import { brandingText } from '@/lib/i18n/document-branding'
 import { useUnloadProtection } from './unsaved-changes-dialog'
+import { SettingsCardHeader, settingsCardClassName } from './settings-card'
 import { PageHeader } from '@/components/ui/page-header'
 import { cn } from '@/lib/utils'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -42,6 +43,8 @@ function subscribeStartupPreference(onChange: () => void) {
 function currentStartupPreference() {
     try { return readStartupIntroPreference(window.localStorage) } catch { return null }
 }
+
+const PLAN_NAMES = { free: 'Free', lite: 'Lite', base: 'Base' } as const
 
 const serverStartupPreference = (): StartupIntroPreference => DEFAULT_STARTUP_INTRO_PREFERENCE
 
@@ -91,14 +94,18 @@ function StartupIntroSetting() {
         setSaveFailed(!saved)
         if (saved) window.dispatchEvent(new Event(STARTUP_INTRO_CHANGE_EVENT))
     }
-    return <section aria-labelledby="startup-intro-heading" className="rounded-2xl border border-hairline bg-surface p-5 shadow-xs sm:p-6">
-        <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="min-w-0 space-y-1">
-                <h2 id="startup-intro-heading" className="text-base font-semibold text-ink">{t('common.startup_intro_title')}</h2>
-                <p id="startup-intro-description" className="text-sm leading-relaxed text-muted-foreground">{t('common.startup_intro_body')}</p>
-            </div>
+    return <section aria-labelledby="startup-intro-heading" data-settings-card="true" className={settingsCardClassName}>
+        <SettingsCardHeader
+            icon={MonitorSmartphone}
+            titleId="startup-intro-heading"
+            title={t('common.startup_intro_title')}
+            scope="device"
+            className="pb-0 sm:pb-0"
+        />
+        <div className="flex min-w-0 flex-1 flex-col gap-4 px-4 pb-5 pt-3 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:pb-6">
+            <p id="startup-intro-description" className="min-w-0 text-sm leading-relaxed text-muted-foreground sm:pl-[3.375rem]">{t('common.startup_intro_body')}</p>
             <Select value={preference ?? DEFAULT_STARTUP_INTRO_PREFERENCE} onValueChange={changePreference} disabled={preference === null}>
-                <SelectTrigger aria-labelledby="startup-intro-heading" aria-describedby="startup-intro-description" className="min-h-11 w-full whitespace-normal text-left sm:w-auto sm:min-w-44"><SelectValue /></SelectTrigger>
+                <SelectTrigger aria-labelledby="startup-intro-heading" aria-describedby="startup-intro-description" className="min-h-11 w-full shrink-0 whitespace-normal rounded-xl text-left sm:w-auto sm:min-w-44"><SelectValue /></SelectTrigger>
                 <SelectContent>
                     <SelectItem value="first-launch">{t('common.startup_intro_first')}</SelectItem>
                     <SelectItem value="always">{t('common.startup_intro_always')}</SelectItem>
@@ -106,7 +113,7 @@ function StartupIntroSetting() {
                 </SelectContent>
             </Select>
         </div>
-        {(saveFailed || preference === null) && <p role="status" className="mt-3 text-sm text-risk">{t('common.startup_intro_error')}</p>}
+        {(saveFailed || preference === null) && <p role="status" className="px-4 pb-5 text-sm text-risk sm:px-6">{t('common.startup_intro_error')}</p>}
     </section>
 }
 
@@ -144,7 +151,7 @@ export function PlanAwareSettingsView({
     onFactoryNameChange,
     onDefaultsChange,
 }: PlanAwareSettingsViewProps) {
-    const { t, language } = useTranslation()
+    const { t, tx, language } = useTranslation()
 
     const [confirmedName, setConfirmedName] = useState(profile.fullName)
     const [confirmedDefaults, setConfirmedDefaults] = useState<CostingDefaultsData | null>(null)
@@ -171,9 +178,9 @@ export function PlanAwareSettingsView({
         <div className={cn('ui-route-enter w-full space-y-6', (tier === 'free' || tier === 'lite') && styles.root)}>
             {/* The same title row as the other workspace pages. */}
             <PageHeader title={t('settings.title') || 'Settings'} />
-            {/* Wide screens pair related sections in rows; below xl it is one column in this order. */}
-            <main className="grid grid-cols-1 gap-6 xl:grid-cols-2 xl:items-start">
-                <div className={styles.slot}><FreeSettingsGroup compact={tier === 'free' || tier === 'lite'} title={freeSupportingText(language, 'personal')} summary={tier === 'lite' ? confirmedName : profile.fullName} dirty={personalDirty}><PersonalInformationCard
+            {/* Wide screens pair related sections in rows of equal height; below xl it is one column in this order. */}
+            <main className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+                <div className={cn(styles.slot, styles.fill)}><FreeSettingsGroup compact={tier === 'free' || tier === 'lite'} title={freeSupportingText(language, 'personal')} summary={tier === 'lite' ? confirmedName : profile.fullName} dirty={personalDirty}><PersonalInformationCard
                         initialName={profile.fullName}
                         email={profile.email}
                         emailVerified={profile.emailVerified}
@@ -181,9 +188,11 @@ export function PlanAwareSettingsView({
                         onNameUpdated={tier === 'lite' ? name => { setConfirmedName(name); onProfileNameChange?.(name) } : onProfileNameChange}
                         onDirtyChange={setPersonalDirty}
                     /></FreeSettingsGroup></div>
-                <div className={styles.slot}><FreeSettingsGroup compact={tier === 'free' || tier === 'lite'} title={freeSupportingText(language, 'factory')} summary={factory.name} dirty={factoryDirty}><FactoryDetailsCard
+                <div className={cn(styles.slot, styles.fill)}><FreeSettingsGroup compact={tier === 'free' || tier === 'lite'} title={freeSupportingText(language, 'factory')} summary={factory.name} dirty={factoryDirty}><FactoryDetailsCard
                         initialFactoryName={factory.name}
                         isAuthorizedEditor={factory.isAuthorizedEditor ?? true}
+                        planName={tier === 'none' ? undefined : tx(PLAN_NAMES[tier])}
+                        planHref={tier === 'free' ? '/free/billing' : '/owner/billing'}
                         onFactoryNameUpdated={onFactoryNameChange}
                         onDirtyChange={setFactoryDirty}
                     /></FreeSettingsGroup></div>

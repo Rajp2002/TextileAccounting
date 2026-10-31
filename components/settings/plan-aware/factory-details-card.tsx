@@ -1,19 +1,23 @@
 'use client'
 
 import React, { useState, useId } from 'react'
-import { CheckCircle2, Factory, Loader2 } from 'lucide-react'
+import Link from 'next/link'
+import { CheckCircle2, ChevronRight, Factory, Loader2 } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { toast, userFacingError } from '@/lib/app-notifications'
 import { useSavedFlash } from '@/hooks/use-saved-flash'
 import { useTranslation } from '@/lib/i18n/context'
 import { updateFactoryDetails } from '@/app/(dashboard)/owner/settings/actions'
+import { ReadOnlyValue, SettingsCardFooter, SettingsCardHeader, settingsCardBodyClassName, settingsCardClassName, settingsSaveButtonClassName } from './settings-card'
 
 interface FactoryDetailsCardProps {
     initialFactoryName: string
     isAuthorizedEditor?: boolean
+    /** The plan shown under the name, already in display form (Free, Lite, Base). */
+    planName?: string
+    planHref?: string
     onFactoryNameUpdated?: (newName: string) => void
     onDirtyChange?: (dirty: boolean) => void
 }
@@ -21,6 +25,8 @@ interface FactoryDetailsCardProps {
 export function FactoryDetailsCard({
     initialFactoryName,
     isAuthorizedEditor = true,
+    planName,
+    planHref,
     onFactoryNameUpdated,
     onDirtyChange,
 }: FactoryDetailsCardProps) {
@@ -91,29 +97,20 @@ export function FactoryDetailsCard({
     return (
         <section
             aria-labelledby="factory-details-heading"
-            className="rounded-2xl border border-hairline bg-surface p-5 shadow-xs sm:p-6"
+            data-settings-card="true"
+            className={settingsCardClassName}
         >
-            <div className="flex flex-wrap items-start justify-between gap-2 border-b border-hairline/80 pb-4">
-                <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-saffron-soft text-saffron-deep">
-                            <Factory className="h-4 w-4" aria-hidden="true" />
-                        </span>
-                        <h2 id="factory-details-heading" className="text-base font-semibold text-ink">
-                            {tx('Factory details')}
-                        </h2>
-                    </div>
-                    <p className="text-sm leading-relaxed text-muted-foreground">
-                        {tx('Identify your active factory workspace and review team connection details.')}
-                    </p>
-                </div>
-                <Badge variant="outline" className="text-xs font-medium text-muted-foreground">
-                    {tx('Factory: Used for this factory.')}
-                </Badge>
-            </div>
+            <SettingsCardHeader
+                icon={Factory}
+                titleId="factory-details-heading"
+                title={tx('Factory details')}
+                description={tx('Identify your active factory workspace and review team connection details.')}
+                scope="factory"
+                className="border-b border-hairline"
+            />
 
-            <form onSubmit={handleSubmit} className="mt-6 space-y-6">
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <form onSubmit={handleSubmit} className="flex flex-1 flex-col">
+                <div className={`space-y-5 ${settingsCardBodyClassName}`}>
                     {/* Factory / Workspace Name */}
                     <div className="space-y-2">
                         <Label htmlFor={factoryInputId} className="text-sm font-semibold text-ink">
@@ -140,9 +137,9 @@ export function FactoryDetailsCard({
                                 )}
                             </>
                         ) : (
-                            <div className="flex min-h-11 items-center rounded-xl border border-hairline bg-surface-soft/60 px-3.5 py-2 text-sm text-ink select-all">
+                            <ReadOnlyValue lockedLabel={tx('You can view this factory name, but only owners or admins can edit it.')}>
                                 {factoryName || tx('Weavly')}
-                            </div>
+                            </ReadOnlyValue>
                         )}
                         <p className="text-xs text-muted-foreground">
                             {isAuthorizedEditor
@@ -151,11 +148,26 @@ export function FactoryDetailsCard({
                         </p>
                     </div>
 
+                    {/* The plan this factory is on, with the way to change it. */}
+                    {planName && (
+                        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-hairline/70 pt-4">
+                            <div className="min-w-0">
+                                <p className="text-xs font-medium text-muted-foreground">{tx('Your plan')}</p>
+                                <p className="mt-0.5 text-sm font-semibold text-ink">{planName}</p>
+                            </div>
+                            {planHref && (
+                                <Link href={planHref} className="inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-ink hover:text-saffron-deep">
+                                    {tx('Manage plan')}
+                                    <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                                </Link>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 {/* Form Actions */}
                 {isAuthorizedEditor && (
-                    <div className="flex flex-wrap items-center justify-end gap-3 border-t border-hairline/80 pt-4">
+                    <SettingsCardFooter dirty={isDirty}>
                         {isDirty && (
                             <Button
                                 type="button"
@@ -170,7 +182,7 @@ export function FactoryDetailsCard({
                         <Button
                             type="submit"
                             disabled={!isDirty || isSubmitting}
-                            className={`min-h-11 rounded-xl bg-loom px-5 font-bold text-white shadow-xs hover:bg-loom-elevated transition-colors ${justSaved && !isDirty ? 'disabled:opacity-100' : ''}`}
+                            className={settingsSaveButtonClassName(isDirty, justSaved)}
                         >
                             {isSubmitting ? (
                                 <>
@@ -186,7 +198,7 @@ export function FactoryDetailsCard({
                                 tx('Save factory details')
                             )}
                         </Button>
-                    </div>
+                    </SettingsCardFooter>
                 )}
             </form>
         </section>

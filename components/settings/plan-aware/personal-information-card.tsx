@@ -6,11 +6,11 @@ import { Label } from '@/components/ui/label'
 import { LiquidSegmented } from '@/components/ui/liquid-segmented'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { toast, userFacingError } from '@/lib/app-notifications'
 import { useSavedFlash } from '@/hooks/use-saved-flash'
 import { useTranslation, type Language } from '@/lib/i18n/context'
 import { updatePersonalInformation } from '@/app/(dashboard)/owner/settings/actions'
+import { ReadOnlyValue, SettingsCardFooter, SettingsCardHeader, settingsCardBodyClassName, settingsCardClassName, settingsSaveButtonClassName } from './settings-card'
 
 interface PersonalInformationCardProps {
     initialName: string
@@ -109,29 +109,20 @@ export function PersonalInformationCard({
     return (
         <section
             aria-labelledby="personal-info-heading"
-            className="rounded-2xl border border-hairline bg-surface p-5 shadow-xs sm:p-6"
+            data-settings-card="true"
+            className={settingsCardClassName}
         >
-            <div className="flex flex-wrap items-start justify-between gap-2 border-b border-hairline/80 pb-4">
-                <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-saffron-soft text-saffron-deep">
-                            <User className="h-4 w-4" aria-hidden="true" />
-                        </span>
-                        <h2 id="personal-info-heading" className="text-base font-semibold text-ink">
-                            {tx('Personal information')}
-                        </h2>
-                    </div>
-                    <p className="text-sm leading-relaxed text-muted-foreground">
-                        {tx('Manage your personal profile details and language preferences.')}
-                    </p>
-                </div>
-                <Badge variant="outline" className="text-xs font-medium text-muted-foreground">
-                    {tx('Personal: Only affects your account.')}
-                </Badge>
-            </div>
+            <SettingsCardHeader
+                icon={User}
+                titleId="personal-info-heading"
+                title={tx('Personal information')}
+                description={tx('Manage your personal profile details and language preferences.')}
+                scope="personal"
+                className="border-b border-hairline"
+            />
 
-            <form onSubmit={handleSubmit} className="mt-6 space-y-6">
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <form onSubmit={handleSubmit} className="flex flex-1 flex-col">
+                <div className={`grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2 ${settingsCardBodyClassName}`}>
                     {/* Your Name */}
                     <div className="space-y-2">
                         <Label htmlFor={nameInputId} className="text-sm font-semibold text-ink">
@@ -164,7 +155,7 @@ export function PersonalInformationCard({
                             {tx('Preferred language')}
                         </Label>
                         <LiquidSegmented
-                            className="mt-0.5"
+                            fullWidth
                             aria-label={tx('Preferred language')}
                             disabled={languageStatus === 'loading'}
                             value={language}
@@ -178,45 +169,41 @@ export function PersonalInformationCard({
 
                     {/* Account Email (Read-only) */}
                     <div className="space-y-2">
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between gap-2">
                             <Label className="text-sm font-semibold text-ink">
                                 {tx('Account email')}
                             </Label>
                             {emailVerified ? (
-                                <span className="inline-flex items-center gap-1 text-xs font-medium text-success">
+                                <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2 py-0.5 text-xs font-medium text-success">
                                     <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
                                     {tx('Verified')}
                                 </span>
                             ) : (
-                                <span className="text-xs text-muted-foreground">
+                                <span className="rounded-full bg-surface-soft px-2 py-0.5 text-xs font-medium text-muted-foreground">
                                     {tx('Unverified')}
                                 </span>
                             )}
                         </div>
-                        <div className="flex min-h-11 items-center rounded-xl border border-hairline bg-surface-soft/60 px-3.5 py-2 text-sm text-ink break-all select-all">
+                        <ReadOnlyValue lockedLabel={tx('This cannot be changed here.')}>
                             {email || tx('Not provided')}
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                            {tx('This cannot be changed here.')}
-                        </p>
+                        </ReadOnlyValue>
                     </div>
 
                     {/* Account Phone (Read-only) */}
                     <div className="space-y-2">
-                        <Label className="text-sm font-semibold text-ink">
-                            {tx('Account phone')}
-                        </Label>
-                        <div className="flex min-h-11 items-center rounded-xl border border-hairline bg-surface-soft/60 px-3.5 py-2 text-sm text-ink select-all">
-                            {phone || tx('Not provided')}
+                        <div className="flex min-h-[22px] items-center">
+                            <Label className="text-sm font-semibold text-ink">
+                                {tx('Account phone')}
+                            </Label>
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                            {tx('This cannot be changed here.')}
-                        </p>
+                        <ReadOnlyValue lockedLabel={tx('This cannot be changed here.')}>
+                            {phone || tx('Not provided')}
+                        </ReadOnlyValue>
                     </div>
                 </div>
 
                 {/* Form Actions */}
-                <div className="flex flex-wrap items-center justify-end gap-3 border-t border-hairline/80 pt-4">
+                <SettingsCardFooter dirty={isDirty} note={tx('Email and phone are tied to your sign-in and cannot be changed here.')}>
                     {isDirty && (
                         <Button
                             type="button"
@@ -231,7 +218,7 @@ export function PersonalInformationCard({
                     <Button
                         type="submit"
                         disabled={!isDirty || isSubmitting}
-                        className={`min-h-11 rounded-xl bg-loom px-5 font-bold text-white shadow-xs hover:bg-loom-elevated transition-colors ${justSaved && !isDirty ? 'disabled:opacity-100' : ''}`}
+                        className={settingsSaveButtonClassName(isDirty, justSaved)}
                     >
                         {isSubmitting ? (
                             <>
@@ -247,7 +234,7 @@ export function PersonalInformationCard({
                             tx('Save personal information')
                         )}
                     </Button>
-                </div>
+                </SettingsCardFooter>
             </form>
         </section>
     )

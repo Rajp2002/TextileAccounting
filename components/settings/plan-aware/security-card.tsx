@@ -1,12 +1,12 @@
 'use client'
 
 import React, { useState } from 'react'
-import { ShieldCheck, Mail, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
+import { ShieldCheck, Mail, KeyRound, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { toast, userFacingError } from '@/lib/app-notifications'
 import { useTranslation } from '@/lib/i18n/context'
 import { requestSecurityPasswordReset } from '@/app/(dashboard)/owner/settings/actions'
+import { SettingsCardHeader, settingsCardBodyClassName, settingsCardClassName } from './settings-card'
 
 interface SecurityCardProps {
     email: string
@@ -46,39 +46,31 @@ export function SecurityCard({ email }: SecurityCardProps) {
     return (
         <section
             aria-labelledby="security-heading"
-            className="rounded-2xl border border-hairline bg-surface p-5 shadow-xs sm:p-6"
+            data-settings-card="true"
+            className={settingsCardClassName}
         >
-            <div className="flex flex-wrap items-start justify-between gap-2 border-b border-hairline/80 pb-4">
-                <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-saffron-soft text-saffron-deep">
-                            <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-                        </span>
-                        <h2 id="security-heading" className="text-base font-semibold text-ink">
-                            {tx('Security')}
-                        </h2>
-                    </div>
-                    <p className="text-sm leading-relaxed text-muted-foreground">
-                        {tx('Manage your password and sign-in authentication security.')}
-                    </p>
-                </div>
-                <Badge variant="outline" className="text-xs font-medium text-muted-foreground">
-                    {tx('Personal: Only affects your account.')}
-                </Badge>
-            </div>
+            <SettingsCardHeader
+                icon={ShieldCheck}
+                titleId="security-heading"
+                title={tx('Security')}
+                description={tx('Manage your password and sign-in authentication security.')}
+                scope="personal"
+                className="border-b border-hairline"
+            />
 
-            <div className="mt-6 space-y-4">
-                <div className="flex flex-col gap-4 rounded-xl border border-hairline bg-surface-soft/40 p-5 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="space-y-1">
+            <div className={`space-y-4 ${settingsCardBodyClassName}`}>
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0 space-y-1">
                         <h3 className="text-sm font-semibold text-ink">
                             {tx('Password & sign-in')}
                         </h3>
-                        <p className="text-xs leading-relaxed text-muted-foreground">
+                        <p className="text-sm leading-relaxed text-muted-foreground">
                             {tx('Send a secure password reset link to your registered email address.')}
                         </p>
                         {email && (
-                            <p className="text-xs font-mono text-ink pt-0.5 select-all">
-                                {email}
+                            <p className="inline-flex max-w-full items-center gap-1.5 pt-1 text-xs font-medium text-ink">
+                                <Mail className="h-3.5 w-3.5 shrink-0 text-subtle" aria-hidden="true" />
+                                <span className="min-w-0 break-all select-all">{email}</span>
                             </p>
                         )}
                     </div>
@@ -96,7 +88,7 @@ export function SecurityCard({ email }: SecurityCardProps) {
                             </>
                         ) : (
                             <>
-                                <Mail className="h-4 w-4 text-subtle" aria-hidden="true" />
+                                <KeyRound className="h-4 w-4 text-subtle" aria-hidden="true" />
                                 {tx('Send reset link')}
                             </>
                         )}
