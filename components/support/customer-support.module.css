@@ -1,4 +1,7 @@
 .scope { --spacing: 4px; --text-sm: 14px; --text-xs: 12px; color: var(--wv-text-primary); }
+/* Inside the workspace frame the scope fills the page so the history panel can sit at the bottom. */
+.scope:not(.shell) { display: flex; flex: 1; flex-direction: column; }
+.scope:not(.shell) > [data-sensitive-surface]:not([hidden]) { display: flex; flex: 1; flex-direction: column; gap: 24px; }
 .shell { min-height: 100svh; background: var(--wv-bg-canvas); }
 .sidebar { position: fixed; inset: 0 auto 0 0; width: 248px; display: flex; flex-direction: column; background: var(--wv-bg-inverse); color: var(--wv-text-inverse); padding: 0 16px; }
 .brand { display: flex; align-items: center; justify-content: center; height: 132px; flex-shrink: 0; border-bottom: 1px solid var(--wv-border-inverse); }
@@ -41,7 +44,7 @@
 .tip p, .privacy p { margin-top: 5px; font-size: 13px; line-height: 1.65; color: var(--wv-neel-500); }
 .privacy { display: flex; align-items: flex-start; gap: 12px; border-top: 1px solid var(--wv-border-subtle); padding-top: 24px; margin-top: auto; }
 .privacy > svg { width: 18px; height: 18px; flex-shrink: 0; color: var(--wv-text-brand); margin-top: 2px; }
-.export { display: flex; align-items: center; gap: 18px; margin-top: 24px; padding: 24px; }
+.export { display: flex; align-items: center; gap: 18px; margin-top: auto; padding: 24px; }
 .exportIcon { display: grid; place-items: center; width: 48px; height: 48px; flex-shrink: 0; border-radius: 50%; background: var(--wv-bg-canvas); }
 .exportIcon svg { width: 22px; height: 22px; stroke-width: 1.75; }
 .export h2 { font-size: 14px; font-weight: 650; line-height: 1.5; }

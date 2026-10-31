@@ -1502,11 +1502,11 @@ export default function RatesClient({
                         {/* Activity holds every yarn's price chart in one modal, so the cards stay plain. */}
                         <Button
                             data-ratebook-field="activityAction"
-                            variant="outline"
+                            variant="saffron"
                             disabled={activityRates.length === 0}
                             onClick={() => openHistory(activityRates[0], 'trend')}
                             title={tx('See the price history of every yarn')}
-                            className={secondaryAction}
+                            className="h-10 rounded-lg font-semibold max-md:min-h-[44px]"
                         >
                             <History className="h-4 w-4" aria-hidden="true" />
                             <span>{tx('Activity')}</span>

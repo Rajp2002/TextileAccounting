@@ -56,12 +56,12 @@ export async function SupportWorkspaceFrame({ children }: { children: ReactNode 
   if (!sidebar) return <SupportShell>{children}</SupportShell>
   const sidebarPreference = parseSidebarPreference((await cookies()).get(SIDEBAR_PREFERENCE_COOKIE)?.value)
 
-  return <div className="relative isolate min-h-svh overflow-x-hidden bg-background" data-workspace-shell data-sidebar-preference={sidebarPreference} data-plan-tier={sidebar.subscriptionTier}>
+  return <div className="relative isolate min-h-svh overflow-x-hidden bg-background" data-owner-shell data-workspace-shell data-sidebar-preference={sidebarPreference} data-plan-tier={sidebar.subscriptionTier}>
     <BrandBackground variant="app" />
     <a href="#support-main" className="sr-only fixed left-3 top-[calc(0.75rem+var(--safe-area-top))] z-[100] rounded bg-surface p-3 text-ink focus:not-sr-only">Skip to content</a>
     <OwnerSidebar {...sidebar} />
     <div className="mobile-workspace-content relative z-10 min-w-0 px-safe">
-      <main id="support-main" tabIndex={-1} className="dashboard-main mx-auto min-h-svh w-full min-w-0 max-w-[var(--main-max)] px-3 pb-5 pt-[calc(1rem+env(safe-area-inset-top,0px))] xs:px-4 md:px-6 md:pb-6 md:pt-[calc(1.5rem+var(--safe-area-top))] lg:px-8">
+      <main id="support-main" tabIndex={-1} className="dashboard-main mx-auto flex min-h-svh flex-col w-full min-w-0 max-w-[var(--main-max)] px-3 pb-5 pt-[calc(1rem+env(safe-area-inset-top,0px))] xs:px-4 md:px-6 md:pb-6 md:pt-[calc(1.5rem+var(--safe-area-top))] lg:px-8">
         <div className={styles.scope}>{children}</div>
       </main>
     </div>
