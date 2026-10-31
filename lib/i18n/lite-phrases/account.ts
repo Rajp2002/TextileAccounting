@@ -150,6 +150,7 @@ export const ACCOUNT_PHRASES: LitePhraseRow[] = [
     ["Reuse a fabric construction for the next enquiry.", "अगली पूछताछ के लिए कपड़े की बनावट फिर से इस्तेमाल करें।", "આગલી પૂછપરછ માટે કાપડની બનાવટ ફરી વાપરો."],
     ["Keep yarn prices current across every costing.", "हर कॉस्टिंग में यार्न के भाव ताज़ा रखें।", "દરેક કોસ્ટિંગમાં યાર્નના ભાવ તાજા રાખો."],
     ["Reopen, compare and share costings as PDF.", "कॉस्टिंग फिर से खोलें, तुलना करें और PDF में भेजें।", "કોસ્ટિંગ ફરી ખોલો, સરખાવો અને PDF માં મોકલો."],
+    ["Watch the {0} demo", "{0} का डेमो देखें", "{0} નો ડેમો જુઓ"],
     ["The complete costing desk.", "पूरी कॉस्टिंग डेस्क।", "પૂરું કોસ્ટિંગ ડેસ્ક."],
     ["Daily metres by quality, loom and shift.", "क्वालिटी, लूम और शिफ़्ट के हिसाब से रोज़ के मीटर।", "ક્વોલિટી, લૂમ અને શિફ્ટ પ્રમાણે રોજના મીટર."],
     ["Piece-rate and fixed-salary pay cycles.", "पीस-रेट और फिक्स पगार के पे-साइकल।", "પીસ-રેટ અને ફિક્સ પગારના પે-સાઇકલ."],
