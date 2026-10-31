@@ -97,7 +97,7 @@ describe('Sprint 7 Base UX polish contracts', () => {
 
     it('keeps Base mobile entry surfaces padded and full-width', () => {
         // Billing now fills the content column like every other route; there is no rail to make room for.
-        expect(read('app/(dashboard)/owner/billing/page.tsx')).toContain('"billing-workspace-shell w-full space-y-6 pb-20"')
+        expect(read('app/(dashboard)/owner/billing/page.tsx')).toContain('"billing-workspace-shell flex w-full flex-col md:min-h-[calc(100svh-3rem-var(--safe-area-top))]"')
         expect(read('app/(dashboard)/owner/data-export/page.tsx')).toContain('w-full max-w-2xl px-4')
         expect(read('components/ConfirmActionDialog.tsx')).toContain('w-full sm:w-auto')
     })

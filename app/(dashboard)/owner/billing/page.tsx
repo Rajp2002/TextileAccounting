@@ -10,7 +10,8 @@ import { PaymentHistoryList, type BillingHistoryEntry, type BillingHistoryStatus
 import { ReferralCard } from '@/components/billing/ReferralCard'
 import { getReferralStats } from '@/lib/referral'
 import {
-    AlertCircle, ArrowRight, Check, Clock, Lock, ReceiptText, RefreshCw, ShieldCheck, Star, XCircle,
+    AlertCircle, ArrowRight, Calculator, Clock, Factory, FileText, Layers, Lock, Star, Tag, Truck, Users, XCircle,
+    type LucideIcon,
 } from 'lucide-react'
 import { railPrimaryAction } from '@/components/ui/rail'
 import { cn } from '@/lib/utils'
@@ -162,9 +163,19 @@ function daysUntil(iso: string | null, now: Date): number | null {
 }
 
 /** What each plan gives the owner, in the words the plan chooser uses. */
-const PLAN_INCLUDES: Record<PurchasablePlanTier, readonly string[]> = {
-    lite: ['Unlimited costings', 'Saved qualities', 'Yarn Rate Book', 'Saved Costings and PDF export'],
-    base: ['Everything in Lite', 'Production and looms', 'Workers and payroll', 'Fabric stock and challans'],
+const PLAN_INCLUDES: Record<PurchasablePlanTier, readonly { icon: LucideIcon; title: string; text: string }[]> = {
+    lite: [
+        { icon: Calculator, title: 'Unlimited costings', text: 'Cost any fabric, as often as you need.' },
+        { icon: Layers, title: 'Saved qualities', text: 'Reuse a fabric construction for the next enquiry.' },
+        { icon: Tag, title: 'Yarn Rate Book', text: 'Keep yarn prices current across every costing.' },
+        { icon: FileText, title: 'Saved Costings and PDF export', text: 'Reopen, compare and share costings as PDF.' },
+    ],
+    base: [
+        { icon: Calculator, title: 'Everything in Lite', text: 'The complete costing desk.' },
+        { icon: Factory, title: 'Production and looms', text: 'Daily metres by quality, loom and shift.' },
+        { icon: Users, title: 'Workers and payroll', text: 'Piece-rate and fixed-salary pay cycles.' },
+        { icon: Truck, title: 'Fabric stock and challans', text: 'Godown stock and dispatch challans.' },
+    ],
 }
 
 function AccessStateCallout({
@@ -453,8 +464,9 @@ export default async function BillingPage() {
     const primaryPlanAction = <>{viewPlansAction}{paymentAction}</>
 
     return (
-        <div className={cn("billing-workspace-shell w-full space-y-6 pb-20", litePresentation && styles.root)}>
-            <div className="ui-route-enter space-y-8">
+        <div className={cn("billing-workspace-shell flex w-full flex-col md:min-h-[calc(100svh-3rem-var(--safe-area-top))]", litePresentation && styles.root)}>
+            {/* On tablet and desktop the page fills the screen: the plan card takes the room and payments sit at the bottom. */}
+            <div className="ui-route-enter flex flex-1 flex-col gap-8">
                 <RouteMilestones route="/owner/billing" shellVisible primaryUsable secondaryReady />
                 <PlanAnalyticsBeacon eventName="base_pricing_viewed" properties={{ current_tier: tier }} />
 
@@ -490,9 +502,9 @@ export default async function BillingPage() {
                 )}
 
                 {/* The plan at a glance: which plan, until when, and what renewing costs. */}
-                <section aria-labelledby="current-plan-heading" className="space-y-3">
+                <section aria-labelledby="current-plan-heading" className="flex flex-1 flex-col gap-3">
                     <h2 className="text-[15px] font-semibold text-ink">Your plan</h2>
-                    <div className="overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs">
+                    <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xs">
                         <div className="flex flex-col gap-1 px-5 py-5 sm:px-6">
                             <div className="flex flex-wrap items-center gap-2.5">
                                 <h3 id="current-plan-heading" className="text-[22px] font-semibold leading-tight tracking-[-0.01em] text-ink">{shownPlanName}</h3>
@@ -510,9 +522,9 @@ export default async function BillingPage() {
                         {planStats.length > 0 ? (
                             <dl className={cn('grid border-t border-hairline max-sm:divide-y max-sm:divide-hairline sm:divide-x sm:divide-hairline', planStats.length === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2')}>
                                 {planStats.map(stat => (
-                                    <div key={stat.label} className="min-w-0 px-5 py-4 sm:px-6 sm:py-5">
+                                    <div key={stat.label} className="min-w-0 px-5 py-5 sm:px-6 sm:py-6">
                                         <dt className="text-[13px] font-medium text-muted-foreground">{stat.label}</dt>
-                                        <dd className="mt-1 text-xl font-semibold leading-tight tracking-[-0.01em] text-ink tabular-nums">{stat.value}</dd>
+                                        <dd className="mt-1.5 text-2xl font-semibold leading-tight tracking-[-0.02em] text-ink tabular-nums sm:text-[28px]">{stat.value}</dd>
                                         {stat.note && <dd className="mt-0.5 text-[13px] text-body tabular-nums">{stat.note}</dd>}
                                     </div>
                                 ))}
@@ -521,15 +533,20 @@ export default async function BillingPage() {
                             <p className="border-t border-hairline px-5 py-4 text-sm text-body sm:px-6">{accessTiming}</p>
                         )}
 
-                        <div className="border-t border-hairline bg-surface-soft/40 px-5 py-4 sm:px-6">
+                        <div className="flex flex-1 flex-col justify-center border-t border-hairline bg-surface-soft/40 px-5 py-5 sm:px-6 sm:py-6">
                             {shownTier ? (
                                 <>
                                     <p className="text-[13px] font-medium text-muted-foreground">{shownTier === 'base' ? 'Included in Base' : 'Included in Lite'}</p>
-                                    <ul className="mt-2 grid gap-x-6 gap-y-2 sm:grid-cols-2 lg:grid-cols-4">
-                                        {PLAN_INCLUDES[shownTier].map(item => (
-                                            <li key={item} className="flex items-center gap-2 text-sm text-ink">
-                                                <Check className="size-4 shrink-0 text-[var(--wv-moss-700)]" strokeWidth={2.5} aria-hidden="true" />
-                                                {item}
+                                    <ul className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                                        {PLAN_INCLUDES[shownTier].map(({ icon: Icon, title, text }) => (
+                                            <li key={title} className="flex items-start gap-3 rounded-xl border border-hairline bg-surface p-4">
+                                                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-saffron-soft text-saffron-deep">
+                                                    <Icon className="size-[18px]" aria-hidden="true" />
+                                                </span>
+                                                <span className="min-w-0">
+                                                    <span className="block text-sm font-semibold text-ink">{title}</span>
+                                                    <span className="mt-0.5 block text-[13px] leading-snug text-body">{text}</span>
+                                                </span>
                                             </li>
                                         ))}
                                     </ul>
@@ -541,14 +558,9 @@ export default async function BillingPage() {
                     </div>
                 </section>
 
-                <section aria-labelledby="billing-history-heading" className="space-y-3">
+                <section aria-labelledby="billing-history-heading" className="mt-auto space-y-3">
                     <h2 id="billing-history-heading" className="text-[15px] font-semibold text-ink">Payments &amp; receipts</h2>
                     <PaymentHistoryList entries={billingHistoryEntries} unconfirmedAttemptCopy={litePresentation} latestAttemptId={latestAttemptNeedsAttention && latestAttempt?.provider_order_id && getBillingAttemptPresentation(latestAttempt.status).shouldCheck ? latestAttempt.id : undefined} />
-                    <ul aria-label="Billing essentials" className="space-y-1.5 px-1 text-[13px] leading-relaxed text-muted-foreground">
-                        <li className="flex items-start gap-2"><ReceiptText className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />Receipts are PDF payment receipts. GST tax invoices are not issued for this pilot.</li>
-                        <li className="flex items-start gap-2"><RefreshCw className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />Annual renewals are manual. Nothing is charged automatically; renewal opens 30 days before access ends.</li>
-                        <li className="flex items-start gap-2"><ShieldCheck className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />Payments go through secure Razorpay checkout. Weavly does not store your full card or banking details.</li>
-                    </ul>
                 </section>
 
                 <Suspense fallback={null}>
