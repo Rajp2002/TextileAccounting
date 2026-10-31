@@ -44,15 +44,15 @@ export function PlanIncludesTiles({ tier }: { tier: PurchasablePlanTier }) {
         {PLAN_INCLUDES[tier].map(({ icon: Icon, title, text, demo }) => {
           const content = (
             <>
-              <span className={cn('flex size-12 shrink-0 items-center justify-center rounded-xl bg-saffron-soft text-saffron-deep', demo && 'transition-transform duration-300 ease-out group-hover:scale-110 group-focus-visible:scale-110 motion-reduce:transition-none motion-reduce:group-hover:scale-100')}>
+              <span className={cn('flex size-12 shrink-0 items-center justify-center rounded-xl bg-saffron-soft text-saffron-deep', demo && 'transition-[transform,background-color,color] duration-300 ease-out group-hover:scale-110 group-hover:bg-white/10 group-hover:text-[var(--wv-text-brand-on-inverse)] motion-reduce:transition-none motion-reduce:group-hover:scale-100')}>
                 <Icon className="size-6" aria-hidden="true" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-base font-semibold text-ink sm:text-lg">{title}</span>
-                <span className="mt-1 block text-sm leading-relaxed text-body sm:text-[15px]">{text}</span>
+                <span className={cn('block text-base font-semibold text-ink sm:text-lg', demo && 'transition-colors duration-300 group-hover:text-surface motion-reduce:transition-none')}>{title}</span>
+                <span className={cn('mt-1 block text-sm leading-relaxed text-body sm:text-[15px]', demo && 'transition-colors duration-300 group-hover:text-surface/80 motion-reduce:transition-none')}>{text}</span>
               </span>
               {demo && (
-                <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-ink text-surface opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100 max-md:opacity-100 motion-reduce:transition-none">
+                <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-ink text-surface opacity-0 transition-[opacity,background-color,color] duration-300 group-hover:bg-[var(--wv-action-accent)] group-hover:text-ink group-hover:opacity-100 group-focus-visible:opacity-100 max-md:opacity-100 motion-reduce:transition-none">
                   <Play className="size-4 translate-x-px fill-current" />
                 </span>
               )}
@@ -68,11 +68,10 @@ export function PlanIncludesTiles({ tier }: { tier: PurchasablePlanTier }) {
                   onClick={event => { setTrigger(event.currentTarget); setFeature(demo) }}
                   className={cn(
                     tileBase,
-                    'group relative w-full cursor-pointer text-left shadow-sm transition-[transform,box-shadow,border-color] duration-300 ease-out',
-                    'hover:z-10 hover:-translate-y-1.5 hover:scale-[1.02] hover:border-[var(--wv-saffron-200)] hover:shadow-[0_18px_32px_-14px_rgba(22,33,62,0.4)]',
-                    'focus-visible:z-10 focus-visible:-translate-y-1.5 focus-visible:scale-[1.02] focus-visible:border-[var(--wv-saffron-200)] focus-visible:shadow-[0_18px_32px_-14px_rgba(22,33,62,0.4)]',
+                    'group relative w-full cursor-pointer text-left shadow-sm transition-[transform,box-shadow,border-color,background-color] duration-300 ease-out',
+                    'hover:z-10 hover:-translate-y-1.5 hover:scale-[1.02] hover:border-ink hover:bg-ink hover:shadow-[0_20px_36px_-14px_rgba(22,33,62,0.55)]',
                     'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-saffron-deep active:translate-y-0 active:scale-100 active:shadow-sm',
-                    'motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:hover:scale-100 motion-reduce:focus-visible:translate-y-0 motion-reduce:focus-visible:scale-100',
+                    'motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:hover:scale-100',
                   )}
                 >
                   {content}
