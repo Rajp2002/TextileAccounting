@@ -1,7 +1,7 @@
 .scope { --spacing: 4px; --text-sm: 14px; --text-xs: 12px; color: var(--wv-text-primary); }
 /* Inside the workspace frame the scope fills the page so the history panel can sit at the bottom. */
 .scope:not(.shell) { display: flex; flex: 1; flex-direction: column; }
-.scope:not(.shell) > [data-sensitive-surface]:not([hidden]) { display: flex; flex: 1; flex-direction: column; gap: 24px; }
+.boundary, .boundarySurface:not([hidden]), .skeletonFrame { display: flex; flex: 1; flex-direction: column; gap: 24px; }
 .shell { min-height: 100svh; background: var(--wv-bg-canvas); }
 .sidebar { position: fixed; inset: 0 auto 0 0; width: 248px; display: flex; flex-direction: column; background: var(--wv-bg-inverse); color: var(--wv-text-inverse); padding: 0 16px; }
 .brand { display: flex; align-items: center; justify-content: center; height: 132px; flex-shrink: 0; border-bottom: 1px solid var(--wv-border-inverse); }

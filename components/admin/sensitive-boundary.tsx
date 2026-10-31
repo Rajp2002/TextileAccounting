@@ -7,7 +7,7 @@ import { globalQueryClient } from '@/lib/query-client-registry'
 
 /** Memory-only data. Revalidate before showing a restored or switched session. */
 export function useSensitiveSessionBoundary(userId: string, kind: 'founder' | 'customer' | 'founder_candidate', surface: RefObject<HTMLDivElement | null>, sessionTag?: string) {
-    const [message, setMessage] = useState<string | null>('Checking your session…')
+    const [message, setMessage] = useState<string | null>(CHECKING_SESSION_MESSAGE)
     const [invalidated, setInvalidated] = useState(false)
     const [generation, setGeneration] = useState(0)
 
@@ -35,7 +35,7 @@ export function useSensitiveSessionBoundary(userId: string, kind: 'founder' | 'c
             const current = ++sequence
             if (concealFirst) {
                 conceal()
-                setMessage('Checking your session…')
+                setMessage(CHECKING_SESSION_MESSAGE)
             }
             try {
                 const response = await fetch(endpoint, { cache: 'no-store', signal: controller.signal, credentials: 'same-origin' })
@@ -122,14 +122,19 @@ export function useSensitiveSessionBoundary(userId: string, kind: 'founder' | 'c
     return { message, invalidated, generation }
 }
 
-export function SensitiveBoundary({ userId, kind, sessionTag, children }: { userId: string; kind: 'founder' | 'customer' | 'founder_candidate'; sessionTag?: string; children: React.ReactNode }) {
+export const CHECKING_SESSION_MESSAGE = 'Checking your session…'
+
+/** `checkingFallback` replaces the plain "checking" text while the session check runs; errors still show their message. */
+export function SensitiveBoundary({ userId, kind, sessionTag, className, surfaceClassName, checkingFallback, children }: { userId: string; kind: 'founder' | 'customer' | 'founder_candidate'; sessionTag?: string; className?: string; surfaceClassName?: string; checkingFallback?: React.ReactNode; children: React.ReactNode }) {
     const surface = useRef<HTMLDivElement>(null)
     const { message, invalidated, generation } = useSensitiveSessionBoundary(userId, kind, surface, sessionTag)
-    return <div data-sensitive-surface="true" data-sentry-block="true">
-        {message && <div role="status" className="mx-auto max-w-2xl p-8 text-sm text-ink">
+    const showFallback = message === CHECKING_SESSION_MESSAGE && checkingFallback
+    return <div data-sensitive-surface="true" data-sentry-block="true" className={className}>
+        {showFallback && checkingFallback}
+        {message && !showFallback && <div role="status" className="mx-auto max-w-2xl p-8 text-sm text-ink">
             <p>{message}</p>
             <a className="mt-4 inline-block underline" href={kind === 'founder_candidate' ? '/admin/verify' : kind === 'founder' ? '/admin' : '/support'}>Reload safely</a>
         </div>}
-        {!invalidated && <div ref={surface} hidden={Boolean(message)} key={`${userId}:${generation}`}>{children}</div>}
+        {!invalidated && <div ref={surface} hidden={Boolean(message)} className={surfaceClassName} key={`${userId}:${generation}`}>{children}</div>}
     </div>
 }
