@@ -109,7 +109,7 @@ describe('Rate Book board: one card per yarn in RatesClient.tsx', () => {
 
     it('marks a due card in its status line and asks to confirm the price in the review modal, not with a badge', () => {
         expect(card).toContain('due ? dueStatus(rate)')
-        expect(card).toContain("due ? 'font-semibold text-destructive' : 'text-muted-foreground'")
+        expect(card).toContain("due ? 'font-semibold text-saffron-deep' : 'text-muted-foreground'")
         expect(read('components/rates/RateReviewDialog.tsx')).toContain('fillCopy(copy.stillPrice, { price: formatRateValue(rate.current_value, rate.unit) })')
         expect(client).not.toContain('<StatusBadge')
     })

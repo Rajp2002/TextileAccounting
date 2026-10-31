@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useRef } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { History, Loader2, Minus, TrendingDown, TrendingUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -16,6 +16,94 @@ const DATE_OPTIONS = { day: 'numeric', month: 'short', year: 'numeric' } as cons
 
 /** The yarns offered in the modal's picker, one labelled group per section of the board. */
 export type RateTrendGroup = { label: string; rates: CostRateRow[] }
+
+/** A track's border (1px) and padding (4px) on each side, added to its options' widths. */
+const TRACK_CHROME = 10
+const OPTION_TEXT = 'whitespace-nowrap px-3 text-[13px] font-semibold'
+
+/**
+ * One section's yarns as a connected segmented track, like the board's direction
+ * toggle. When the yarns don't fit on one line they wrap into further tracks, one
+ * per line: a hidden copy of the options measures their widths and packs them.
+ */
+function YarnPickerGroup({ group, selectedId, onSelect }: {
+    group: RateTrendGroup
+    selectedId: string | null
+    onSelect: (rate: CostRateRow) => void
+}) {
+    const areaRef = useRef<HTMLDivElement>(null)
+    const measureRef = useRef<HTMLDivElement>(null)
+    const [rows, setRows] = useState<CostRateRow[][] | null>(null)
+
+    useLayoutEffect(() => {
+        const area = areaRef.current
+        const measure = measureRef.current
+        if (!area || !measure) return
+        const pack = () => {
+            const available = area.clientWidth
+            const widths = Array.from(measure.children, child => Math.ceil(child.getBoundingClientRect().width))
+            const next: CostRateRow[][] = []
+            let row: CostRateRow[] = []
+            let used = TRACK_CHROME
+            group.rates.forEach((option, index) => {
+                if (row.length > 0 && used + widths[index] > available) {
+                    next.push(row)
+                    row = []
+                    used = TRACK_CHROME
+                }
+                row.push(option)
+                used += widths[index]
+            })
+            if (row.length > 0) next.push(row)
+            const key = next.map(line => line.map(option => option.id).join(',')).join('|')
+            setRows(current => current?.map(line => line.map(option => option.id).join(',')).join('|') === key ? current : next)
+        }
+        pack()
+        // Re-pack when the modal resizes or the web font lands and the names change width.
+        const observer = new ResizeObserver(pack)
+        observer.observe(area)
+        observer.observe(measure)
+        return () => observer.disconnect()
+    }, [group.rates])
+
+    return (
+        <div role="group" aria-label={group.label} className="flex items-start gap-2">
+            <span className="flex h-10 w-11 shrink-0 items-center text-xs font-semibold text-subtle max-md:h-[54px]">{group.label}</span>
+            <div ref={areaRef} className="relative min-w-0 flex-1 space-y-1.5">
+                <div ref={measureRef} aria-hidden="true" className="pointer-events-none invisible absolute left-0 top-0 flex w-max">
+                    {group.rates.map(option => <span key={option.id} className={OPTION_TEXT}>{option.name}</span>)}
+                </div>
+                {(rows ?? [group.rates]).map(line => (
+                    <div
+                        key={line[0].id}
+                        className="flex w-fit max-w-full rounded-full border border-hairline bg-surface-soft p-1 shadow-[inset_0_1px_2px_rgba(22,33,62,0.08)]"
+                    >
+                        {line.map(option => {
+                            const selected = option.id === selectedId
+                            return (
+                                <button
+                                    key={option.id}
+                                    type="button"
+                                    aria-pressed={selected}
+                                    onClick={() => { if (!selected) onSelect(option) }}
+                                    className={cn(
+                                        OPTION_TEXT,
+                                        'h-8 min-w-0 truncate rounded-full transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/70 max-md:min-h-[44px]',
+                                        selected
+                                            ? 'bg-loom text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_3px_8px_-3px_rgba(22,33,62,0.55)]'
+                                            : 'text-ink hover:bg-surface',
+                                    )}
+                                >
+                                    {option.name}
+                                </button>
+                            )
+                        })}
+                    </div>
+                ))}
+            </div>
+        </div>
+    )
+}
 
 /**
  * Every active yarn's price history in one place: pills pick a yarn, and its full
@@ -62,29 +150,10 @@ export function RateTrendDialog({ rate, groups, onSelectRate, rows, loading, err
                     </div>
                 </DialogHeader>
 
-                {/* One pill per active yarn, grouped like the board; the chosen one is filled ink. */}
-                <div data-ratebook-field="activityYarnPicker" className="max-h-36 space-y-2 overflow-y-auto rounded-xl border border-hairline bg-surface-soft/50 p-3">
+                {/* One connected track per section, grouped like the board; the chosen yarn is filled navy. */}
+                <div data-ratebook-field="activityYarnPicker" className="max-h-44 space-y-2 overflow-y-auto">
                     {groups.filter(group => group.rates.length > 0).map(group => (
-                        <div key={group.label} role="group" aria-label={group.label} className="flex flex-wrap items-center gap-1.5">
-                            <span className="mr-1 w-11 shrink-0 text-xs font-semibold text-subtle">{group.label}</span>
-                            {group.rates.map(option => {
-                                const selected = option.id === rate?.id
-                                return (
-                                    <button
-                                        key={option.id}
-                                        type="button"
-                                        aria-pressed={selected}
-                                        onClick={() => { if (!selected) onSelectRate(option) }}
-                                        className={cn(
-                                            'h-8 max-w-full truncate rounded-full border px-3 text-[13px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/50 max-md:min-h-[44px]',
-                                            selected ? 'border-ink bg-ink text-surface' : 'border-hairline bg-surface text-body hover:bg-surface-soft',
-                                        )}
-                                    >
-                                        {option.name}
-                                    </button>
-                                )
-                            })}
-                        </div>
+                        <YarnPickerGroup key={group.label} group={group} selectedId={rate?.id ?? null} onSelect={onSelectRate} />
                     ))}
                 </div>
 

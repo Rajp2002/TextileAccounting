@@ -33,7 +33,7 @@ describe('yarn review and selling-margin preferences', () => {
     expect(sidebar).toContain('yarnReviewDueCount')
     expect(sidebar).toContain('BellRing')
     // Overdue and soon-due yarns lead their Rate Book sections, say how late they are, and open in the review modal.
-    expect(rates).toContain("due ? 'font-semibold text-destructive' : 'text-muted-foreground'")
+    expect(rates).toContain("due ? 'font-semibold text-saffron-deep' : 'text-muted-foreground'")
     expect(rates).toContain('data-ratebook-field="reviewPricesAction"')
     expect(rates).toContain("dueIn === -1 ? copy.overdueOne : fillCopy(copy.overdueDays, { n: -dueIn })")
   })
