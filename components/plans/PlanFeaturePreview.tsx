@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { ArrowUpRight, Play } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { LiquidSegmented } from '@/components/ui/liquid-segmented'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { FEATURE_DEMOS } from '@/lib/feature-demos'
 import { useTranslation } from '@/lib/i18n/context'
@@ -31,16 +32,30 @@ export function PlanFeaturePreview({ planTier, features, onOpenPreview }: PlanFe
           <SelectContent>{features.map(feature => <SelectItem key={feature} value={feature} className="min-h-[44px]">{upgradeText(language, feature)}</SelectItem>)}</SelectContent>
         </Select>
       </div>
-      <TabsList
-        aria-label={`${planTier} · ${freeMobileEntryText(language, 'previewFeatures')}`}
-        className={cn('hidden h-auto w-full shrink-0 gap-1 rounded-lg border-0 bg-surface-soft p-1 group-data-[orientation=horizontal]/tabs:h-auto md:grid', features.length > 4 ? 'grid-cols-3' : features.length > 2 ? 'grid-cols-2 lg:grid-cols-4' : 'grid-cols-2')}
-      >
-        {features.map(feature => (
-          <TabsTrigger key={feature} value={feature} className="h-auto min-h-[44px] whitespace-normal px-2 py-2 text-sm leading-snug shadow-none transition-colors duration-150 data-[state=active]:shadow-xs motion-reduce:transition-none">
-            {upgradeText(language, feature)}
-          </TabsTrigger>
-        ))}
-      </TabsList>
+      {features.length <= 4 ? (
+        <LiquidSegmented
+          role="tablist"
+          size="sm"
+          fullWidth
+          aria-label={`${planTier} · ${freeMobileEntryText(language, 'previewFeatures')}`}
+          value={activeFeature}
+          onValueChange={setActiveFeature}
+          className="hidden shrink-0 md:grid"
+          optionClassName="min-h-11 px-2 text-sm"
+          options={features.map(feature => ({ value: feature, label: upgradeText(language, feature) }))}
+        />
+      ) : (
+        <TabsList
+          aria-label={`${planTier} · ${freeMobileEntryText(language, 'previewFeatures')}`}
+          className={cn('hidden h-auto w-full shrink-0 gap-1 rounded-lg border-0 bg-surface-soft p-1 group-data-[orientation=horizontal]/tabs:h-auto md:grid', features.length > 4 ? 'grid-cols-3' : features.length > 2 ? 'grid-cols-2 lg:grid-cols-4' : 'grid-cols-2')}
+        >
+          {features.map(feature => (
+            <TabsTrigger key={feature} value={feature} className="h-auto min-h-[44px] whitespace-normal px-2 py-2 text-sm leading-snug shadow-none transition-colors duration-150 data-[state=active]:shadow-xs motion-reduce:transition-none">
+              {upgradeText(language, feature)}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      )}
       {features.map(feature => {
         const featureName = upgradeText(language, feature)
         return (

@@ -505,8 +505,8 @@ export default async function BillingPage() {
                             <dl className={cn('grid border-t border-hairline max-sm:divide-y max-sm:divide-hairline sm:divide-x sm:divide-hairline', planStats.length === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2')}>
                                 {planStats.map(stat => (
                                     <div key={stat.label} className="min-w-0 px-5 py-5 sm:px-6 sm:py-6">
-                                        <dt className="text-[13px] font-medium text-muted-foreground">{stat.label}</dt>
-                                        <dd className="mt-1.5 text-center text-2xl font-semibold leading-tight tracking-[-0.02em] text-ink tabular-nums sm:text-[28px]">{stat.value}</dd>
+                                        <dt className="text-center text-[13px] font-medium text-muted-foreground">{stat.label}</dt>
+                                        <dd className="mt-1.5 text-center text-xl font-semibold leading-tight tracking-[-0.01em] text-ink tabular-nums sm:text-2xl">{stat.value}</dd>
                                         {stat.note && <dd className="mt-0.5 text-center text-[13px] text-body tabular-nums">{stat.note}</dd>}
                                     </div>
                                 ))}
