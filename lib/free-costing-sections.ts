@@ -26,6 +26,12 @@ function sectionForField(field: string): SectionId {
   return 'details'
 }
 
+/** Tile tones of the sections with a blocking input issue; their headers show a "!" badge. */
+export function incompleteSectionTones(validation: EstimatorValidationResult): ReadonlySet<number> {
+  const ids = new Set(validation.issues.map(issue => sectionForField(issue.field)))
+  return new Set(sections.filter(section => ids.has(section.id)).map(section => section.tone))
+}
+
 /** Uses input validation only: checking sections must never reveal an unmetered price. */
 export function getFreeCostingSections(validation: EstimatorValidationResult, qualityLabel: string, warningsAcknowledged: boolean): FreeCostingSection[] {
   const issues = qualityLabel.trim() ? validation.issues : [{ field: 'qualityLabel' }, ...validation.issues]

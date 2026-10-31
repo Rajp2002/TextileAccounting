@@ -1,7 +1,7 @@
 import {describe,expect,it} from 'vitest'
 import {makeFreeDemo,makeFreeEstimate} from '@/lib/free-estimator-defaults'
 import {validateEstimatorSnapshot,requiresFactoryCapacity} from '@/lib/estimator-validation'
-import {getFreeCostingSections} from '@/lib/free-costing-sections'
+import {getFreeCostingSections,incompleteSectionTones} from '@/lib/free-costing-sections'
 
 const validEstimate=()=>{
   const state=makeFreeDemo();state.weftRows[0].picks=60;state.perPickCostPaisa=0.1375
@@ -15,6 +15,12 @@ describe('Free input section checklist',()=>{
     const sections=check(makeFreeEstimate(),'')
     expect(sections.filter(section=>section.status==='incomplete').map(section=>section.id)).toEqual(['details','warp','weft','weaving','overhead'])
     expect(sections.filter(section=>section.status==='complete').map(section=>section.id)).toEqual(['preparation','processing','pricing'])
+  })
+  it('gives the section-header "!" badge the tones of the sections with blocking issues',()=>{
+    const state=makeFreeEstimate()
+    const tones=incompleteSectionTones(validateEstimatorSnapshot(state,{requireTapeLength:false,requireCapacity:requiresFactoryCapacity(state)}))
+    expect([...tones].sort()).toEqual([2,3,4,6])
+    expect(incompleteSectionTones(validateEstimatorSnapshot(validEstimate(),{requireTapeLength:false,requireCapacity:false})).size).toBe(0)
   })
   it('accepts complete costing inputs without requiring a saved result',()=>{
     expect(check().every(section=>section.status==='complete')).toBe(true)

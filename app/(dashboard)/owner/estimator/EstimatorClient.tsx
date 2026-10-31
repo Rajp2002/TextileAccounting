@@ -5,7 +5,7 @@ import {FreeRecalculationWindow} from '@/components/estimator/FreeRecalculationW
 import dynamic from 'next/dynamic'
 import { useMobileKeyboard } from '@/hooks/use-mobile-keyboard'
 import { KeyboardNextBar } from '@/components/ui/keyboard-next-bar'
-import { Fragment, useReducer, useEffect, useLayoutEffect, useMemo, useCallback, useState, useRef, useId } from 'react'
+import { Fragment, createContext, useContext, useReducer, useEffect, useLayoutEffect, useMemo, useCallback, useState, useRef, useId } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { nanoid } from 'nanoid'
 import { Card, CardContent } from '@/components/ui/card'
@@ -124,7 +124,7 @@ import { warningAcknowledgementKey } from '@/lib/warning-acknowledgement'
 import { freeText, type FreeText } from '@/lib/i18n/free-tier'
 import { freeMobileText } from '@/lib/i18n/free-mobile'
 import { liteEstimatorText } from '@/lib/i18n/lite-estimator'
-import { getFreeCostingSections, liveCostSheetView, type FreeCostingSection } from '@/lib/free-costing-sections'
+import { getFreeCostingSections, incompleteSectionTones, liveCostSheetView, type FreeCostingSection } from '@/lib/free-costing-sections'
 import { FreeCostingChecklist } from '@/components/estimator/FreeCostingChecklist'
 import { useGutterDock } from '@/hooks/use-gutter-dock'
 import { makeFreeEstimate } from '@/lib/free-estimator-defaults'
@@ -833,6 +833,10 @@ function YarnComponentCountFields({
 // one per section so they are easy to tell apart while the card bodies stay plain. The colour follows
 // the section, so warp is baby blue and weft mint in both Quick and Detailed modes.
 
+// Tones of the sections with a missing or invalid required input (see incompleteSectionTones). Their
+// headers carry a "!" badge; the inputs themselves are highlighted in place, with no summary banner.
+const SectionAttentionContext = createContext<ReadonlySet<number>>(new Set())
+
 function SectionHeader({ title, icon: Icon, accent = 'warp', badgeContent, detail, step, tone = step, tutorialSection }: {
     title:    string
     icon:     React.ElementType
@@ -845,9 +849,12 @@ function SectionHeader({ title, icon: Icon, accent = 'warp', badgeContent, detai
     tutorialSection?: number
 }) {
     const colorClass = getAccentStyles(accent)
+    const { tx } = useTranslation()
+    const needsAttention = useContext(SectionAttentionContext).has(tone ?? step ?? -1)
     return (
         <div
             data-tutorial-section={tutorialSection}
+            data-needs-attention={needsAttention || undefined}
             data-tone={step != null ? tone ?? step : undefined}
             className={`flex items-stretch border-b ${step != null ? 'estimator-step-tile' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)]'}`}
         >
@@ -862,7 +869,18 @@ function SectionHeader({ title, icon: Icon, accent = 'warp', badgeContent, detai
                         <Icon className="h-4 w-4" />
                     </div>
                     <div className="min-w-0">
-                        <span className="text-[17px] font-semibold leading-snug text-[var(--color-ink)]">{title}</span>
+                        <span className="flex items-center gap-2 text-[17px] font-semibold leading-snug text-[var(--color-ink)]">
+                            {title}
+                            {needsAttention && (
+                                <span
+                                    role="img"
+                                    aria-label={tx('Has missing inputs')}
+                                    className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--wv-madder-600)] text-[13px] font-bold leading-none text-white"
+                                >
+                                    !
+                                </span>
+                            )}
+                        </span>
                         {detail}
                     </div>
                 </div>
@@ -4075,6 +4093,7 @@ export default function EstimatorClient({
         }),
         [requireCapacityForCurrentCosting, state],
     )
+    const attentionTones = useMemo(() => incompleteSectionTones(estimatorValidation), [estimatorValidation])
     const firstEstimatorValidationMessage = useMemo(
         () => getFirstEstimatorValidationMessage(estimatorValidation),
         [estimatorValidation],
@@ -4884,6 +4903,8 @@ export default function EstimatorClient({
         if (unconfirmedRequestId) return
         setShowValidation(true)
         if (!hasValidCostResult) {
+            // No summary banner: take the owner to the first highlighted input (switching to Detailed when it lives there).
+            jumpToFirstEstimatorIssue()
             return toast.error(tx(firstCostingReadinessMessage ?? 'Complete the highlighted inputs before saving.'))
         }
         if (!costingStartedRef.current) {
@@ -5183,6 +5204,7 @@ export default function EstimatorClient({
     ].filter(line => line.value > 0)
     return (
         <PlausibilityConfirmationProvider store={plausibilityConfirmations}>
+        <SectionAttentionContext.Provider value={attentionTones}>
         <div ref={estimatorGutterRef} data-free-costing={freeMode || undefined} data-lite-costing={liteMode || undefined} data-sentry-block={freeMode || undefined} className="ui-route-enter estimator-mobile-form space-y-5 pb-floating-button md:pb-20 relative">
             <span hidden data-signin-ready="true" />
             <RouteMilestones
@@ -5503,46 +5525,6 @@ export default function EstimatorClient({
                             >
                                 Review
                             </Button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {showValidation && !estimatorValidation.valid && (
-                <div id={validationSummaryId} className={`${pageShellClass} mb-2`} role="alert">
-                    <div className="rounded-xl border border-[var(--wv-madder-200)] bg-[var(--wv-madder-50)] px-4 py-3 text-[var(--wv-madder-600)]">
-                        <div className="flex items-start gap-3">
-                            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-[var(--wv-madder-600)]" />
-                            <div className="min-w-0 flex-1">
-                                <p className="text-sm font-bold">Complete the highlighted inputs before saving</p>
-                                <ul className="mt-1 space-y-0.5 text-xs leading-relaxed text-[var(--wv-madder-600)]">
-                                    {estimatorValidation.issues.slice(0, 6).map(issue => (
-                                        <li key={`${issue.field}:${issue.message}`}>{issue.message}</li>
-                                    ))}
-                                </ul>
-                                {estimatorValidation.issues.length > 6 && (
-                                    <p className="mt-1 text-xs font-semibold text-[var(--wv-madder-600)]">{`${estimatorValidation.issues.length - 6} more entries to fix`}</p>
-                                )}
-                            </div>
-                            {estimatorValidation.issues.some(issue => (
-                                issue.field === 'loomCount'
-                                || issue.field === 'monthlyWorkingDays'
-                                || issue.field === 'avgOutputPerLoomPerDay'
-                                || issue.field === 'monthlyOutputM'
-                            )) && (
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    className="shrink-0 border-[var(--wv-madder-200)] bg-white text-[var(--wv-madder-600)] hover:bg-[var(--wv-madder-50)]"
-                                    onClick={() => {
-                                        handleEntryModeChange('detailed')
-                                        setShowAdvancedOverhead(true)
-                                    }}
-                                >
-                                    Open capacity inputs
-                                </Button>
-                            )}
                         </div>
                     </div>
                 </div>
@@ -7695,6 +7677,7 @@ export default function EstimatorClient({
 
 
         </div>
+        </SectionAttentionContext.Provider>
         </PlausibilityConfirmationProvider>
     )
 }

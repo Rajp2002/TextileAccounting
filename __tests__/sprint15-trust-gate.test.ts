@@ -157,7 +157,6 @@ describe('Sprint 15 Base estimator trust gates', () => {
     expect(source).toContain('Wastage applied after base yarn costing:')
     expect(source).toContain('Manual yarn-cost workflow')
     expect(source).toContain('Base yarn subtotal')
-    expect(source).toContain('Open capacity inputs')
   })
 
   it('explains the capacity warning and whether monthly output drives overhead', () => {
