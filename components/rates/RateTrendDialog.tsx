@@ -150,8 +150,9 @@ export function RateTrendDialog({ rate, groups, onSelectRate, rows, loading, err
                     </div>
                 </DialogHeader>
 
-                {/* One connected track per section, grouped like the board; the chosen yarn is filled navy. */}
-                <div data-ratebook-field="activityYarnPicker" className="max-h-44 space-y-2 overflow-y-auto">
+                {/* One connected track per section, grouped like the board; the chosen yarn is filled navy.
+                    It grows with its rows; the dialog scrolls as a whole once it outgrows the screen. */}
+                <div data-ratebook-field="activityYarnPicker" className="space-y-2">
                     {groups.filter(group => group.rates.length > 0).map(group => (
                         <YarnPickerGroup key={group.label} group={group} selectedId={rate?.id ?? null} onSelect={onSelectRate} />
                     ))}
