@@ -533,19 +533,20 @@ export default async function BillingPage() {
                             <p className="border-t border-hairline px-5 py-4 text-sm text-body sm:px-6">{accessTiming}</p>
                         )}
 
-                        <div className="flex flex-1 flex-col justify-center border-t border-hairline bg-surface-soft/40 px-5 py-5 sm:px-6 sm:py-6">
+                        {/* The tiles share whatever height the card has left, two by two. */}
+                        <div className="flex flex-1 flex-col border-t border-hairline bg-surface-soft/40 px-5 py-5 sm:px-6 sm:py-6">
                             {shownTier ? (
                                 <>
                                     <p className="text-[13px] font-medium text-muted-foreground">{shownTier === 'base' ? 'Included in Base' : 'Included in Lite'}</p>
-                                    <ul className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                                    <ul className="mt-3 grid flex-1 auto-rows-fr gap-3 sm:grid-cols-2 sm:gap-4">
                                         {PLAN_INCLUDES[shownTier].map(({ icon: Icon, title, text }) => (
-                                            <li key={title} className="flex items-start gap-3 rounded-xl border border-hairline bg-surface p-4">
-                                                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-saffron-soft text-saffron-deep">
-                                                    <Icon className="size-[18px]" aria-hidden="true" />
+                                            <li key={title} className="flex min-h-[112px] items-center gap-4 rounded-xl border border-hairline bg-surface p-5 sm:gap-5 sm:p-6">
+                                                <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-saffron-soft text-saffron-deep">
+                                                    <Icon className="size-6" aria-hidden="true" />
                                                 </span>
                                                 <span className="min-w-0">
-                                                    <span className="block text-sm font-semibold text-ink">{title}</span>
-                                                    <span className="mt-0.5 block text-[13px] leading-snug text-body">{text}</span>
+                                                    <span className="block text-base font-semibold text-ink sm:text-lg">{title}</span>
+                                                    <span className="mt-1 block text-sm leading-relaxed text-body sm:text-[15px]">{text}</span>
                                                 </span>
                                             </li>
                                         ))}
